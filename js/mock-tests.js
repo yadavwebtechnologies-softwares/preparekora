@@ -124,3 +124,30 @@ if (testLanguage) {
 
 renderMockTests();
 updateSelectedLanguage();
+if (mockTestListing) {
+    mockTestListing.addEventListener("click", (event) => {
+        const card = event.target.closest("[data-mock-test]");
+
+        if (!card) return;
+
+        const testNumber = Number(card.dataset.testNumber);
+
+        if (testNumber === 1) {
+            window.location.href = "test.html?test=1";
+            return;
+        }
+
+        const noticeModal = document.getElementById("notice-modal");
+        const noticeTitle = document.getElementById("notice-title");
+        const noticeMessage = document.getElementById("notice-message");
+
+        if (!noticeModal || !noticeTitle || !noticeMessage) return;
+
+        noticeTitle.textContent = "Premium Test";
+        noticeMessage.textContent =
+            "Premium test access will be implemented during the functionality upgrade.";
+
+        noticeModal.hidden = false;
+        document.body.classList.add("modal-open");
+    });
+}
