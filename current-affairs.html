@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore daily, Assam and national current affairs practice on StudyNow.">
+
+    <title>Current Affairs — StudyNow</title>
+
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+    <script src="js/current-affairs.js" defer></script>
+</head>
+
+<body>
+
+    <!-- Shared Header -->
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="index.html" class="brand" aria-label="StudyNow Home">
+                <span class="brand-name">StudyNow</span>
+                <span class="brand-caption">Learn. Practice. Progress.</span>
+            </a>
+
+            <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+                <a href="index.html#current-affairs">Current Affairs</a>
+                <a href="index.html#featured-tests">Mock Tests</a>
+                <a href="index.html#subjects">Subjects</a>
+                <a href="index.html#daily-practice">Daily Practice</a>
+            </nav>
+
+            <div class="header-actions">
+                <button type="button" class="btn btn-outline" data-action="login">
+                    Login
+                </button>
+                <button type="button" class="btn btn-primary" data-action="signup">
+                    Create Account
+                </button>
+            </div>
+
+            <button
+                type="button"
+                class="menu-toggle"
+                id="menu-toggle"
+                aria-label="Toggle navigation"
+                aria-controls="main-nav"
+                aria-expanded="false"
+            >
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <main id="main-content">
+
+        <!-- Shared Hero -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <span class="eyebrow">STAY INFORMED</span>
+
+                <h1>Current Affairs<br>and Daily Practice</h1>
+
+                <p>
+                    Explore current affairs topics and practise questions
+                    relevant to your competitive exam preparation.
+                </p>
+
+                <div class="hero-actions">
+                    <a href="#affairs-categories" class="btn btn-primary btn-large">
+                        Explore Categories
+                    </a>
+                    <a href="#practice-resources" class="btn btn-outline btn-large">
+                        Practice Resources
+                    </a>
+                </div>
+
+                <div class="hero-highlights">
+                    <span>Daily Updates</span>
+                    <span>Assam and National</span>
+                    <span>Practice Quizzes</span>
+                </div>
+            </div>
+
+            <!-- Shared Hero Visual -->
+            <div class="hero-visual">
+                <div class="visual-topline">
+                    <span class="visual-dot" aria-hidden="true"></span>
+                    <span>YOUR DAILY PREPARATION</span>
+                </div>
+
+                <div class="visual-main">
+                    <span class="visual-label">LEARN SOMETHING NEW</span>
+                    <h2>Read.<br>Understand.<br>Revise.</h2>
+
+                    <div class="visual-progress">
+                        <span class="progress-track">
+                            <span class="progress-value"></span>
+                        </span>
+                        <span class="progress-caption">
+                            Make current affairs part of your routine
+                        </span>
+                    </div>
+                </div>
+
+                <div class="visual-footer">
+                    <div>
+                        <strong>Explore</strong>
+                        <span>Important topics</span>
+                    </div>
+                    <div>
+                        <strong>Practise</strong>
+                        <span>Review your knowledge</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Current Affairs Categories -->
+        <section class="content-section" id="affairs-categories">
+            <div class="section-heading">
+                <div>
+                    <h2 class="section-title">Browse Categories</h2>
+                </div>
+            </div>
+
+            <div class="listing-grid">
+
+                <button type="button" class="listing-card" data-affairs-category="daily">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="4" y="5" width="16" height="15" rx="2"></rect>
+                            <path d="M8 3v4M16 3v4M4 10h16"></path>
+                            <path d="M8 14h3M8 17h6"></path>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-title">Daily Current Affairs</span>
+                        <span class="card-description">
+                            Daily updates and important events
+                        </span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </button>
+
+                <button type="button" class="listing-card" data-affairs-category="assam">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3 20h18M5 20V9l7-5 7 5v11"></path>
+                            <path d="M9 20v-6h6v6"></path>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-title">Assam Current Affairs</span>
+                        <span class="card-description">
+                            State-level news and developments
+                        </span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </button>
+
+                <button type="button" class="listing-card" data-affairs-category="national">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M3.5 12h17M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"></path>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-title">National Current Affairs</span>
+                        <span class="card-description">
+                            Important events across India
+                        </span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </button>
+
+                <button type="button" class="listing-card" data-affairs-category="quiz">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="5" y="4" width="14" height="17" rx="2"></rect>
+                            <path d="M9 4V3h6v1M8 10h8M8 14h3M8 17h5"></path>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-title">Current Affairs Quiz</span>
+                        <span class="card-description">
+                            Practise questions about current events
+                        </span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </button>
+
+            </div>
+        </section>
+
+        <!-- Selected Category -->
+        <section class="content-section feature-section" id="practice-resources">
+            <div class="section-heading">
+                <div>
+                    <h2 class="section-title" id="resource-heading">
+                        Current Affairs Resources
+                    </h2>
+                </div>
+            </div>
+
+            <div class="listing-grid" id="affairs-resource-list">
+                <!-- Static resources are rendered by current-affairs.js -->
+            </div>
+        </section>
+
+        <!-- About -->
+        <section class="content-section" id="about-current-affairs">
+            <div class="section-heading">
+                <div>
+                    <h2 class="section-title">About Current Affairs Practice</h2>
+                </div>
+            </div>
+
+            <p>
+                Regular current affairs revision helps you stay familiar with
+                important events and prepare for general awareness questions.
+                StudyNow will bring its topic-wise resources together here.
+            </p>
+        </section>
+
+    </main>
+
+    <!-- Shared Footer -->
+    <footer class="site-footer">
+        <div class="footer-main">
+            <div class="footer-brand">
+                <a href="index.html" class="brand">
+                    <span class="brand-name">StudyNow</span>
+                </a>
+                <p>
+                    A focused platform for competitive exam preparation,
+                    mock tests and subject-wise practice.
+                </p>
+            </div>
+
+            <div class="footer-column">
+                <h2>Explore</h2>
+                <a href="index.html#current-affairs">Current Affairs</a>
+                <a href="index.html#featured-tests">Mock Tests</a>
+                <a href="index.html#subjects">Subjects</a>
+                <a href="index.html#daily-practice">Daily Practice</a>
+            </div>
+
+            <div class="footer-column">
+                <h2>StudyNow</h2>
+                <a href="index.html#why-studynow">About StudyNow</a>
+                <a href="index.html">Back to Home</a>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p class="site-credit">
+                Design and Develop by Yadav Web Technologies
+            </p>
+            <p class="copyright">
+                StudyNow. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>
