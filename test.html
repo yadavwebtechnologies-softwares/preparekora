@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="description"
+        content="Practise ADRE Grade III mock test questions on StudyNow."
+    >
+
+    <title>ADRE Grade III Mock Test 1 — StudyNow</title>
+
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+    <script src="js/test.js" defer></script>
+</head>
+
+<body>
+
+    <!-- Shared Header -->
+    <header class="site-header">
+        <div class="header-inner">
+
+            <a href="index.html" class="brand" aria-label="StudyNow Home">
+                <span class="brand-name">StudyNow</span>
+                <span class="brand-caption">Learn. Practice. Progress.</span>
+            </a>
+
+            <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+                <a href="index.html#current-affairs">Current Affairs</a>
+                <a href="index.html#featured-tests">Mock Tests</a>
+                <a href="index.html#subjects">Subjects</a>
+                <a href="index.html#daily-practice">Daily Practice</a>
+            </nav>
+
+            <div class="header-actions">
+                <button type="button" class="btn btn-outline" data-action="login">
+                    Login
+                </button>
+
+                <button type="button" class="btn btn-primary" data-action="signup">
+                    Create Account
+                </button>
+            </div>
+
+            <button
+                type="button"
+                class="menu-toggle"
+                id="menu-toggle"
+                aria-label="Toggle navigation"
+                aria-controls="main-nav"
+                aria-expanded="false"
+            >
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+        </div>
+    </header>
+
+    <main id="main-content">
+
+        <!-- Shared Hero -->
+        <section class="hero-section">
+
+            <div class="hero-content">
+                <span class="eyebrow" id="test-status">FREE TEST PREVIEW</span>
+
+                <h1 id="test-title">ADRE Grade III<br>Mock Test 1</h1>
+
+                <p>
+                    Practise the sample questions below to explore the
+                    StudyNow test interface.
+                </p>
+
+                <div class="hero-actions">
+                    <a href="#questions" class="btn btn-primary btn-large">
+                        View Questions
+                    </a>
+
+                    <a href="mock-tests.html?exam=adre-grade-iii"
+                       class="btn btn-outline btn-large">
+                        Back to Mock Tests
+                    </a>
+                </div>
+
+                <div class="hero-highlights">
+                    <span>150 Questions in Full Test</span>
+                    <span>180 Minutes</span>
+                    <span>English</span>
+                </div>
+            </div>
+
+            <div class="hero-visual">
+                <div class="visual-topline">
+                    <span class="visual-dot" aria-hidden="true"></span>
+                    <span>TEST OVERVIEW</span>
+                </div>
+
+                <div class="visual-main">
+                    <span class="visual-label">YOUR PRACTICE SESSION</span>
+                    <h2>Read.<br>Think.<br>Choose.</h2>
+
+                    <div class="visual-progress">
+                        <span class="progress-track">
+                            <span class="progress-value"></span>
+                        </span>
+
+                        <span class="progress-caption">
+                            Every question is a learning opportunity
+                        </span>
+                    </div>
+                </div>
+
+                <div class="visual-footer">
+                    <div>
+                        <strong>MCQs</strong>
+                        <span>Multiple-choice format</span>
+                    </div>
+
+                    <div>
+                        <strong>Review</strong>
+                        <span>Check your preparation</span>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Instructions -->
+        <section class="content-section" id="instructions">
+
+            <div class="section-heading">
+                <div>
+                    <h2 class="section-title">Test Instructions</h2>
+                </div>
+            </div>
+
+            <div class="listing-grid">
+
+                <article class="listing-card">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M12 7v5l3 2"></path>
+                        </svg>
+                    </span>
+
+                    <span class="card-content">
+                        <span class="card-title">Time Limit</span>
+                        <span class="card-description">
+                            180 minutes for the full test
+                        </span>
+                    </span>
+                </article>
+
+                <article class="listing-card">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="5" y="4" width="14" height="17" rx="2"></rect>
+                            <path d="M9 4V3h6v1M8 10h8M8 14h8"></path>
+                        </svg>
+                    </span>
+
+                    <span class="card-content">
+                        <span class="card-title">Question Format</span>
+                        <span class="card-description">
+                            Multiple-choice questions
+                        </span>
+                    </span>
+                </article>
+
+                <article class="listing-card">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M5 5h14M5 12h14M5 19h14"></path>
+                            <circle cx="8" cy="5" r="1"></circle>
+                            <circle cx="8" cy="12" r="1"></circle>
+                            <circle cx="8" cy="19" r="1"></circle>
+                        </svg>
+                    </span>
+
+                    <span class="card-content">
+                        <span class="card-title">Select One Answer</span>
+                        <span class="card-description">
+                            Choose one option for each question
+                        </span>
+                    </span>
+                </article>
+
+                <article class="listing-card">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M5 12l4 4L19 6"></path>
+                        </svg>
+                    </span>
+
+                    <span class="card-content">
+                        <span class="card-title">Sample Preview</span>
+                        <span class="card-description">
+                            This page currently displays sample questions
+                        </span>
+                    </span>
+                </article>
+
+            </div>
+
+        </section>
+
+        <!-- Questions -->
+        <section class="content-section" id="questions">
+
+            <div class="section-heading">
+                <div>
+                    <h2 class="section-title">Sample Questions</h2>
+                </div>
+            </div>
+
+            <p>
+                These five questions demonstrate the test layout only.
+                They are not the complete 150-question mock test.
+            </p>
+
+            <form id="test-form">
+
+                <div class="daily-list">
+
+                    <article class="daily-card">
+                        <span class="date-box">
+                            <strong>01</strong>
+                            <span>MCQ</span>
+                        </span>
+
+                        <div class="card-content">
+                            <h3>What is the capital of Assam?</h3>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q1" value="a">
+                                    A. Guwahati
+                                </label>
+                            </p>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q1" value="b">
+                                    B. Dispur
+                                </label>
+                            </p>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q1" value="c">
+                                    C. Jorhat
+                                </label>
+                            </p>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q1" value="d">
+                                    D. Silchar
+                                </label>
+                            </p>
+                        </div>
+                    </article>
+
+                    <article class="daily-card">
+                        <span class="date-box">
+                            <strong>02</strong>
+                            <span>MCQ</span>
+                        </span>
+
+                        <div class="card-content">
+                            <h3>Which major river flows through Assam?</h3>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q2" value="a">
+                                    A. Godavari
+                                </label>
+                            </p>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q2" value="b">
+                                    B. Narmada
+                                </label>
+                            </p>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q2" value="c">
+                                    C. Brahmaputra
+                                </label>
+                            </p>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q2" value="d">
+                                    D. Tapi
+                                </label>
+                            </p>
+                        </div>
+                    </article>
+
+                    <article class="daily-card">
+                        <span class="date-box">
+                            <strong>03</strong>
+                            <span>MCQ</span>
+                        </span>
+
+                        <div class="card-content">
+                            <h3>Which part of the Indian Constitution contains Fundamental Rights?</h3>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q3" value="a">
+                                    A. Part I
+                                </label>
+                            </p>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q3" value="b">
+                                    B. Part II
+                                </label>
+                            </p>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q3" value="c">
+                                    C. Part III
+                                </label>
+                            </p>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q3" value="d">
+                                    D. Part IV
+                                </label>
+                            </p>
+                        </div>
+                    </article>
+
+                    <article class="daily-card">
+                        <span class="date-box">
+                            <strong>04</strong>
+                            <span>MCQ</span>
+                        </span>
+
+                        <div class="card-content">
+                            <h3>What is 15% of 200?</h3>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q4" value="a">
+                                    A. 20
+                                </label>
+                            </p>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q4" value="b">
+                                    B. 25
+                                </label>
+                            </p>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q4" value="c">
+                                    C. 30
+                                </label>
+                            </p>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q4" value="d">
+                                    D. 35
+                                </label>
+                            </p>
+                        </div>
+                    </article>
+
+                    <article class="daily-card">
+                        <span class="date-box">
+                            <strong>05</strong>
+                            <span>MCQ</span>
+                        </span>
+
+                        <div class="card-content">
+                            <h3>Choose the synonym of "Rapid".</h3>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q5" value="a">
+                                    A. Slow
+                                </label>
+                            </p>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q5" value="b">
+                                    B. Fast
+                                </label>
+                            </p>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q5" value="c">
+                                    C. Weak
+                                </label>
+                            </p>
+
+                            <p>
+                                <label>
+                                    <input type="radio" name="q5" value="d">
+                                    D. Quiet
+                                </label>
+                            </p>
+                        </div>
+                    </article>
+
+                </div>
+
+                <div class="hero-actions">
+                    <button type="submit" class="btn btn-primary btn-large">
+                        Submit Preview
+                    </button>
+
+                    <button type="reset" class="btn btn-outline btn-large">
+                        Clear Answers
+                    </button>
+                </div>
+
+            </form>
+
+        </section>
+
+    </main>
+
+    <!-- Shared Footer -->
+    <footer class="site-footer">
+        <div class="footer-main">
+
+            <div class="footer-brand">
+                <a href="index.html" class="brand">
+                    <span class="brand-name">StudyNow</span>
+                </a>
+
+                <p>
+                    A focused platform for competitive exam preparation,
+                    mock tests and subject-wise practice.
+                </p>
+            </div>
+
+            <div class="footer-column">
+                <h2>Explore</h2>
+                <a href="index.html#current-affairs">Current Affairs</a>
+                <a href="index.html#featured-tests">Mock Tests</a>
+                <a href="index.html#subjects">Subjects</a>
+                <a href="index.html#daily-practice">Daily Practice</a>
+            </div>
+
+            <div class="footer-column">
+                <h2>StudyNow</h2>
+                <a href="index.html#why-studynow">About StudyNow</a>
+                <a href="index.html">Back to Home</a>
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            <p class="site-credit">
+                Design and Develop by Yadav Web Technologies
+            </p>
+
+            <p class="copyright">
+                StudyNow. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>
