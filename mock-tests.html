@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="description"
+        content="Explore ADRE Grade III mock tests and competitive exam practice on StudyNow."
+    >
+
+    <title>ADRE Grade III Mock Tests — StudyNow</title>
+
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+    <script src="js/mock-tests.js" defer></script>
+</head>
+
+<body>
+
+    <!-- Shared Header -->
+    <header class="site-header">
+        <div class="header-inner">
+
+            <a href="index.html" class="brand" aria-label="StudyNow Home">
+                <span class="brand-name">StudyNow</span>
+                <span class="brand-caption">Learn. Practice. Progress.</span>
+            </a>
+
+            <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+                <a href="index.html#current-affairs">Current Affairs</a>
+                <a href="index.html#featured-tests">Mock Tests</a>
+                <a href="index.html#subjects">Subjects</a>
+                <a href="index.html#daily-practice">Daily Practice</a>
+            </nav>
+
+            <div class="header-actions">
+                <button type="button" class="btn btn-outline" data-action="login">
+                    Login
+                </button>
+
+                <button type="button" class="btn btn-primary" data-action="signup">
+                    Create Account
+                </button>
+            </div>
+
+            <button
+                type="button"
+                class="menu-toggle"
+                id="menu-toggle"
+                aria-label="Toggle navigation"
+                aria-controls="main-nav"
+                aria-expanded="false"
+            >
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+        </div>
+    </header>
+
+    <main id="main-content">
+
+        <!-- Reuse Existing Hero -->
+        <section class="hero-section" id="home">
+
+            <div class="hero-content">
+                <span class="eyebrow">ASSAM DIRECT RECRUITMENT</span>
+
+                <h1>ADRE Grade III<br>Mock Tests</h1>
+
+                <p>
+                    Prepare for ADRE Grade III with structured mock tests.
+                    Practise questions, manage your time and review your preparation.
+                </p>
+
+                <div class="hero-actions">
+                    <a href="#mock-test-list" class="btn btn-primary btn-large">
+                        Explore Mock Tests
+                    </a>
+
+                    <a href="organization.html?org=adre" class="btn btn-outline btn-large">
+                        Back to Exams
+                    </a>
+                </div>
+
+                <div class="hero-highlights">
+                    <span>10 Mock Tests</span>
+                    <span>1,500 MCQs</span>
+                    <span>180 Minutes per Test</span>
+                    <span>Negative Marking</span>
+                </div>
+            </div>
+
+            <!-- Reuse Existing Hero Visual -->
+            <div class="hero-visual">
+                <div class="visual-topline">
+                    <span class="visual-dot" aria-hidden="true"></span>
+                    <span>EXAM OVERVIEW</span>
+                </div>
+
+                <div class="visual-main">
+                    <span class="visual-label">ADRE GRADE III</span>
+
+                    <h2>Practise.<br>Review.<br>Improve.</h2>
+
+                    <div class="visual-progress">
+                        <span class="progress-track">
+                            <span class="progress-value"></span>
+                        </span>
+
+                        <span class="progress-caption">
+                            Build confidence through practice
+                        </span>
+                    </div>
+                </div>
+
+                <div class="visual-footer">
+                    <div>
+                        <strong>150 MCQs</strong>
+                        <span>Per mock test</span>
+                    </div>
+
+                    <div>
+                        <strong>180 Minutes</strong>
+                        <span>Per mock test</span>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Mock Test List -->
+        <section class="content-section feature-section" id="mock-test-list">
+
+            <div class="section-heading">
+                <div>
+                    <h2 class="section-title">Available Mock Tests</h2>
+                </div>
+
+                <div>
+                    <label for="test-language">Language </label>
+
+                    <select id="test-language" class="btn btn-outline">
+                        <option value="en">English</option>
+                        <option value="as">Assamese</option>
+                    </select>
+                </div>
+            </div>
+
+            <p id="language-selection" aria-live="polite">
+                Selected language: English
+            </p>
+
+            <div class="listing-grid" id="mock-test-listing">
+                <!-- Test cards generated by js/mock-tests.js -->
+            </div>
+
+        </section>
+
+        <!-- About This Test -->
+        <section class="content-section" id="about-test">
+
+            <div class="section-heading">
+                <div>
+                    <h2 class="section-title">About This Test</h2>
+                </div>
+            </div>
+
+            <div class="listing-grid">
+
+                <article class="listing-card">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="6" y="4.5" width="12" height="16" rx="2"></rect>
+                            <path d="M9 4.5V3h6v1.5"></path>
+                            <path d="M9 11h6M9 15h6"></path>
+                        </svg>
+                    </span>
+
+                    <span class="card-content">
+                        <span class="card-title">150 Questions</span>
+                        <span class="card-description">
+                            Multiple-choice questions in each test
+                        </span>
+                    </span>
+                </article>
+
+                <article class="listing-card">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M12 7v5l3 2"></path>
+                        </svg>
+                    </span>
+
+                    <span class="card-content">
+                        <span class="card-title">180 Minutes</span>
+                        <span class="card-description">
+                            Set time limit for each mock test
+                        </span>
+                    </span>
+                </article>
+
+                <article class="listing-card">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 5h16M4 12h16M4 19h16"></path>
+                            <path d="m8 3-4 2 4 2M16 10l4 2-4 2"></path>
+                        </svg>
+                    </span>
+
+                    <span class="card-content">
+                        <span class="card-title">Negative Marking</span>
+                        <span class="card-description">
+                            Follow the marking rules specified for the test
+                        </span>
+                    </span>
+                </article>
+
+                <article class="listing-card">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
+                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                        </svg>
+                    </span>
+
+                    <span class="card-content">
+                        <span class="card-title">Two Languages</span>
+                        <span class="card-description">
+                            English and Assamese selection
+                        </span>
+                    </span>
+                </article>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Shared Footer -->
+    <footer class="site-footer">
+
+        <div class="footer-main">
+
+            <div class="footer-brand">
+                <a href="index.html" class="brand">
+                    <span class="brand-name">StudyNow</span>
+                </a>
+
+                <p>
+                    A focused platform for competitive exam preparation,
+                    mock tests and subject-wise practice.
+                </p>
+            </div>
+
+            <div class="footer-column">
+                <h2>Explore</h2>
+                <a href="index.html#current-affairs">Current Affairs</a>
+                <a href="index.html#featured-tests">Mock Tests</a>
+                <a href="index.html#subjects">Subjects</a>
+                <a href="index.html#daily-practice">Daily Practice</a>
+            </div>
+
+            <div class="footer-column">
+                <h2>StudyNow</h2>
+                <a href="index.html#why-studynow">About StudyNow</a>
+                <a href="index.html">Back to Home</a>
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            <p class="site-credit">
+                Design and Develop by Yadav Web Technologies
+            </p>
+
+            <p class="copyright">
+                StudyNow. All rights reserved.
+            </p>
+        </div>
+
+    </footer>
+
+</body>
+</html>
