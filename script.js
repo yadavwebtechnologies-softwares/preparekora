@@ -459,16 +459,12 @@ function handlePracticeCard(card) {
 }
 
 function handleCurrentAffairsCard(card) {
-    const name = card
-        .querySelector(".card-title")
-        ?.textContent.trim();
+    const categoryId = card.dataset.currentAffairs;
 
-    if (!name) return;
+    if (!categoryId) return;
 
-    openNotice(
-        name,
-        "Current affairs content will be added after the section structure and content source are finalized."
-    );
+    window.location.href =
+        `current-affairs.html?category=${encodeURIComponent(categoryId)}`;
 }
 
 
