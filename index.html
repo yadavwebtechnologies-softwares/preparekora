@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="StudyNow helps students prepare for competitive exams with mock tests, subject-wise practice and current affairs.">
+
     <title>StudyNow — Competitive Exam Preparation</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
     <!-- Header -->
@@ -15,8 +19,8 @@
                 <span class="brand-caption">Learn. Practice. Progress.</span>
             </a>
 
-            <nav class="main-nav" id="main-nav">
-                <a href="#organizations">Organizations</a>
+            <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+                <a href="#current-affairs">Current Affairs</a>
                 <a href="#featured-tests">Mock Tests</a>
                 <a href="#subjects">Subjects</a>
                 <a href="#daily-practice">Daily Practice</a>
@@ -36,6 +40,7 @@
                 class="menu-toggle"
                 id="menu-toggle"
                 aria-label="Toggle navigation"
+                aria-controls="main-nav"
                 aria-expanded="false"
             >
                 <span></span>
@@ -45,17 +50,18 @@
         </div>
     </header>
 
-    <main>
-        <!-- Hero -->
-        <section class="hero-section">
-            <div class="hero-content">
-                <span class="eyebrow">YOUR EXAM PREPARATION STARTS HERE</span>
+    <main id="main-content">
 
-                <h1>Prepare smarter.<br>Move closer to your goal.</h1>
+        <!-- Hero -->
+        <section class="hero-section" id="home">
+            <div class="hero-content">
+                <span class="eyebrow">YOUR EXAM PREPARATION</span>
+
+                <h1>Prepare smarter.<br>Practice with purpose.</h1>
 
                 <p>
-                    Practise with exam-focused mock tests, strengthen your
-                    subjects and improve your preparation one test at a time.
+                    Improve your preparation with competitive exam mock tests,
+                    subject-wise practice and previous-year questions.
                 </p>
 
                 <div class="hero-actions">
@@ -67,7 +73,7 @@
                         Try Free Mock Test
                     </button>
 
-                    <a href="#organizations" class="btn btn-outline btn-large">
+                    <a href="#featured-tests" class="btn btn-outline btn-large">
                         Explore Exams
                     </a>
                 </div>
@@ -79,9 +85,9 @@
                 </div>
             </div>
 
-            <div class="hero-visual">
+            <div class="hero-visual" aria-label="StudyNow preparation overview">
                 <div class="visual-topline">
-                    <span class="visual-dot"></span>
+                    <span class="visual-dot" aria-hidden="true"></span>
                     <span>YOUR PREPARATION</span>
                 </div>
 
@@ -116,470 +122,499 @@
         <section class="content-section" id="organizations">
             <div class="section-heading">
                 <div>
-                    <span class="eyebrow">FIND YOUR EXAM</span>
-                    <h2>Browse by Organization</h2>
-                    <p>
-                        Choose an organization to explore its exams and
-                        preparation materials.
-                    </p>
+                    <h2 class="section-title">Browse by Organization</h2>
                 </div>
+                <a href="#organizations" class="view-all">
+                    View All <span aria-hidden="true">›</span>
+                </a>
             </div>
 
             <div class="listing-grid">
 
-                <button type="button" class="content-card" data-org="apsc">
-                    <span class="card-category">STATE EXAMINATIONS</span>
-                    <h3>APSC</h3>
-                    <p>
-                        Prepare for Assam Public Service Commission examinations.
-                    </p>
-                    <div class="card-meta">
-                        <span>3 Exams</span>
-                        <span>2,908 MCQs</span>
-                    </div>
-                    <span class="card-link">
-                        Explore Exams <span aria-hidden="true">→</span>
+                <button type="button" class="listing-card organization-card" data-org="apsc">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3.5 6.5h6l2 2h9v10.5H3.5z"></path>
+                            <path d="M3.5 6.5V5A1.5 1.5 0 0 1 5 3.5h4"></path>
+                        </svg>
                     </span>
+                    <span class="card-content">
+                        <span class="card-category">STATE EXAMINATIONS</span>
+                        <span class="card-title">APSC</span>
+                        <span class="card-description">3 Exams · 2,908 MCQs</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </button>
 
-                <button type="button" class="content-card" data-org="adre">
-                    <span class="card-category">RECRUITMENT EXAMS</span>
-                    <h3>Assam Direct Recruitment</h3>
-                    <p>
-                        Explore ADRE Grade III and Grade IV exam preparation.
-                    </p>
-                    <div class="card-meta">
-                        <span>4 Exams</span>
-                        <span>5,700 MCQs</span>
-                    </div>
-                    <span class="card-link">
-                        Explore Exams <span aria-hidden="true">→</span>
+                <button type="button" class="listing-card organization-card" data-org="adre">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3.5 6.5h6l2 2h9v10.5H3.5z"></path>
+                            <path d="M3.5 6.5V5A1.5 1.5 0 0 1 5 3.5h4"></path>
+                        </svg>
                     </span>
+                    <span class="card-content">
+                        <span class="card-category">RECRUITMENT EXAMS</span>
+                        <span class="card-title">Assam Direct Recruitment</span>
+                        <span class="card-description">4 Exams · 5,700 MCQs</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </button>
 
-                <button type="button" class="content-card" data-org="assam-police">
-                    <span class="card-category">UNIFORMED SERVICES</span>
-                    <h3>Assam Police</h3>
-                    <p>
-                        Practise for Assam Police recruitment examinations.
-                    </p>
-                    <div class="card-meta">
-                        <span>2 Exams</span>
-                        <span>2,000 MCQs</span>
-                    </div>
-                    <span class="card-link">
-                        Explore Exams <span aria-hidden="true">→</span>
+                <button type="button" class="listing-card organization-card" data-org="assam-police">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3.5 6.5h6l2 2h9v10.5H3.5z"></path>
+                            <path d="M3.5 6.5V5A1.5 1.5 0 0 1 5 3.5h4"></path>
+                        </svg>
                     </span>
+                    <span class="card-content">
+                        <span class="card-category">UNIFORMED SERVICES</span>
+                        <span class="card-title">Assam Police</span>
+                        <span class="card-description">2 Exams · 2,000 MCQs</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </button>
 
-                <button type="button" class="content-card" data-org="ssuhs">
-                    <span class="card-category">HEALTH EDUCATION</span>
-                    <h3>SSUHS</h3>
-                    <p>
-                        Explore entrance and recruitment exam preparation.
-                    </p>
-                    <div class="card-meta">
-                        <span>1 Exam</span>
-                        <span>500 MCQs</span>
-                    </div>
-                    <span class="card-link">
-                        Explore Exams <span aria-hidden="true">→</span>
+                <button type="button" class="listing-card organization-card" data-org="ssuhs">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3.5 6.5h6l2 2h9v10.5H3.5z"></path>
+                            <path d="M3.5 6.5V5A1.5 1.5 0 0 1 5 3.5h4"></path>
+                        </svg>
                     </span>
+                    <span class="card-content">
+                        <span class="card-category">HEALTH EDUCATION</span>
+                        <span class="card-title">SSUHS</span>
+                        <span class="card-description">1 Exam · 500 MCQs</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </button>
 
             </div>
         </section>
 
-        <!-- Featured Mock Tests -->
-        <section class="content-section section-muted" id="featured-tests">
+        <!-- Featured Tests -->
+        <section class="content-section feature-section" id="featured-tests">
             <div class="section-heading">
                 <div>
-                    <span class="eyebrow">START PRACTISING</span>
-                    <h2>Featured Mock Tests</h2>
-                    <p>
-                        Choose a test based on your target examination.
-                    </p>
+                    <h2 class="section-title">Featured Tests</h2>
                 </div>
+                <a href="#featured-tests" class="view-all">
+                    View All <span aria-hidden="true">›</span>
+                </a>
             </div>
 
             <div class="listing-grid">
 
-                <button type="button" class="content-card" data-test="assam-vfa">
-                    <span class="card-category">ASSAM RECRUITMENT</span>
-                    <h3>Assam VFA Exam</h3>
-                    <p>
-                        Practise important topics for the VFA examination.
-                    </p>
-                    <div class="card-meta">
-                        <span>20 Tests</span>
-                        <span>100 MCQs/Test</span>
-                    </div>
-                    <span class="card-link">
-                        View Tests <span aria-hidden="true">→</span>
+                <button type="button" class="listing-card test-card" data-test="assam-vfa">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="6" y="4.5" width="12" height="16" rx="2"></rect>
+                            <path d="M9 4.5V3h6v1.5"></path>
+                            <path d="m9 12 2 2 4-4"></path>
+                        </svg>
                     </span>
+                    <span class="card-content">
+                        <span class="card-title">Assam VFA Exam</span>
+                        <span class="card-description">20 Tests · 100 MCQs each</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </button>
 
-                <button type="button" class="content-card" data-test="anm">
-                    <span class="card-category">ENTRANCE EXAM</span>
-                    <h3>ANM Entrance Exam</h3>
-                    <p>
-                        Strengthen your knowledge through structured practice.
-                    </p>
-                    <div class="card-meta">
-                        <span>10 Tests</span>
-                        <span>50 MCQs/Test</span>
-                    </div>
-                    <span class="card-link">
-                        View Tests <span aria-hidden="true">→</span>
+                <button type="button" class="listing-card test-card" data-test="anm">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="6" y="4.5" width="12" height="16" rx="2"></rect>
+                            <path d="M9 4.5V3h6v1.5"></path>
+                            <path d="m9 12 2 2 4-4"></path>
+                        </svg>
                     </span>
+                    <span class="card-content">
+                        <span class="card-title">ANM Entrance Exam</span>
+                        <span class="card-description">10 Tests · 50 MCQs each</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </button>
 
-                <button type="button" class="content-card" data-test="adre-grade-iii">
-                    <span class="card-category">ADRE</span>
-                    <h3>ADRE Grade III</h3>
-                    <p>
-                        Practise with mock tests for Grade III preparation.
-                    </p>
-                    <div class="card-meta">
-                        <span>10 Tests</span>
-                        <span>150 MCQs/Test</span>
-                    </div>
-                    <span class="card-link">
-                        View Tests <span aria-hidden="true">→</span>
+                <button type="button" class="listing-card test-card" data-test="adre-grade-iii">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="6" y="4.5" width="12" height="16" rx="2"></rect>
+                            <path d="M9 4.5V3h6v1.5"></path>
+                            <path d="m9 12 2 2 4-4"></path>
+                        </svg>
                     </span>
+                    <span class="card-content">
+                        <span class="card-title">ADRE Grade III</span>
+                        <span class="card-description">10 Tests · 150 MCQs each</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </button>
 
-                <button type="button" class="content-card" data-test="sub-inspector">
-                    <span class="card-category">ASSAM POLICE</span>
-                    <h3>Sub Inspector</h3>
-                    <p>
-                        Practise reasoning, general knowledge and related topics.
-                    </p>
-                    <div class="card-meta">
-                        <span>10 Tests</span>
-                        <span>100 MCQs/Test</span>
-                    </div>
-                    <span class="card-link">
-                        View Tests <span aria-hidden="true">→</span>
+                <button type="button" class="listing-card test-card" data-test="sub-inspector">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="6" y="4.5" width="12" height="16" rx="2"></rect>
+                            <path d="M9 4.5V3h6v1.5"></path>
+                            <path d="m9 12 2 2 4-4"></path>
+                        </svg>
                     </span>
+                    <span class="card-content">
+                        <span class="card-title">Sub Inspector</span>
+                        <span class="card-description">10 Tests · 100 MCQs each</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </button>
 
             </div>
         </section>
 
         <!-- Subjects -->
-        <section class="content-section" id="subjects">
+        <section class="content-section subject-section" id="subjects">
             <div class="section-heading">
                 <div>
-                    <span class="eyebrow">FOCUS ON YOUR SUBJECTS</span>
-                    <h2>Subject-wise Practice</h2>
-                    <p>
-                        Select a subject to practise questions and strengthen
-                        your preparation.
-                    </p>
+                    <h2 class="section-title">Subject-wise Tests</h2>
                 </div>
+                <a href="#subjects" class="view-all">
+                    View All <span aria-hidden="true">›</span>
+                </a>
             </div>
 
             <div class="listing-grid">
 
-                <button type="button" class="content-card subject-card" data-subject="assamese">
-                    <span class="subject-index">01</span>
-                    <h3>Assamese</h3>
-                    <div class="card-meta">
-                        <span>15 Tests</span>
-                        <span>448 MCQs</span>
-                    </div>
-                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
+                <button type="button" class="listing-card subject-card" data-subject="assamese">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
+                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-title">Assamese</span>
+                        <span class="card-description">15 Tests · 448 MCQs</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </button>
 
-                <button type="button" class="content-card subject-card" data-subject="culture">
-                    <span class="subject-index">02</span>
-                    <h3>Culture</h3>
-                    <div class="card-meta">
-                        <span>10 Tests</span>
-                        <span>200 MCQs</span>
-                    </div>
-                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
+                <button type="button" class="listing-card subject-card" data-subject="culture">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
+                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-title">Culture</span>
+                        <span class="card-description">10 Tests · 200 MCQs</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </button>
 
-                <button type="button" class="content-card subject-card" data-subject="computer">
-                    <span class="subject-index">03</span>
-                    <h3>Computer Knowledge</h3>
-                    <div class="card-meta">
-                        <span>9 Tests</span>
-                        <span>270 MCQs</span>
-                    </div>
-                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
+                <button type="button" class="listing-card subject-card" data-subject="computer">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
+                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-title">Computer Knowledge</span>
+                        <span class="card-description">9 Tests · 270 MCQs</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </button>
 
-                <button type="button" class="content-card subject-card" data-subject="driving">
-                    <span class="subject-index">04</span>
-                    <h3>Driving Knowledge</h3>
-                    <div class="card-meta">
-                        <span>6 Tests</span>
-                        <span>57 MCQs</span>
-                    </div>
-                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
+                <button type="button" class="listing-card subject-card" data-subject="driving">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
+                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-title">Driving Knowledge</span>
+                        <span class="card-description">6 Tests · 57 MCQs</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </button>
 
-                <button type="button" class="content-card subject-card" data-subject="economics">
-                    <span class="subject-index">05</span>
-                    <h3>Economics</h3>
-                    <div class="card-meta">
-                        <span>5 Tests</span>
-                        <span>49 MCQs</span>
-                    </div>
-                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
+                <button type="button" class="listing-card subject-card" data-subject="economics">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
+                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-title">Economics</span>
+                        <span class="card-description">5 Tests · 49 MCQs</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </button>
 
-                <button type="button" class="content-card subject-card" data-subject="english">
-                    <span class="subject-index">06</span>
-                    <h3>English</h3>
-                    <div class="card-meta">
-                        <span>27 Tests</span>
-                        <span>800 MCQs</span>
-                    </div>
-                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
+                <button type="button" class="listing-card subject-card" data-subject="english">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
+                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-title">English</span>
+                        <span class="card-description">27 Tests · 800 MCQs</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </button>
 
-                <button type="button" class="content-card subject-card" data-subject="general-knowledge">
-                    <span class="subject-index">07</span>
-                    <h3>General Knowledge</h3>
-                    <div class="card-meta">
-                        <span>17 Tests</span>
-                        <span>1,628 MCQs</span>
-                    </div>
-                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
+                <button type="button" class="listing-card subject-card" data-subject="general-knowledge">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
+                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-title">General Knowledge</span>
+                        <span class="card-description">17 Tests · 1,628 MCQs</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </button>
 
-                <button type="button" class="content-card subject-card" data-subject="geography">
-                    <span class="subject-index">08</span>
-                    <h3>Geography</h3>
-                    <div class="card-meta">
-                        <span>10 Tests</span>
-                        <span>200 MCQs</span>
-                    </div>
-                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
+                <button type="button" class="listing-card subject-card" data-subject="geography">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
+                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-title">Geography</span>
+                        <span class="card-description">10 Tests · 200 MCQs</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </button>
 
             </div>
         </section>
 
-        <!-- Daily Practice -->
-        <section class="daily-practice-section" id="daily-practice">
-            <div class="daily-practice-content">
-                <span class="eyebrow">BUILD A DAILY HABIT</span>
-                <h2>A little practice every day makes a difference.</h2>
-                <p>
-                    Test your knowledge, review your mistakes and keep
-                    progressing towards your target examination.
-                </p>
-                <button
-                    type="button"
-                    class="btn btn-primary"
-                    data-action="start-free-mock"
-                >
-                    Start Practising
-                </button>
+        <!-- Current Affairs -->
+        <section class="content-section" id="current-affairs">
+            <div class="section-heading">
+                <div>
+                    <h2 class="section-title">Current Affairs</h2>
+                </div>
+                <a href="#current-affairs" class="view-all">
+                    View All <span aria-hidden="true">›</span>
+                </a>
             </div>
 
-            <div class="daily-practice-side">
-                <div class="daily-step">
-                    <span class="daily-number">01</span>
-                    <div>
-                        <h3>Practise</h3>
-                        <p>Test your understanding.</p>
-                    </div>
-                </div>
+            <div class="listing-grid">
 
-                <div class="daily-step">
-                    <span class="daily-number">02</span>
-                    <div>
-                        <h3>Review</h3>
-                        <p>Understand your mistakes.</p>
-                    </div>
-                </div>
+                <button type="button" class="listing-card" data-current-affairs="daily">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="4" y="5" width="16" height="15" rx="2"></rect>
+                            <path d="M8 3v4M16 3v4M4 10h16"></path>
+                            <path d="M8 14h3M8 17h6"></path>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-title">Daily Current Affairs</span>
+                        <span class="card-description">Review important daily updates</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </button>
 
-                <div class="daily-step">
-                    <span class="daily-number">03</span>
-                    <div>
-                        <h3>Improve</h3>
-                        <p>Build consistency over time.</p>
-                    </div>
-                </div>
+                <button type="button" class="listing-card" data-current-affairs="assam">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3 20h18M5 20V9l7-5 7 5v11"></path>
+                            <path d="M9 20v-6h6v6M9 10h.01M15 10h.01"></path>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-title">Assam Current Affairs</span>
+                        <span class="card-description">State news and important developments</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </button>
+
+                <button type="button" class="listing-card" data-current-affairs="national">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M3.5 12h17M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"></path>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-title">National Current Affairs</span>
+                        <span class="card-description">Important national events and updates</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </button>
+
+                <button type="button" class="listing-card" data-current-affairs="quiz">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="5" y="4" width="14" height="17" rx="2"></rect>
+                            <path d="M9 4V3h6v1M8 10h8M8 14h3M8 17h5"></path>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-title">Current Affairs Quiz</span>
+                        <span class="card-description">Practise questions based on current events</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </button>
+
             </div>
         </section>
+
+        <!-- Daily Practice and Why StudyNow -->
+        <section class="lower-sections" id="daily-practice">
+
+            <div class="lower-column">
+                <div class="section-heading">
+                    <h2 class="section-title">Daily Practice</h2>
+                    <a href="#daily-practice" class="view-all">
+                        View All <span aria-hidden="true">›</span>
+                    </a>
+                </div>
+
+                <div class="daily-list">
+
+                    <article class="daily-card">
+                        <span class="date-box">
+                            <strong>01</strong>
+                            <span>Set</span>
+                        </span>
+                        <div class="card-content">
+                            <h3>Daily General Knowledge</h3>
+                            <p>Practise general knowledge and review your answers.</p>
+                        </div>
+                    </article>
+
+                    <article class="daily-card">
+                        <span class="date-box">
+                            <strong>02</strong>
+                            <span>Set</span>
+                        </span>
+                        <div class="card-content">
+                            <h3>Assam History Revision</h3>
+                            <p>Revise important topics through focused practice.</p>
+                        </div>
+                    </article>
+
+                    <article class="daily-card">
+                        <span class="date-box">
+                            <strong>03</strong>
+                            <span>Set</span>
+                        </span>
+                        <div class="card-content">
+                            <h3>Reasoning Practice</h3>
+                            <p>Strengthen your accuracy with practice questions.</p>
+                        </div>
+                    </article>
+
+                </div>
+            </div>
+
+            <div class="lower-column" id="why-studynow">
+                <div class="section-heading">
+                    <h2 class="section-title">Why StudyNow</h2>
+                </div>
+
+                <div class="why-list">
+
+                    <article class="why-card">
+                        <span class="why-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M4 5h16M4 12h9M4 19h16M15 9l3 3-3 3"></path>
+                            </svg>
+                        </span>
+                        <div class="card-content">
+                            <h3>Focused Exam Preparation</h3>
+                            <p>Explore exams and subjects in one place.</p>
+                        </div>
+                    </article>
+
+                    <article class="why-card">
+                        <span class="why-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="9"></circle>
+                                <path d="M12 7v5l3 2"></path>
+                            </svg>
+                        </span>
+                        <div class="card-content">
+                            <h3>Realistic Practice Sessions</h3>
+                            <p>Prepare with timed tests and review your answers.</p>
+                        </div>
+                    </article>
+
+                    <article class="why-card">
+                        <span class="why-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M4 19V5M4 19h17"></path>
+                                <rect x="7" y="12" width="3" height="4"></rect>
+                                <rect x="12" y="8" width="3" height="8"></rect>
+                                <rect x="17" y="4" width="3" height="12"></rect>
+                            </svg>
+                        </span>
+                        <div class="card-content">
+                            <h3>Track Your Progress</h3>
+                            <p>Identify strengths and subjects needing more practice.</p>
+                        </div>
+                    </article>
+
+                </div>
+            </div>
+
+        </section>
+
     </main>
 
     <!-- Footer -->
     <footer class="site-footer">
+
         <div class="footer-main">
+
             <div class="footer-brand">
                 <a href="index.html" class="brand">
                     <span class="brand-name">StudyNow</span>
                 </a>
                 <p>
-                    A focused platform for competitive exam practice and
-                    preparation.
+                    A focused platform for competitive exam preparation,
+                    mock tests and subject-wise practice.
                 </p>
             </div>
 
-            <nav class="footer-links" aria-label="Footer navigation">
-                <a href="#organizations">Organizations</a>
+            <div class="footer-column">
+                <h2>Explore</h2>
+                <a href="#current-affairs">Current Affairs</a>
                 <a href="#featured-tests">Mock Tests</a>
                 <a href="#subjects">Subjects</a>
                 <a href="#daily-practice">Daily Practice</a>
-            </nav>
+            </div>
+
+            <div class="footer-column">
+                <h2>StudyNow</h2>
+                <a href="#why-studynow">About StudyNow</a>
+                <a href="#home">Back to Top</a>
+            </div>
+
         </div>
 
         <div class="footer-bottom">
-            <p class="site-credit">Design and Develop by Yadav Web Technologies</p>
-            <p class="copyright">StudyNow. All rights reserved.</p>
-        </div>
-    </footer>
-
-    <!-- Authentication Modal -->
-    <div class="modal-overlay" id="auth-modal" hidden>
-        <section
-            class="modal-panel auth-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="auth-title"
-        >
-            <button
-                type="button"
-                class="modal-close"
-                data-action="close-auth"
-                aria-label="Close login panel"
-            >&times;</button>
-
-            <div class="modal-heading">
-                <span class="eyebrow">YOUR STUDYNOW ACCOUNT</span>
-                <h2 id="auth-title">Welcome back</h2>
-                <p id="auth-description">Sign in to continue your preparation.</p>
-            </div>
-
-            <form id="auth-form">
-                <div class="form-field" id="name-field" hidden>
-                    <label for="auth-name">Full name</label>
-                    <input
-                        type="text"
-                        id="auth-name"
-                        name="name"
-                        autocomplete="name"
-                        placeholder="Enter your full name"
-                    >
-                </div>
-
-                <div class="form-field">
-                    <label for="auth-email">Email address</label>
-                    <input
-                        type="email"
-                        id="auth-email"
-                        name="email"
-                        autocomplete="email"
-                        placeholder="you@example.com"
-                        required
-                    >
-                </div>
-
-                <div class="form-field">
-                    <label for="auth-password">Password</label>
-                    <input
-                        type="password"
-                        id="auth-password"
-                        name="password"
-                        autocomplete="current-password"
-                        placeholder="Enter your password"
-                        required
-                    >
-                </div>
-
-                <button
-                    type="button"
-                    class="text-link forgot-password"
-                    data-action="forgot-password"
-                >
-                    Forgot password?
-                </button>
-
-                <p class="form-message" id="auth-message" role="status"></p>
-
-                <button
-                    type="submit"
-                    class="btn btn-primary btn-full"
-                    id="auth-submit"
-                >
-                    Login
-                </button>
-            </form>
-
-            <p class="auth-switch" id="auth-switch">
-                New to StudyNow?
-                <button type="button" class="text-link" data-action="switch-signup">
-                    Create an account
-                </button>
+            <p class="site-credit">
+                Design and Develop by Yadav Web Technologies
             </p>
-        </section>
-    </div>
+            <p class="copyright">
+                StudyNow. All Rights Reserved.
+            </p>
+        </div>
 
-    <!-- Free Mock Test Modal -->
-    <div class="modal-overlay" id="mock-modal" hidden>
-        <section
-            class="modal-panel mock-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="mock-title"
-        >
-            <button
-                type="button"
-                class="modal-close"
-                data-action="close-mock"
-                aria-label="Close mock test"
-            >&times;</button>
-
-            <div class="mock-header">
-                <div>
-                    <span class="eyebrow">FREE PRACTICE SESSION</span>
-                    <h2 id="mock-title">StudyNow Free Mock Test</h2>
-                </div>
-                <span class="mock-counter" id="mock-counter">
-                    Question 1 of 5
-                </span>
-            </div>
-
-            <div class="mock-progress-track">
-                <div class="mock-progress-value" id="mock-progress-value"></div>
-            </div>
-
-            <div class="mock-question-area" id="mock-question-area"></div>
-
-            <div class="mock-navigation" id="mock-navigation">
-                <button type="button" class="btn btn-outline" data-action="mock-prev">
-                    Previous
-                </button>
-                <button type="button" class="btn btn-primary" data-action="mock-next">
-                    Next
-                </button>
-            </div>
-
-            <div class="mock-result" id="mock-result" hidden>
-                <span class="eyebrow">TEST COMPLETED</span>
-                <h2>Your Result</h2>
-                <p class="mock-score" id="mock-score"></p>
-                <div class="mock-review" id="mock-review"></div>
-
-                <div class="mock-result-actions">
-                    <button type="button" class="btn btn-outline" data-action="retry-mock">
-                        Try Again
-                    </button>
-                    <button type="button" class="btn btn-primary" data-action="signup">
-                        Create Account
-                    </button>
-                </div>
-            </div>
-        </section>
-    </div>
+    </footer>
 
     <script src="script.js"></script>
 </body>
