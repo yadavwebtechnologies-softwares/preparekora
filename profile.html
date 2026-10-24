@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Profile | StudyNow</title>
+    <meta name="description" content="View and manage your StudyNow profile and exam preparation preferences.">
+    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/profile.html">
+    <meta name="robots" content="noindex, follow">
+
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+    <script src="js/profile.js" defer></script>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="index.html" class="brand" aria-label="StudyNow Home">
+                <span class="brand-name">StudyNow</span>
+                <span class="brand-caption">Learn. Practice. Progress.</span>
+            </a>
+
+            <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+                <a href="index.html#current-affairs">Current Affairs</a>
+                <a href="mock-tests.html">Mock Tests</a>
+                <a href="subject.html">Subjects</a>
+                <a href="daily-practice.html">Daily Practice</a>
+            </nav>
+
+            <div class="header-actions">
+                <a href="dashboard.html" class="btn btn-outline">Dashboard</a>
+            </div>
+
+            <button
+                type="button"
+                class="menu-toggle"
+                id="menu-toggle"
+                aria-label="Toggle navigation"
+                aria-controls="main-nav"
+                aria-expanded="false"
+            >
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <section class="content-section">
+            <div class="section-heading">
+                <span class="eyebrow">ACCOUNT SETTINGS</span>
+                <h1 class="section-title">My Profile</h1>
+                <p>Manage your account information and study preferences.</p>
+            </div>
+
+            <div class="why-card">
+                <form id="profile-form">
+                    <div class="form-group">
+                        <label for="profile-name">Full Name</label>
+                        <input
+                            type="text"
+                            id="profile-name"
+                            name="name"
+                            placeholder="Enter your full name"
+                            autocomplete="name"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profile-email">Email Address</label>
+                        <input
+                            type="email"
+                            id="profile-email"
+                            name="email"
+                            placeholder="Your email address"
+                            autocomplete="email"
+                            readonly
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="exam-preference">Exam Preparation</label>
+                        <select id="exam-preference" name="exam">
+                            <option value="">Select your target exam</option>
+                            <option value="adre">Assam Direct Recruitment</option>
+                            <option value="assam-police">Assam Police</option>
+                            <option value="apsc">APSC</option>
+                            <option value="tet">TET</option>
+                            <option value="ssc">SSC</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="preferred-language">Preferred Language</label>
+                        <select id="preferred-language" name="language">
+                            <option value="en">English</option>
+                            <option value="as">Assamese</option>
+                        </select>
+                    </div>
+
+                    <p id="profile-message" role="status" aria-live="polite"></p>
+
+                    <button type="submit" class="btn btn-primary">
+                        Save Changes
+                    </button>
+                </form>
+            </div>
+
+            <div class="why-card">
+                <h2 class="section-title">Account</h2>
+                <p>Return to your dashboard or sign out of your account.</p>
+
+                <div class="header-actions">
+                    <a href="dashboard.html" class="btn btn-outline">
+                        Go to Dashboard
+                    </a>
+
+                    <button type="button" class="btn btn-primary" id="logout-button">
+                        Logout
+                    </button>
+                </div>
+
+                <p id="logout-message" role="status" aria-live="polite"></p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-bottom">
+            <p>Design and Develop by Yadav Web Technologies</p>
+        </div>
+    </footer>
+</body>
+</html>
