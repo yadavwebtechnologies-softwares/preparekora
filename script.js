@@ -18,10 +18,6 @@ let lastFocusedElement = null;
 
 /* ==========================================
    2. CREATE MODAL ELEMENTS
-
-   Login and notice modals are generated here
-   because the approved HTML contains no modal
-   markup for them.
 ========================================== */
 
 function createModalElements() {
@@ -177,11 +173,7 @@ function toggleNavigation() {
     const isOpen = mainNav.classList.toggle("is-open");
 
     menuToggle.classList.toggle("is-active", isOpen);
-
-    menuToggle.setAttribute(
-        "aria-expanded",
-        String(isOpen)
-    );
+    menuToggle.setAttribute("aria-expanded", String(isOpen));
 
     menuToggle.setAttribute(
         "aria-label",
@@ -326,6 +318,7 @@ function setAuthMode(mode) {
         loginButton.textContent = "Login";
 
         authSwitch.appendChild(loginButton);
+
     } else {
         authTitle.textContent = "Welcome back";
 
@@ -427,9 +420,6 @@ function closeNotice() {
 
 /* ==========================================
    9. CARD HANDLERS
-
-   Dedicated pages and actual content will be
-   connected in the next implementation phase.
 ========================================== */
 
 function handleOrganizationCard(card) {
