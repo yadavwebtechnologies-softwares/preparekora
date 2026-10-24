@@ -1,17 +1,28 @@
-/* =========================================
+/* ==========================================
    StudyNow — Main JavaScript
    Design and Develop by Yadav Web Technologies
-========================================= */
+========================================== */
 
 "use strict";
 
-
-/* =========================================
+/* ==========================================
    1. ELEMENTS
-========================================= */
+========================================== */
 
 const menuToggle = document.getElementById("menu-toggle");
 const mainNav = document.getElementById("main-nav");
+
+const authModal = document.getElementById("auth-modal");
+const authForm = document.getElementById("auth-form");
+const authTitle = document.getElementById("auth-title");
+const authDescription = document.getElementById("auth-description");
+const authSubmit = document.getElementById("auth-submit");
+const authMessage = document.getElementById("auth-message");
+const authSwitch = document.getElementById("auth-switch");
+const nameField = document.getElementById("name-field");
+const authName = document.getElementById("auth-name");
+const authEmail = document.getElementById("auth-email");
+const authPassword = document.getElementById("auth-password");
 
 const mockModal = document.getElementById("mock-modal");
 const mockTitle = document.getElementById("mock-title");
@@ -19,82 +30,51 @@ const mockCounter = document.getElementById("mock-counter");
 const mockProgress = document.getElementById("mock-progress-value");
 const mockQuestionArea = document.getElementById("mock-question-area");
 const mockNavigation = document.getElementById("mock-navigation");
+const mockPreviousButton = document.querySelector('[data-action="mock-prev"]');
+const mockNextButton = document.querySelector('[data-action="mock-next"]');
 const mockResult = document.getElementById("mock-result");
 const mockScore = document.getElementById("mock-score");
 const mockReview = document.getElementById("mock-review");
 
-const mockPrevButton = document.querySelector(
-    '[data-action="mock-prev"]'
-);
-
-const mockNextButton = document.querySelector(
-    '[data-action="mock-next"]'
-);
-
-const AUTO_MOCK_KEY = "studynow-mock-shown";
+const AUTO_MOCK_KEY = "studynow-free-mock-shown";
 
 
-/* =========================================
+/* ==========================================
    2. SAMPLE QUESTIONS
-========================================= */
+========================================== */
 
 const questions = [
     {
         question: "What is the capital of Assam?",
-        options: [
-            "Guwahati",
-            "Dispur",
-            "Jorhat",
-            "Silchar"
-        ],
+        options: ["Guwahati", "Dispur", "Jorhat", "Silchar"],
         answer: 1,
         explanation:
             "Dispur is the capital of Assam and is located within Guwahati."
     },
     {
         question: "Which country shares an international border with Assam?",
-        options: [
-            "Sri Lanka",
-            "Maldives",
-            "Bangladesh",
-            "Indonesia"
-        ],
+        options: ["Sri Lanka", "Maldives", "Bangladesh", "Indonesia"],
         answer: 2,
         explanation:
-            "Assam shares an international border with Bangladesh and Bhutan."
+            "Assam shares international borders with Bangladesh and Bhutan."
     },
     {
         question: "What is 25% of 200?",
-        options: [
-            "25",
-            "40",
-            "50",
-            "75"
-        ],
+        options: ["25", "40", "50", "75"],
         answer: 2,
         explanation:
             "25% of 200 = (25 / 100) × 200 = 50."
     },
     {
         question: "Find the next number: 2, 4, 8, 16, __",
-        options: [
-            "20",
-            "24",
-            "30",
-            "32"
-        ],
+        options: ["20", "24", "30", "32"],
         answer: 3,
         explanation:
             "Each number is multiplied by 2. Therefore, 16 × 2 = 32."
     },
     {
         question: "Which of these is an input device?",
-        options: [
-            "Monitor",
-            "Printer",
-            "Keyboard",
-            "Speaker"
-        ],
+        options: ["Monitor", "Printer", "Keyboard", "Speaker"],
         answer: 2,
         explanation:
             "A keyboard is an input device used to enter text, numbers and commands."
@@ -102,21 +82,22 @@ const questions = [
 ];
 
 
-/* =========================================
-   3. STATE
-========================================= */
+/* ==========================================
+   3. APPLICATION STATE
+========================================== */
 
-let currentQuestion = 0;
+let currentQuestionIndex = 0;
 let selectedAnswers = new Array(questions.length).fill(null);
+let authMode = "login";
 let autoMockTimer = null;
 let lastFocusedElement = null;
 
 
-/* =========================================
+/* ==========================================
    4. SESSION STORAGE
-========================================= */
+========================================== */
 
-function hasShownAutoMock() {
+function hasAutoMockBeenShown() {
     try {
         return sessionStorage.getItem(AUTO_MOCK_KEY) === "true";
     } catch {
@@ -124,20 +105,35 @@ function hasShownAutoMock() {
     }
 }
 
-function markAutoMockShown() {
+function markAutoMockAsShown() {
     try {
         sessionStorage.setItem(AUTO_MOCK_KEY, "true");
     } catch {
-        // The website remains usable if sessionStorage is unavailable.
+        // The website remains functional without session storage.
     }
 }
 
 
-/* =========================================
-   5. MOBILE NAVIGATION
-========================================= */
+/* ==========================================
+   5. BODY SCROLL
+========================================== */
 
-function toggleMenu() {
+function updateBodyScroll() {
+    const authIsOpen = authModal && !authModal.hidden;
+    const mockIsOpen = mockModal && !mockModal.hidden;
+
+    document.body.classList.toggle(
+        "modal-open",
+        Boolean(authIsOpen || mockIsOpen)
+    );
+}
+
+
+/* ==========================================
+   6. MOBILE NAVIGATION
+========================================== */
+
+function toggleNavigation() {
     if (!menuToggle || !mainNav) return;
 
     const isOpen = mainNav.classList.toggle("is-open");
@@ -146,7 +142,7 @@ function toggleMenu() {
     menuToggle.setAttribute("aria-expanded", String(isOpen));
 }
 
-function closeMenu() {
+function closeNavigation() {
     if (!menuToggle || !mainNav) return;
 
     mainNav.classList.remove("is-open");
@@ -155,12 +151,12 @@ function closeMenu() {
 }
 
 if (menuToggle) {
-    menuToggle.addEventListener("click", toggleMenu);
+    menuToggle.addEventListener("click", toggleNavigation);
 }
 
 if (mainNav) {
     mainNav.querySelectorAll("a").forEach((link) => {
-        link.addEventListener("click", closeMenu);
+        link.addEventListener("click", closeNavigation);
     });
 }
 
@@ -170,20 +166,180 @@ document.addEventListener("click", (event) => {
         mainNav.classList.contains("is-open") &&
         !event.target.closest(".header-inner")
     ) {
-        closeMenu();
+        closeNavigation();
     }
 });
 
 
-/* =========================================
-   6. MODAL HELPERS
-========================================= */
+/* ==========================================
+   7. AUTHENTICATION MODAL
+========================================== */
 
-function updatePageScroll() {
-    const modalOpen = mockModal && !mockModal.hidden;
+function openAuth(mode = "login") {
+    if (!authModal) return;
 
-    document.body.classList.toggle("modal-open", Boolean(modalOpen));
+    lastFocusedElement = document.activeElement;
+
+    // Prevent two modals from being displayed together.
+    if (mockModal) {
+        mockModal.hidden = true;
+    }
+
+    setAuthMode(mode);
+
+    if (authForm) {
+        authForm.reset();
+    }
+
+    if (authMessage) {
+        authMessage.textContent = "";
+    }
+
+    authModal.hidden = false;
+    updateBodyScroll();
+
+    const firstInput = mode === "signup" ? authName : authEmail;
+
+    window.setTimeout(() => {
+        if (firstInput && !authModal.hidden) {
+            firstInput.focus();
+        }
+    }, 50);
 }
+
+function closeAuth() {
+    if (!authModal) return;
+
+    authModal.hidden = true;
+    updateBodyScroll();
+    restoreFocus();
+}
+
+function setAuthMode(mode) {
+    authMode = mode === "signup" ? "signup" : "login";
+
+    if (!authTitle || !authDescription || !authSubmit || !authSwitch) {
+        return;
+    }
+
+    if (authMessage) {
+        authMessage.textContent = "";
+    }
+
+    if (authMode === "signup") {
+        authTitle.textContent = "Create your account";
+        authDescription.textContent =
+            "Create a StudyNow account to continue your preparation.";
+
+        authSubmit.textContent = "Create Account";
+
+        if (nameField) nameField.hidden = false;
+        if (authName) authName.required = true;
+
+        if (authPassword) {
+            authPassword.autocomplete = "new-password";
+        }
+
+        authSwitch.replaceChildren();
+
+        authSwitch.append(
+            document.createTextNode("Already have an account? ")
+        );
+
+        const loginButton = document.createElement("button");
+        loginButton.type = "button";
+        loginButton.className = "text-link";
+        loginButton.dataset.action = "switch-login";
+        loginButton.textContent = "Login";
+
+        authSwitch.appendChild(loginButton);
+    } else {
+        authTitle.textContent = "Welcome back";
+        authDescription.textContent =
+            "Sign in to continue your preparation.";
+
+        authSubmit.textContent = "Login";
+
+        if (nameField) nameField.hidden = true;
+        if (authName) authName.required = false;
+
+        if (authPassword) {
+            authPassword.autocomplete = "current-password";
+        }
+
+        authSwitch.replaceChildren();
+
+        authSwitch.append(
+            document.createTextNode("New to StudyNow? ")
+        );
+
+        const signupButton = document.createElement("button");
+        signupButton.type = "button";
+        signupButton.className = "text-link";
+        signupButton.dataset.action = "switch-signup";
+        signupButton.textContent = "Create an account";
+
+        authSwitch.appendChild(signupButton);
+    }
+}
+
+
+/* ==========================================
+   8. LOGIN / SIGNUP FORM
+========================================== */
+
+if (authForm) {
+    authForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        if (!authMessage) return;
+
+        /*
+           Firebase Authentication is not connected yet.
+           Do not pretend that login or signup succeeded.
+        */
+
+        authMessage.textContent =
+            authMode === "signup"
+                ? "Account creation will be available after Firebase Authentication is connected."
+                : "Login will be available after Firebase Authentication is connected.";
+    });
+}
+
+
+/* ==========================================
+   9. FORGOT PASSWORD
+========================================== */
+
+function handleForgotPassword() {
+    if (!authMessage) return;
+
+    const email = authEmail ? authEmail.value.trim() : "";
+
+    if (!email) {
+        authMessage.textContent = "Enter your email address first.";
+
+        if (authEmail) {
+            authEmail.focus();
+        }
+
+        return;
+    }
+
+    if (!authEmail.checkValidity()) {
+        authMessage.textContent = "Enter a valid email address.";
+        authEmail.focus();
+        return;
+    }
+
+    authMessage.textContent =
+        "Password recovery will be available after Firebase Authentication is connected.";
+}
+
+
+/* ==========================================
+   10. MOCK TEST — OPEN / CLOSE
+========================================== */
 
 function stopAutoMockTimer() {
     if (autoMockTimer !== null) {
@@ -192,18 +348,17 @@ function stopAutoMockTimer() {
     }
 }
 
-
-/* =========================================
-   7. OPEN AND CLOSE MOCK TEST
-========================================= */
-
-function openMockTest(title = "StudyNow Mock Test") {
+function openMockTest(title = "StudyNow Free Mock Test") {
     if (!mockModal) return;
 
     stopAutoMockTimer();
-    markAutoMockShown();
+    markAutoMockAsShown();
 
     lastFocusedElement = document.activeElement;
+
+    if (authModal) {
+        authModal.hidden = true;
+    }
 
     if (mockTitle) {
         mockTitle.textContent = title;
@@ -212,7 +367,7 @@ function openMockTest(title = "StudyNow Mock Test") {
     resetMockTest();
 
     mockModal.hidden = false;
-    updatePageScroll();
+    updateBodyScroll();
 
     const closeButton = mockModal.querySelector(
         '[data-action="close-mock"]'
@@ -227,23 +382,29 @@ function closeMockTest() {
     if (!mockModal) return;
 
     mockModal.hidden = true;
-    updatePageScroll();
+    updateBodyScroll();
+    restoreFocus();
+}
 
+function restoreFocus() {
     if (
         lastFocusedElement &&
-        typeof lastFocusedElement.focus === "function"
+        typeof lastFocusedElement.focus === "function" &&
+        lastFocusedElement.isConnected
     ) {
         lastFocusedElement.focus();
     }
+
+    lastFocusedElement = null;
 }
 
 
-/* =========================================
-   8. RESET TEST
-========================================= */
+/* ==========================================
+   11. RESET MOCK TEST
+========================================== */
 
 function resetMockTest() {
-    currentQuestion = 0;
+    currentQuestionIndex = 0;
     selectedAnswers = new Array(questions.length).fill(null);
 
     if (mockQuestionArea) {
@@ -266,97 +427,102 @@ function resetMockTest() {
 }
 
 
-/* =========================================
-   9. RENDER QUESTION
-========================================= */
+/* ==========================================
+   12. RENDER QUESTION
+========================================== */
 
 function renderQuestion() {
     if (
         !mockQuestionArea ||
         !mockCounter ||
         !mockProgress ||
-        !mockPrevButton ||
+        !mockPreviousButton ||
         !mockNextButton
     ) {
         return;
     }
 
-    const item = questions[currentQuestion];
+    const question = questions[currentQuestionIndex];
 
-    if (!item) return;
+    if (!question) return;
 
     mockQuestionArea.replaceChildren();
 
     mockCounter.textContent =
-        `Question ${currentQuestion + 1} of ${questions.length}`;
+        `Question ${currentQuestionIndex + 1} of ${questions.length}`;
 
     mockProgress.style.width =
-        `${((currentQuestion + 1) / questions.length) * 100}%`;
+        `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
 
-    const number = document.createElement("div");
-    number.className = "question-number";
-    number.textContent = `QUESTION ${currentQuestion + 1}`;
+    const numberLabel = document.createElement("div");
+    numberLabel.className = "question-number";
+    numberLabel.textContent =
+        `QUESTION ${currentQuestionIndex + 1}`;
 
-    const heading = document.createElement("h3");
-    heading.className = "question-text";
-    heading.textContent = item.question;
+    const questionText = document.createElement("h3");
+    questionText.className = "question-text";
+    questionText.textContent = question.question;
 
     const optionsContainer = document.createElement("div");
     optionsContainer.className = "question-options";
 
-    item.options.forEach((option, index) => {
-        const button = document.createElement("button");
+    question.options.forEach((option, optionIndex) => {
+        const optionButton = document.createElement("button");
+        optionButton.type = "button";
+        optionButton.className = "question-option";
 
-        button.type = "button";
-        button.className = "question-option";
+        const selected =
+            selectedAnswers[currentQuestionIndex] === optionIndex;
 
-        const isSelected = selectedAnswers[currentQuestion] === index;
-
-        button.classList.toggle("is-selected", isSelected);
-        button.setAttribute("aria-pressed", String(isSelected));
+        optionButton.classList.toggle("is-selected", selected);
+        optionButton.setAttribute("aria-pressed", String(selected));
 
         const marker = document.createElement("span");
         marker.className = "option-marker";
-        marker.textContent = String.fromCharCode(65 + index);
+        marker.textContent = String.fromCharCode(65 + optionIndex);
 
-        const text = document.createElement("span");
-        text.textContent = option;
+        const optionText = document.createElement("span");
+        optionText.textContent = option;
 
-        button.append(marker, text);
+        optionButton.append(marker, optionText);
 
-        button.addEventListener("click", () => {
-            selectedAnswers[currentQuestion] = index;
+        optionButton.addEventListener("click", () => {
+            selectedAnswers[currentQuestionIndex] = optionIndex;
             renderQuestion();
         });
 
-        optionsContainer.appendChild(button);
+        optionsContainer.appendChild(optionButton);
     });
 
-    mockQuestionArea.append(number, heading, optionsContainer);
+    mockQuestionArea.append(
+        numberLabel,
+        questionText,
+        optionsContainer
+    );
 
-    mockPrevButton.disabled = currentQuestion === 0;
+    mockPreviousButton.disabled = currentQuestionIndex === 0;
 
     mockNextButton.textContent =
-        currentQuestion === questions.length - 1
+        currentQuestionIndex === questions.length - 1
             ? "Submit Test"
             : "Next";
 }
 
 
-/* =========================================
-   10. QUESTION NAVIGATION
-========================================= */
+/* ==========================================
+   13. PREVIOUS / NEXT QUESTION
+========================================== */
 
 function previousQuestion() {
-    if (currentQuestion <= 0) return;
+    if (currentQuestionIndex <= 0) return;
 
-    currentQuestion--;
+    currentQuestionIndex--;
     renderQuestion();
 }
 
 function nextQuestion() {
-    if (currentQuestion < questions.length - 1) {
-        currentQuestion++;
+    if (currentQuestionIndex < questions.length - 1) {
+        currentQuestionIndex++;
         renderQuestion();
         return;
     }
@@ -365,33 +531,38 @@ function nextQuestion() {
 }
 
 
-/* =========================================
-   11. SUBMIT TEST
-========================================= */
+/* ==========================================
+   14. SUBMIT TEST
+========================================== */
 
 function submitTest() {
     const unanswered = selectedAnswers.filter(
         (answer) => answer === null
     ).length;
 
-    const message = unanswered > 0
-        ? `${unanswered} question(s) remain unanswered. Submit anyway?`
-        : "Are you sure you want to submit the test?";
+    const confirmation = unanswered > 0
+        ? `${unanswered} question(s) are unanswered. Submit anyway?`
+        : "Are you sure you want to submit your test?";
 
-    if (!window.confirm(message)) return;
+    if (!window.confirm(confirmation)) {
+        return;
+    }
 
     showResult();
 }
 
 function showResult() {
-    const correctAnswers = questions.reduce((total, item, index) => {
-        return total + (
-            selectedAnswers[index] === item.answer ? 1 : 0
-        );
-    }, 0);
+    const correctCount = questions.reduce(
+        (total, question, index) => {
+            return total + (
+                selectedAnswers[index] === question.answer ? 1 : 0
+            );
+        },
+        0
+    );
 
     const percentage = Math.round(
-        (correctAnswers / questions.length) * 100
+        (correctCount / questions.length) * 100
     );
 
     if (mockCounter) {
@@ -412,10 +583,10 @@ function showResult() {
 
     if (mockScore) {
         mockScore.textContent =
-            `${correctAnswers} / ${questions.length} correct · ${percentage}%`;
+            `${correctCount} / ${questions.length} correct · ${percentage}%`;
     }
 
-    renderReview();
+    renderAnswerReview();
 
     if (mockResult) {
         mockResult.hidden = false;
@@ -423,21 +594,21 @@ function showResult() {
 }
 
 
-/* =========================================
-   12. ANSWER REVIEW
-========================================= */
+/* ==========================================
+   15. ANSWER REVIEW
+========================================== */
 
-function renderReview() {
+function renderAnswerReview() {
     if (!mockReview) return;
 
     mockReview.replaceChildren();
 
-    questions.forEach((item, index) => {
+    questions.forEach((question, index) => {
         const selected = selectedAnswers[index];
-        const correct = selected === item.answer;
+        const correct = selected === question.answer;
 
-        const card = document.createElement("article");
-        card.className = "review-item";
+        const reviewCard = document.createElement("article");
+        reviewCard.className = "review-item";
 
         const status = document.createElement("span");
         status.className = `review-status ${
@@ -451,60 +622,62 @@ function renderReview() {
                 : "Incorrect";
 
         const heading = document.createElement("h3");
-        heading.textContent = `Q${index + 1}. ${item.question}`;
+        heading.textContent = `Q${index + 1}. ${question.question}`;
 
-        const userAnswer = document.createElement("p");
-        userAnswer.textContent = selected === null
+        const yourAnswer = document.createElement("p");
+        yourAnswer.textContent = selected === null
             ? "Your answer: Not answered"
-            : `Your answer: ${item.options[selected]}`;
+            : `Your answer: ${question.options[selected]}`;
 
         const correctAnswer = document.createElement("p");
         correctAnswer.textContent =
-            `Correct answer: ${item.options[item.answer]}`;
+            `Correct answer: ${question.options[question.answer]}`;
 
         const explanation = document.createElement("p");
-        explanation.textContent = `Explanation: ${item.explanation}`;
+        explanation.textContent =
+            `Explanation: ${question.explanation}`;
 
-        card.append(
+        reviewCard.append(
             status,
             heading,
-            userAnswer,
+            yourAnswer,
             correctAnswer,
             explanation
         );
 
-        mockReview.appendChild(card);
+        mockReview.appendChild(reviewCard);
     });
 }
 
 
-/* =========================================
-   13. RETRY TEST
-========================================= */
+/* ==========================================
+   16. RETRY TEST
+========================================== */
 
 function retryTest() {
     resetMockTest();
 }
 
 
-/* =========================================
-   14. ORGANIZATION CARDS
-========================================= */
+/* ==========================================
+   17. ORGANIZATION CARDS
+========================================== */
 
-function handleOrganization(card) {
-    const name = card.querySelector("h3")?.textContent.trim();
+function handleOrganizationCard(card) {
+    const organizationName =
+        card.querySelector("h3")?.textContent.trim();
 
-    if (!name) return;
+    if (!organizationName) return;
 
     window.alert(
-        `${name} details page will be connected when the organization pages are created.`
+        `${organizationName} details page will be connected when its dedicated page is created.`
     );
 }
 
 
-/* =========================================
-   15. TEST AND SUBJECT CARDS
-========================================= */
+/* ==========================================
+   18. FEATURED TEST / SUBJECT CARDS
+========================================== */
 
 function handlePracticeCard(card) {
     const name = card.querySelector("h3")?.textContent.trim();
@@ -515,60 +688,84 @@ function handlePracticeCard(card) {
 }
 
 
-/* =========================================
-   16. LOGIN AND ACCOUNT PLACEHOLDERS
-========================================= */
-
-function handleAccountAction(action) {
-    if (action === "login") {
-        window.alert(
-            "Login panel will be connected when authentication is implemented."
-        );
-        return;
-    }
-
-    if (action === "signup") {
-        window.alert(
-            "Create Account will be connected when authentication is implemented."
-        );
-    }
-}
-
-
-/* =========================================
-   17. AUTOMATIC MOCK TEST POPUP
-========================================= */
+/* ==========================================
+   19. AUTOMATIC MOCK POPUP
+========================================== */
 
 function scheduleAutoMock() {
-    if (hasShownAutoMock()) return;
+    if (hasAutoMockBeenShown()) return;
 
     autoMockTimer = window.setTimeout(() => {
         autoMockTimer = null;
 
-        if (mockModal && !mockModal.hidden) return;
+        // Do not interrupt the login panel.
+        if (authModal && !authModal.hidden) {
+            autoMockTimer = window.setTimeout(schedulePendingMock, 500);
+            return;
+        }
+
+        if (mockModal && !mockModal.hidden) {
+            return;
+        }
 
         openMockTest("StudyNow Free Mock Test");
     }, 5000);
 }
 
+function schedulePendingMock() {
+    autoMockTimer = null;
 
-/* =========================================
-   18. CENTRAL CLICK HANDLER
-========================================= */
+    if (hasAutoMockBeenShown()) return;
+
+    if (authModal && !authModal.hidden) {
+        autoMockTimer = window.setTimeout(schedulePendingMock, 500);
+        return;
+    }
+
+    if (mockModal && !mockModal.hidden) {
+        return;
+    }
+
+    openMockTest("StudyNow Free Mock Test");
+}
+
+
+/* ==========================================
+   20. CENTRAL CLICK HANDLER
+========================================== */
 
 document.addEventListener("click", (event) => {
-    const actionButton = event.target.closest("[data-action]");
+    const actionElement = event.target.closest("[data-action]");
 
-    if (actionButton) {
-        const action = actionButton.dataset.action;
+    if (actionElement) {
+        const action = actionElement.dataset.action;
 
         switch (action) {
             case "login":
-            case "signup":
-                handleAccountAction(action);
+                openAuth("login");
                 return;
 
-            case "start-mock":
+            case "signup":
+                openAuth("signup");
+                return;
+
+            case "switch-signup":
+                setAuthMode("signup");
+                return;
+
+            case "switch-login":
+                setAuthMode("login");
+                return;
+
+            case "close-auth":
+                closeAuth();
+                return;
+
+            case "forgot-password":
+                handleForgotPassword();
+                return;
+
+            case "start-free-mock":
                 openMockTest("StudyNow Free Mock Test");
                 return;
 
@@ -596,7 +793,7 @@ document.addEventListener("click", (event) => {
     const organizationCard = event.target.closest("[data-org]");
 
     if (organizationCard) {
-        handleOrganization(organizationCard);
+        handleOrganizationCard(organizationCard);
         return;
     }
 
@@ -615,16 +812,42 @@ document.addEventListener("click", (event) => {
 });
 
 
-/* =========================================
-   19. INITIALIZE
-========================================= */
+/* ==========================================
+   21. MODAL BEHAVIOUR
+========================================== */
+
+/*
+   As planned:
+   - The X button closes a modal.
+   - Clicking the backdrop does not close it.
+   - Escape does not close it.
+*/
+
+[authModal, mockModal].forEach((modal) => {
+    if (!modal) return;
+
+    modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+            event.stopPropagation();
+        }
+    });
+});
+
+
+/* ==========================================
+   22. INITIALIZE
+========================================== */
 
 function initializeStudyNow() {
+    if (authModal) {
+        authModal.hidden = true;
+    }
+
     if (mockModal) {
         mockModal.hidden = true;
     }
 
-    updatePageScroll();
+    updateBodyScroll();
     scheduleAutoMock();
 }
 
