@@ -1,189 +1,179 @@
 /* ==========================================
-   StudyNow — Subject Details
+   StudyNow — Subject Listing
    Design and Develop by Yadav Web Technologies
 ========================================== */
 
 "use strict";
 
-const subjectData = {
-    assamese: {
-        name: "Assamese",
-        tests: 15,
-        questions: "448"
-    },
-    culture: {
-        name: "Culture",
-        tests: 10,
-        questions: "200"
-    },
-    computer: {
-        name: "Computer Knowledge",
-        tests: 9,
-        questions: "270"
-    },
-    driving: {
-        name: "Driving Knowledge",
-        tests: 6,
-        questions: "57"
-    },
-    economics: {
-        name: "Economics",
-        tests: 5,
-        questions: "49"
-    },
-    english: {
-        name: "English",
-        tests: 27,
-        questions: "800"
-    },
-    "general-knowledge": {
-        name: "General Knowledge",
-        tests: 17,
-        questions: "1,628"
-    },
-    geography: {
-        name: "Geography",
-        tests: 10,
-        questions: "200"
-    }
-};
+document.addEventListener("DOMContentLoaded", () => {
+    const subjectList = document.getElementById("subject-list");
 
-const subjectTitle = document.getElementById("subject-title");
-const subjectDescription = document.getElementById("subject-description");
-const subjectTestCount = document.getElementById("subject-test-count");
-const subjectQuestionCount = document.getElementById("subject-question-count");
-const subjectPracticeList = document.getElementById("subject-practice-list");
-const subjectAboutText = document.getElementById("subject-about-text");
+    if (!subjectList) return;
 
+    /*
+     * Static subject catalogue.
+     * Later this data can be loaded from Firebase Realtime Database
+     * or managed through the StudyNow Control Room.
+     */
+    const subjects = [
+        {
+            id: "assamese",
+            name: "Assamese",
+            details: "15 Tests · 448 MCQs",
+            icon: "book"
+        },
+        {
+            id: "culture",
+            name: "Culture",
+            details: "10 Tests · 200 MCQs",
+            icon: "book"
+        },
+        {
+            id: "computer",
+            name: "Computer Knowledge",
+            details: "9 Tests · 270 MCQs",
+            icon: "computer"
+        },
+        {
+            id: "driving",
+            name: "Driving Knowledge",
+            details: "6 Tests · 57 MCQs",
+            icon: "driving"
+        },
+        {
+            id: "economics",
+            name: "Economics",
+            details: "5 Tests · 49 MCQs",
+            icon: "economics"
+        },
+        {
+            id: "geography",
+            name: "Geography",
+            details: "10 Tests · 200 MCQs",
+            icon: "geography"
+        },
+        {
+            id: "english",
+            name: "English",
+            details: "27 Tests · 800 MCQs",
+            icon: "english"
+        },
+        {
+            id: "general-knowledge",
+            name: "General Knowledge",
+            details: "17 Tests · 1,628 MCQs",
+            icon: "knowledge"
+        },
+        {
+            id: "polity",
+            name: "Polity",
+            details: "Topic-wise practice",
+            icon: "polity"
+        }
+    ];
 
-function createPracticeCard(title, description, index) {
-    const card = document.createElement("button");
+    const icons = {
+        book: `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H12v19H7.5A3.5 3.5 0 0 0 4 24z"></path>
+                <path d="M20 5.5A3.5 3.5 0 0 0 16.5 2H12v19h4.5a3.5 3.5 0 0 1 3.5 3z"></path>
+            </svg>
+        `,
+        computer: `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="13" rx="2"></rect>
+                <path d="M8 21h8M12 17v4M7 8h10"></path>
+            </svg>
+        `,
+        driving: `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m5 11 1.5-5h11L19 11"></path>
+                <path d="M3 11h18v7H3z"></path>
+                <path d="M6 18v2M18 18v2M7 14h.01M17 14h.01"></path>
+            </svg>
+        `,
+        economics: `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 20V4M4 20h17"></path>
+                <path d="m7 15 4-4 3 2 5-6"></path>
+            </svg>
+        `,
+        geography: `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"></path>
+            </svg>
+        `,
+        english: `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H20v19H7.5A3.5 3.5 0 0 0 4 24z"></path>
+                <path d="M8 7h8M8 11h8M8 15h5"></path>
+            </svg>
+        `,
+        knowledge: `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M9.5 9a2.5 2.5 0 1 1 4.4 1.6c-1.1 1-1.9 1.3-1.9 2.9M12 17h.01"></path>
+            </svg>
+        `,
+        polity: `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m3 8 9-5 9 5M4 20h16M6 9v8M10 9v8M14 9v8M18 9v8M3 21h18"></path>
+            </svg>
+        `
+    };
 
-    card.type = "button";
-    card.className = "listing-card test-card";
-    card.dataset.practiceSet = String(index);
+    function createSubjectCard(subject) {
+        const link = document.createElement("a");
 
-    const icon = document.createElement("span");
-    icon.className = "card-icon";
-    icon.setAttribute("aria-hidden", "true");
-    icon.style.background = "var(--green-soft)";
-    icon.style.color = "var(--green)";
+        link.className = "listing-card subject-card";
+        link.href = `test.html?subject=${encodeURIComponent(subject.id)}`;
+        link.setAttribute(
+            "aria-label",
+            `Open ${subject.name} practice`
+        );
 
-    icon.innerHTML = `
-        <svg viewBox="0 0 24 24">
-            <rect x="6" y="4.5" width="12" height="16" rx="2"></rect>
-            <path d="M9 4.5V3h6v1.5"></path>
-            <path d="m9 12 2 2 4-4"></path>
-        </svg>
-    `;
+        const icon = document.createElement("span");
+        icon.className = "card-icon";
+        icon.setAttribute("aria-hidden", "true");
 
-    const content = document.createElement("span");
-    content.className = "card-content";
+        // Keep the icon aligned with StudyNow's green accent.
+        icon.style.background = "var(--green-soft)";
+        icon.style.color = "var(--green)";
+        icon.innerHTML = icons[subject.icon] || icons.book;
 
-    const category = document.createElement("span");
-    category.className = "card-category";
-    category.textContent = "PRACTICE RESOURCE";
+        const content = document.createElement("span");
+        content.className = "card-content";
 
-    const cardTitle = document.createElement("span");
-    cardTitle.className = "card-title";
-    cardTitle.textContent = title;
+        const category = document.createElement("span");
+        category.className = "card-category";
+        category.textContent = "SUBJECT PRACTICE";
 
-    const cardDescription = document.createElement("span");
-    cardDescription.className = "card-description";
-    cardDescription.textContent = description;
+        const title = document.createElement("span");
+        title.className = "card-title";
+        title.textContent = subject.name;
 
-    content.append(category, cardTitle, cardDescription);
+        const description = document.createElement("span");
+        description.className = "card-description";
+        description.textContent = subject.details;
 
-    const arrow = document.createElement("span");
-    arrow.className = "card-arrow";
-    arrow.setAttribute("aria-hidden", "true");
-    arrow.textContent = "›";
+        content.append(category, title, description);
 
-    card.append(icon, content, arrow);
+        const arrow = document.createElement("span");
+        arrow.className = "card-arrow";
+        arrow.setAttribute("aria-hidden", "true");
+        arrow.textContent = "›";
 
-    return card;
-}
+        link.append(icon, content, arrow);
 
-
-function renderSubject(subject) {
-    subjectTitle.textContent = subject.name;
-
-    subjectDescription.textContent =
-        `Explore ${subject.name} practice resources and strengthen your exam preparation.`;
-
-    subjectTestCount.textContent = `${subject.tests} Tests`;
-    subjectQuestionCount.textContent = `${subject.questions} MCQs`;
-
-    subjectAboutText.textContent =
-        `${subject.name} practice resources help you revise concepts and prepare for competitive examinations. Explore the available practice options below.`;
-
-    document.title = `${subject.name} Practice — StudyNow`;
-
-    subjectPracticeList.replaceChildren(
-        createPracticeCard("Practice Set 1", "Question practice preview", 1),
-        createPracticeCard("Topic-wise Practice", "Review subject topics", 2),
-        createPracticeCard("Revision Practice", "Revise important concepts", 3)
-    );
-}
-
-
-function renderSubjectNotFound() {
-    subjectTitle.textContent = "Subject Not Found";
-    subjectDescription.textContent =
-        "This subject is unavailable. Return to the homepage to select a subject.";
-
-    subjectTestCount.textContent = "Browse";
-    subjectQuestionCount.textContent = "Available Subjects";
-
-    subjectAboutText.textContent =
-        "Choose an available subject from the StudyNow homepage.";
-
-    subjectPracticeList.replaceChildren();
-
-    document.title = "Subject Not Found — StudyNow";
-}
-
-
-function handlePracticeClick(event) {
-    const card = event.target.closest("[data-practice-set]");
-
-    if (!card || !subjectPracticeList.contains(card)) return;
-
-    const noticeModal = document.getElementById("notice-modal");
-    const noticeTitle = document.getElementById("notice-title");
-    const noticeMessage = document.getElementById("notice-message");
-
-    if (!noticeModal || !noticeTitle || !noticeMessage) return;
-
-    noticeTitle.textContent =
-        card.querySelector(".card-title")?.textContent || "Practice Resource";
-
-    noticeMessage.textContent =
-        "This practice resource is a frontend placeholder. Its full content will be added in a later upgrade.";
-
-    noticeModal.hidden = false;
-    document.body.classList.add("modal-open");
-
-    const closeButton = noticeModal.querySelector(
-        '[data-action="close-notice"]'
-    );
-
-    if (closeButton) closeButton.focus();
-}
-
-
-function initializeSubjectPage() {
-    const params = new URLSearchParams(window.location.search);
-    const subjectId = params.get("subject") || "english";
-    const subject = subjectData[subjectId];
-
-    if (subject) {
-        renderSubject(subject);
-    } else {
-        renderSubjectNotFound();
+        return link;
     }
 
-    subjectPracticeList.addEventListener("click", handlePracticeClick);
-}
+    const fragment = document.createDocumentFragment();
 
-initializeSubjectPage();
+    subjects.forEach((subject) => {
+        fragment.appendChild(createSubjectCard(subject));
+    });
+
+    subjectList.replaceChildren(fragment);
+});
