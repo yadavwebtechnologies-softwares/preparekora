@@ -40,7 +40,7 @@ function createMockTestCard(test) {
 
     card.type = "button";
     card.className = "listing-card test-card";
-    card.dataset.test = test.id;
+    card.dataset.mockTest = test.id;
 
     const icon = document.createElement("span");
     icon.className = "card-icon";
