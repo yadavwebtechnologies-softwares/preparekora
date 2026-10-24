@@ -1,570 +1,1166 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>StudyNow — Competitive Exam Preparation</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+/* =========================================
+   StudyNow — Main Stylesheet
+   Design and Develop by Yadav Web Technologies
+========================================= */
 
-<body>
-    <!-- Header -->
-    <header class="site-header">
-        <div class="header-inner">
-            <a href="index.html" class="brand" aria-label="StudyNow Home">
-                <span class="brand-name">StudyNow</span>
-                <span class="brand-caption">Learn. Practice. Progress.</span>
-            </a>
+:root {
+    --green: #245c4a;
+    --green-dark: #194535;
+    --green-soft: #e8efe9;
+    --cream: #f7f5ef;
+    --white: #ffffff;
+    --charcoal: #252a26;
+    --text: #4b534d;
+    --muted: #747c75;
+    --border: #e1e5df;
+    --soft-border: #edf0eb;
+    --danger: #a33b35;
 
-            <button
-                type="button"
-                class="menu-toggle"
-                id="menu-toggle"
-                aria-label="Toggle navigation"
-                aria-expanded="false"
-            >
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
+    --radius: 11px;
+    --radius-small: 7px;
+    --content-width: 1160px;
+    --shadow: 0 7px 20px rgba(30, 56, 41, 0.07);
+}
 
-            <nav class="main-nav" id="main-nav">
-                <a href="#organizations">Organizations</a>
-                <a href="#featured-tests">Mock Tests</a>
-                <a href="#subjects">Subjects</a>
-                <a href="#daily-practice">Daily Practice</a>
-            </nav>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
-            <div class="header-actions" id="header-actions">
-                <button type="button" class="button button-outline" data-action="login">
-                    Login
-                </button>
-                <button type="button" class="button button-primary" data-action="signup">
-                    Create Account
-                </button>
-            </div>
-        </div>
-    </header>
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 85px;
+}
 
-    <main>
-        <!-- Hero Section -->
-        <section class="hero-section">
-            <div class="hero-content">
-                <span class="eyebrow">YOUR EXAM PREPARATION STARTS HERE</span>
+body {
+    min-width: 320px;
+    background: var(--white);
+    color: var(--charcoal);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
 
-                <h1>Prepare smarter.<br>Move closer to your goal.</h1>
+body.modal-open {
+    overflow: hidden;
+}
 
-                <p>
-                    Practice with exam-focused mock tests, improve your accuracy
-                    and track your preparation progress in one place.
-                </p>
+button,
+input {
+    font: inherit;
+}
 
-                <div class="hero-actions">
-                    <button
-                        type="button"
-                        class="button button-primary button-large"
-                        data-action="start-free-mock"
-                    >
-                        Try Free Mock Test
-                    </button>
+button,
+a {
+    -webkit-tap-highlight-color: transparent;
+}
 
-                    <a href="#organizations" class="button button-outline button-large">
-                        Explore Exams
-                    </a>
-                </div>
+button {
+    cursor: pointer;
+}
 
-                <div class="hero-highlights">
-                    <span>Exam-focused practice</span>
-                    <span>Previous-year papers</span>
-                    <span>Performance tracking</span>
-                </div>
-            </div>
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
 
-            <div class="hero-visual" aria-label="StudyNow practice overview">
-                <div class="visual-topline">
-                    <span class="visual-dot"></span>
-                    <span>STUDY SESSION</span>
-                </div>
+a {
+    color: inherit;
+    text-decoration: none;
+}
 
-                <div class="visual-main">
-                    <span class="visual-label">YOUR NEXT GOAL</span>
-                    <h2>Better preparation.<br>Better performance.</h2>
-                    <div class="visual-progress">
-                        <span class="progress-track">
-                            <span class="progress-value"></span>
-                        </span>
-                        <span class="progress-caption">Every practice session counts</span>
-                    </div>
-                </div>
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+    outline: 3px solid rgba(36, 92, 74, 0.25);
+    outline-offset: 3px;
+}
 
-                <div class="visual-footer">
-                    <div>
-                        <strong>Practice</strong>
-                        <span>Build consistency</span>
-                    </div>
-                    <div>
-                        <strong>Review</strong>
-                        <span>Learn from mistakes</span>
-                    </div>
-                </div>
-            </div>
-        </section>
+[hidden] {
+    display: none !important;
+}
 
-        <!-- Organizations -->
-        <section class="content-section" id="organizations">
-            <div class="section-heading">
-                <div>
-                    <span class="eyebrow">FIND YOUR EXAM</span>
-                    <h2>Browse by Organization</h2>
-                    <p>Select an organization to explore its exams and preparation materials.</p>
-                </div>
-                <a href="#organizations" class="text-link">Explore organizations</a>
-            </div>
+::selection {
+    color: var(--white);
+    background: var(--green);
+}
 
-            <div class="card-grid organization-grid">
-                <button
-                    type="button"
-                    class="content-card organization-card"
-                    data-org="apsc"
-                >
-                    <span class="card-category">STATE EXAMS</span>
-                    <h3>APSC</h3>
-                    <p>Prepare for Assam Public Service Commission examinations.</p>
-                    <div class="card-meta">
-                        <span>3 Exams</span>
-                        <span>2,908 MCQs</span>
-                    </div>
-                    <span class="card-link">Explore exams <span aria-hidden="true">→</span></span>
-                </button>
 
-                <button
-                    type="button"
-                    class="content-card organization-card"
-                    data-org="adre"
-                >
-                    <span class="card-category">RECRUITMENT EXAMS</span>
-                    <h3>Assam Direct Recruitment</h3>
-                    <p>Explore Grade III and Grade IV exam preparation.</p>
-                    <div class="card-meta">
-                        <span>4 Exams</span>
-                        <span>5,700 MCQs</span>
-                    </div>
-                    <span class="card-link">Explore exams <span aria-hidden="true">→</span></span>
-                </button>
+/* =========================================
+   HEADER
+========================================= */
 
-                <button
-                    type="button"
-                    class="content-card organization-card"
-                    data-org="assam-police"
-                >
-                    <span class="card-category">UNIFORMED SERVICES</span>
-                    <h3>Assam Police</h3>
-                    <p>Practice for police recruitment and related examinations.</p>
-                    <div class="card-meta">
-                        <span>2 Exams</span>
-                        <span>2,000 MCQs</span>
-                    </div>
-                    <span class="card-link">Explore exams <span aria-hidden="true">→</span></span>
-                </button>
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.97);
+    border-bottom: 1px solid var(--border);
+}
 
-                <button
-                    type="button"
-                    class="content-card organization-card"
-                    data-org="ssuhs"
-                >
-                    <span class="card-category">HEALTH EDUCATION</span>
-                    <h3>SSUHS</h3>
-                    <p>Explore entrance and recruitment exam practice.</p>
-                    <div class="card-meta">
-                        <span>1 Exam</span>
-                        <span>500 MCQs</span>
-                    </div>
-                    <span class="card-link">Explore exams <span aria-hidden="true">→</span></span>
-                </button>
-            </div>
-        </section>
+.header-inner {
+    width: min(var(--content-width), calc(100% - 40px));
+    min-height: 70px;
+    margin-inline: auto;
 
-        <!-- Featured Tests -->
-        <section class="content-section section-muted" id="featured-tests">
-            <div class="section-heading">
-                <div>
-                    <span class="eyebrow">START PRACTISING</span>
-                    <h2>Featured Mock Tests</h2>
-                    <p>Choose a test and practise according to your target examination.</p>
-                </div>
-                <a href="#organizations" class="text-link">View all exams</a>
-            </div>
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
 
-            <div class="card-grid">
-                <button
-                    type="button"
-                    class="content-card test-card"
-                    data-test="assam-vfa"
-                >
-                    <span class="card-category">ASSAM RECRUITMENT</span>
-                    <h3>Assam VFA Exam</h3>
-                    <p>Practise important topics for the VFA examination.</p>
-                    <div class="card-meta">
-                        <span>20 Tests</span>
-                        <span>100 MCQs/Test</span>
-                    </div>
-                    <span class="card-link">View tests <span aria-hidden="true">→</span></span>
-                </button>
+.brand {
+    flex-shrink: 0;
+    color: var(--green);
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.2;
+}
 
-                <button
-                    type="button"
-                    class="content-card test-card"
-                    data-test="anm"
-                >
-                    <span class="card-category">ENTRANCE EXAM</span>
-                    <h3>ANM Entrance Exam</h3>
-                    <p>Build your knowledge through structured practice.</p>
-                    <div class="card-meta">
-                        <span>10 Tests</span>
-                        <span>50 MCQs/Test</span>
-                    </div>
-                    <span class="card-link">View tests <span aria-hidden="true">→</span></span>
-                </button>
+.main-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+}
 
-                <button
-                    type="button"
-                    class="content-card test-card"
-                    data-test="adre-grade-iii"
-                >
-                    <span class="card-category">ADRE</span>
-                    <h3>ADRE Grade III</h3>
-                    <p>Prepare with full-length mock test practice.</p>
-                    <div class="card-meta">
-                        <span>10 Tests</span>
-                        <span>150 MCQs/Test</span>
-                    </div>
-                    <span class="card-link">View tests <span aria-hidden="true">→</span></span>
-                </button>
+.main-nav a {
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+}
 
-                <button
-                    type="button"
-                    class="content-card test-card"
-                    data-test="sub-inspector"
-                >
-                    <span class="card-category">ASSAM POLICE</span>
-                    <h3>Sub Inspector</h3>
-                    <p>Practise reasoning, general knowledge and other topics.</p>
-                    <div class="card-meta">
-                        <span>10 Tests</span>
-                        <span>100 MCQs/Test</span>
-                    </div>
-                    <span class="card-link">View tests <span aria-hidden="true">→</span></span>
-                </button>
-            </div>
-        </section>
+.main-nav a:hover {
+    color: var(--green);
+}
 
-        <!-- Subject-wise Practice -->
-        <section class="content-section" id="subjects">
-            <div class="section-heading">
-                <div>
-                    <span class="eyebrow">FOCUS ON YOUR WEAK AREAS</span>
-                    <h2>Subject-wise Practice</h2>
-                    <p>Choose a subject to practise specific topics and improve accuracy.</p>
-                </div>
-            </div>
+.header-actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 8px;
+}
 
-            <div class="card-grid subject-grid">
-                <button type="button" class="content-card subject-card" data-subject="assamese">
-                    <span class="subject-index">01</span>
-                    <h3>Assamese</h3>
-                    <div class="card-meta">
-                        <span>15 Tests</span>
-                        <span>448 MCQs</span>
-                    </div>
-                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
-                </button>
+.menu-toggle {
+    width: 36px;
+    height: 35px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 5px;
 
-                <button type="button" class="content-card subject-card" data-subject="culture">
-                    <span class="subject-index">02</span>
-                    <h3>Culture</h3>
-                    <div class="card-meta">
-                        <span>10 Tests</span>
-                        <span>200 MCQs</span>
-                    </div>
-                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
-                </button>
+    border: 1px solid var(--border);
+    border-radius: var(--radius-small);
+    background: var(--white);
+}
 
-                <button type="button" class="content-card subject-card" data-subject="computer">
-                    <span class="subject-index">03</span>
-                    <h3>Computer Knowledge</h3>
-                    <div class="card-meta">
-                        <span>9 Tests</span>
-                        <span>270 MCQs</span>
-                    </div>
-                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
-                </button>
+.menu-toggle span {
+    width: 17px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--charcoal);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
 
-                <button type="button" class="content-card subject-card" data-subject="driving">
-                    <span class="subject-index">04</span>
-                    <h3>Driving Knowledge</h3>
-                    <div class="card-meta">
-                        <span>6 Tests</span>
-                        <span>57 MCQs</span>
-                    </div>
-                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
-                </button>
+.menu-toggle.is-active span:first-child {
+    transform: translateY(7px) rotate(45deg);
+}
 
-                <button type="button" class="content-card subject-card" data-subject="economics">
-                    <span class="subject-index">05</span>
-                    <h3>Economics</h3>
-                    <div class="card-meta">
-                        <span>5 Tests</span>
-                        <span>49 MCQs</span>
-                    </div>
-                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
-                </button>
+.menu-toggle.is-active span:nth-child(2) {
+    opacity: 0;
+}
 
-                <button type="button" class="content-card subject-card" data-subject="english">
-                    <span class="subject-index">06</span>
-                    <h3>English</h3>
-                    <div class="card-meta">
-                        <span>27 Tests</span>
-                        <span>800 MCQs</span>
-                    </div>
-                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
-                </button>
+.menu-toggle.is-active span:last-child {
+    transform: translateY(-7px) rotate(-45deg);
+}
 
-                <button type="button" class="content-card subject-card" data-subject="general-knowledge">
-                    <span class="subject-index">07</span>
-                    <h3>General Knowledge</h3>
-                    <div class="card-meta">
-                        <span>17 Tests</span>
-                        <span>1,628 MCQs</span>
-                    </div>
-                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
-                </button>
 
-                <button type="button" class="content-card subject-card" data-subject="geography">
-                    <span class="subject-index">08</span>
-                    <h3>Geography</h3>
-                    <div class="card-meta">
-                        <span>10 Tests</span>
-                        <span>200 MCQs</span>
-                    </div>
-                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
-                </button>
-            </div>
-        </section>
+/* =========================================
+   BUTTONS
+========================================= */
 
-        <!-- Daily Practice -->
-        <section class="content-section daily-practice-section" id="daily-practice">
-            <div class="daily-practice-content">
-                <span class="eyebrow">BUILD A DAILY HABIT</span>
-                <h2>A little practice every day makes a difference.</h2>
-                <p>
-                    Revise important concepts, answer practice questions and
-                    keep moving towards your target exam.
-                </p>
-                <button
-                    type="button"
-                    class="button button-primary"
-                    data-action="start-free-mock"
-                >
-                    Start Practising
-                </button>
-            </div>
+.btn {
+    min-height: 37px;
+    padding: 9px 14px;
 
-            <div class="daily-practice-side">
-                <span class="daily-number">01</span>
-                <div>
-                    <h3>Practise</h3>
-                    <p>Test your understanding.</p>
-                </div>
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
 
-                <span class="daily-number">02</span>
-                <div>
-                    <h3>Review</h3>
-                    <p>Understand your mistakes.</p>
-                </div>
+    border: 1px solid transparent;
+    border-radius: var(--radius-small);
 
-                <span class="daily-number">03</span>
-                <div>
-                    <h3>Improve</h3>
-                    <p>Build consistency over time.</p>
-                </div>
-            </div>
-        </section>
-    </main>
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.35;
+    text-align: center;
 
-    <!-- Footer -->
-    <footer class="site-footer">
-        <div class="footer-main">
-            <div class="footer-brand">
-                <a href="index.html" class="brand">
-                    <span class="brand-name">StudyNow</span>
-                </a>
-                <p>A focused practice platform for competitive exam preparation.</p>
-            </div>
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
 
-            <div class="footer-links">
-                <a href="#organizations">Organizations</a>
-                <a href="#featured-tests">Mock Tests</a>
-                <a href="#subjects">Subjects</a>
-                <a href="#daily-practice">Daily Practice</a>
-            </div>
-        </div>
+.btn:hover {
+    transform: translateY(-1px);
+}
 
-        <div class="footer-bottom">
-            <p class="site-credit">Design and Develop by Yadav Web Technologies</p>
-            <p class="copyright">StudyNow. All rights reserved.</p>
-        </div>
-    </footer>
+.btn-primary {
+    color: var(--white);
+    background: var(--green);
+    border-color: var(--green);
+}
 
-    <!-- Authentication Modal -->
-    <div class="modal-overlay" id="auth-modal" hidden>
-        <section
-            class="modal-panel auth-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="auth-title"
-        >
-            <button
-                type="button"
-                class="modal-close"
-                data-action="close-auth"
-                aria-label="Close login panel"
-            >
-                &times;
-            </button>
+.btn-primary:hover {
+    background: var(--green-dark);
+    border-color: var(--green-dark);
+}
 
-            <div class="modal-heading">
-                <span class="eyebrow">YOUR STUDYNOW ACCOUNT</span>
-                <h2 id="auth-title">Welcome back</h2>
-                <p id="auth-description">Sign in to continue your preparation.</p>
-            </div>
+.btn-outline {
+    color: var(--green);
+    background: var(--white);
+    border-color: #cbd6ce;
+}
 
-            <form id="auth-form">
-                <div class="form-field" id="name-field" hidden>
-                    <label for="auth-name">Full name</label>
-                    <input
-                        type="text"
-                        id="auth-name"
-                        name="name"
-                        autocomplete="name"
-                        placeholder="Enter your full name"
-                    >
-                </div>
+.btn-outline:hover {
+    background: var(--green-soft);
+    border-color: var(--green);
+}
 
-                <div class="form-field">
-                    <label for="auth-email">Email address</label>
-                    <input
-                        type="email"
-                        id="auth-email"
-                        name="email"
-                        autocomplete="email"
-                        placeholder="you@example.com"
-                        required
-                    >
-                </div>
 
-                <div class="form-field">
-                    <label for="auth-password">Password</label>
-                    <input
-                        type="password"
-                        id="auth-password"
-                        name="password"
-                        autocomplete="current-password"
-                        placeholder="Enter your password"
-                        required
-                    >
-                </div>
+/* =========================================
+   HERO
+========================================= */
 
-                <button
-                    type="button"
-                    class="text-link forgot-password"
-                    data-action="forgot-password"
-                >
-                    Forgot password?
-                </button>
+.hero {
+    width: min(var(--content-width), calc(100% - 40px));
+    min-height: 325px;
+    margin: 26px auto 0;
+    padding: 48px 52px;
 
-                <p class="form-message" id="auth-message" role="status"></p>
+    display: flex;
+    align-items: center;
 
-                <button type="submit" class="button button-primary button-full" id="auth-submit">
-                    Login
-                </button>
-            </form>
+    overflow: hidden;
+    border: 1px solid #e8e8df;
+    border-radius: 15px;
+    background: var(--cream);
+}
 
-            <p class="auth-switch" id="auth-switch">
-                New to StudyNow?
-                <button type="button" class="text-link" data-action="switch-signup">
-                    Create an account
-                </button>
-            </p>
-        </section>
-    </div>
+.hero-content {
+    width: 100%;
+    max-width: 670px;
+}
 
-    <!-- Free Mock Test Modal -->
-    <div class="modal-overlay" id="mock-modal" hidden>
-        <section
-            class="modal-panel mock-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="mock-title"
-        >
-            <button
-                type="button"
-                class="modal-close"
-                data-action="close-mock"
-                aria-label="Close mock test"
-            >
-                &times;
-            </button>
+.section-label {
+    display: inline-block;
+    color: var(--green);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.5;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+}
 
-            <div class="mock-header">
-                <div>
-                    <span class="eyebrow">FREE PRACTICE SESSION</span>
-                    <h2 id="mock-title">StudyNow Free Mock Test</h2>
-                </div>
+.hero h1 {
+    margin-top: 13px;
+    color: var(--charcoal);
 
-                <div class="mock-counter" id="mock-counter">Question 1 of 5</div>
-            </div>
+    font-size: clamp(33px, 4vw, 46px);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -1.5px;
+}
 
-            <div class="mock-progress-track">
-                <div class="mock-progress-value" id="mock-progress-value"></div>
-            </div>
+.hero-content > p {
+    max-width: 560px;
+    margin-top: 14px;
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.85;
+}
 
-            <div class="mock-question-area" id="mock-question-area">
-                <!-- Questions will be rendered here by script.js. -->
-            </div>
+.hero-actions {
+    margin-top: 23px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+}
 
-            <div class="mock-navigation" id="mock-navigation">
-                <button type="button" class="button button-outline" data-action="mock-prev">
-                    Previous
-                </button>
-                <button type="button" class="button button-primary" data-action="mock-next">
-                    Next
-                </button>
-            </div>
+.hero-actions .btn {
+    min-height: 41px;
+    padding-inline: 17px;
+}
 
-            <div class="mock-result" id="mock-result" hidden>
-                <span class="eyebrow">TEST COMPLETED</span>
-                <h2>Your Result</h2>
-                <p class="mock-score" id="mock-score"></p>
-                <div class="mock-review" id="mock-review"></div>
 
-                <div class="mock-result-actions">
-                    <button
-                        type="button"
-                        class="button button-outline"
-                        data-action="retry-mock"
-                    >
-                        Try Again
-                    </button>
-                    <button
-                        type="button"
-                        class="button button-primary"
-                        data-action="signup"
-                    >
-                        Create Account
-                    </button>
-                </div>
-            </div>
-        </section>
-    </div>
+/* =========================================
+   GENERAL SECTIONS
+========================================= */
 
-    <script src="script.js"></script>
-</body>
-</html>
+.content-section {
+    width: min(var(--content-width), calc(100% - 40px));
+    margin-inline: auto;
+    padding: 54px 0;
+}
+
+.section-muted {
+    width: 100%;
+    max-width: none;
+    padding-inline: max(20px, calc((100% - var(--content-width)) / 2));
+    background: #f8f9f6;
+}
+
+.section-heading {
+    margin-bottom: 23px;
+
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.section-heading h2 {
+    margin-top: 7px;
+    color: var(--charcoal);
+    font-size: clamp(23px, 2.5vw, 28px);
+    font-weight: 800;
+    line-height: 1.3;
+    letter-spacing: -0.65px;
+}
+
+.section-heading p {
+    margin-top: 7px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.75;
+}
+
+
+/* =========================================
+   CARD GRID
+========================================= */
+
+.item-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.item-card {
+    width: 100%;
+    min-width: 0;
+    min-height: 190px;
+    padding: 19px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    appearance: none;
+    -webkit-appearance: none;
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--white);
+    color: var(--charcoal);
+
+    font-family: inherit;
+    text-align: left;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+.item-card:hover {
+    border-color: #a9bcae;
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+}
+
+.item-card:focus-visible {
+    outline: 3px solid rgba(36, 92, 74, 0.2);
+    outline-offset: 2px;
+}
+
+.item-category {
+    display: inline-block;
+    max-width: 100%;
+    color: var(--green);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.9px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.item-card h3 {
+    margin-top: 9px;
+    color: var(--charcoal);
+    font-size: 16px;
+    font-weight: 750;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.item-card > p {
+    margin-top: 7px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.75;
+}
+
+.item-info {
+    width: 100%;
+    margin-top: auto;
+    padding-top: 13px;
+
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px 14px;
+
+    border-top: 1px solid var(--soft-border);
+}
+
+.item-info span {
+    color: var(--text);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.item-link {
+    width: 100%;
+    margin-top: 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+
+    color: var(--green);
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.item-link span {
+    font-size: 17px;
+    line-height: 1;
+    transition: transform 0.2s ease;
+}
+
+.item-card:hover .item-link span {
+    transform: translateX(3px);
+}
+
+
+/* Cards with descriptions */
+
+.item-card:has(> p) {
+    min-height: 215px;
+}
+
+.item-card:has(> p) .item-info {
+    margin-top: 15px;
+}
+
+
+/* =========================================
+   DAILY PRACTICE
+========================================= */
+
+.daily-practice {
+    width: min(var(--content-width), calc(100% - 40px));
+    margin: 0 auto 55px;
+    padding: 32px;
+
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: var(--cream);
+}
+
+.daily-practice h2 {
+    max-width: 640px;
+    margin-top: 9px;
+    font-size: clamp(24px, 3vw, 31px);
+    font-weight: 800;
+    line-height: 1.3;
+    letter-spacing: -0.7px;
+}
+
+.daily-practice p {
+    max-width: 630px;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.8;
+}
+
+.daily-practice .btn {
+    margin-top: 18px;
+}
+
+
+/* =========================================
+   FOOTER
+========================================= */
+
+.site-footer {
+    border-top: 1px solid var(--border);
+    background: var(--white);
+}
+
+.footer-inner {
+    width: min(var(--content-width), calc(100% - 40px));
+    margin-inline: auto;
+    padding: 27px 0 17px;
+
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+}
+
+.footer-inner > p {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.footer-credit {
+    width: 100%;
+    margin-top: 12px;
+    padding-top: 14px;
+
+    border-top: 1px solid var(--soft-border);
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+
+/* =========================================
+   MODAL
+========================================= */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    padding: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow-y: auto;
+    background: rgba(24, 34, 27, 0.62);
+
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+.mock-panel {
+    position: relative;
+    width: min(100%, 650px);
+    max-height: calc(100dvh - 40px);
+    padding: 28px;
+
+    overflow-y: auto;
+
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: var(--white);
+    box-shadow: 0 20px 65px rgba(0, 0, 0, 0.2);
+
+    animation: modal-appear 0.2s ease-out;
+}
+
+@keyframes modal-appear {
+    from {
+        opacity: 0;
+        transform: translateY(7px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--white);
+    color: var(--text);
+    font-size: 22px;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    background: var(--cream);
+}
+
+.mock-panel > h2 {
+    margin-top: 8px;
+    padding-right: 30px;
+    font-size: 23px;
+    font-weight: 800;
+    line-height: 1.4;
+}
+
+.mock-status {
+    margin-top: 18px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 9px;
+
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.mock-progress {
+    height: 5px;
+    margin-top: 11px;
+    overflow: hidden;
+    border-radius: 5px;
+    background: #e9ede8;
+}
+
+#mock-progress-value {
+    width: 20%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--green);
+    transition: width 0.2s ease;
+}
+
+
+/* Question area */
+
+#mock-question-area {
+    min-height: 210px;
+    padding: 24px 0 20px;
+}
+
+.question-number {
+    color: var(--green);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+}
+
+.question-text {
+    margin-top: 9px;
+    font-size: 16px;
+    font-weight: 750;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+
+.question-options {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.question-option {
+    min-width: 0;
+    min-height: 45px;
+    padding: 11px;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--white);
+    color: var(--text);
+
+    font-size: 11px;
+    line-height: 1.55;
+    text-align: left;
+
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.question-option:hover {
+    border-color: #a9bcae;
+    background: #fbfcfa;
+}
+
+.question-option.is-selected {
+    border-color: var(--green);
+    background: var(--green-soft);
+    color: var(--green-dark);
+}
+
+.option-marker {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--white);
+    font-size: 10px;
+    font-weight: 750;
+}
+
+.question-option.is-selected .option-marker {
+    border-color: var(--green);
+    background: var(--green);
+    color: var(--white);
+}
+
+
+/* Question navigation */
+
+.mock-navigation {
+    padding-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    border-top: 1px solid var(--soft-border);
+}
+
+
+/* Results */
+
+#mock-result {
+    padding-top: 18px;
+}
+
+#mock-result > h3 {
+    font-size: 22px;
+}
+
+#mock-score {
+    margin-top: 7px;
+    color: var(--green);
+    font-size: 24px;
+    font-weight: 800;
+}
+
+#mock-review {
+    margin-top: 18px;
+    display: grid;
+    gap: 10px;
+}
+
+.review-item {
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fcfcfa;
+}
+
+.review-item h3 {
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.review-item p {
+    margin-top: 6px;
+    color: var(--text);
+    font-size: 11px;
+    line-height: 1.7;
+}
+
+.review-status {
+    display: inline-block;
+    margin-bottom: 6px;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.review-status.correct {
+    color: var(--green);
+}
+
+.review-status.incorrect {
+    color: var(--danger);
+}
+
+.mock-result-actions {
+    margin-top: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+}
+
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 1000px) {
+    .header-inner {
+        gap: 16px;
+    }
+
+    .main-nav {
+        gap: 14px;
+    }
+
+    .main-nav a {
+        font-size: 11px;
+    }
+
+    .header-actions {
+        gap: 6px;
+    }
+
+    .header-actions .btn {
+        padding-inline: 10px;
+        font-size: 10px;
+    }
+
+    .item-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+/* =========================================
+   MOBILE NAVIGATION
+========================================= */
+
+@media (max-width: 800px) {
+    .header-inner {
+        position: relative;
+        min-height: 65px;
+        flex-wrap: wrap;
+        gap: 9px;
+    }
+
+    .brand {
+        margin-right: auto;
+        font-size: 22px;
+    }
+
+    .menu-toggle {
+        display: flex;
+        order: 2;
+    }
+
+    .header-actions {
+        order: 3;
+    }
+
+    .main-nav {
+        position: absolute;
+        top: calc(100% + 1px);
+        right: 0;
+        left: 0;
+        z-index: 110;
+
+        padding: 8px;
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+
+        border: 1px solid var(--border);
+        border-radius: 0 0 10px 10px;
+        background: var(--white);
+        box-shadow: 0 12px 22px rgba(30, 56, 41, 0.08);
+    }
+
+    .main-nav.is-open {
+        display: flex;
+        animation: nav-appear 0.18s ease-out;
+    }
+
+    .main-nav a {
+        padding: 11px;
+        border-radius: 6px;
+        font-size: 12px;
+    }
+
+    .main-nav a:hover {
+        background: var(--cream);
+    }
+
+    @keyframes nav-appear {
+        from {
+            opacity: 0;
+            transform: translateY(-4px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}
+
+
+/* =========================================
+   MOBILE LAYOUT
+========================================= */
+
+@media (max-width: 649px) {
+    body {
+        font-size: 13px;
+    }
+
+    .header-inner {
+        width: calc(100% - 28px);
+        column-gap: 7px;
+    }
+
+    .brand {
+        font-size: 21px;
+    }
+
+    .header-actions .btn {
+        min-height: 33px;
+        padding: 7px 9px;
+        font-size: 10px;
+    }
+
+    .hero {
+        width: calc(100% - 28px);
+        min-height: 0;
+        margin-top: 14px;
+        padding: 28px 21px;
+        border-radius: 12px;
+    }
+
+    .hero h1 {
+        margin-top: 11px;
+        font-size: clamp(30px, 8vw, 38px);
+        line-height: 1.16;
+        letter-spacing: -1.1px;
+    }
+
+    .hero-content > p {
+        margin-top: 11px;
+        font-size: 12px;
+        line-height: 1.8;
+    }
+
+    .hero-actions {
+        margin-top: 18px;
+        gap: 8px;
+    }
+
+    .hero-actions .btn {
+        min-height: 39px;
+        padding-inline: 11px;
+        font-size: 11px;
+    }
+
+    .content-section {
+        width: calc(100% - 28px);
+        padding: 41px 0;
+    }
+
+    .section-muted {
+        width: 100%;
+        padding-inline: 14px;
+    }
+
+    .section-heading {
+        margin-bottom: 18px;
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .section-heading h2 {
+        font-size: 23px;
+    }
+
+    .section-heading p {
+        font-size: 11px;
+    }
+
+    /* One full-width exam card per row on mobile */
+    .item-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    .item-card {
+        min-height: 0;
+        padding: 16px;
+        border-radius: 9px;
+    }
+
+    .item-card:has(> p) {
+        min-height: 0;
+    }
+
+    .item-card h3 {
+        font-size: 15px;
+    }
+
+    .item-card > p {
+        font-size: 11px;
+    }
+
+    .item-info {
+        margin-top: 13px;
+        padding-top: 11px;
+    }
+
+    .item-link {
+        margin-top: 12px;
+    }
+
+    .daily-practice {
+        width: calc(100% - 28px);
+        margin-bottom: 40px;
+        padding: 22px;
+        border-radius: 11px;
+    }
+
+    .daily-practice h2 {
+        font-size: 25px;
+    }
+
+    .daily-practice p {
+        font-size: 11px;
+    }
+
+    .footer-inner {
+        width: calc(100% - 28px);
+        padding-top: 23px;
+    }
+
+    .footer-inner > p {
+        font-size: 10px;
+    }
+
+    .footer-credit {
+        line-height: 1.7;
+    }
+
+    /* Modal */
+
+    .modal-overlay {
+        padding: 12px;
+    }
+
+    .mock-panel {
+        max-height: calc(100dvh - 24px);
+        padding: 22px 17px;
+        border-radius: 11px;
+    }
+
+    .mock-panel > h2 {
+        font-size: 20px;
+    }
+
+    #mock-question-area {
+        min-height: 0;
+        padding: 20px 0;
+    }
+
+    .question-text {
+        font-size: 15px;
+    }
+
+    .question-options {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    .question-option {
+        min-height: 43px;
+        padding: 10px;
+    }
+
+    .mock-result-actions .btn {
+        padding-inline: 10px;
+        font-size: 10px;
+    }
+}
+
+
+/* =========================================
+   VERY SMALL SCREENS
+========================================= */
+
+@media (max-width: 370px) {
+    .header-inner {
+        column-gap: 5px;
+    }
+
+    .brand {
+        font-size: 20px;
+    }
+
+    .header-actions .btn {
+        padding-inline: 7px;
+        font-size: 9px;
+    }
+
+    .hero {
+        padding: 23px 16px;
+    }
+
+    .hero h1 {
+        font-size: 29px;
+    }
+
+    .hero-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .hero-actions .btn {
+        width: 100%;
+    }
+
+    .section-heading h2 {
+        font-size: 21px;
+    }
+}
+
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
