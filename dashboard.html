@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Dashboard | StudyNow</title>
+    <meta name="description" content="View your StudyNow practice dashboard, mock tests, test history and preparation progress.">
+    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/dashboard.html">
+    <meta name="robots" content="noindex, follow">
+
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+    <script src="js/dashboard.js" defer></script>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="index.html" class="brand" aria-label="StudyNow Home">
+                <span class="brand-name">StudyNow</span>
+                <span class="brand-caption">Learn. Practice. Progress.</span>
+            </a>
+
+            <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+                <a href="index.html#current-affairs">Current Affairs</a>
+                <a href="mock-tests.html">Mock Tests</a>
+                <a href="subject.html">Subjects</a>
+                <a href="daily-practice.html">Daily Practice</a>
+            </nav>
+
+            <div class="header-actions">
+                <a href="index.html" class="btn btn-outline">Home</a>
+            </div>
+
+            <button
+                type="button"
+                class="menu-toggle"
+                id="menu-toggle"
+                aria-label="Toggle navigation"
+                aria-controls="main-nav"
+                aria-expanded="false"
+            >
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <section class="content-section">
+            <div class="section-heading">
+                <span class="eyebrow">MY STUDYNOW</span>
+                <h1 class="section-title">Welcome, <span id="dashboard-name">Student</span></h1>
+                <p>Continue your preparation and keep making progress.</p>
+            </div>
+
+            <div class="listing-grid">
+                <a href="mock-tests.html" class="listing-card">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <rect x="4" y="3" width="16" height="18" rx="2"/>
+                            <path d="M8 8h8M8 12h8M8 16h5"/>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-category">Practice</span>
+                        <span class="card-title">Mock Tests</span>
+                        <span class="card-description">Explore available tests and practice questions.</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">→</span>
+                </a>
+
+                <a href="test.html" class="listing-card">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <circle cx="12" cy="12" r="9"/>
+                            <path d="M12 7v5l3 2"/>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-category">Continue</span>
+                        <span class="card-title">Continue Test</span>
+                        <span class="card-description">Resume your pending test when this feature is available.</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">→</span>
+                </a>
+
+                <a href="daily-practice.html" class="listing-card">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M5 4h14v16H5z"/>
+                            <path d="m8 9 2 2 4-4M8 15h8"/>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-category">Daily Learning</span>
+                        <span class="card-title">Daily Practice</span>
+                        <span class="card-description">Build your knowledge with daily practice sets.</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">→</span>
+                </a>
+
+                <a href="subject.html" class="listing-card">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M3 5.5A3.5 3.5 0 0 1 6.5 2H21v17H6.5A3.5 3.5 0 0 0 3 22z"/>
+                            <path d="M3 5.5V22M8 7h8M8 11h8"/>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-category">Revision</span>
+                        <span class="card-title">Subjects</span>
+                        <span class="card-description">Choose a subject and focus on your revision.</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">→</span>
+                </a>
+            </div>
+        </section>
+
+        <section class="content-section">
+            <div class="section-heading">
+                <h2 class="section-title">Performance Summary</h2>
+                <p>Your personal performance details will appear here once tracking is connected.</p>
+            </div>
+
+            <div class="lower-sections">
+                <div class="why-card">
+                    <h3>Tests Completed</h3>
+                    <p id="tests-completed">—</p>
+                </div>
+
+                <div class="why-card">
+                    <h3>Average Score</h3>
+                    <p id="average-score">—</p>
+                </div>
+
+                <div class="why-card">
+                    <h3>Questions Practiced</h3>
+                    <p id="questions-practiced">—</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="content-section">
+            <div class="section-heading">
+                <h2 class="section-title">Recent Test History</h2>
+                <p>Your completed tests will appear here.</p>
+            </div>
+
+            <div class="why-card" id="test-history">
+                <p>No test history available yet.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-bottom">
+            <p>Design and Develop by Yadav Web Technologies</p>
+        </div>
+    </footer>
+</body>
+</html>
