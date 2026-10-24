@@ -970,12 +970,12 @@ button.listing-card {
         margin-right: auto;
     }
 
-    .menu-toggle {
-        display: flex;
+    .header-actions {
         order: 2;
     }
 
-    .header-actions {
+    .menu-toggle {
+        display: flex;
         order: 3;
     }
 
