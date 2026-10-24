@@ -530,12 +530,18 @@ document.addEventListener("click", (event) => {
         return;
     }
 
-    const subjectCard = event.target.closest("[data-subject]");
+const subjectCard = event.target.closest("[data-subject]");
 
-    if (subjectCard) {
-        handlePracticeCard(subjectCard);
-        return;
+if (subjectCard) {
+    const subjectId = subjectCard.dataset.subject;
+
+    if (subjectId) {
+        window.location.href =
+            `subject.html?subject=${encodeURIComponent(subjectId)}`;
     }
+
+    return;
+}
 
     const affairsCard = event.target.closest("[data-current-affairs]");
 
