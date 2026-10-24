@@ -1,289 +1,579 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>StudyNow — Exam Preparation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyNow — Competitive Exam Preparation</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+    <!-- Header -->
     <header class="site-header">
         <div class="header-inner">
-            <a href="index.html" class="brand">StudyNow</a>
-
-            <button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
+            <a href="index.html" class="brand" aria-label="StudyNow Home">
+                <span class="brand-name">StudyNow</span>
+                <span class="brand-caption">Learn. Practice. Progress.</span>
+            </a>
 
             <nav class="main-nav" id="main-nav">
                 <a href="#organizations">Organizations</a>
-                <a href="#featured">Mock Tests</a>
+                <a href="#featured-tests">Mock Tests</a>
                 <a href="#subjects">Subjects</a>
                 <a href="#daily-practice">Daily Practice</a>
             </nav>
 
             <div class="header-actions">
-                <button class="btn btn-outline" data-action="login">Login</button>
-                <button class="btn btn-primary" data-action="signup">Create Account</button>
+                <button type="button" class="btn btn-outline" data-action="login">
+                    Login
+                </button>
+                <button type="button" class="btn btn-primary" data-action="signup">
+                    Create Account
+                </button>
             </div>
+
+            <button
+                type="button"
+                class="menu-toggle"
+                id="menu-toggle"
+                aria-label="Toggle navigation"
+                aria-expanded="false"
+            >
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </header>
 
     <main>
-        <section class="hero">
+        <!-- Hero -->
+        <section class="hero-section">
             <div class="hero-content">
-                <span class="section-label">YOUR EXAM PREPARATION</span>
+                <span class="eyebrow">YOUR EXAM PREPARATION STARTS HERE</span>
 
-                <h1>Prepare smarter.<br>Practice with purpose.</h1>
+                <h1>Prepare smarter.<br>Move closer to your goal.</h1>
 
                 <p>
-                    Improve your preparation with competitive exam mock tests,
-                    subject-wise practice and previous-year questions.
+                    Practise with exam-focused mock tests, strengthen your
+                    subjects and improve your preparation one test at a time.
                 </p>
 
                 <div class="hero-actions">
-                    <button class="btn btn-primary" data-action="start-mock">
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-large"
+                        data-action="start-free-mock"
+                    >
                         Try Free Mock Test
                     </button>
-                    <a href="#organizations" class="btn btn-outline">
+
+                    <a href="#organizations" class="btn btn-outline btn-large">
                         Explore Exams
                     </a>
                 </div>
+
+                <div class="hero-highlights">
+                    <span>Exam-focused practice</span>
+                    <span>Subject-wise questions</span>
+                    <span>Previous-year papers</span>
+                </div>
+            </div>
+
+            <div class="hero-visual">
+                <div class="visual-topline">
+                    <span class="visual-dot"></span>
+                    <span>YOUR PREPARATION</span>
+                </div>
+
+                <div class="visual-main">
+                    <span class="visual-label">KEEP MOVING FORWARD</span>
+                    <h2>Practice.<br>Review.<br>Improve.</h2>
+
+                    <div class="visual-progress">
+                        <span class="progress-track">
+                            <span class="progress-value"></span>
+                        </span>
+                        <span class="progress-caption">
+                            Every practice session counts
+                        </span>
+                    </div>
+                </div>
+
+                <div class="visual-footer">
+                    <div>
+                        <strong>Practise</strong>
+                        <span>Test your knowledge</span>
+                    </div>
+                    <div>
+                        <strong>Improve</strong>
+                        <span>Learn from mistakes</span>
+                    </div>
+                </div>
             </div>
         </section>
 
+        <!-- Organizations -->
         <section class="content-section" id="organizations">
             <div class="section-heading">
                 <div>
-                    <span class="section-label">FIND YOUR EXAM</span>
+                    <span class="eyebrow">FIND YOUR EXAM</span>
                     <h2>Browse by Organization</h2>
-                    <p>Choose an organization to explore its exams.</p>
+                    <p>
+                        Choose an organization to explore its exams and
+                        preparation materials.
+                    </p>
                 </div>
             </div>
 
-            <div class="item-grid">
-                <button class="item-card" data-org="apsc">
-                    <span class="item-category">STATE EXAMINATIONS</span>
+            <div class="listing-grid">
+
+                <button type="button" class="content-card" data-org="apsc">
+                    <span class="card-category">STATE EXAMINATIONS</span>
                     <h3>APSC</h3>
-                    <p>Prepare for Assam Public Service Commission exams.</p>
-                    <div class="item-info">
+                    <p>
+                        Prepare for Assam Public Service Commission examinations.
+                    </p>
+                    <div class="card-meta">
                         <span>3 Exams</span>
                         <span>2,908 MCQs</span>
                     </div>
-                    <span class="item-link">Explore Exams <span>→</span></span>
+                    <span class="card-link">
+                        Explore Exams <span aria-hidden="true">→</span>
+                    </span>
                 </button>
 
-                <button class="item-card" data-org="adre">
-                    <span class="item-category">RECRUITMENT</span>
+                <button type="button" class="content-card" data-org="adre">
+                    <span class="card-category">RECRUITMENT EXAMS</span>
                     <h3>Assam Direct Recruitment</h3>
-                    <p>Explore ADRE Grade III and Grade IV examinations.</p>
-                    <div class="item-info">
+                    <p>
+                        Explore ADRE Grade III and Grade IV exam preparation.
+                    </p>
+                    <div class="card-meta">
                         <span>4 Exams</span>
                         <span>5,700 MCQs</span>
                     </div>
-                    <span class="item-link">Explore Exams <span>→</span></span>
+                    <span class="card-link">
+                        Explore Exams <span aria-hidden="true">→</span>
+                    </span>
                 </button>
 
-                <button class="item-card" data-org="assam-police">
-                    <span class="item-category">UNIFORMED SERVICES</span>
+                <button type="button" class="content-card" data-org="assam-police">
+                    <span class="card-category">UNIFORMED SERVICES</span>
                     <h3>Assam Police</h3>
-                    <p>Prepare for Assam Police recruitment examinations.</p>
-                    <div class="item-info">
+                    <p>
+                        Practise for Assam Police recruitment examinations.
+                    </p>
+                    <div class="card-meta">
                         <span>2 Exams</span>
                         <span>2,000 MCQs</span>
                     </div>
-                    <span class="item-link">Explore Exams <span>→</span></span>
+                    <span class="card-link">
+                        Explore Exams <span aria-hidden="true">→</span>
+                    </span>
                 </button>
 
-                <button class="item-card" data-org="ssuhs">
-                    <span class="item-category">HEALTH EDUCATION</span>
+                <button type="button" class="content-card" data-org="ssuhs">
+                    <span class="card-category">HEALTH EDUCATION</span>
                     <h3>SSUHS</h3>
-                    <p>Practise for health science entrance examinations.</p>
-                    <div class="item-info">
+                    <p>
+                        Explore entrance and recruitment exam preparation.
+                    </p>
+                    <div class="card-meta">
                         <span>1 Exam</span>
                         <span>500 MCQs</span>
                     </div>
-                    <span class="item-link">Explore Exams <span>→</span></span>
+                    <span class="card-link">
+                        Explore Exams <span aria-hidden="true">→</span>
+                    </span>
                 </button>
+
             </div>
         </section>
 
-        <section class="content-section section-muted" id="featured">
+        <!-- Featured Mock Tests -->
+        <section class="content-section section-muted" id="featured-tests">
             <div class="section-heading">
                 <div>
-                    <span class="section-label">START PRACTISING</span>
+                    <span class="eyebrow">START PRACTISING</span>
                     <h2>Featured Mock Tests</h2>
-                    <p>Choose a test related to your target examination.</p>
+                    <p>
+                        Choose a test based on your target examination.
+                    </p>
                 </div>
             </div>
 
-            <div class="item-grid">
-                <button class="item-card" data-test="assam-vfa">
-                    <span class="item-category">ASSAM RECRUITMENT</span>
+            <div class="listing-grid">
+
+                <button type="button" class="content-card" data-test="assam-vfa">
+                    <span class="card-category">ASSAM RECRUITMENT</span>
                     <h3>Assam VFA Exam</h3>
-                    <div class="item-info">
+                    <p>
+                        Practise important topics for the VFA examination.
+                    </p>
+                    <div class="card-meta">
                         <span>20 Tests</span>
-                        <span>100 MCQs each</span>
+                        <span>100 MCQs/Test</span>
                     </div>
-                    <span class="item-link">View Tests <span>→</span></span>
+                    <span class="card-link">
+                        View Tests <span aria-hidden="true">→</span>
+                    </span>
                 </button>
 
-                <button class="item-card" data-test="anm">
-                    <span class="item-category">ENTRANCE EXAM</span>
+                <button type="button" class="content-card" data-test="anm">
+                    <span class="card-category">ENTRANCE EXAM</span>
                     <h3>ANM Entrance Exam</h3>
-                    <div class="item-info">
+                    <p>
+                        Strengthen your knowledge through structured practice.
+                    </p>
+                    <div class="card-meta">
                         <span>10 Tests</span>
-                        <span>50 MCQs each</span>
+                        <span>50 MCQs/Test</span>
                     </div>
-                    <span class="item-link">View Tests <span>→</span></span>
+                    <span class="card-link">
+                        View Tests <span aria-hidden="true">→</span>
+                    </span>
                 </button>
 
-                <button class="item-card" data-test="adre-grade-iii">
-                    <span class="item-category">ADRE</span>
+                <button type="button" class="content-card" data-test="adre-grade-iii">
+                    <span class="card-category">ADRE</span>
                     <h3>ADRE Grade III</h3>
-                    <div class="item-info">
+                    <p>
+                        Practise with mock tests for Grade III preparation.
+                    </p>
+                    <div class="card-meta">
                         <span>10 Tests</span>
-                        <span>150 MCQs each</span>
+                        <span>150 MCQs/Test</span>
                     </div>
-                    <span class="item-link">View Tests <span>→</span></span>
+                    <span class="card-link">
+                        View Tests <span aria-hidden="true">→</span>
+                    </span>
                 </button>
 
-                <button class="item-card" data-test="sub-inspector">
-                    <span class="item-category">ASSAM POLICE</span>
+                <button type="button" class="content-card" data-test="sub-inspector">
+                    <span class="card-category">ASSAM POLICE</span>
                     <h3>Sub Inspector</h3>
-                    <div class="item-info">
+                    <p>
+                        Practise reasoning, general knowledge and related topics.
+                    </p>
+                    <div class="card-meta">
                         <span>10 Tests</span>
-                        <span>100 MCQs each</span>
+                        <span>100 MCQs/Test</span>
                     </div>
-                    <span class="item-link">View Tests <span>→</span></span>
+                    <span class="card-link">
+                        View Tests <span aria-hidden="true">→</span>
+                    </span>
                 </button>
+
             </div>
         </section>
 
+        <!-- Subjects -->
         <section class="content-section" id="subjects">
             <div class="section-heading">
                 <div>
-                    <span class="section-label">PRACTISE BY SUBJECT</span>
+                    <span class="eyebrow">FOCUS ON YOUR SUBJECTS</span>
                     <h2>Subject-wise Practice</h2>
-                    <p>Focus on individual subjects to strengthen your preparation.</p>
+                    <p>
+                        Select a subject to practise questions and strengthen
+                        your preparation.
+                    </p>
                 </div>
             </div>
 
-            <div class="item-grid">
-                <button class="item-card" data-subject="assamese">
+            <div class="listing-grid">
+
+                <button type="button" class="content-card subject-card" data-subject="assamese">
+                    <span class="subject-index">01</span>
                     <h3>Assamese</h3>
-                    <div class="item-info"><span>15 Tests</span><span>448 MCQs</span></div>
-                    <span class="item-link">Practise <span>→</span></span>
+                    <div class="card-meta">
+                        <span>15 Tests</span>
+                        <span>448 MCQs</span>
+                    </div>
+                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
                 </button>
 
-                <button class="item-card" data-subject="culture">
+                <button type="button" class="content-card subject-card" data-subject="culture">
+                    <span class="subject-index">02</span>
                     <h3>Culture</h3>
-                    <div class="item-info"><span>10 Tests</span><span>200 MCQs</span></div>
-                    <span class="item-link">Practise <span>→</span></span>
+                    <div class="card-meta">
+                        <span>10 Tests</span>
+                        <span>200 MCQs</span>
+                    </div>
+                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
                 </button>
 
-                <button class="item-card" data-subject="computer">
+                <button type="button" class="content-card subject-card" data-subject="computer">
+                    <span class="subject-index">03</span>
                     <h3>Computer Knowledge</h3>
-                    <div class="item-info"><span>9 Tests</span><span>270 MCQs</span></div>
-                    <span class="item-link">Practise <span>→</span></span>
+                    <div class="card-meta">
+                        <span>9 Tests</span>
+                        <span>270 MCQs</span>
+                    </div>
+                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
                 </button>
 
-                <button class="item-card" data-subject="driving">
+                <button type="button" class="content-card subject-card" data-subject="driving">
+                    <span class="subject-index">04</span>
                     <h3>Driving Knowledge</h3>
-                    <div class="item-info"><span>6 Tests</span><span>57 MCQs</span></div>
-                    <span class="item-link">Practise <span>→</span></span>
+                    <div class="card-meta">
+                        <span>6 Tests</span>
+                        <span>57 MCQs</span>
+                    </div>
+                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
                 </button>
 
-                <button class="item-card" data-subject="economics">
+                <button type="button" class="content-card subject-card" data-subject="economics">
+                    <span class="subject-index">05</span>
                     <h3>Economics</h3>
-                    <div class="item-info"><span>5 Tests</span><span>49 MCQs</span></div>
-                    <span class="item-link">Practise <span>→</span></span>
+                    <div class="card-meta">
+                        <span>5 Tests</span>
+                        <span>49 MCQs</span>
+                    </div>
+                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
                 </button>
 
-                <button class="item-card" data-subject="english">
+                <button type="button" class="content-card subject-card" data-subject="english">
+                    <span class="subject-index">06</span>
                     <h3>English</h3>
-                    <div class="item-info"><span>27 Tests</span><span>800 MCQs</span></div>
-                    <span class="item-link">Practise <span>→</span></span>
+                    <div class="card-meta">
+                        <span>27 Tests</span>
+                        <span>800 MCQs</span>
+                    </div>
+                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
                 </button>
 
-                <button class="item-card" data-subject="general-knowledge">
+                <button type="button" class="content-card subject-card" data-subject="general-knowledge">
+                    <span class="subject-index">07</span>
                     <h3>General Knowledge</h3>
-                    <div class="item-info"><span>17 Tests</span><span>1,628 MCQs</span></div>
-                    <span class="item-link">Practise <span>→</span></span>
+                    <div class="card-meta">
+                        <span>17 Tests</span>
+                        <span>1,628 MCQs</span>
+                    </div>
+                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
                 </button>
 
-                <button class="item-card" data-subject="geography">
+                <button type="button" class="content-card subject-card" data-subject="geography">
+                    <span class="subject-index">08</span>
                     <h3>Geography</h3>
-                    <div class="item-info"><span>10 Tests</span><span>200 MCQs</span></div>
-                    <span class="item-link">Practise <span>→</span></span>
+                    <div class="card-meta">
+                        <span>10 Tests</span>
+                        <span>200 MCQs</span>
+                    </div>
+                    <span class="card-link">Practise <span aria-hidden="true">→</span></span>
                 </button>
+
             </div>
         </section>
 
-        <section class="daily-practice" id="daily-practice">
-            <div>
-                <span class="section-label">DAILY PRACTICE</span>
-                <h2>Build your preparation, one test at a time.</h2>
+        <!-- Daily Practice -->
+        <section class="daily-practice-section" id="daily-practice">
+            <div class="daily-practice-content">
+                <span class="eyebrow">BUILD A DAILY HABIT</span>
+                <h2>A little practice every day makes a difference.</h2>
                 <p>
-                    Practise regularly, review your mistakes and keep improving
-                    your exam readiness.
+                    Test your knowledge, review your mistakes and keep
+                    progressing towards your target examination.
                 </p>
-                <button class="btn btn-primary" data-action="start-mock">
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    data-action="start-free-mock"
+                >
                     Start Practising
                 </button>
+            </div>
+
+            <div class="daily-practice-side">
+                <div class="daily-step">
+                    <span class="daily-number">01</span>
+                    <div>
+                        <h3>Practise</h3>
+                        <p>Test your understanding.</p>
+                    </div>
+                </div>
+
+                <div class="daily-step">
+                    <span class="daily-number">02</span>
+                    <div>
+                        <h3>Review</h3>
+                        <p>Understand your mistakes.</p>
+                    </div>
+                </div>
+
+                <div class="daily-step">
+                    <span class="daily-number">03</span>
+                    <div>
+                        <h3>Improve</h3>
+                        <p>Build consistency over time.</p>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
 
+    <!-- Footer -->
     <footer class="site-footer">
-        <div class="footer-inner">
-            <a href="index.html" class="brand">StudyNow</a>
-            <p>Competitive exam preparation and practice.</p>
-
-            <div class="footer-credit">
-                Design and Develop by Yadav Web Technologies
+        <div class="footer-main">
+            <div class="footer-brand">
+                <a href="index.html" class="brand">
+                    <span class="brand-name">StudyNow</span>
+                </a>
+                <p>
+                    A focused platform for competitive exam practice and
+                    preparation.
+                </p>
             </div>
+
+            <nav class="footer-links" aria-label="Footer navigation">
+                <a href="#organizations">Organizations</a>
+                <a href="#featured-tests">Mock Tests</a>
+                <a href="#subjects">Subjects</a>
+                <a href="#daily-practice">Daily Practice</a>
+            </nav>
+        </div>
+
+        <div class="footer-bottom">
+            <p class="site-credit">Design and Develop by Yadav Web Technologies</p>
+            <p class="copyright">StudyNow. All rights reserved.</p>
         </div>
     </footer>
 
-    <!-- Free Mock Test -->
+    <!-- Authentication Modal -->
+    <div class="modal-overlay" id="auth-modal" hidden>
+        <section
+            class="modal-panel auth-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="auth-title"
+        >
+            <button
+                type="button"
+                class="modal-close"
+                data-action="close-auth"
+                aria-label="Close login panel"
+            >&times;</button>
+
+            <div class="modal-heading">
+                <span class="eyebrow">YOUR STUDYNOW ACCOUNT</span>
+                <h2 id="auth-title">Welcome back</h2>
+                <p id="auth-description">Sign in to continue your preparation.</p>
+            </div>
+
+            <form id="auth-form">
+                <div class="form-field" id="name-field" hidden>
+                    <label for="auth-name">Full name</label>
+                    <input
+                        type="text"
+                        id="auth-name"
+                        name="name"
+                        autocomplete="name"
+                        placeholder="Enter your full name"
+                    >
+                </div>
+
+                <div class="form-field">
+                    <label for="auth-email">Email address</label>
+                    <input
+                        type="email"
+                        id="auth-email"
+                        name="email"
+                        autocomplete="email"
+                        placeholder="you@example.com"
+                        required
+                    >
+                </div>
+
+                <div class="form-field">
+                    <label for="auth-password">Password</label>
+                    <input
+                        type="password"
+                        id="auth-password"
+                        name="password"
+                        autocomplete="current-password"
+                        placeholder="Enter your password"
+                        required
+                    >
+                </div>
+
+                <button
+                    type="button"
+                    class="text-link forgot-password"
+                    data-action="forgot-password"
+                >
+                    Forgot password?
+                </button>
+
+                <p class="form-message" id="auth-message" role="status"></p>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary btn-full"
+                    id="auth-submit"
+                >
+                    Login
+                </button>
+            </form>
+
+            <p class="auth-switch" id="auth-switch">
+                New to StudyNow?
+                <button type="button" class="text-link" data-action="switch-signup">
+                    Create an account
+                </button>
+            </p>
+        </section>
+    </div>
+
+    <!-- Free Mock Test Modal -->
     <div class="modal-overlay" id="mock-modal" hidden>
-        <section class="mock-panel" role="dialog" aria-modal="true"
-                 aria-labelledby="mock-title">
+        <section
+            class="modal-panel mock-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mock-title"
+        >
+            <button
+                type="button"
+                class="modal-close"
+                data-action="close-mock"
+                aria-label="Close mock test"
+            >&times;</button>
 
-            <button class="modal-close" data-action="close-mock"
-                    aria-label="Close mock test">&times;</button>
-
-            <span class="section-label">FREE PRACTICE TEST</span>
-            <h2 id="mock-title">StudyNow Mock Test</h2>
-
-            <div class="mock-status">
-                <span id="mock-counter">Question 1 of 5</span>
-                <span>5 Questions</span>
+            <div class="mock-header">
+                <div>
+                    <span class="eyebrow">FREE PRACTICE SESSION</span>
+                    <h2 id="mock-title">StudyNow Free Mock Test</h2>
+                </div>
+                <span class="mock-counter" id="mock-counter">
+                    Question 1 of 5
+                </span>
             </div>
 
-            <div class="mock-progress">
-                <div id="mock-progress-value"></div>
+            <div class="mock-progress-track">
+                <div class="mock-progress-value" id="mock-progress-value"></div>
             </div>
 
-            <div id="mock-question-area"></div>
+            <div class="mock-question-area" id="mock-question-area"></div>
 
             <div class="mock-navigation" id="mock-navigation">
-                <button class="btn btn-outline" data-action="mock-prev">Previous</button>
-                <button class="btn btn-primary" data-action="mock-next">Next</button>
+                <button type="button" class="btn btn-outline" data-action="mock-prev">
+                    Previous
+                </button>
+                <button type="button" class="btn btn-primary" data-action="mock-next">
+                    Next
+                </button>
             </div>
 
-            <div id="mock-result" hidden>
-                <h3>Test Completed</h3>
-                <p id="mock-score"></p>
-                <div id="mock-review"></div>
+            <div class="mock-result" id="mock-result" hidden>
+                <span class="eyebrow">TEST COMPLETED</span>
+                <h2>Your Result</h2>
+                <p class="mock-score" id="mock-score"></p>
+                <div class="mock-review" id="mock-review"></div>
 
                 <div class="mock-result-actions">
-                    <button class="btn btn-outline" data-action="retry-mock">
+                    <button type="button" class="btn btn-outline" data-action="retry-mock">
                         Try Again
                     </button>
-                    <button class="btn btn-primary" data-action="signup">
+                    <button type="button" class="btn btn-primary" data-action="signup">
                         Create Account
                     </button>
                 </div>
