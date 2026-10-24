@@ -199,29 +199,23 @@ function handleExamClick(event) {
 
     const examName = card.querySelector(".card-title")?.textContent.trim();
 
+    if (examName === "ADRE Grade III") {
+        window.location.href = "mock-tests.html?exam=adre-grade-iii";
+        return;
+    }
+
     const noticeModal = document.getElementById("notice-modal");
     const noticeTitle = document.getElementById("notice-title");
     const noticeMessage = document.getElementById("notice-message");
 
-    if (!noticeModal || !noticeTitle || !noticeMessage) {
-        return;
-    }
+    if (!noticeModal || !noticeTitle || !noticeMessage) return;
 
     noticeTitle.textContent = examName || "Exam Details";
-
     noticeMessage.textContent =
-        "The dedicated mock tests page for this exam will be added in the next step.";
+        "This exam's dedicated page will be added in a future frontend update.";
 
     noticeModal.hidden = false;
     document.body.classList.add("modal-open");
-
-    const closeButton = noticeModal.querySelector(
-        '[data-action="close-notice"]'
-    );
-
-    if (closeButton) {
-        closeButton.focus();
-    }
 }
 
 
