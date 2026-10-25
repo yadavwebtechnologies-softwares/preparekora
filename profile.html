@@ -3,137 +3,246 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>My Profile | StudyNow</title>
-    <meta name="description" content="View and manage your StudyNow profile and exam preparation preferences.">
-    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/profile.html">
-    <meta name="robots" content="noindex, follow">
-
+    <meta name="theme-color" content="#ffffff">
+    <title>My Profile | StudyKora</title>
+    <meta name="description" content="Manage your StudyKora account and settings.">
     <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
-    <script src="js/profile.js" defer></script>
 </head>
 
 <body>
-    <header class="site-header">
-        <div class="header-inner">
-            <a href="index.html" class="brand" aria-label="StudyNow Home">
-                <span class="brand-name">StudyNow</span>
-                <span class="brand-caption">Learn. Practice. Progress.</span>
-            </a>
 
-            <nav class="main-nav" id="main-nav" aria-label="Main navigation">
-                <a href="index.html#current-affairs">Current Affairs</a>
-                <a href="mock-tests.html">Mock Tests</a>
-                <a href="subject.html">Subjects</a>
-                <a href="daily-practice.html">Daily Practice</a>
-            </nav>
-
-            <div class="header-actions">
-                <a href="dashboard.html" class="btn btn-outline">Dashboard</a>
-            </div>
-
-            <button
-                type="button"
-                class="menu-toggle"
-                id="menu-toggle"
-                aria-label="Toggle navigation"
-                aria-controls="main-nav"
-                aria-expanded="false"
-            >
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-        </div>
-    </header>
+    <!-- Shared Header -->
+    <div id="site-header"></div>
 
     <main>
         <section class="content-section">
+
             <div class="section-heading">
-                <span class="eyebrow">ACCOUNT SETTINGS</span>
-                <h1 class="section-title">My Profile</h1>
-                <p>Manage your account information and study preferences.</p>
-            </div>
-
-            <div class="why-card">
-                <form id="profile-form">
-                    <div class="form-group">
-                        <label for="profile-name">Full Name</label>
-                        <input
-                            type="text"
-                            id="profile-name"
-                            name="name"
-                            placeholder="Enter your full name"
-                            autocomplete="name"
-                            required
-                        >
-                    </div>
-
-                    <div class="form-group">
-                        <label for="profile-email">Email Address</label>
-                        <input
-                            type="email"
-                            id="profile-email"
-                            name="email"
-                            placeholder="Your email address"
-                            autocomplete="email"
-                            readonly
-                        >
-                    </div>
-
-                    <div class="form-group">
-                        <label for="exam-preference">Exam Preparation</label>
-                        <select id="exam-preference" name="exam">
-                            <option value="">Select your target exam</option>
-                            <option value="adre">Assam Direct Recruitment</option>
-                            <option value="assam-police">Assam Police</option>
-                            <option value="apsc">APSC</option>
-                            <option value="tet">TET</option>
-                            <option value="ssc">SSC</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="preferred-language">Preferred Language</label>
-                        <select id="preferred-language" name="language">
-                            <option value="en">English</option>
-                            <option value="as">Assamese</option>
-                        </select>
-                    </div>
-
-                    <p id="profile-message" role="status" aria-live="polite"></p>
-
-                    <button type="submit" class="btn btn-primary">
-                        Save Changes
-                    </button>
-                </form>
-            </div>
-
-            <div class="why-card">
-                <h2 class="section-title">Account</h2>
-                <p>Return to your dashboard or sign out of your account.</p>
-
-                <div class="header-actions">
-                    <a href="dashboard.html" class="btn btn-outline">
-                        Go to Dashboard
-                    </a>
-
-                    <button type="button" class="btn btn-primary" id="logout-button">
-                        Logout
-                    </button>
+                <div>
+                    <p class="section-title">YOUR ACCOUNT</p>
+                    <h1>My Profile</h1>
                 </div>
+            </div>
 
-                <p id="logout-message" role="status" aria-live="polite"></p>
+            <!-- Signed Out State -->
+            <div class="panel" id="profile-auth-required" hidden>
+                <h2 class="panel-title">Login Required</h2>
+                <p class="panel-description">
+                    Sign in to view and manage your profile.
+                </p>
+                <a href="./auth.html?mode=login" class="btn btn-primary">
+                    Login
+                </a>
+                <a href="./auth.html?mode=signup" class="btn btn-outline">
+                    Create Account
+                </a>
+            </div>
+
+            <!-- Account Profile -->
+            <div id="profile-content" class="content-stack" hidden>
+
+                <section class="panel">
+                    <h2 class="panel-title">Profile Information</h2>
+                    <p class="panel-description">
+                        View and update your account details.
+                    </p>
+
+                    <form id="profile-form">
+
+                        <div class="form-group">
+                            <label class="form-label" for="profile-name">
+                                Full Name
+                            </label>
+                            <input
+                                class="form-control"
+                                type="text"
+                                id="profile-name"
+                                name="displayName"
+                                maxlength="80"
+                                autocomplete="name"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="profile-email">
+                                Email Address
+                            </label>
+                            <input
+                                class="form-control"
+                                type="email"
+                                id="profile-email"
+                                name="email"
+                                autocomplete="email"
+                                readonly
+                            >
+                            <p class="form-hint">
+                                Email changes require account verification.
+                            </p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="profile-photo">
+                                Profile Photo URL (Optional)
+                            </label>
+                            <input
+                                class="form-control"
+                                type="url"
+                                id="profile-photo"
+                                name="photoURL"
+                                placeholder="https://example.com/photo.jpg"
+                            >
+                        </div>
+
+                        <p
+                            class="form-message"
+                            id="profile-message"
+                            role="status"
+                            aria-live="polite"
+                        ></p>
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                            id="profile-save"
+                        >
+                            Save Changes
+                        </button>
+                    </form>
+                </section>
+
+                <!-- Account Settings -->
+                <section class="panel">
+                    <h2 class="panel-title">Account Settings</h2>
+                    <p class="panel-description">
+                        Manage your account access and deletion request.
+                    </p>
+
+                    <div class="form-group">
+                        <h3>Change Email Address</h3>
+                        <p class="form-hint">
+                            Email changes will require verification.
+                        </p>
+                        <button
+                            type="button"
+                            class="btn btn-outline"
+                            id="profile-change-email"
+                        >
+                            Change Email
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <h3>Request Account Deletion</h3>
+                        <p class="form-hint">
+                            Submit a request for your account to be reviewed
+                            for deletion.
+                        </p>
+                        <button
+                            type="button"
+                            class="btn btn-outline"
+                            id="profile-delete-open"
+                        >
+                            Request Deletion
+                        </button>
+                    </div>
+
+                    <form id="profile-delete-form" hidden>
+                        <div class="form-group">
+                            <label class="form-label" for="profile-delete-password">
+                                Account Password
+                            </label>
+                            <input
+                                class="form-control"
+                                type="password"
+                                id="profile-delete-password"
+                                autocomplete="current-password"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="profile-delete-confirm">
+                                Type DELETE to confirm
+                            </label>
+                            <input
+                                class="form-control"
+                                type="text"
+                                id="profile-delete-confirm"
+                                autocomplete="off"
+                                required
+                            >
+                        </div>
+
+                        <p
+                            class="form-message"
+                            id="profile-delete-message"
+                            role="status"
+                            aria-live="polite"
+                        ></p>
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                            id="profile-delete-submit"
+                        >
+                            Submit Deletion Request
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn btn-outline"
+                            id="profile-delete-cancel"
+                        >
+                            Cancel
+                        </button>
+                    </form>
+                </section>
+
+                <!-- Logout -->
+                <section class="panel">
+                    <h2 class="panel-title">Log Out</h2>
+                    <p class="panel-description">
+                        Sign out of your StudyKora account on this session.
+                    </p>
+
+                    <button
+                        type="button"
+                        class="btn btn-outline"
+                        id="profile-logout"
+                    >
+                        Log Out
+                    </button>
+
+                    <div id="profile-logout-confirmation" hidden>
+                        <p class="form-message">
+                            Are you sure you want to log out?
+                        </p>
+
+                        <button
+                            type="button"
+                            class="btn btn-outline"
+                            id="profile-logout-cancel"
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn btn-primary"
+                            id="profile-logout-confirm"
+                        >
+                            Confirm Log Out
+                        </button>
+                    </div>
+                </section>
+
             </div>
         </section>
     </main>
 
-    <footer class="site-footer">
-        <div class="footer-bottom">
-            <p>Design and Develop by Yadav Web Technologies</p>
-        </div>
-    </footer>
+<script src="js/shared-header.js"></script>
+<script src="js/profile.js"></script>
+
 </body>
 </html>
