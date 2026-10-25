@@ -1,172 +1,417 @@
-/* ==========================================
-   StudyNow — Daily Practice
-   Design and Develop by Yadav Web Technologies
-========================================== */
+
+/* =====================================================
+   studyKora — Daily Practice
+   Daily MCQ challenge, score, subject search and filters
+===================================================== */
 
 "use strict";
 
 document.addEventListener("DOMContentLoaded", () => {
-    const dailySetList = document.getElementById("daily-set-list");
+    const $ = (id) => document.getElementById(id);
 
-    const dailySets = [
+    /* -----------------------------------------------
+       1. Date display
+    ----------------------------------------------- */
+
+    const dateElement = $("practice-date");
+
+    if (dateElement) {
+        const today = new Date();
+
+        dateElement.textContent = today.toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "short",
+            year: "numeric"
+        });
+    }
+
+    /* -----------------------------------------------
+       2. Daily challenge questions
+       Sample content for frontend testing
+    ----------------------------------------------- */
+
+    const questions = [
         {
-            id: "general-knowledge",
-            title: "Daily General Knowledge",
-            description: "Practise important facts and general awareness.",
-            category: "DAILY PRACTICE",
-            icon: "knowledge"
+            category: "General Knowledge",
+            question: "Which city is the capital of Assam?",
+            options: ["Guwahati", "Silchar", "Dispur", "Jorhat"],
+            answer: 2,
+            explanation: "Dispur is the capital of Assam."
         },
         {
-            id: "english",
-            title: "English Practice",
-            description: "Revise grammar, vocabulary and comprehension.",
-            category: "LANGUAGE",
-            icon: "book"
+            category: "English",
+            question: "Choose the synonym of 'Rapid'.",
+            options: ["Slow", "Fast", "Weak", "Late"],
+            answer: 1,
+            explanation: "'Fast' is a synonym of 'rapid'."
         },
         {
-            id: "geography",
-            title: "Geography Revision",
-            description: "Review geography concepts and key facts.",
-            category: "REVISION",
-            icon: "globe"
+            category: "Mathematics",
+            question: "What is 25% of 200?",
+            options: ["25", "40", "50", "75"],
+            answer: 2,
+            explanation: "25% of 200 is 200 × 25 / 100 = 50."
         },
         {
-            id: "economics",
-            title: "Economics Practice",
-            description: "Strengthen your understanding of economics.",
-            category: "SUBJECT PRACTICE",
-            icon: "chart"
+            category: "General Science",
+            question: "What is the chemical formula of water?",
+            options: ["CO₂", "O₂", "H₂O", "NaCl"],
+            answer: 2,
+            explanation: "A water molecule contains two hydrogen atoms and one oxygen atom."
         },
         {
-            id: "polity",
-            title: "Polity Revision",
-            description: "Revise constitutional and political concepts.",
-            category: "REVISION",
-            icon: "building"
-        },
-        {
-            id: "assamese",
-            title: "Assamese Practice",
-            description: "Practise Assamese language-related questions.",
-            category: "LANGUAGE",
-            icon: "book"
+            category: "Indian Polity",
+            question: "Fundamental Rights are primarily contained in which part of the Indian Constitution?",
+            options: ["Part I", "Part II", "Part III", "Part IV"],
+            answer: 2,
+            explanation: "Fundamental Rights are contained in Part III of the Constitution."
         }
     ];
 
-    const iconMarkup = {
-        knowledge: `
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="12" r="9"/>
-                <path d="M9.5 9a2.5 2.5 0 1 1 4.4 1.6
-                         c-1.1 1-1.9 1.3-1.9 2.9"/>
-                <path d="M12 17h.01"/>
-            </svg>
-        `,
-        book: `
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H20v19H7.5
-                         A3.5 3.5 0 0 0 4 24z"/>
-                <path d="M4 5.5V24M8 7h8M8 11h8"/>
-            </svg>
-        `,
-        globe: `
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="12" r="9"/>
-                <path d="M3 12h18M12 3a15 15 0 0 1 0 18
-                         M12 3a15 15 0 0 0 0 18"/>
-            </svg>
-        `,
-        chart: `
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M4 20V4M4 20h17"/>
-                <path d="m7 15 4-4 3 2 5-6"/>
-            </svg>
-        `,
-        building: `
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="m3 8 9-5 9 5M4 20h16"/>
-                <path d="M6 9v8M10 9v8M14 9v8M18 9v8M3 21h18"/>
-            </svg>
-        `
+    const challenge = {
+        questionNumber: $("daily-question-number"),
+        category: $("daily-question-category"),
+        questionText: $("daily-question-text"),
+        options: $("daily-question-options"),
+        feedback: $("daily-question-feedback"),
+        progress: $("daily-progress"),
+        progressFill: $("daily-progress-fill"),
+        nextButton: $("daily-next-button"),
+        restartButton: $("daily-restart-button"),
+        status: $("daily-challenge-status"),
+        workspace: $("daily-challenge-workspace"),
+
+        answeredCount: $("daily-answered-count"),
+        correctCount: $("daily-correct-count"),
+        liveScore: $("daily-live-score"),
+
+        resultPanel: $("daily-result-panel"),
+        resultMessage: $("daily-result-message"),
+        resultScore: $("daily-result-score"),
+        resultCorrect: $("daily-result-correct"),
+        resultIncorrect: $("daily-result-incorrect"),
+        resultAccuracy: $("daily-result-accuracy"),
+        resultRetry: $("daily-result-retry")
     };
 
-    function createDailyCard(item) {
-        const link = document.createElement("a");
+    let currentIndex = 0;
+    let selectedAnswers = Array(questions.length).fill(null);
+    let answerChecked = Array(questions.length).fill(false);
+    let finished = false;
 
-        link.className = "listing-card";
-        link.href = `test.html?subject=${encodeURIComponent(item.id)}`;
-        link.setAttribute("aria-label", `Open ${item.title}`);
+    function showFeedback(message, type = "") {
+        if (!challenge.feedback) return;
 
-        const icon = document.createElement("span");
-        icon.className = "card-icon";
-        icon.setAttribute("aria-hidden", "true");
-        icon.style.background = "var(--green-soft)";
-        icon.style.color = "var(--green)";
-        icon.innerHTML = iconMarkup[item.icon] || iconMarkup.book;
+        challenge.feedback.textContent = message;
 
-        const content = document.createElement("span");
-        content.className = "card-content";
-
-        const category = document.createElement("span");
-        category.className = "card-category";
-        category.textContent = item.category;
-
-        const title = document.createElement("span");
-        title.className = "card-title";
-        title.textContent = item.title;
-
-        const description = document.createElement("span");
-        description.className = "card-description";
-        description.textContent = item.description;
-
-        content.append(category, title, description);
-
-        const arrow = document.createElement("span");
-        arrow.className = "card-arrow";
-        arrow.setAttribute("aria-hidden", "true");
-        arrow.textContent = "›";
-
-        link.append(icon, content, arrow);
-
-        return link;
+        if (type) {
+            challenge.feedback.dataset.type = type;
+        } else {
+            delete challenge.feedback.dataset.type;
+        }
     }
 
-    if (dailySetList) {
-        const fragment = document.createDocumentFragment();
-
-        dailySets.forEach((item) => {
-            fragment.appendChild(createDailyCard(item));
-        });
-
-        dailySetList.replaceChildren(fragment);
+    function getAnsweredCount() {
+        return answerChecked.filter(Boolean).length;
     }
 
-    /*
-     * Existing revision-category controls:
-     * send supported subjects directly to their practice preview.
-     * Categories without a dedicated subject route go to the subject list.
-     */
-    const revisionRoutes = {
-        "general-knowledge": "test.html?subject=general-knowledge",
-        english: "test.html?subject=english",
-        "assam-history": "subjects.html#available-subjects",
-        reasoning: "subjects.html#available-subjects"
-    };
+    function getCorrectCount() {
+        return questions.reduce((total, question, index) => {
+            return total + (
+                answerChecked[index] &&
+                selectedAnswers[index] === question.answer
+                    ? 1
+                    : 0
+            );
+        }, 0);
+    }
 
-    document.querySelectorAll("[data-revision]").forEach((control) => {
-        const revisionId = control.dataset.revision;
-        const destination = revisionRoutes[revisionId];
+    function updateProgress() {
+        const answered = getAnsweredCount();
+        const correct = getCorrectCount();
+        const percentage = Math.round(
+            (answered / questions.length) * 100
+        );
 
-        if (!destination) return;
-
-        if (control.tagName === "A") {
-            control.href = destination;
-            return;
+        if (challenge.answeredCount) {
+            challenge.answeredCount.textContent =
+                `${answered} of ${questions.length}`;
         }
 
-        // Keep existing button appearance, but use real page navigation.
-        control.addEventListener("click", () => {
-            window.location.href = destination;
+        if (challenge.correctCount) {
+            challenge.correctCount.textContent = String(correct);
+        }
+
+        if (challenge.liveScore) {
+            challenge.liveScore.textContent =
+                `${correct} / ${questions.length}`;
+        }
+
+        if (challenge.progress) {
+            challenge.progress.setAttribute(
+                "aria-valuenow",
+                String(percentage)
+            );
+        }
+
+        if (challenge.progressFill) {
+            challenge.progressFill.style.width = `${percentage}%`;
+        }
+    }
+
+    function renderQuestion() {
+        if (finished) return;
+
+        const question = questions[currentIndex];
+
+        challenge.questionNumber.textContent =
+            `Question ${currentIndex + 1} of ${questions.length}`;
+
+        challenge.category.textContent = question.category;
+        challenge.questionText.textContent = question.question;
+
+        challenge.options.replaceChildren();
+
+        question.options.forEach((optionText, optionIndex) => {
+            const button = document.createElement("button");
+
+            button.type = "button";
+            button.className = "option-item";
+
+            const letter = document.createElement("span");
+            letter.className = "option-letter";
+            letter.textContent = String.fromCharCode(65 + optionIndex);
+
+            const label = document.createElement("span");
+            label.textContent = optionText;
+
+            const isSelected =
+                selectedAnswers[currentIndex] === optionIndex;
+
+            if (isSelected) {
+                button.classList.add("is-selected");
+            }
+
+            button.setAttribute(
+                "aria-pressed",
+                String(isSelected)
+            );
+
+            button.append(letter, label);
+
+            if (answerChecked[currentIndex]) {
+                button.disabled = true;
+
+                if (optionIndex === question.answer) {
+                    button.classList.add("is-selected");
+                }
+            } else {
+                button.addEventListener("click", () => {
+                    selectAnswer(optionIndex);
+                });
+            }
+
+            challenge.options.appendChild(button);
+        });
+
+        if (answerChecked[currentIndex]) {
+            const isCorrect =
+                selectedAnswers[currentIndex] === question.answer;
+
+            showFeedback(
+                `${isCorrect ? "Correct!" : "Incorrect."} ${question.explanation}`,
+                isCorrect ? "success" : "error"
+            );
+
+            challenge.nextButton.disabled = false;
+        } else {
+            showFeedback("Choose one option to check your answer.");
+            challenge.nextButton.disabled = true;
+        }
+
+        challenge.nextButton.textContent =
+            currentIndex === questions.length - 1
+                ? "View Result"
+                : "Next Question";
+
+        if (challenge.status) {
+            challenge.status.textContent =
+                `${getAnsweredCount()} of ${questions.length} answered`;
+        }
+
+        updateProgress();
+    }
+
+    function selectAnswer(optionIndex) {
+        if (finished || answerChecked[currentIndex]) return;
+
+        const question = questions[currentIndex];
+
+        selectedAnswers[currentIndex] = optionIndex;
+        answerChecked[currentIndex] = true;
+
+        const isCorrect = optionIndex === question.answer;
+
+        showFeedback(
+            `${isCorrect ? "Correct!" : "Incorrect."} ${question.explanation}`,
+            isCorrect ? "success" : "error"
+        );
+
+        renderQuestion();
+    }
+
+    function finishChallenge() {
+        finished = true;
+
+        const correct = getCorrectCount();
+        const answered = getAnsweredCount();
+        const incorrect = answered - correct;
+        const accuracy = answered > 0
+            ? Math.round((correct / answered) * 100)
+            : 0;
+
+        challenge.workspace.hidden = true;
+        challenge.resultPanel.hidden = false;
+
+        challenge.resultMessage.textContent =
+            `You answered ${answered} of ${questions.length} questions.`;
+
+        challenge.resultScore.textContent =
+            `${correct} / ${questions.length}`;
+
+        challenge.resultCorrect.textContent = String(correct);
+        challenge.resultIncorrect.textContent = String(incorrect);
+        challenge.resultAccuracy.textContent = `${accuracy}%`;
+
+        if (challenge.status) {
+            challenge.status.textContent = "Challenge completed";
+        }
+
+        challenge.resultPanel.scrollIntoView({
+            behavior: window.matchMedia(
+                "(prefers-reduced-motion: reduce)"
+            ).matches ? "auto" : "smooth",
+            block: "start"
+        });
+    }
+
+    function resetChallenge() {
+        currentIndex = 0;
+        selectedAnswers = Array(questions.length).fill(null);
+        answerChecked = Array(questions.length).fill(false);
+        finished = false;
+
+        challenge.workspace.hidden = false;
+        challenge.resultPanel.hidden = true;
+
+        if (challenge.status) {
+            challenge.status.textContent = "Ready to practise";
+        }
+
+        renderQuestion();
+    }
+
+    if (challenge.nextButton) {
+        challenge.nextButton.addEventListener("click", () => {
+            if (finished || !answerChecked[currentIndex]) return;
+
+            if (currentIndex === questions.length - 1) {
+                finishChallenge();
+                return;
+            }
+
+            currentIndex += 1;
+            renderQuestion();
+        });
+    }
+
+    if (challenge.restartButton) {
+        challenge.restartButton.addEventListener("click", resetChallenge);
+    }
+
+    if (challenge.resultRetry) {
+        challenge.resultRetry.addEventListener("click", resetChallenge);
+    }
+
+    renderQuestion();
+
+    /* -----------------------------------------------
+       3. Subject search and category filters
+    ----------------------------------------------- */
+
+    const searchInput = $("practice-subject-search");
+
+    const subjectCards = Array.from(
+        document.querySelectorAll("[data-practice-card]")
+    );
+
+    const filterButtons = Array.from(
+        document.querySelectorAll("[data-practice-filter]")
+    );
+
+    const resultCount = $("practice-subject-count");
+    const emptyState = $("practice-subject-empty");
+
+    let activeCategory = "all";
+
+    function updateSubjectCards() {
+        const query = String(searchInput?.value || "")
+            .trim()
+            .toLocaleLowerCase();
+
+        let visibleCount = 0;
+
+        subjectCards.forEach((card) => {
+            const searchableText = [
+                card.dataset.practiceName,
+                card.dataset.practiceCategory,
+                card.textContent
+            ].join(" ").toLocaleLowerCase();
+
+            const matchesSearch = searchableText.includes(query);
+
+            const matchesCategory =
+                activeCategory === "all" ||
+                card.dataset.practiceCategory === activeCategory;
+
+            const isVisible = matchesSearch && matchesCategory;
+
+            card.hidden = !isVisible;
+
+            if (isVisible) visibleCount += 1;
+        });
+
+        if (resultCount) {
+            resultCount.textContent =
+                `${visibleCount} ${
+                    visibleCount === 1 ? "subject" : "subjects"
+                } found`;
+        }
+
+        if (emptyState) {
+            emptyState.hidden = visibleCount !== 0;
+        }
+    }
+
+    filterButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            activeCategory = button.dataset.practiceFilter || "all";
+
+            filterButtons.forEach((item) => {
+                const isActive =
+                    item.dataset.practiceFilter === activeCategory;
+
+                item.classList.toggle("is-active", isActive);
+                item.setAttribute("aria-pressed", String(isActive));
+            });
+
+            updateSubjectCards();
         });
     });
+
+    if (searchInput) {
+        searchInput.addEventListener("input", updateSubjectCards);
+    }
+
+    updateSubjectCards();
 });
