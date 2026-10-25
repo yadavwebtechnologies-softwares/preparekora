@@ -1,499 +1,192 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Login | studyKora</title>
-    <meta name="description" content="Access your studyKora account, register or recover your password.">
-    <meta name="theme-color" content="#28734f">
-    <meta name="robots" content="noindex, follow">
-    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/auth.html">
+    <title>Current Affairs | StudyKora</title>
+    <meta name="description" content="Prepare for Assam competitive examinations with current affairs, important news updates, and general awareness practice on StudyKora.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/current-affairs.html">
 
     <link rel="stylesheet" href="style.css">
 
     <script src="script.js" defer></script>
-    <script src="js/auth.js" defer></script>
+    <script src="js/shared-header.js" defer></script>
+    <script src="js/current-affairs.js" defer></script>
 </head>
 
-<body class="auth-page">
-
-    <main class="auth-layout">
-
-        <!-- Left branding panel -->
-        <aside class="auth-side">
-
-            <a href="index.html" class="auth-brand" aria-label="studyKora home">
-                <span class="auth-brand-name"><span style="color: #ffffff;">study</span><span style="color: rgba(255, 255, 255, 0.72);">kora</span></span>
-                <span class="auth-brand-caption">Learn. Practice. Progress.</span>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="index.html" aria-label="StudyKora home">
+                <span class="brand-text">
+                    <span class="brand-name">
+                        <span style="color:#111111;">study</span><span style="color:#777777;">kora</span>
+                    </span>
+                </span>
             </a>
 
-            <div class="auth-side-content">
-                <span class="auth-eyebrow">
-                    YOUR LEARNING JOURNEY
-                </span>
+            <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+                <a href="index.html" data-page="index.html">Home</a>
+                <a href="mock-tests.html" data-page="mock-tests.html">Mock Tests</a>
+                <a href="current-affairs.html" data-page="current-affairs.html" aria-current="page">Current Affairs</a>
+                <a href="daily-practice.html" data-page="daily-practice.html">Daily Practice</a>
+                <a href="resources.html" data-page="resources.html">Resources</a>
+            </nav>
 
-                <h1>Your exam preparation starts here</h1>
+            <div class="header-actions">
+                <div class="account-guest" id="account-guest">
+                    <a class="btn btn-secondary" id="account-login-link" href="auth.html?mode=login">Login</a>
+                    <a class="btn btn-primary" id="account-register-link" href="auth.html?mode=signup">Create Account</a>
+                </div>
 
-                <p class="auth-side-description">
-                    Practise MCQs in English and Assamese for ADRE,
-                    Assam Police, APSC, TET, SSC and other competitive exams.
-                </p>
+                <div class="account-authenticated" id="account-authenticated" hidden>
+                    <a class="account-profile-trigger" id="account-profile-trigger" href="profile.html" aria-label="Open your profile">
+                        <svg id="account-profile-avatar" viewBox="0 0 24 24" width="36" height="36" aria-hidden="true">
+                            <circle cx="12" cy="12" r="11" fill="#e8f4ec"></circle>
+                            <circle cx="12" cy="8.5" r="3.2" fill="#28734f"></circle>
+                            <path d="M5.8 19c.6-3.1 2.8-4.8 6.2-4.8s5.6 1.7 6.2 4.8" fill="#28734f"></path>
+                        </svg>
+                    </a>
+                </div>
+
+                <button class="menu-toggle" id="menu-toggle" type="button"
+                    aria-label="Open navigation menu" aria-expanded="false"
+                    aria-controls="main-nav">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </div>
+        </div>
+    </header>
 
-            <div class="auth-side-stats">
-                <div class="auth-side-stat">
-                    <strong>15,000+</strong>
-                    <span>MCQs</span>
-                </div>
-
-                <div class="auth-side-stat">
-                    <strong>50+</strong>
-                    <span>Exam categories</span>
-                </div>
-
-                <div class="auth-side-stat">
-                    <strong>Free</strong>
-                    <span>To get started</span>
+    <main>
+        <section class="page-hero">
+            <div class="container">
+                <div class="page-hero-content">
+                    <p class="eyebrow">STAY INFORMED</p>
+                    <h1>Current Affairs</h1>
+                    <p>
+                        Important news and general awareness topics to support
+                        your competitive examination preparation.
+                    </p>
                 </div>
             </div>
-
-        </aside>
-
-        <!-- Right authentication area -->
-        <section class="auth-main" aria-label="Account access">
-
-            <div class="auth-main-inner">
-
-                <a href="index.html" class="auth-mobile-brand" aria-label="studyKora home"><span class="brand-name-primary">study</span><span class="brand-name-muted">kora</span></a>
-
-                <div class="auth-form-wrap">
-
-                    <!-- LOGIN -->
-                    <section
-                        class="auth-panel"
-                        id="login-panel"
-                        data-auth-panel="login"
-                    >
-
-                        <a href="index.html" class="auth-form-brand" aria-label="studyKora home"><span class="brand-name-primary">study</span><span class="brand-name-muted">kora</span></a>
-
-                        <div class="auth-card">
-                            <div class="auth-heading">
-                                <h2>Welcome back</h2>
-                                <p>Enter your credentials to continue.</p>
-                            </div>
-
-                            <form id="login-form" novalidate>
-
-                                <div class="auth-field">
-                                    <label for="login-email">
-                                        Email
-                                    </label>
-
-                                    <input
-                                        type="email"
-                                        id="login-email"
-                                        name="email"
-                                        class="auth-input"
-                                        placeholder="Enter your email"
-                                        autocomplete="email"
-                                        required
-                                    >
-                                </div>
-
-                                <div class="auth-field">
-                                    <label for="login-password">
-                                        Password
-                                    </label>
-
-                                    <div class="auth-password-wrap">
-                                        <input
-                                            type="password"
-                                            id="login-password"
-                                            name="password"
-                                            class="auth-input"
-                                            placeholder="Enter your password"
-                                            autocomplete="current-password"
-                                            required
-                                        >
-
-                                        <button
-                                            type="button"
-                                            class="auth-password-toggle"
-                                            data-toggle-password="login-password"
-                                            aria-label="Show password"
-                                            aria-pressed="false"
-                                        >
-                                            Show
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <p
-                                    class="auth-message"
-                                    id="login-message"
-                                    role="status"
-                                    aria-live="polite"
-                                ></p>
-
-                                <button
-                                    type="submit"
-                                    class="auth-submit"
-                                    id="login-submit"
-                                >
-                                    Login
-                                </button>
-
-                                <div class="auth-link-row auth-link-row-center">
-                                    <a href="auth.html?mode=forgot"
-                                       data-show-auth="forgot">
-                                        Forgot your password?
-                                    </a>
-                                </div>
-
-                                <p class="auth-switch-text">
-                                    Don't have an account?
-                                    <a href="auth.html?mode=signup"
-                                       data-show-auth="signup">
-                                        Register
-                                    </a>
-                                </p>
-
-                            </form>
-                        </div>
-
-                    </section>
-
-                    <!-- SIGNUP -->
-                    <section
-                        class="auth-panel"
-                        id="signup-panel"
-                        data-auth-panel="signup"
-                        hidden
-                    >
-
-                        <a href="index.html" class="auth-form-brand" aria-label="studyKora home"><span class="brand-name-primary">study</span><span class="brand-name-muted">kora</span></a>
-
-                        <div class="auth-card">
-                            <div class="auth-heading">
-                                <h2>Create your account</h2>
-                                <p>Join studyKora and start practising.</p>
-                            </div>
-
-                            <form id="signup-form" novalidate>
-
-                                <div class="auth-field">
-                                    <label for="signup-name">Full Name</label>
-
-                                    <input
-                                        type="text"
-                                        id="signup-name"
-                                        name="name"
-                                        class="auth-input"
-                                        placeholder="Enter your full name"
-                                        autocomplete="name"
-                                        maxlength="100"
-                                        required
-                                    >
-                                </div>
-
-                                <div class="auth-field">
-                                    <label for="signup-email">Email</label>
-
-                                    <input
-                                        type="email"
-                                        id="signup-email"
-                                        name="email"
-                                        class="auth-input"
-                                        placeholder="Enter your email"
-                                        autocomplete="email"
-                                        required
-                                    >
-                                </div>
-
-                                <div class="auth-field">
-                                    <label for="signup-whatsapp">
-                                        WhatsApp Number
-                                    </label>
-
-                                    <input
-                                        type="tel"
-                                        id="signup-whatsapp"
-                                        name="whatsapp"
-                                        class="auth-input"
-                                        placeholder="+91 98765 43210"
-                                        autocomplete="tel"
-                                        inputmode="tel"
-                                        maxlength="20"
-                                        required
-                                    >
-
-                                    <small class="auth-field-hint">
-                                        Include your country code, such as +91.
-                                    </small>
-                                </div>
-
-                                <div class="auth-field">
-                                    <label for="signup-password">Password</label>
-
-                                    <div class="auth-password-wrap">
-                                        <input
-                                            type="password"
-                                            id="signup-password"
-                                            name="password"
-                                            class="auth-input"
-                                            placeholder="Create a password"
-                                            autocomplete="new-password"
-                                            minlength="8"
-                                            required
-                                        >
-
-                                        <button
-                                            type="button"
-                                            class="auth-password-toggle"
-                                            data-toggle-password="signup-password"
-                                            aria-label="Show password"
-                                            aria-pressed="false"
-                                        >
-                                            Show
-                                        </button>
-                                    </div>
-
-                                    <small class="auth-field-hint">
-                                        Use at least 8 characters.
-                                    </small>
-                                </div>
-
-                                <div class="auth-field">
-                                    <label for="signup-confirm-password">
-                                        Confirm Password
-                                    </label>
-
-                                    <div class="auth-password-wrap">
-                                        <input
-                                            type="password"
-                                            id="signup-confirm-password"
-                                            name="confirmPassword"
-                                            class="auth-input"
-                                            placeholder="Re-enter your password"
-                                            autocomplete="new-password"
-                                            minlength="8"
-                                            required
-                                        >
-
-                                        <button
-                                            type="button"
-                                            class="auth-password-toggle"
-                                            data-toggle-password="signup-confirm-password"
-                                            aria-label="Show password"
-                                            aria-pressed="false"
-                                        >
-                                            Show
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <p
-                                    class="auth-message"
-                                    id="signup-message"
-                                    role="status"
-                                    aria-live="polite"
-                                ></p>
-
-                                <button
-                                    type="submit"
-                                    class="auth-submit"
-                                    id="signup-submit"
-                                >
-                                    Create Account
-                                </button>
-
-                                <p class="auth-switch-text">
-                                    Already have an account?
-                                    <a href="auth.html?mode=login"
-                                       data-show-auth="login">
-                                        Login
-                                    </a>
-                                </p>
-
-                            </form>
-                        </div>
-
-                    </section>
-
-                    <!-- FORGOT PASSWORD -->
-                    <section
-                        class="auth-panel"
-                        id="forgot-panel"
-                        data-auth-panel="forgot"
-                        hidden
-                    >
-
-                        <a href="index.html" class="auth-form-brand" aria-label="studyKora home"><span class="brand-name-primary">study</span><span class="brand-name-muted">kora</span></a>
-
-                        <div class="auth-card">
-                            <div class="auth-heading">
-                                <h2>Recover your account</h2>
-                                <p>
-                                    Enter the email and WhatsApp number
-                                    registered with your account.
-                                </p>
-                            </div>
-
-                            <form id="forgot-form" novalidate>
-
-                                <div class="auth-field">
-                                    <label for="forgot-email">
-                                        Registered Email
-                                    </label>
-
-                                    <input
-                                        type="email"
-                                        id="forgot-email"
-                                        name="email"
-                                        class="auth-input"
-                                        placeholder="Enter your registered email"
-                                        autocomplete="email"
-                                        required
-                                    >
-                                </div>
-
-                                <div class="auth-field">
-                                    <label for="forgot-whatsapp">
-                                        Registered WhatsApp Number
-                                    </label>
-
-                                    <input
-                                        type="tel"
-                                        id="forgot-whatsapp"
-                                        name="whatsapp"
-                                        class="auth-input"
-                                        placeholder="+91 98765 43210"
-                                        autocomplete="tel"
-                                        inputmode="tel"
-                                        maxlength="20"
-                                    >
-                                </div>
-
-                                <p
-                                    class="auth-message"
-                                    id="forgot-message"
-                                    role="status"
-                                    aria-live="polite"
-                                ></p>
-
-                                <button
-                                    type="submit"
-                                    class="auth-submit"
-                                    id="forgot-submit"
-                                >
-                                    Verify Account
-                                </button>
-
-                                <!-- Hidden until real verification succeeds -->
-                                <div id="forgot-reset-fields" hidden>
-
-                                    <div class="auth-field">
-                                        <label for="forgot-otp">
-                                            Verification Code
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            id="forgot-otp"
-                                            name="otp"
-                                            class="auth-input"
-                                            placeholder="Enter verification code"
-                                            inputmode="numeric"
-                                            autocomplete="one-time-code"
-                                            maxlength="8"
-                                        >
-                                    </div>
-
-                                    <div class="auth-field">
-                                        <label for="forgot-new-password">
-                                            New Password
-                                        </label>
-
-                                        <input
-                                            type="password"
-                                            id="forgot-new-password"
-                                            name="newPassword"
-                                            class="auth-input"
-                                            placeholder="Create a new password"
-                                            autocomplete="new-password"
-                                            minlength="8"
-                                        >
-                                    </div>
-
-                                    <div class="auth-field">
-                                        <label for="forgot-confirm-password">
-                                            Confirm New Password
-                                        </label>
-
-                                        <input
-                                            type="password"
-                                            id="forgot-confirm-password"
-                                            name="confirmPassword"
-                                            class="auth-input"
-                                            placeholder="Re-enter new password"
-                                            autocomplete="new-password"
-                                            minlength="8"
-                                        >
-                                    </div>
-
-                                    <button
-                                        type="button"
-                                        class="auth-submit"
-                                        id="forgot-reset-submit"
-                                    >
-                                        Reset Password
-                                    </button>
-
-                                </div>
-
-                                <p class="auth-switch-text">
-                                    Remembered your password?
-                                    <a href="auth.html?mode=login"
-                                       data-show-auth="login">
-                                        Back to Login
-                                    </a>
-                                </p>
-
-                            </form>
-                        </div>
-
-                    </section>
-
-                </div>
-
-                <div class="auth-security-note">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"
-                              stroke="currentColor"
-                              stroke-width="1.6"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"/>
-                        <path d="m8.5 12 2.2 2.2 4.8-5"
-                              stroke="currentColor"
-                              stroke-width="1.6"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"/>
-                    </svg>
-
-                    <span>Secure account access</span>
-                </div>
-
-                <a href="index.html" class="auth-home-link">
-                    Back to studyKora
-                </a>
-
-            </div>
-
         </section>
 
+        <section class="content-section">
+            <div class="container">
+                <div class="section-heading">
+                    <div>
+                        <h2>Explore Current Affairs</h2>
+                        <p>Search topics or choose a category to find updates.</p>
+                    </div>
+                </div>
+
+                <div class="panel current-affairs-toolbar">
+                    <div class="form-group">
+                        <label class="form-label" for="current-affairs-search">
+                            Search updates
+                        </label>
+                        <input
+                            class="form-control"
+                            id="current-affairs-search"
+                            type="search"
+                            placeholder="Search topics, headlines or keywords..."
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="current-affairs-category">
+                            Category
+                        </label>
+                        <select class="form-control" id="current-affairs-category">
+                            <option value="all">All categories</option>
+                            <option value="assam">Assam</option>
+                            <option value="national">National</option>
+                            <option value="international">International</option>
+                            <option value="economy">Economy</option>
+                            <option value="science">Science and Technology</option>
+                            <option value="environment">Environment</option>
+                            <option value="sports">Sports</option>
+                            <option value="awards">Awards and Appointments</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="current-affairs-sort">
+                            Sort by
+                        </label>
+                        <select class="form-control" id="current-affairs-sort">
+                            <option value="newest">Newest first</option>
+                            <option value="oldest">Oldest first</option>
+                            <option value="title">Title A–Z</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="current-affairs-results-bar">
+                    <p id="current-affairs-result-count" aria-live="polite">
+                        Loading updates...
+                    </p>
+                    <button class="btn btn-secondary" id="current-affairs-reset" type="button">
+                        Reset filters
+                    </button>
+                </div>
+
+                <div class="current-affairs-grid" id="current-affairs-grid">
+                    <!-- Current affairs articles are rendered by js/current-affairs.js -->
+                </div>
+
+                <div class="panel current-affairs-empty" id="current-affairs-empty" hidden>
+                    <h3>No matching updates found</h3>
+                    <p>Try another search term or select a different category.</p>
+                    <button class="btn btn-primary" id="current-affairs-empty-reset" type="button">
+                        Clear filters
+                    </button>
+                </div>
+
+                <div class="current-affairs-notice">
+                    <p>
+                        <strong>Preparation note:</strong>
+                        Always verify important facts, dates and official announcements
+                        using reliable official sources before your examination.
+                    </p>
+                </div>
+            </div>
+        </section>
     </main>
 
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-main">
+                <div class="footer-brand">
+                    <a class="brand" href="index.html" aria-label="StudyKora home">
+                        <span class="brand-text">
+                            <span class="brand-name">
+                                <span style="color:#111111;">study</span><span style="color:#777777;">kora</span>
+                            </span>
+                        </span>
+                    </a>
+                    <p>Practice, learn and prepare for your next opportunity.</p>
+                </div>
+
+                <div class="footer-links">
+                    <a href="mock-tests.html">Mock Tests</a>
+                    <a href="current-affairs.html">Current Affairs</a>
+                    <a href="daily-practice.html">Daily Practice</a>
+                    <a href="privacy.html">Privacy Policy</a>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year"></span> StudyKora. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
