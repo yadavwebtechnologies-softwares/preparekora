@@ -1,291 +1,236 @@
 
-/* =====================================================
-   studyKora — Current Affairs
-   Category selection, search, URL state and page headings
-===================================================== */
-
+/* StudyKora Current Affairs */
 "use strict";
 
-document.addEventListener("DOMContentLoaded", () => {
+(function () {
     const searchInput = document.getElementById("current-affairs-search");
+    const categorySelect = document.getElementById("current-affairs-category");
+    const sortSelect = document.getElementById("current-affairs-sort");
+    const grid = document.getElementById("current-affairs-grid");
+    const resultCount = document.getElementById("current-affairs-result-count");
+    const emptyState = document.getElementById("current-affairs-empty");
+    const resetButton = document.getElementById("current-affairs-reset");
+    const emptyResetButton = document.getElementById("current-affairs-empty-reset");
+    const yearElement = document.getElementById("current-year");
 
-    const categoryCards = Array.from(
-        document.querySelectorAll("[data-ca-card]")
-    );
+    if (
+        !searchInput ||
+        !categorySelect ||
+        !sortSelect ||
+        !grid ||
+        !resultCount ||
+        !emptyState
+    ) {
+        console.error("[StudyKora Current Affairs] Required page elements are missing.");
+        return;
+    }
 
-    const filterButtons = Array.from(
-        document.querySelectorAll("[data-ca-filter]")
-    );
-
-    const mainHero = document.getElementById(
-        "current-affairs-main-hero"
-    );
-
-    const categoryHero = document.getElementById(
-        "current-affairs-category-hero"
-    );
-
-    const categoryLabel = document.getElementById(
-        "current-affairs-category-label"
-    );
-
-    const categoryTitle = document.getElementById(
-        "current-affairs-category-title"
-    );
-
-    const categoryDescription = document.getElementById(
-        "current-affairs-category-description"
-    );
-
-    const contentHeading = document.getElementById(
-        "current-affairs-content-heading"
-    );
-
-    const contentDescription = document.getElementById(
-        "current-affairs-content-description"
-    );
-
-    const resultCount = document.getElementById(
-        "current-affairs-result-count"
-    );
-
-    const emptyTitle = document.getElementById(
-        "current-affairs-empty-title"
-    );
-
-    const emptyDescription = document.getElementById(
-        "current-affairs-empty-description"
-    );
-
-    const categoryDetails = {
-        daily: {
-            title: "Daily Updates",
-            description:
-                "Review dated current affairs updates and important events for competitive exam preparation.",
-            contentHeading: "Daily Current Affairs",
-            contentDescription:
-                "Search and explore daily news and revision material.",
-            emptyTitle: "Daily updates are not available yet",
-            emptyDescription:
-                "Verified, dated current affairs content will appear here once it is added."
+    /*
+     * Replace these sample entries with verified current-affairs data.
+     * Dates must use YYYY-MM-DD format.
+     *
+     * For a production news feed, load articles from a trusted API or
+     * your own Firebase-backed publishing system.
+     */
+    const articles = [
+        {
+            id: "sample-assam",
+            title: "Assam Current Affairs",
+            summary: "Add a verified update about Assam, with its date and reliable source.",
+            category: "assam",
+            date: "2026-01-01",
+            sourceName: "Add official source",
+            sourceUrl: ""
         },
-
-        assam: {
-            title: "Assam Affairs",
-            description:
-                "Explore Assam-related events, government initiatives, culture and important developments.",
-            contentHeading: "Assam Current Affairs",
-            contentDescription:
-                "Find updates related to Assam and its important developments.",
-            emptyTitle: "Assam updates are not available yet",
-            emptyDescription:
-                "Verified Assam-related updates will appear here once they are added."
+        {
+            id: "sample-national",
+            title: "National Current Affairs",
+            summary: "Add a verified national news update relevant to competitive examinations.",
+            category: "national",
+            date: "2026-01-02",
+            sourceName: "Add official source",
+            sourceUrl: ""
         },
-
-        national: {
-            title: "National Affairs",
-            description:
-                "Review important national developments, public policies and events across India.",
-            contentHeading: "National Current Affairs",
-            contentDescription:
-                "Explore national updates relevant to competitive examinations.",
-            emptyTitle: "National updates are not available yet",
-            emptyDescription:
-                "Verified, dated national updates will appear here once they are added."
-        },
-
-        quiz: {
-            title: "Current Affairs Quiz",
-            description:
-                "Test your understanding of current affairs through multiple-choice questions.",
-            contentHeading: "Current Affairs Practice",
-            contentDescription:
-                "Search and explore available current affairs practice material.",
-            emptyTitle: "Current affairs quizzes are not available yet",
-            emptyDescription:
-                "Quiz cards will appear here once question sets are configured."
+        {
+            id: "sample-international",
+            title: "International Current Affairs",
+            summary: "Add a verified international development and its examination-relevant facts.",
+            category: "international",
+            date: "2026-01-03",
+            sourceName: "Add official source",
+            sourceUrl: ""
         }
+    ];
+
+    const categoryNames = {
+        assam: "Assam",
+        national: "National",
+        international: "International",
+        economy: "Economy",
+        science: "Science and Technology",
+        environment: "Environment",
+        sports: "Sports",
+        awards: "Awards and Appointments"
     };
 
-    let activeCategory = "all";
+    function escapeHTML(value) {
+        return String(value ?? "").replace(/[&<>"']/g, function (character) {
+            const entities = {
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            };
 
-    function normalize(value) {
-        return String(value || "").trim().toLocaleLowerCase();
-    }
-
-    function getCategoryFromCard(card) {
-        return card.dataset.caId || "";
-    }
-
-    function updateUrl(category) {
-        const url = new URL(window.location.href);
-
-        if (category === "all") {
-            url.searchParams.delete("category");
-        } else {
-            url.searchParams.set("category", category);
-        }
-
-        window.history.replaceState({}, "", url);
-    }
-
-    function updateBanner(category) {
-        const isSpecificCategory =
-            category !== "all" && Boolean(categoryDetails[category]);
-
-        if (mainHero) {
-            mainHero.hidden = isSpecificCategory;
-        }
-
-        if (categoryHero) {
-            categoryHero.hidden = !isSpecificCategory;
-        }
-
-        if (!isSpecificCategory) {
-            document.title = "Current Affairs | studyKora";
-            return;
-        }
-
-        const details = categoryDetails[category];
-
-        if (categoryLabel) {
-            categoryLabel.textContent = "Current Affairs";
-        }
-
-        if (categoryTitle) {
-            categoryTitle.textContent = details.title;
-        }
-
-        if (categoryDescription) {
-            categoryDescription.textContent = details.description;
-        }
-
-        if (contentHeading) {
-            contentHeading.textContent = details.contentHeading;
-        }
-
-        if (contentDescription) {
-            contentDescription.textContent =
-                details.contentDescription;
-        }
-
-        if (emptyTitle) {
-            emptyTitle.textContent = details.emptyTitle;
-        }
-
-        if (emptyDescription) {
-            emptyDescription.textContent = details.emptyDescription;
-        }
-
-        document.title = `${details.title} | studyKora`;
-    }
-
-    function updateFilters() {
-        filterButtons.forEach((button) => {
-            const isActive =
-                button.dataset.caFilter === activeCategory;
-
-            button.classList.toggle("is-active", isActive);
-            button.setAttribute("aria-pressed", String(isActive));
+            return entities[character];
         });
     }
 
-    function updateCards() {
-        const query = normalize(searchInput?.value);
-        let visibleCount = 0;
+    function formatDate(dateString) {
+        const date = new Date(dateString + "T00:00:00");
 
-        categoryCards.forEach((card) => {
-            const category = getCategoryFromCard(card);
+        if (Number.isNaN(date.getTime())) {
+            return "Date unavailable";
+        }
 
-            const searchableText = normalize([
-                card.dataset.caName,
-                card.dataset.caDescription,
-                card.dataset.caKeywords,
-                card.textContent
-            ].join(" "));
+        return new Intl.DateTimeFormat("en-IN", {
+            day: "numeric",
+            month: "short",
+            year: "numeric"
+        }).format(date);
+    }
 
-            const matchesSearch = searchableText.includes(query);
+    function isValidSourceURL(url) {
+        if (!url) return false;
 
+        try {
+            const parsedURL = new URL(url);
+            return parsedURL.protocol === "https:" || parsedURL.protocol === "http:";
+        } catch {
+            return false;
+        }
+    }
+
+    function createArticleCard(article) {
+        const category = categoryNames[article.category] || "General Awareness";
+        const safeTitle = escapeHTML(article.title);
+        const safeSummary = escapeHTML(article.summary);
+        const safeCategory = escapeHTML(category);
+        const safeDate = escapeHTML(formatDate(article.date));
+        const safeSource = escapeHTML(article.sourceName || "Source not provided");
+
+        const sourceLink = isValidSourceURL(article.sourceUrl)
+            ? `<a class="current-affairs-source-link"
+                   href="${escapeHTML(article.sourceUrl)}"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                   View source
+               </a>`
+            : "";
+
+        return `
+            <article class="panel current-affairs-card" data-article-id="${escapeHTML(article.id)}">
+                <div class="current-affairs-card-top">
+                    <span class="current-affairs-category">${safeCategory}</span>
+                    <time datetime="${escapeHTML(article.date)}">${safeDate}</time>
+                </div>
+
+                <div class="current-affairs-card-body">
+                    <h3>${safeTitle}</h3>
+                    <p>${safeSummary}</p>
+                </div>
+
+                <div class="current-affairs-card-footer">
+                    <span class="current-affairs-source">${safeSource}</span>
+                    ${sourceLink}
+                </div>
+            </article>
+        `;
+    }
+
+    function getFilteredArticles() {
+        const query = searchInput.value.trim().toLocaleLowerCase();
+        const selectedCategory = categorySelect.value;
+        const selectedSort = sortSelect.value;
+
+        const filtered = articles.filter(function (article) {
             const matchesCategory =
-                activeCategory === "all" ||
-                category === activeCategory;
+                selectedCategory === "all" ||
+                article.category === selectedCategory;
 
-            const isVisible = matchesSearch && matchesCategory;
+            const searchableText = [
+                article.title,
+                article.summary,
+                article.category,
+                article.sourceName
+            ].join(" ").toLocaleLowerCase();
 
-            card.hidden = !isVisible;
+            const matchesSearch = !query || searchableText.includes(query);
 
-            if (isVisible) {
-                visibleCount += 1;
-            }
+            return matchesCategory && matchesSearch;
         });
 
-        if (resultCount) {
-            resultCount.textContent =
-                `${visibleCount} ${
-                    visibleCount === 1 ? "category" : "categories"
-                } found`;
-        }
-    }
-
-    function setCategory(category, syncUrl = true) {
-        const isValidCategory =
-            category === "all" ||
-            Object.prototype.hasOwnProperty.call(
-                categoryDetails,
-                category
-            );
-
-        activeCategory = isValidCategory ? category : "all";
-
-        updateBanner(activeCategory);
-        updateFilters();
-        updateCards();
-
-        if (syncUrl) {
-            updateUrl(activeCategory);
-        }
-    }
-
-    /* Category filter buttons */
-
-    filterButtons.forEach((button) => {
-        button.addEventListener("click", () => {
-            const category = button.dataset.caFilter;
-
-            if (category) {
-                setCategory(category);
+        filtered.sort(function (a, b) {
+            if (selectedSort === "oldest") {
+                return a.date.localeCompare(b.date);
             }
+
+            if (selectedSort === "title") {
+                return a.title.localeCompare(b.title);
+            }
+
+            return b.date.localeCompare(a.date);
         });
-    });
 
-    /* Search category cards */
-
-    if (searchInput) {
-        searchInput.addEventListener("input", updateCards);
+        return filtered;
     }
 
-    /* Support direct links such as ?category=assam */
+    function renderArticles() {
+        const filteredArticles = getFilteredArticles();
 
-    function loadCategoryFromUrl() {
-        const params = new URLSearchParams(window.location.search);
-        const requestedCategory = normalize(params.get("category"));
+        grid.innerHTML = filteredArticles.map(createArticleCard).join("");
 
-        if (
-            requestedCategory &&
-            Object.prototype.hasOwnProperty.call(
-                categoryDetails,
-                requestedCategory
-            )
-        ) {
-            setCategory(requestedCategory, false);
-        } else {
-            setCategory("all", false);
-        }
+        resultCount.textContent =
+            `Showing ${filteredArticles.length} of ${articles.length} updates.`;
+
+        const hasResults = filteredArticles.length > 0;
+
+        emptyState.hidden = hasResults;
+        grid.hidden = !hasResults;
+
+        console.info(
+            "[StudyKora Current Affairs] Rendered:",
+            filteredArticles.length,
+            "of",
+            articles.length
+        );
     }
 
-    window.addEventListener("popstate", loadCategoryFromUrl);
+    function resetFilters() {
+        searchInput.value = "";
+        categorySelect.value = "all";
+        sortSelect.value = "newest";
+        renderArticles();
+    }
 
-    /* Initial page state */
+    searchInput.addEventListener("input", renderArticles);
+    categorySelect.addEventListener("change", renderArticles);
+    sortSelect.addEventListener("change", renderArticles);
 
-    loadCategoryFromUrl();
-});
+    if (resetButton) {
+        resetButton.addEventListener("click", resetFilters);
+    }
+
+    if (emptyResetButton) {
+        emptyResetButton.addEventListener("click", resetFilters);
+    }
+
+    if (yearElement) {
+        yearElement.textContent = new Date().getFullYear();
+    }
+
+    renderArticles();
+
+    console.info("[StudyKora Current Affairs] Initialized.");
+})();
