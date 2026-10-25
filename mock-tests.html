@@ -4,44 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="description"
-        content="Explore ADRE Grade III mock tests and competitive exam practice on StudyNow."
-    >
-
-    <title>ADRE Grade III Mock Tests — StudyNow</title>
+    <title>Mock Tests | StudyNow</title>
+    <meta name="description" content="Explore competitive exam mock tests on StudyNow and prepare for Assam examinations with focused practice.">
+    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/mock-tests.html">
+    <meta name="robots" content="index, follow">
 
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
-    <script src="js/mock-tests.js" defer></script>
 </head>
 
 <body>
-
-    <!-- Shared Header -->
     <header class="site-header">
         <div class="header-inner">
-
             <a href="index.html" class="brand" aria-label="StudyNow Home">
                 <span class="brand-name">StudyNow</span>
                 <span class="brand-caption">Learn. Practice. Progress.</span>
             </a>
 
             <nav class="main-nav" id="main-nav" aria-label="Main navigation">
-                <a href="index.html#current-affairs">Current Affairs</a>
-                <a href="index.html#featured-tests">Mock Tests</a>
-                <a href="index.html#subjects">Subjects</a>
-                <a href="index.html#daily-practice">Daily Practice</a>
+                <a href="current-affairs.html">Current Affairs</a>
+                <a href="mock-tests.html" aria-current="page">Mock Tests</a>
+                <a href="subjects.html">Subjects</a>
+                <a href="daily-practice.html">Daily Practice</a>
             </nav>
 
             <div class="header-actions">
-                <button type="button" class="btn btn-outline" data-action="login">
-                    Login
-                </button>
-
-                <button type="button" class="btn btn-primary" data-action="signup">
-                    Create Account
-                </button>
+                <a href="auth.html?mode=login" class="btn btn-outline">Login</a>
+                <a href="auth.html?mode=signup" class="btn btn-primary">Create Account</a>
             </div>
 
             <button
@@ -56,201 +45,211 @@
                 <span></span>
                 <span></span>
             </button>
-
         </div>
     </header>
 
-    <main id="main-content">
-
-        <!-- Reuse Existing Hero -->
-        <section class="hero-section" id="home">
-
+    <main>
+        <section class="hero-section">
             <div class="hero-content">
-                <span class="eyebrow">ASSAM DIRECT RECRUITMENT</span>
+                <span class="eyebrow">EXAM PREPARATION</span>
 
-                <h1>ADRE Grade III<br>Mock Tests</h1>
+                <h1>Mock Tests</h1>
 
                 <p>
-                    Prepare for ADRE Grade III with structured mock tests.
-                    Practise questions, manage your time and review your preparation.
+                    Explore practice tests for competitive examinations.
+                    Choose an exam to view its available tests and prepare
+                    at your own pace.
                 </p>
 
                 <div class="hero-actions">
-                    <a href="#mock-test-list" class="btn btn-primary btn-large">
-                        Explore Mock Tests
+                    <a href="#available-tests" class="btn btn-primary btn-large">
+                        Explore Tests
                     </a>
 
-                    <a href="organization.html?org=adre" class="btn btn-outline btn-large">
-                        Back to Exams
+                    <a href="subjects.html" class="btn btn-outline btn-large">
+                        Browse Subjects
                     </a>
-                </div>
-
-                <div class="hero-highlights">
-                    <span>10 Mock Tests</span>
-                    <span>1,500 MCQs</span>
-                    <span>180 Minutes per Test</span>
-                    <span>Negative Marking</span>
                 </div>
             </div>
 
-            <!-- Reuse Existing Hero Visual -->
             <div class="hero-visual">
                 <div class="visual-topline">
                     <span class="visual-dot" aria-hidden="true"></span>
-                    <span>EXAM OVERVIEW</span>
+                    <span>STUDYNOW PRACTICE</span>
                 </div>
 
                 <div class="visual-main">
-                    <span class="visual-label">ADRE GRADE III</span>
-
-                    <h2>Practise.<br>Review.<br>Improve.</h2>
+                    <span class="visual-label">PREPARE WITH PURPOSE</span>
+                    <h2>Practice.<br>Review.<br>Improve.</h2>
 
                     <div class="visual-progress">
                         <span class="progress-track">
                             <span class="progress-value"></span>
                         </span>
-
                         <span class="progress-caption">
-                            Build confidence through practice
+                            Build confidence with regular practice
                         </span>
                     </div>
                 </div>
 
                 <div class="visual-footer">
                     <div>
-                        <strong>150 MCQs</strong>
-                        <span>Per mock test</span>
+                        <strong>Mock Tests</strong>
+                        <span>Exam-focused practice</span>
                     </div>
-
                     <div>
-                        <strong>180 Minutes</strong>
-                        <span>Per mock test</span>
+                        <strong>Subjects</strong>
+                        <span>Focused revision</span>
                     </div>
                 </div>
             </div>
-
         </section>
 
-        <!-- Mock Test List -->
-        <section class="content-section feature-section" id="mock-test-list">
-
+        <section class="content-section" id="available-tests">
             <div class="section-heading">
                 <div>
                     <h2 class="section-title">Available Mock Tests</h2>
-                </div>
-
-                <div>
-                    <label for="test-language">Language </label>
-
-                    <select id="test-language" class="btn btn-outline">
-                        <option value="en">English</option>
-                        <option value="as">Assamese</option>
-                    </select>
-                </div>
-            </div>
-
-            <p id="language-selection" aria-live="polite">
-                Selected language: English
-            </p>
-
-            <div class="listing-grid" id="mock-test-listing">
-                <!-- Test cards generated by js/mock-tests.js -->
-            </div>
-
-        </section>
-
-        <!-- About This Test -->
-        <section class="content-section" id="about-test">
-
-            <div class="section-heading">
-                <div>
-                    <h2 class="section-title">About This Test</h2>
+                    <p>Select an examination to explore its practice tests.</p>
                 </div>
             </div>
 
             <div class="listing-grid">
-
-                <article class="listing-card">
+                <a class="listing-card" href="organization.html?exam=assam-vfa">
                     <span class="card-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <rect x="6" y="4.5" width="12" height="16" rx="2"></rect>
-                            <path d="M9 4.5V3h6v1.5"></path>
-                            <path d="M9 11h6M9 15h6"></path>
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M4 20V4M4 20h17"/>
+                            <path d="m7 15 4-4 3 2 5-6"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
-                        <span class="card-title">150 Questions</span>
+                        <span class="card-category">COMPETITIVE EXAM</span>
+                        <span class="card-title">Assam VFA</span>
                         <span class="card-description">
-                            Multiple-choice questions in each test
+                            Explore VFA exam preparation and available practice tests.
                         </span>
                     </span>
-                </article>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
 
-                <article class="listing-card">
+                <a class="listing-card" href="organization.html?exam=anm-entrance">
                     <span class="card-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="9"></circle>
-                            <path d="M12 7v5l3 2"></path>
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M12 3v18M3 12h18"/>
+                            <rect x="4" y="4" width="16" height="16" rx="3"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
-                        <span class="card-title">180 Minutes</span>
+                        <span class="card-category">ENTRANCE EXAM</span>
+                        <span class="card-title">ANM Entrance</span>
                         <span class="card-description">
-                            Set time limit for each mock test
+                            Explore entrance exam practice and revision resources.
                         </span>
                     </span>
-                </article>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
 
-                <article class="listing-card">
+                <a class="listing-card" href="organization.html?exam=adre-grade-iii">
                     <span class="card-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M4 5h16M4 12h16M4 19h16"></path>
-                            <path d="m8 3-4 2 4 2M16 10l4 2-4 2"></path>
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="4" y="3" width="16" height="18" rx="2"/>
+                            <path d="M8 8h8M8 12h8M8 16h5"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
-                        <span class="card-title">Negative Marking</span>
+                        <span class="card-category">ASSAM DIRECT RECRUITMENT</span>
+                        <span class="card-title">ADRE Grade III</span>
                         <span class="card-description">
-                            Follow the marking rules specified for the test
+                            Explore Grade III mock tests and exam preparation.
                         </span>
                     </span>
-                </article>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
 
-                <article class="listing-card">
+                <a class="listing-card" href="organization.html?exam=si">
                     <span class="card-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
-                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/>
+                            <path d="m8.5 12 2.2 2.2 4.8-5"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
-                        <span class="card-title">Two Languages</span>
+                        <span class="card-category">RECRUITMENT EXAM</span>
+                        <span class="card-title">Sub-Inspector (SI)</span>
                         <span class="card-description">
-                            English and Assamese selection
+                            Explore SI exam preparation and available practice tests.
                         </span>
                     </span>
-                </article>
-
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
             </div>
-
         </section>
 
+        <section class="content-section">
+            <div class="section-heading">
+                <div>
+                    <h2 class="section-title">Subject-wise Practice</h2>
+                    <p>Practise individual subjects alongside mock tests.</p>
+                </div>
+
+                <a href="subjects.html#available-subjects" class="view-all">
+                    View Subjects <span aria-hidden="true">›</span>
+                </a>
+            </div>
+
+            <div class="listing-grid">
+                <a class="listing-card" href="test.html?subject=economics">
+                    <span class="card-content">
+                        <span class="card-category">SUBJECT PRACTICE</span>
+                        <span class="card-title">Economics</span>
+                        <span class="card-description">
+                            Practise economic concepts and fundamentals.
+                        </span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+
+                <a class="listing-card" href="test.html?subject=geography">
+                    <span class="card-content">
+                        <span class="card-category">SUBJECT PRACTICE</span>
+                        <span class="card-title">Geography</span>
+                        <span class="card-description">
+                            Revise geography concepts and important facts.
+                        </span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+
+                <a class="listing-card" href="test.html?subject=english">
+                    <span class="card-content">
+                        <span class="card-category">SUBJECT PRACTICE</span>
+                        <span class="card-title">English</span>
+                        <span class="card-description">
+                            Practise grammar, vocabulary and comprehension.
+                        </span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+
+                <a class="listing-card" href="test.html?subject=polity">
+                    <span class="card-content">
+                        <span class="card-category">SUBJECT PRACTICE</span>
+                        <span class="card-title">Polity</span>
+                        <span class="card-description">
+                            Revise constitutional and political concepts.
+                        </span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+            </div>
+        </section>
     </main>
 
-    <!-- Shared Footer -->
     <footer class="site-footer">
-
         <div class="footer-main">
-
             <div class="footer-brand">
                 <a href="index.html" class="brand">
                     <span class="brand-name">StudyNow</span>
                 </a>
-
                 <p>
                     A focused platform for competitive exam preparation,
                     mock tests and subject-wise practice.
@@ -259,31 +258,23 @@
 
             <div class="footer-column">
                 <h2>Explore</h2>
-                <a href="index.html#current-affairs">Current Affairs</a>
-                <a href="index.html#featured-tests">Mock Tests</a>
-                <a href="index.html#subjects">Subjects</a>
-                <a href="index.html#daily-practice">Daily Practice</a>
+                <a href="current-affairs.html">Current Affairs</a>
+                <a href="mock-tests.html">Mock Tests</a>
+                <a href="subjects.html">Subjects</a>
+                <a href="daily-practice.html">Daily Practice</a>
             </div>
 
             <div class="footer-column">
-                <h2>StudyNow</h2>
-                <a href="index.html#why-studynow">About StudyNow</a>
+                <h2>Account</h2>
+                <a href="auth.html?mode=login">Login</a>
+                <a href="auth.html?mode=signup">Create Account</a>
                 <a href="index.html">Back to Home</a>
             </div>
-
         </div>
 
         <div class="footer-bottom">
-            <p class="site-credit">
-                Design and Develop by Yadav Web Technologies
-            </p>
-
-            <p class="copyright">
-                StudyNow. All rights reserved.
-            </p>
+            <p>Design and Develop by Yadav Web Technologies</p>
         </div>
-
     </footer>
-
 </body>
 </html>
