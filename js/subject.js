@@ -1,423 +1,520 @@
-
-/* =====================================================
-   studyKora — Subject Page
-   Search, filters, subject details and topic navigation
-===================================================== */
-
 "use strict";
 
 document.addEventListener("DOMContentLoaded", () => {
-    const searchInput = document.getElementById("subject-search");
-    const subjectCards = Array.from(
-        document.querySelectorAll("[data-subject-card]")
-    );
+    const el = {
+        directoryHero: document.getElementById("subject-directory-hero"),
+        detailHero: document.getElementById("subject-detail-hero"),
+        directory: document.getElementById("subject-directory"),
+        detailContent: document.getElementById("subject-detail-content"),
 
-    const filterButtons = Array.from(
-        document.querySelectorAll("[data-subject-filter]")
-    );
+        search: document.getElementById("subject-search"),
+        filters: document.getElementById("subject-filters"),
+        grid: document.getElementById("subject-grid"),
+        resultCount: document.getElementById("subject-result-count"),
+        emptyState: document.getElementById("subject-empty-state"),
 
-    const resultCount = document.getElementById("subject-result-count");
-    const emptyState = document.getElementById("subject-empty-state");
+        category: document.getElementById("subject-detail-category"),
+        title: document.getElementById("subject-detail-title"),
+        description: document.getElementById("subject-detail-description"),
+        about: document.getElementById("subject-detail-about"),
+        tags: document.getElementById("subject-detail-tags"),
+        topics: document.getElementById("subject-topics"),
 
-    const directoryHero = document.getElementById("subject-directory-hero");
-    const detailHero = document.getElementById("subject-detail-hero");
-    const directorySection = document.getElementById("subject-directory");
-    const detailSection = document.getElementById("subject-detail-content");
+        startTest: document.getElementById("subject-start-test"),
+        practiceButton: document.getElementById("subject-practice-button")
+    };
 
-    const detailTitle = document.getElementById("subject-detail-title");
-    const detailCategory = document.getElementById("subject-detail-category");
-    const detailDescription = document.getElementById(
-        "subject-detail-description"
-    );
-
-    const detailAbout = document.getElementById("subject-detail-about");
-    const detailTags = document.getElementById("subject-detail-tags");
-    const topicsContainer = document.getElementById("subject-topics");
-
-    const startTestLink = document.getElementById("subject-start-test");
-    const practiceButton = document.getElementById("subject-practice-button");
-
-    if (!subjectCards.length) return;
-
-    const subjects = {
+    const subjectData = {
         "general-knowledge": {
             name: "General Knowledge",
             category: "General Studies",
-            categoryId: "general",
-            description:
-                "Practise important facts, static GK and general awareness for competitive examinations.",
+            filter: "general",
+            description: "Practise static GK and important general awareness questions.",
+            about: "Revise important facts and general knowledge topics for competitive examinations.",
+            tags: ["General Studies", "MCQ Practice", "Exam Preparation"],
             topics: [
-                ["Indian History", "indian-history"],
-                ["Indian Geography", "indian-geography"],
-                ["Indian Polity", "indian-polity"],
-                ["General Science", "general-science"],
-                ["Important Facts", "important-facts"]
+                "Static General Knowledge",
+                "Important Days",
+                "Books and Authors",
+                "Awards and Honours",
+                "Important Organizations"
             ]
         },
 
-        assamese: {
+        "assamese": {
             name: "Assamese",
-            category: "Language",
-            categoryId: "language",
-            description:
-                "Practise Assamese grammar, vocabulary, literature and language-based questions.",
+            category: "Languages",
+            filter: "language",
+            description: "Practise Assamese language and grammar questions.",
+            about: "Build your Assamese language skills through grammar, vocabulary and language-based questions.",
+            tags: ["Language", "Grammar", "MCQ Practice"],
             topics: [
-                ["Assamese Grammar", "assamese-grammar"],
-                ["Vocabulary", "vocabulary"],
-                ["Literature", "literature"],
-                ["Language Usage", "language-usage"]
+                "Assamese Grammar",
+                "Vocabulary",
+                "Synonyms and Antonyms",
+                "Literature",
+                "Language Usage"
             ]
         },
 
-        english: {
+        "english": {
             name: "English",
-            category: "Language",
-            categoryId: "language",
-            description:
-                "Improve grammar, vocabulary, comprehension and other English language skills.",
+            category: "Languages",
+            filter: "language",
+            description: "Improve English grammar, vocabulary and comprehension.",
+            about: "Practise English language questions commonly used in competitive examinations.",
+            tags: ["Language", "Grammar", "Vocabulary"],
             topics: [
-                ["Grammar", "grammar"],
-                ["Vocabulary", "vocabulary"],
-                ["Synonyms and Antonyms", "synonyms-antonyms"],
-                ["Sentence Correction", "sentence-correction"],
-                ["Comprehension", "comprehension"]
+                "Parts of Speech",
+                "Tenses",
+                "Vocabulary",
+                "Synonyms and Antonyms",
+                "Sentence Correction",
+                "Reading Comprehension"
             ]
         },
 
-        mathematics: {
+        "mathematics": {
             name: "Mathematics",
             category: "Aptitude",
-            categoryId: "aptitude",
-            description:
-                "Practise arithmetic, numerical ability and mathematics questions for competitive exams.",
+            filter: "aptitude",
+            description: "Practise arithmetic and numerical ability questions.",
+            about: "Strengthen calculation skills and numerical problem-solving through topic-wise practice.",
+            tags: ["Numerical Ability", "Arithmetic", "MCQ Practice"],
             topics: [
-                ["Number System", "number-system"],
-                ["Percentage", "percentage"],
-                ["Ratio and Proportion", "ratio-proportion"],
-                ["Profit and Loss", "profit-loss"],
-                ["Time and Work", "time-work"]
+                "Number System",
+                "Percentage",
+                "Ratio and Proportion",
+                "Profit and Loss",
+                "Average",
+                "Time and Work",
+                "Time, Speed and Distance"
             ]
         },
 
-        reasoning: {
+        "reasoning": {
             name: "Reasoning",
             category: "Aptitude",
-            categoryId: "aptitude",
-            description:
-                "Develop logical thinking through verbal and non-verbal reasoning practice.",
+            filter: "aptitude",
+            description: "Develop logical and analytical reasoning skills.",
+            about: "Practise questions that develop logical thinking, pattern recognition and problem-solving ability.",
+            tags: ["Logical Reasoning", "Analytical Ability", "MCQ Practice"],
             topics: [
-                ["Number Series", "number-series"],
-                ["Analogy", "analogy"],
-                ["Coding and Decoding", "coding-decoding"],
-                ["Direction Sense", "direction-sense"],
-                ["Logical Reasoning", "logical-reasoning"]
+                "Number Series",
+                "Coding and Decoding",
+                "Analogy",
+                "Classification",
+                "Direction Sense",
+                "Blood Relations",
+                "Logical Puzzles"
             ]
         },
 
-        computer: {
+        "computer": {
             name: "Computer",
             category: "Other Subjects",
-            categoryId: "other",
-            description:
-                "Revise computer fundamentals, hardware, software, internet and basic digital concepts.",
+            filter: "other",
+            description: "Revise computer fundamentals and basic IT concepts.",
+            about: "Learn essential computer concepts and practise computer-awareness questions.",
+            tags: ["Computer Awareness", "IT Basics", "MCQ Practice"],
             topics: [
-                ["Computer Fundamentals", "computer-fundamentals"],
-                ["Hardware and Software", "hardware-software"],
-                ["Internet Basics", "internet-basics"],
-                ["MS Office", "ms-office"],
-                ["Cyber Security Basics", "cyber-security"]
+                "Computer Fundamentals",
+                "Hardware and Software",
+                "Operating Systems",
+                "Internet Basics",
+                "MS Office",
+                "Computer Networks"
             ]
         },
 
-        geography: {
+        "geography": {
             name: "Geography",
             category: "General Studies",
-            categoryId: "general",
-            description:
-                "Study physical, Indian and world geography, including important geographical facts about Assam.",
+            filter: "general",
+            description: "Study Assam, Indian and world geography.",
+            about: "Revise physical and human geography, maps, resources and important geographical facts.",
+            tags: ["General Studies", "Geography", "MCQ Practice"],
             topics: [
-                ["Physical Geography", "physical-geography"],
-                ["Indian Geography", "indian-geography"],
-                ["World Geography", "world-geography"],
-                ["Assam Geography", "assam-geography"]
+                "Physical Geography",
+                "Indian Geography",
+                "Geography of Assam",
+                "Rivers and Mountains",
+                "Climate and Environment",
+                "World Geography"
             ]
         },
 
-        polity: {
+        "polity": {
             name: "Indian Polity",
             category: "General Studies",
-            categoryId: "general",
-            description:
-                "Practise questions on the Indian Constitution, government institutions and governance.",
+            filter: "general",
+            description: "Practise questions on the Indian Constitution and governance.",
+            about: "Understand constitutional provisions, government institutions and important aspects of Indian governance.",
+            tags: ["Indian Constitution", "Governance", "MCQ Practice"],
             topics: [
-                ["Indian Constitution", "constitution"],
-                ["Fundamental Rights", "fundamental-rights"],
-                ["Parliament", "parliament"],
-                ["President and Governor", "president-governor"],
-                ["Constitutional Bodies", "constitutional-bodies"]
+                "Constitutional Basics",
+                "Fundamental Rights",
+                "Directive Principles",
+                "Union Government",
+                "State Government",
+                "Constitutional Bodies"
             ]
         },
 
-        history: {
+        "history": {
             name: "History",
             category: "General Studies",
-            categoryId: "general",
-            description:
-                "Revise ancient, medieval and modern Indian history, including Assam's historical background.",
+            filter: "general",
+            description: "Revise Indian history and the history of Assam.",
+            about: "Study important historical periods, events, movements and personalities relevant to examinations.",
+            tags: ["Indian History", "Assam History", "MCQ Practice"],
             topics: [
-                ["Ancient India", "ancient-india"],
-                ["Medieval India", "medieval-india"],
-                ["Modern India", "modern-india"],
-                ["Assam History", "assam-history"]
+                "Ancient Indian History",
+                "Medieval Indian History",
+                "Modern Indian History",
+                "Indian Freedom Movement",
+                "History of Assam"
             ]
         },
 
-        economics: {
+        "economics": {
             name: "Economics",
             category: "General Studies",
-            categoryId: "general",
-            description:
-                "Learn basic economic concepts, the Indian economy and important economic indicators.",
+            filter: "general",
+            description: "Learn basic economics and important economic concepts.",
+            about: "Practise questions on economic fundamentals, the Indian economy and related terminology.",
+            tags: ["Economics", "Indian Economy", "MCQ Practice"],
             topics: [
-                ["Basic Economics", "basic-economics"],
-                ["Indian Economy", "indian-economy"],
-                ["Banking", "banking"],
-                ["Economic Planning", "economic-planning"]
+                "Basic Economic Concepts",
+                "National Income",
+                "Banking",
+                "Inflation",
+                "Indian Economy",
+                "Government Budget"
             ]
         },
 
-        science: {
+        "science": {
             name: "General Science",
             category: "Other Subjects",
-            categoryId: "other",
-            description:
-                "Review basic concepts in physics, chemistry, biology and everyday science.",
+            filter: "other",
+            description: "Revise basic scientific concepts and general science.",
+            about: "Build general science knowledge through questions covering important concepts from different scientific fields.",
+            tags: ["General Science", "Science Basics", "MCQ Practice"],
             topics: [
-                ["Physics", "physics"],
-                ["Chemistry", "chemistry"],
-                ["Biology", "biology"],
-                ["Everyday Science", "everyday-science"]
+                "Physics",
+                "Chemistry",
+                "Biology",
+                "Human Body",
+                "Scientific Instruments",
+                "Everyday Science"
             ]
         },
 
         "assam-culture": {
             name: "Assam Art and Culture",
             category: "General Studies",
-            categoryId: "general",
-            description:
-                "Explore the traditions, festivals, heritage, literature and cultural history of Assam.",
+            filter: "general",
+            description: "Explore Assam's heritage, traditions, festivals and culture.",
+            about: "Revise important aspects of Assam's cultural heritage, traditional practices, art forms and festivals.",
+            tags: ["Assam GK", "Culture", "Regional Studies"],
             topics: [
-                ["Festivals of Assam", "assam-festivals"],
-                ["Art and Handicrafts", "art-handicrafts"],
-                ["Traditional Culture", "traditional-culture"],
-                ["Literature and Personalities", "culture-personalities"]
+                "Festivals of Assam",
+                "Traditional Dance and Music",
+                "Literature of Assam",
+                "Historical Monuments",
+                "Cultural Personalities",
+                "Heritage and Traditions"
             ]
         }
     };
 
-    let activeCategory = "all";
+    /*
+     * Shared helper functions
+     */
 
-    function normalize(value) {
-        return String(value || "")
+    function createElement(tag, className, text) {
+        const node = document.createElement(tag);
+
+        if (className) {
+            node.className = className;
+        }
+
+        if (text !== undefined) {
+            node.textContent = text;
+        }
+
+        return node;
+    }
+
+    function makeTestUrl(subjectId, topic) {
+        const params = new URLSearchParams();
+
+        params.set("subject", subjectId);
+
+        if (topic) {
+            params.set("topic", topic);
+        }
+
+        return `test.html?${params.toString()}`;
+    }
+
+    function makeTopicSlug(topic) {
+        return topic
+            .toLowerCase()
             .trim()
-            .toLocaleLowerCase();
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
     }
 
-    function getSubjectFromCard(card) {
-        const id = card.dataset.subjectId;
-        return subjects[id] || null;
-    }
+    /*
+     * Search and category filters
+     */
 
-    function updateResults() {
-        const query = normalize(searchInput?.value);
+    function updateSubjectDirectory() {
+        if (!el.grid) return;
+
+        const searchTerm = el.search
+            ? el.search.value.trim().toLowerCase()
+            : "";
+
+        const activeButton = el.filters
+            ? el.filters.querySelector(
+                '[data-subject-filter][aria-pressed="true"]'
+            )
+            : null;
+
+        const activeFilter = activeButton
+            ? activeButton.dataset.subjectFilter
+            : "all";
+
+        const cards = Array.from(
+            el.grid.querySelectorAll("[data-subject-card]")
+        );
+
         let visibleCount = 0;
 
-        subjectCards.forEach((card) => {
-            const subject = getSubjectFromCard(card);
+        cards.forEach((card) => {
+            const name = card.dataset.subjectName || "";
+            const id = card.dataset.subjectId || "";
+            const category = card.dataset.subjectCategory || "";
+            const description =
+                card.querySelector(".card-description")?.textContent || "";
 
-            if (!subject) {
-                card.hidden = true;
+            const searchText =
+                `${name} ${id} ${category} ${description}`.toLowerCase();
+
+            const matchesSearch = searchText.includes(searchTerm);
+
+            const matchesFilter =
+                activeFilter === "all" || category === activeFilter;
+
+            const visible = matchesSearch && matchesFilter;
+
+            card.hidden = !visible;
+
+            if (visible) {
+                visibleCount++;
+            }
+        });
+
+        if (el.resultCount) {
+            el.resultCount.textContent =
+                `Showing ${visibleCount} of ${cards.length} subjects.`;
+        }
+
+        if (el.emptyState) {
+            el.emptyState.hidden = visibleCount > 0;
+        }
+    }
+
+    if (el.search) {
+        el.search.addEventListener("input", updateSubjectDirectory);
+    }
+
+    if (el.filters) {
+        el.filters.addEventListener("click", (event) => {
+            const button = event.target.closest("[data-subject-filter]");
+
+            if (!button || !el.filters.contains(button)) {
                 return;
             }
 
-            const searchableText = normalize([
-                subject.name,
-                subject.category,
-                subject.description,
-                card.textContent
-            ].join(" "));
+            el.filters
+                .querySelectorAll("[data-subject-filter]")
+                .forEach((filterButton) => {
+                    const selected = filterButton === button;
 
-            const matchesSearch = searchableText.includes(query);
+                    filterButton.classList.toggle("is-active", selected);
+                    filterButton.setAttribute(
+                        "aria-pressed",
+                        String(selected)
+                    );
+                });
 
-            const matchesCategory =
-                activeCategory === "all" ||
-                subject.categoryId === activeCategory;
-
-            const isVisible = matchesSearch && matchesCategory;
-
-            card.hidden = !isVisible;
-
-            if (isVisible) visibleCount += 1;
+            updateSubjectDirectory();
         });
-
-        if (resultCount) {
-            resultCount.textContent =
-                `${visibleCount} ${visibleCount === 1 ? "subject" : "subjects"} found`;
-        }
-
-        if (emptyState) {
-            emptyState.hidden = visibleCount !== 0;
-        }
     }
 
-    function setActiveCategory(category) {
-        activeCategory = category;
+    /*
+     * Render selected subject details
+     */
 
-        filterButtons.forEach((button) => {
-            const isActive = button.dataset.subjectFilter === category;
-
-            button.classList.toggle("is-active", isActive);
-            button.setAttribute("aria-pressed", String(isActive));
-        });
-
-        updateResults();
-    }
-
-    function makeTopicCard(subjectId, topicName, topicId) {
-        const link = document.createElement("a");
-        link.className = "listing-card";
-
-        const params = new URLSearchParams({
-            subject: subjectId,
-            topic: topicId
-        });
-
-        link.href = `test.html?${params.toString()}`;
-
-        const icon = document.createElement("span");
-        icon.className = "card-icon";
-        icon.setAttribute("aria-hidden", "true");
-        icon.textContent = "Q";
-
-        const content = document.createElement("span");
-        content.className = "card-content";
-
-        const title = document.createElement("span");
-        title.className = "card-title";
-        title.textContent = topicName;
-
-        const description = document.createElement("span");
-        description.className = "card-description";
-        description.textContent = "Practise MCQs";
-
-        const arrow = document.createElement("span");
-        arrow.className = "card-arrow";
-        arrow.setAttribute("aria-hidden", "true");
-        arrow.textContent = "›";
-
-        content.append(title, description);
-        link.append(icon, content, arrow);
-
-        return link;
-    }
-
-    function addDetailTag(text) {
-        const tag = document.createElement("span");
-        tag.className = "chip chip-primary";
-        tag.textContent = text;
-        detailTags?.appendChild(tag);
-    }
-
-    function showSubjectDetail(subjectId) {
-        const subject = subjects[subjectId];
+    function renderSubject(subjectId) {
+        const subject = subjectData[subjectId];
 
         if (!subject) {
             return false;
         }
 
-        if (directoryHero) directoryHero.hidden = true;
-        if (directorySection) directorySection.hidden = true;
-        if (detailHero) detailHero.hidden = false;
-        if (detailSection) detailSection.hidden = false;
-
-        if (detailTitle) detailTitle.textContent = subject.name;
-
-        if (detailCategory) {
-            detailCategory.textContent = subject.category;
+        if (el.directoryHero) {
+            el.directoryHero.hidden = true;
+            el.directoryHero.setAttribute("aria-hidden", "true");
         }
 
-        if (detailDescription) {
-            detailDescription.textContent = subject.description;
+        if (el.directory) {
+            el.directory.hidden = true;
         }
 
-        if (detailAbout) {
-            detailAbout.textContent = subject.description;
+        if (el.detailHero) {
+            el.detailHero.hidden = false;
         }
 
-        if (detailTags) {
-            detailTags.replaceChildren();
-            addDetailTag(subject.category);
-            addDetailTag("MCQ Practice");
-            addDetailTag("Competitive Exams");
+        if (el.detailContent) {
+            el.detailContent.hidden = false;
         }
 
-        if (topicsContainer) {
-            topicsContainer.replaceChildren();
+        if (el.category) {
+            el.category.textContent = subject.category;
+        }
 
-            subject.topics.forEach(([topicName, topicId]) => {
-                topicsContainer.appendChild(
-                    makeTopicCard(subjectId, topicName, topicId)
+        if (el.title) {
+            el.title.textContent = subject.name;
+        }
+
+        if (el.description) {
+            el.description.textContent = subject.description;
+        }
+
+        if (el.about) {
+            el.about.textContent = subject.about;
+        }
+
+        /*
+         * Subject-specific metadata
+         */
+
+        document.title = `${subject.name} Practice | StudyKora`;
+
+        const metaDescription = document.querySelector(
+            'meta[name="description"]'
+        );
+
+        if (metaDescription) {
+            metaDescription.content =
+                `${subject.description} Practise with StudyKora.`;
+        }
+
+        /*
+         * Practice links
+         */
+
+        const testUrl = makeTestUrl(subjectId);
+
+        if (el.startTest) {
+            el.startTest.href = testUrl;
+        }
+
+        if (el.practiceButton) {
+            el.practiceButton.href = testUrl;
+        }
+
+        /*
+         * Subject tags
+         */
+
+        if (el.tags) {
+            el.tags.replaceChildren();
+
+            subject.tags.forEach((tag) => {
+                const chip = createElement(
+                    "span",
+                    "chip chip-primary",
+                    tag
                 );
+
+                el.tags.appendChild(chip);
             });
         }
 
-        const practiceUrl =
-            `test.html?subject=${encodeURIComponent(subjectId)}`;
+        /*
+         * Subject topics
+         */
 
-        if (startTestLink) {
-            startTestLink.href = practiceUrl;
+        if (el.topics) {
+            el.topics.replaceChildren();
+
+            subject.topics.forEach((topic, index) => {
+                const link = createElement("a", "listing-card");
+
+                link.href = makeTestUrl(
+                    subjectId,
+                    makeTopicSlug(topic)
+                );
+
+                const icon = createElement(
+                    "span",
+                    "card-icon",
+                    String(index + 1).padStart(2, "0")
+                );
+
+                icon.setAttribute("aria-hidden", "true");
+
+                const content = createElement("span", "card-content");
+
+                const title = createElement(
+                    "span",
+                    "card-title",
+                    topic
+                );
+
+                const description = createElement(
+                    "span",
+                    "card-description",
+                    `Practise ${topic.toLowerCase()} questions.`
+                );
+
+                content.append(title, description);
+
+                const arrow = createElement(
+                    "span",
+                    "card-arrow",
+                    "›"
+                );
+
+                arrow.setAttribute("aria-hidden", "true");
+
+                link.append(icon, content, arrow);
+                el.topics.appendChild(link);
+            });
         }
-
-        if (practiceButton) {
-            practiceButton.href = practiceUrl;
-        }
-
-        document.title = `${subject.name} Practice | studyKora`;
 
         return true;
     }
 
-    /* Search */
-
-    if (searchInput) {
-        searchInput.addEventListener("input", updateResults);
-    }
-
-    /* Category filters */
-
-    filterButtons.forEach((button) => {
-        button.addEventListener("click", () => {
-            const category = button.dataset.subjectFilter;
-
-            if (!category) return;
-
-            setActiveCategory(category);
-        });
-    });
-
-    /* Load the selected subject from the URL */
+    /*
+     * URL support:
+     * subject.html?subject=english
+     */
 
     const params = new URLSearchParams(window.location.search);
-    const requestedSubject = normalize(params.get("subject"));
+    const requestedSubject = (
+        params.get("subject") || ""
+    ).trim().toLowerCase();
 
-    if (requestedSubject && subjects[requestedSubject]) {
-        showSubjectDetail(requestedSubject);
+    if (requestedSubject && subjectData[requestedSubject]) {
+        renderSubject(requestedSubject);
     } else {
-        if (directoryHero) directoryHero.hidden = false;
-        if (directorySection) directorySection.hidden = false;
-        if (detailHero) detailHero.hidden = true;
-        if (detailSection) detailSection.hidden = true;
-
-        updateResults();
+        updateSubjectDirectory();
     }
 });
