@@ -6,10 +6,10 @@
 
     <title>Mock Tests | StudyKora</title>
     <meta name="description" content="Explore mock tests for ADRE, APSC, Assam Police, TET, SSC and other competitive examinations on StudyKora.">
+    <meta name="keywords" content="StudyKora, Assam mock tests, ADRE mock test, APSC CCE, Assam Police, TET, SSC, competitive exam practice">
     <meta name="theme-color" content="#28734f">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/mock-tests.html">
-
     <link rel="stylesheet" href="style.css">
 
     <script src="script.js" defer></script>
@@ -28,7 +28,9 @@
                     <span style="font-size:23px;font-weight:800;">s</span>
                 </span>
                 <span class="brand-text">
-                    <span class="brand-name"><span style="color:#111111;">study</span><span style="color:#777777;">kora</span></span>
+                    <span class="brand-name" style="font-size:19px;">
+                        <span style="color:#111111;">study</span><span style="color:#777777;">kora</span>
+                    </span>
                 </span>
             </a>
 
@@ -41,17 +43,11 @@
             </nav>
 
             <div class="header-actions">
-
                 <div id="account-guest" class="account-guest">
-                    <a href="auth.html?mode=login"
-                       class="btn btn-outline"
-                       id="account-login-link">
+                    <a href="auth.html?mode=login" class="btn btn-outline" id="account-login-link">
                         Login
                     </a>
-
-                    <a href="auth.html?mode=signup"
-                       class="btn btn-primary"
-                       id="account-register-link">
+                    <a href="auth.html?mode=signup" class="btn btn-primary" id="account-register-link">
                         Create Account
                     </a>
                 </div>
@@ -62,12 +58,8 @@
                        id="account-profile-trigger"
                        aria-label="Open profile"
                        title="Profile">
-                        <svg id="account-profile-avatar"
-                             viewBox="0 0 24 24"
-                             width="24"
-                             height="24"
-                             fill="none"
-                             aria-hidden="true">
+                        <svg id="account-profile-avatar" viewBox="0 0 24 24"
+                             width="24" height="24" fill="none" aria-hidden="true">
                             <circle cx="12" cy="8" r="4"
                                     stroke="currentColor" stroke-width="1.7"/>
                             <path d="M4.5 20a7.5 7.5 0 0 1 15 0"
@@ -77,43 +69,35 @@
                     </a>
                 </div>
 
-                <button type="button"
-                        class="menu-toggle"
-                        id="menu-toggle"
+                <button type="button" class="menu-toggle" id="menu-toggle"
                         aria-label="Open navigation menu"
-                        aria-controls="main-nav"
-                        aria-expanded="false">
+                        aria-controls="main-nav" aria-expanded="false">
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M4 7h16M4 12h16M4 17h16"
-                              stroke="currentColor"
-                              stroke-width="1.8"
+                              stroke="currentColor" stroke-width="1.8"
                               stroke-linecap="round"/>
                     </svg>
                 </button>
-
             </div>
         </div>
     </header>
 
     <main class="page-content">
 
-        <!-- Main Mock Tests Banner -->
+        <!-- Main Hero -->
         <section class="page-hero" id="mock-tests-main-hero">
             <div class="page-hero-inner">
-
                 <span class="page-hero-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none">
                         <rect x="5" y="3" width="14" height="18" rx="2"
                               stroke="currentColor" stroke-width="1.7"/>
                         <path d="M9 3v2h6V3M8.5 10h7M8.5 14h7M8.5 18h4"
-                              stroke="currentColor"
-                              stroke-width="1.7"
+                              stroke="currentColor" stroke-width="1.7"
                               stroke-linecap="round"/>
                     </svg>
                 </span>
 
                 <h1 class="page-hero-title">Mock Tests</h1>
-
                 <p class="page-hero-description">
                     Prepare for competitive examinations with exam-wise
                     practice tests and multiple-choice questions.
@@ -124,46 +108,29 @@
                     <span class="page-hero-stat">MCQ Tests</span>
                     <span class="page-hero-stat">Review Your Answers</span>
                 </div>
-
             </div>
         </section>
 
-        <!-- Selected Test Category Banner -->
+        <!-- Selected Category Hero -->
         <section class="page-hero" id="mock-category-hero" hidden>
             <div class="page-hero-inner">
-
-                <span class="page-hero-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none">
-                        <rect x="5" y="3" width="14" height="18" rx="2"
-                              stroke="currentColor" stroke-width="1.7"/>
-                        <path d="M9 3v2h6V3M8.5 10h7M8.5 14h7"
-                              stroke="currentColor"
-                              stroke-width="1.7"
-                              stroke-linecap="round"/>
-                    </svg>
-                </span>
-
-                <span class="eyebrow" id="mock-category-label">
-                    Mock Test Category
-                </span>
+                <span class="eyebrow" id="mock-category-label">Mock Test Category</span>
 
                 <h1 class="page-hero-title" id="mock-category-title">
                     Available Mock Tests
                 </h1>
 
-                <p class="page-hero-description"
-                   id="mock-category-description">
+                <p class="page-hero-description" id="mock-category-description">
                     Choose a test to begin your practice.
                 </p>
 
                 <a href="mock-tests.html" class="btn btn-light mt-md">
                     View All Mock Tests
                 </a>
-
             </div>
         </section>
 
-        <!-- Test Search and Listing -->
+        <!-- Mock Test Directory -->
         <section class="content-section" id="mock-test-directory">
             <div class="container">
 
@@ -172,93 +139,71 @@
                         <h2 class="section-title" id="mock-list-heading">
                             Find Your Mock Test
                         </h2>
-
                         <p class="section-description" id="mock-list-description">
                             Search by exam name or filter tests by category.
                         </p>
                     </div>
                 </div>
 
-                <!-- Search -->
                 <div class="panel" style="margin-bottom:15px;">
                     <div class="form-group" style="margin-bottom:0;">
                         <label class="form-label" for="mock-test-search">
                             Search Mock Tests
                         </label>
-
-                        <input
-                            type="search"
-                            class="form-control"
-                            id="mock-test-search"
-                            placeholder="Search ADRE, APSC, Assam Police..."
-                            autocomplete="off"
-                            aria-describedby="mock-test-result-count"
-                        >
+                        <input type="search" class="form-control"
+                               id="mock-test-search"
+                               placeholder="Search ADRE, APSC, Assam Police..."
+                               autocomplete="off"
+                               aria-describedby="mock-test-result-count">
                     </div>
                 </div>
 
-                <!-- Categories -->
-                <div class="filter-row"
-                     id="mock-test-filters"
+                <!-- Category Filters -->
+                <div class="filter-row" id="mock-test-filters"
                      aria-label="Filter mock tests">
 
-                    <button type="button"
-                            class="filter-button is-active"
-                            data-mock-filter="all"
-                            aria-pressed="true">
+                    <button type="button" class="filter-button is-active"
+                            data-mock-filter="all" aria-pressed="true">
                         All Tests
                     </button>
 
-                    <button type="button"
-                            class="filter-button"
-                            data-mock-filter="administration"
-                            aria-pressed="false">
+                    <button type="button" class="filter-button"
+                            data-mock-filter="administration" aria-pressed="false">
                         APSC
                     </button>
 
-                    <button type="button"
-                            class="filter-button"
-                            data-mock-filter="recruitment"
-                            aria-pressed="false">
+                    <button type="button" class="filter-button"
+                            data-mock-filter="recruitment" aria-pressed="false">
                         ADRE
                     </button>
 
-                    <button type="button"
-                            class="filter-button"
-                            data-mock-filter="police"
-                            aria-pressed="false">
+                    <button type="button" class="filter-button"
+                            data-mock-filter="police" aria-pressed="false">
                         Assam Police
                     </button>
 
-                    <button type="button"
-                            class="filter-button"
-                            data-mock-filter="health"
-                            aria-pressed="false">
+                    <button type="button" class="filter-button"
+                            data-mock-filter="health" aria-pressed="false">
                         Health
                     </button>
 
-                    <button type="button"
-                            class="filter-button"
-                            data-mock-filter="education"
-                            aria-pressed="false">
+                    <button type="button" class="filter-button"
+                            data-mock-filter="education" aria-pressed="false">
                         TET
                     </button>
 
-                    <button type="button"
-                            class="filter-button"
-                            data-mock-filter="other"
-                            aria-pressed="false">
+                    <button type="button" class="filter-button"
+                            data-mock-filter="other" aria-pressed="false">
                         Other Exams
                     </button>
                 </div>
 
-                <p class="section-description"
-                   id="mock-test-result-count"
+                <p class="section-description" id="mock-test-result-count"
                    aria-live="polite">
-                    Browse available test entries.
+                    Loading available mock tests...
                 </p>
 
-                <!-- Mock Test Cards -->
+                <!-- Test Cards -->
                 <div class="test-list mt-md" id="mock-test-grid">
 
                     <article class="test-card"
@@ -266,7 +211,8 @@
                              data-mock-id="assam-vfa"
                              data-mock-category="recruitment"
                              data-mock-name="Assam VFA Exam"
-                             data-mock-description="Practice for Assam VFA recruitment.">
+                             data-mock-description="Village Field Assistant recruitment practice">
+
                         <span class="card-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <rect x="5" y="3" width="14" height="18" rx="2"
@@ -280,17 +226,14 @@
                         <div class="test-card-content">
                             <h3 class="test-card-title">Assam VFA Exam</h3>
                             <div class="test-card-meta">
-                                <span>Recruitment</span>
-                                <span>Practice test</span>
+                                <span>Recruitment</span><span>Practice test</span>
                             </div>
                             <p class="card-description">
                                 Practice questions for the Village Field Assistant examination.
                             </p>
                         </div>
-
-                        <a href="test.html?test=assam-vfa" class="btn btn-primary">
-                            Start Test
-                        </a>
+                        <a href="test.html?test=assam-vfa" class="btn btn-primary"
+                           data-test-link>Start Test</a>
                     </article>
 
                     <article class="test-card"
@@ -298,7 +241,8 @@
                              data-mock-id="apsc-cce"
                              data-mock-category="administration"
                              data-mock-name="APSC CCE"
-                             data-mock-description="Assam civil services preparation.">
+                             data-mock-description="Assam civil services preparation">
+
                         <span class="card-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <path d="M3 10h18M5 10v9m4-9v9m6-9v9m4-9v9M3 21h18M12 3 2.5 8h19z"
@@ -310,17 +254,14 @@
                         <div class="test-card-content">
                             <h3 class="test-card-title">APSC CCE Practice</h3>
                             <div class="test-card-meta">
-                                <span>Civil Services</span>
-                                <span>Practice test</span>
+                                <span>Civil Services</span><span>Practice test</span>
                             </div>
                             <p class="card-description">
                                 General studies and civil services preparation.
                             </p>
                         </div>
-
-                        <a href="test.html?test=apsc-cce" class="btn btn-primary">
-                            Start Test
-                        </a>
+                        <a href="test.html?test=apsc-cce" class="btn btn-primary"
+                           data-test-link>Start Test</a>
                     </article>
 
                     <article class="test-card"
@@ -328,31 +269,20 @@
                              data-mock-id="adre-grade-iii"
                              data-mock-category="recruitment"
                              data-mock-name="ADRE Grade III"
-                             data-mock-description="Grade III recruitment preparation.">
-                        <span class="card-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <rect x="5" y="3" width="14" height="18" rx="2"
-                                      stroke="currentColor" stroke-width="1.7"/>
-                                <path d="M9 8h6M9 12h6M9 16h4"
-                                      stroke="currentColor" stroke-width="1.7"
-                                      stroke-linecap="round"/>
-                            </svg>
-                        </span>
+                             data-mock-description="Grade III recruitment preparation">
 
+                        <span class="card-icon" aria-hidden="true">III</span>
                         <div class="test-card-content">
                             <h3 class="test-card-title">ADRE Grade III</h3>
                             <div class="test-card-meta">
-                                <span>Recruitment</span>
-                                <span>Practice test</span>
+                                <span>Recruitment</span><span>Practice test</span>
                             </div>
                             <p class="card-description">
                                 Prepare with Grade III-oriented MCQ practice.
                             </p>
                         </div>
-
-                        <a href="test.html?test=adre-grade-iii" class="btn btn-primary">
-                            Start Test
-                        </a>
+                        <a href="test.html?test=adre-grade-iii" class="btn btn-primary"
+                           data-test-link>Start Test</a>
                     </article>
 
                     <article class="test-card"
@@ -360,31 +290,20 @@
                              data-mock-id="adre-grade-iv"
                              data-mock-category="recruitment"
                              data-mock-name="ADRE Grade IV"
-                             data-mock-description="Grade IV recruitment preparation.">
-                        <span class="card-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <rect x="5" y="3" width="14" height="18" rx="2"
-                                      stroke="currentColor" stroke-width="1.7"/>
-                                <path d="M9 8h6M9 12h6M9 16h4"
-                                      stroke="currentColor" stroke-width="1.7"
-                                      stroke-linecap="round"/>
-                            </svg>
-                        </span>
+                             data-mock-description="Grade IV recruitment preparation">
 
+                        <span class="card-icon" aria-hidden="true">IV</span>
                         <div class="test-card-content">
                             <h3 class="test-card-title">ADRE Grade IV</h3>
                             <div class="test-card-meta">
-                                <span>Recruitment</span>
-                                <span>Practice test</span>
+                                <span>Recruitment</span><span>Practice test</span>
                             </div>
                             <p class="card-description">
                                 Prepare with Grade IV-oriented MCQ practice.
                             </p>
                         </div>
-
-                        <a href="test.html?test=adre-grade-iv" class="btn btn-primary">
-                            Start Test
-                        </a>
+                        <a href="test.html?test=adre-grade-iv" class="btn btn-primary"
+                           data-test-link>Start Test</a>
                     </article>
 
                     <article class="test-card"
@@ -392,7 +311,8 @@
                              data-mock-id="assam-police-si"
                              data-mock-category="police"
                              data-mock-name="Assam Police SI"
-                             data-mock-description="Sub-Inspector recruitment preparation.">
+                             data-mock-description="Sub-Inspector recruitment preparation">
+
                         <span class="card-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"
@@ -407,17 +327,14 @@
                         <div class="test-card-content">
                             <h3 class="test-card-title">Assam Police SI</h3>
                             <div class="test-card-meta">
-                                <span>Police Recruitment</span>
-                                <span>Practice test</span>
+                                <span>Police Recruitment</span><span>Practice test</span>
                             </div>
                             <p class="card-description">
                                 Sub-Inspector examination preparation.
                             </p>
                         </div>
-
-                        <a href="test.html?test=assam-police-si" class="btn btn-primary">
-                            Start Test
-                        </a>
+                        <a href="test.html?test=assam-police-si" class="btn btn-primary"
+                           data-test-link>Start Test</a>
                     </article>
 
                     <article class="test-card"
@@ -425,32 +342,20 @@
                              data-mock-id="assam-police-constable"
                              data-mock-category="police"
                              data-mock-name="Assam Police Constable"
-                             data-mock-description="Constable recruitment preparation.">
-                        <span class="card-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"
-                                      stroke="currentColor" stroke-width="1.7"
-                                      stroke-linejoin="round"/>
-                                <path d="m8.5 12 2.2 2.2 4.8-5"
-                                      stroke="currentColor" stroke-width="1.7"
-                                      stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </span>
+                             data-mock-description="Constable recruitment preparation">
 
+                        <span class="card-icon" aria-hidden="true">AP</span>
                         <div class="test-card-content">
                             <h3 class="test-card-title">Assam Police Constable</h3>
                             <div class="test-card-meta">
-                                <span>Police Recruitment</span>
-                                <span>Practice test</span>
+                                <span>Police Recruitment</span><span>Practice test</span>
                             </div>
                             <p class="card-description">
                                 Constable examination preparation.
                             </p>
                         </div>
-
-                        <a href="test.html?test=assam-police-constable" class="btn btn-primary">
-                            Start Test
-                        </a>
+                        <a href="test.html?test=assam-police-constable"
+                           class="btn btn-primary" data-test-link>Start Test</a>
                     </article>
 
                     <article class="test-card"
@@ -458,7 +363,8 @@
                              data-mock-id="assam-tet-paper-i"
                              data-mock-category="education"
                              data-mock-name="Assam TET Paper I"
-                             data-mock-description="Teacher eligibility preparation.">
+                             data-mock-description="Teacher eligibility preparation">
+
                         <span class="card-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <path d="m3 8 9-5 9 5-9 5z"
@@ -473,17 +379,14 @@
                         <div class="test-card-content">
                             <h3 class="test-card-title">Assam TET Paper I</h3>
                             <div class="test-card-meta">
-                                <span>Education</span>
-                                <span>Practice test</span>
+                                <span>Education</span><span>Practice test</span>
                             </div>
                             <p class="card-description">
                                 Primary-level teacher eligibility practice.
                             </p>
                         </div>
-
-                        <a href="test.html?test=assam-tet-paper-i" class="btn btn-primary">
-                            Start Test
-                        </a>
+                        <a href="test.html?test=assam-tet-paper-i"
+                           class="btn btn-primary" data-test-link>Start Test</a>
                     </article>
 
                     <article class="test-card"
@@ -491,31 +394,20 @@
                              data-mock-id="anm-entrance"
                              data-mock-category="health"
                              data-mock-name="ANM Entrance"
-                             data-mock-description="Nursing entrance preparation.">
-                        <span class="card-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <circle cx="12" cy="12" r="9"
-                                        stroke="currentColor" stroke-width="1.6"/>
-                                <path d="M12 7v10M7 12h10"
-                                      stroke="currentColor" stroke-width="2"
-                                      stroke-linecap="round"/>
-                            </svg>
-                        </span>
+                             data-mock-description="Nursing entrance preparation">
 
+                        <span class="card-icon" aria-hidden="true">+</span>
                         <div class="test-card-content">
                             <h3 class="test-card-title">ANM Entrance Practice</h3>
                             <div class="test-card-meta">
-                                <span>Health Sciences</span>
-                                <span>Practice test</span>
+                                <span>Health Sciences</span><span>Practice test</span>
                             </div>
                             <p class="card-description">
                                 Nursing entrance preparation questions.
                             </p>
                         </div>
-
-                        <a href="test.html?test=anm-entrance" class="btn btn-primary">
-                            Start Test
-                        </a>
+                        <a href="test.html?test=anm-entrance" class="btn btn-primary"
+                           data-test-link>Start Test</a>
                     </article>
 
                     <article class="test-card"
@@ -523,43 +415,28 @@
                              data-mock-id="ssc-general-practice"
                              data-mock-category="other"
                              data-mock-name="SSC General Practice"
-                             data-mock-description="SSC aptitude, reasoning and general awareness.">
-                        <span class="card-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <rect x="5" y="3" width="14" height="18" rx="2"
-                                      stroke="currentColor" stroke-width="1.7"/>
-                                <path d="M9 8h6M9 12h6M9 16h4"
-                                      stroke="currentColor" stroke-width="1.7"
-                                      stroke-linecap="round"/>
-                            </svg>
-                        </span>
+                             data-mock-description="SSC aptitude, reasoning and general awareness">
 
+                        <span class="card-icon" aria-hidden="true">SSC</span>
                         <div class="test-card-content">
                             <h3 class="test-card-title">SSC General Practice</h3>
                             <div class="test-card-meta">
-                                <span>Other Exams</span>
-                                <span>Practice test</span>
+                                <span>Other Exams</span><span>Practice test</span>
                             </div>
                             <p class="card-description">
                                 Reasoning, aptitude and general awareness practice.
                             </p>
                         </div>
-
-                        <a href="test.html?test=ssc-general-practice" class="btn btn-primary">
-                            Start Test
-                        </a>
+                        <a href="test.html?test=ssc-general-practice"
+                           class="btn btn-primary" data-test-link>Start Test</a>
                     </article>
 
                 </div>
 
-                <!-- Empty State -->
-                <div class="empty-state mt-md"
-                     id="mock-test-empty-state"
-                     hidden>
+                <div class="empty-state mt-md" id="mock-test-empty-state" hidden>
                     <h3>No mock tests found</h3>
                     <p>Try a different search term or category.</p>
                 </div>
-
             </div>
         </section>
 
@@ -591,7 +468,6 @@
                 </div>
             </div>
         </section>
-
     </main>
 
     <!-- Shared Footer -->
@@ -604,7 +480,9 @@
                         <span style="font-size:23px;font-weight:800;">s</span>
                     </span>
                     <span class="brand-text">
-                        <span class="brand-name"><span style="color:#111111;">study</span><span style="color:#777777;">kora</span></span>
+                        <span class="brand-name">
+                            <span style="color:#111111;">study</span><span style="color:#777777;">kora</span>
+                        </span>
                     </span>
                 </a>
                 <p class="footer-description">
@@ -642,12 +520,11 @@
                     <li><a href="privacy-policy.html">Privacy Policy</a></li>
                 </ul>
             </div>
-
         </div>
 
         <div class="footer-bottom">
             <span>&copy; <span data-current-year></span> StudyKora. All rights reserved.</span>
-            <span class="site-credit">Design and Develop by Yadav Web Technologies</span>
+            <span class="site-credit">Designed and developed by Yadav Web Technologies</span>
         </div>
     </footer>
 
