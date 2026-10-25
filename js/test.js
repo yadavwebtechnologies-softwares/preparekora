@@ -7,7 +7,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
     /* ==========================================
-       1. ELEMENT REFERENCES
+       1. DOM REFERENCES
     ========================================== */
 
     const testTitle = document.getElementById("test-title");
@@ -17,14 +17,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const instructionsSection = document.getElementById("instructions");
     const questionSection = document.getElementById("questions");
 
-    const questionHeading = questionSection?.querySelector(".section-title");
-    const questionDescription = questionSection?.querySelector(":scope > p");
+    const questionHeading =
+        questionSection?.querySelector(".section-title");
 
-    const heroDescription = document.querySelector(".hero-content > p");
-    const heroHighlights = document.querySelectorAll(".hero-highlights span");
+    const questionDescription =
+        questionSection?.querySelector(":scope > p");
 
-    const backLink = document.querySelector(".hero-actions .btn-outline");
-    const metaDescription = document.querySelector('meta[name="description"]');
+    const heroDescription =
+        document.querySelector(".hero-content > p");
+
+    const heroHighlights =
+        document.querySelectorAll(".hero-highlights span");
+
+    const backLink =
+        document.querySelector(".hero-actions .btn-outline");
+
+    const metaDescription =
+        document.querySelector('meta[name="description"]');
 
     if (!testTitle || !testStatus) return;
 
@@ -47,47 +56,109 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* ==========================================
-       3. ORIGINAL STATIC TEST CONTENT
+       3. EXAM CATALOGUE
     ========================================== */
 
-    const defaultQuestionHeading =
-        questionHeading?.textContent.trim() || "Sample Questions";
+    const exams = {
+        "adre-grade-iii": {
+            title: "ADRE Grade III",
+            organization: "Assam Direct Recruitment",
+            description: "Prepare for ADRE Grade III with focused mock test practice.",
+            hasSampleQuestions: true
+        },
 
-    const defaultQuestionDescription =
-        questionDescription?.textContent.trim() ||
-        "These questions demonstrate the test layout.";
+        "adre-grade-iv": {
+            title: "ADRE Grade IV",
+            organization: "Assam Direct Recruitment",
+            description: "Explore ADRE Grade IV practice and revision.",
+            hasSampleQuestions: false
+        },
 
-    const defaultHeroDescription =
-        heroDescription?.textContent.trim() ||
-        "Practise sample questions on StudyNow.";
+        "assam-vfa": {
+            title: "Assam VFA",
+            organization: "Recruitment Exam",
+            description: "Explore Assam VFA exam preparation.",
+            hasSampleQuestions: false
+        },
 
-    const params = new URLSearchParams(window.location.search);
-    const subjectParam = params.get("subject");
+        "anm-entrance": {
+            title: "ANM Entrance",
+            organization: "Healthcare Entrance",
+            description: "Explore ANM entrance practice and revision.",
+            hasSampleQuestions: false
+        },
 
-    let pageMode = "test";
+        "assam-police-si": {
+            title: "Assam Police Sub-Inspector",
+            organization: "Assam Police",
+            description: "Explore Sub-Inspector exam preparation.",
+            hasSampleQuestions: false
+        },
 
-    let defaultTestNumber = Number(params.get("test") || 1);
+        "assam-police-constable": {
+            title: "Assam Police Constable",
+            organization: "Assam Police",
+            description: "Explore constable recruitment practice.",
+            hasSampleQuestions: false
+        },
 
-    if (
-        !Number.isInteger(defaultTestNumber) ||
-        defaultTestNumber < 1 ||
-        defaultTestNumber > 10
-    ) {
-        defaultTestNumber = 1;
-    }
+        "apsc-cce": {
+            title: "APSC Combined Competitive Examination",
+            organization: "APSC",
+            description: "Explore APSC CCE preparation.",
+            hasSampleQuestions: false
+        }
+    };
 
 
     /* ==========================================
-       4. COMMON HELPERS
+       4. ORIGINAL HTML CONTENT
     ========================================== */
 
-    function updateMetaDescription(description) {
-        if (metaDescription) {
-            metaDescription.content = description;
-        }
+    const originalQuestionHeading =
+        questionHeading?.textContent.trim() || "Sample Questions";
+
+    const originalQuestionDescription =
+        questionDescription?.textContent.trim() ||
+        "Explore the test questions.";
+
+    const originalHeroDescription =
+        heroDescription?.textContent.trim() ||
+        "Practise for competitive examinations on StudyNow.";
+
+    const params = new URLSearchParams(window.location.search);
+
+    const subjectParam = params.get("subject");
+    const examParam = params.get("exam");
+
+    const rawTestNumber = Number(params.get("test") || 1);
+
+    const testNumber =
+        Number.isInteger(rawTestNumber) &&
+        rawTestNumber >= 1 &&
+        rawTestNumber <= 10
+            ? rawTestNumber
+            : 1;
+
+    let pageMode = "test";
+
+
+    /* ==========================================
+       5. HELPERS
+    ========================================== */
+
+    function setText(element, value) {
+        if (element) element.textContent = value;
     }
 
-    function updateHighlights(first, second, third) {
+    function setBackLink(url, label) {
+        if (!backLink) return;
+
+        backLink.href = url;
+        backLink.textContent = label;
+    }
+
+    function setHighlights(first, second, third) {
         if (heroHighlights[0]) {
             heroHighlights[0].textContent = first;
         }
@@ -101,152 +172,238 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function setBackLink(url, label) {
-        if (!backLink) return;
-
-        backLink.href = url;
-        backLink.textContent = label;
+    function setQuestionSection(title, description) {
+        setText(questionHeading, title);
+        setText(questionDescription, description);
     }
 
-    function setQuestionSection(heading, description) {
-        if (questionHeading) {
-            questionHeading.textContent = heading;
+    function setMetaDescription(description) {
+        if (metaDescription) {
+            metaDescription.content = description;
+        }
+    }
+
+    function showExistingTestContent(show) {
+        if (instructionsSection) {
+            instructionsSection.hidden = !show;
         }
 
-        if (questionDescription) {
-            questionDescription.textContent = description;
+        /*
+         * The existing HTML sample questions belong to
+         * ADRE Grade III. Do not show them for other exams.
+         */
+        if (testForm) {
+            testForm.hidden = !show;
         }
     }
 
 
     /* ==========================================
-       5. SUBJECT PRACTICE MODE
+       6. SUBJECT MODE
 
        Example:
        test.html?subject=economics
-
-       No subject is selected automatically.
-       Only the subject supplied in the URL is used.
     ========================================== */
 
-    function initializeSubjectMode(subjectId) {
+    function initializeSubject(subjectId) {
         pageMode = "subject";
 
-        const normalizedId = subjectId.trim().toLowerCase();
-        const subjectName = subjects[normalizedId];
+        const id = subjectId.trim().toLowerCase();
+        const name = subjects[id];
 
-        // Hide ADRE-only content in subject mode.
-        if (instructionsSection) {
-            instructionsSection.hidden = true;
-        }
-
-        if (testForm) {
-            testForm.hidden = true;
-        }
+        showExistingTestContent(false);
 
         setBackLink(
             "subjects.html#available-subjects",
             "Back to Subjects"
         );
 
-        if (!subjectName) {
-            testTitle.textContent = "Subject Not Found";
-            testStatus.textContent = "SUBJECT UNAVAILABLE";
+        if (!name) {
+            setText(testTitle, "Subject Not Found");
+            setText(testStatus, "SUBJECT UNAVAILABLE");
 
-            document.title = "Subject Not Found | StudyNow";
+            setText(
+                heroDescription,
+                "This subject is unavailable. Return to the subject list and select a valid subject."
+            );
 
-            if (heroDescription) {
-                heroDescription.textContent =
-                    "This subject is unavailable. Return to the subject list and choose a valid subject.";
-            }
-
-            updateHighlights(
+            setHighlights(
                 "Subject unavailable",
-                "Choose a subject",
-                "Try again"
+                "Browse subjects",
+                "Select again"
             );
 
             setQuestionSection(
                 "Subject Unavailable",
-                "Please return to the subject list and select an available subject."
+                "Please return to Subjects and choose an available subject."
             );
 
-            updateMetaDescription(
+            setMetaDescription(
                 "The requested subject is unavailable on StudyNow."
             );
 
+            document.title = "Subject Not Found | StudyNow";
             return;
         }
 
-        testTitle.textContent = `${subjectName} Practice`;
-        testStatus.textContent = "SUBJECT PRACTICE";
+        setText(testTitle, `${name} Practice`);
+        setText(testStatus, "SUBJECT PRACTICE");
 
-        document.title = `${subjectName} Practice | StudyNow`;
+        setText(
+            heroDescription,
+            `Explore ${name} practice. Subject-specific questions and learning content will appear here when available.`
+        );
 
-        if (heroDescription) {
-            heroDescription.textContent =
-                `Explore ${subjectName} practice. Subject-specific questions and learning content will be shown here when connected.`;
-        }
-
-        updateHighlights(
-            subjectName,
+        setHighlights(
+            name,
             "Subject-wise learning",
             "Practice preview"
         );
 
         setQuestionSection(
-            `${subjectName} Practice`,
-            `The ${subjectName} practice page is ready. Its questions, answers and explanations will be connected during the content phase.`
+            `${name} Practice`,
+            `The ${name} practice page is ready for its subject-specific question collection.`
         );
 
-        updateMetaDescription(
-            `Explore ${subjectName} practice and prepare for competitive examinations with StudyNow.`
+        setMetaDescription(
+            `Explore ${name} practice and exam preparation on StudyNow.`
         );
+
+        document.title = `${name} Practice | StudyNow`;
     }
 
 
     /* ==========================================
-       6. MOCK TEST MODE
+       7. EXAM MODE
 
-       Examples:
-       test.html
-       test.html?test=1
-       test.html?test=2
-
-       Existing HTML sample questions remain static.
+       Example:
+       test.html?exam=adre-grade-iii&test=1
     ========================================== */
 
-    function initializeMockTestMode() {
-        pageMode = "test";
+    function initializeExam(examId) {
+        pageMode = "exam";
 
-        if (instructionsSection) {
-            instructionsSection.hidden = false;
+        const id = examId.trim().toLowerCase();
+        const exam = exams[id];
+
+        if (!exam) {
+            showExistingTestContent(false);
+
+            setText(testTitle, "Exam Not Found");
+            setText(testStatus, "EXAM UNAVAILABLE");
+
+            setText(
+                heroDescription,
+                "This examination is unavailable. Return to the exam list and choose another option."
+            );
+
+            setHighlights(
+                "Exam unavailable",
+                "Browse examinations",
+                "Select again"
+            );
+
+            setQuestionSection(
+                "Exam Unavailable",
+                "Please select an available examination from StudyNow."
+            );
+
+            setBackLink("mock-tests.html", "Back to Mock Tests");
+
+            setMetaDescription(
+                "The requested examination is unavailable on StudyNow."
+            );
+
+            document.title = "Exam Not Found | StudyNow";
+            return;
         }
 
-        if (testForm) {
-            testForm.hidden = false;
-        }
+        const showSampleQuestions =
+            exam.hasSampleQuestions && testNumber === 1;
 
-        const testLabel = defaultTestNumber === 1
-            ? "FREE TEST PREVIEW"
-            : "PREMIUM TEST PREVIEW";
+        showExistingTestContent(showSampleQuestions);
 
-        testTitle.textContent =
-            `ADRE Grade III — Mock Test ${defaultTestNumber}`;
+        setText(
+            testTitle,
+            `${exam.title} — Mock Test ${testNumber}`
+        );
 
-        testStatus.textContent = testLabel;
+        setText(
+            testStatus,
+            showSampleQuestions
+                ? "FREE TEST PREVIEW"
+                : testNumber === 1
+                    ? "TEST PREVIEW"
+                    : "PREMIUM TEST PREVIEW"
+        );
+
+        setText(heroDescription, exam.description);
+
+        setHighlights(
+            exam.organization,
+            `Mock Test ${testNumber}`,
+            "Exam practice"
+        );
+
+        setQuestionSection(
+            showSampleQuestions
+                ? originalQuestionHeading
+                : `${exam.title} Practice`,
+            showSampleQuestions
+                ? originalQuestionDescription
+                : `The ${exam.title} test collection is selected. Its specific questions will appear here when the content is available.`
+        );
+
+        setBackLink(
+            `mock-tests.html?exam=${encodeURIComponent(id)}`,
+            "Back to Mock Tests"
+        );
+
+        setMetaDescription(
+            `${exam.title} mock test practice on StudyNow.`
+        );
 
         document.title =
-            `ADRE Grade III Mock Test ${defaultTestNumber} | StudyNow`;
+            `${exam.title} Mock Test ${testNumber} | StudyNow`;
+    }
 
-        if (heroDescription) {
-            heroDescription.textContent = defaultHeroDescription;
-        }
 
-        updateHighlights(
+    /* ==========================================
+       8. DEFAULT ADRE PREVIEW
+
+       Example:
+       test.html
+       test.html?test=1
+    ========================================== */
+
+    function initializeDefaultTest() {
+        pageMode = "test";
+
+        showExistingTestContent(true);
+
+        setText(
+            testTitle,
+            `ADRE Grade III — Mock Test ${testNumber}`
+        );
+
+        setText(
+            testStatus,
+            testNumber === 1
+                ? "FREE TEST PREVIEW"
+                : "PREMIUM TEST PREVIEW"
+        );
+
+        setText(heroDescription, originalHeroDescription);
+
+        setHighlights(
             "150 Questions in Full Test",
             "180 Minutes",
             "English"
+        );
+
+        setQuestionSection(
+            originalQuestionHeading,
+            originalQuestionDescription
         );
 
         setBackLink(
@@ -254,64 +411,52 @@ document.addEventListener("DOMContentLoaded", () => {
             "Back to Mock Tests"
         );
 
-        setQuestionSection(
-            defaultQuestionHeading,
-            defaultQuestionDescription
+        setMetaDescription(
+            "Explore ADRE Grade III mock test practice on StudyNow."
         );
 
-        updateMetaDescription(
-            "Practise sample questions and explore the StudyNow mock test interface."
-        );
+        document.title =
+            `ADRE Grade III Mock Test ${testNumber} | StudyNow`;
     }
 
 
     /* ==========================================
-       7. TEST SUBMISSION PREVIEW
+       9. SUBMIT HANDLING
 
-       No generated popup or fake result.
-       Scoring will be connected later.
+       Static preview only.
+       No generated modal or fake score.
     ========================================== */
 
-    function handleTestSubmit(event) {
-        event.preventDefault();
-
-        if (pageMode !== "test") return;
-
-        testStatus.textContent = "PREVIEW ONLY";
-
-        setQuestionSection(
-            defaultQuestionHeading,
-            "This is a static preview. Answer checking, score calculation, result saving and test history will be connected in the functionality phase."
-        );
-    }
-
     if (testForm) {
-        testForm.addEventListener("submit", handleTestSubmit);
+        testForm.addEventListener("submit", (event) => {
+            event.preventDefault();
 
-        testForm.addEventListener("reset", () => {
-            window.setTimeout(() => {
-                if (pageMode !== "test") return;
+            if (pageMode !== "test" && pageMode !== "exam") {
+                return;
+            }
 
-                testStatus.textContent = defaultTestNumber === 1
-                    ? "FREE TEST PREVIEW"
-                    : "PREMIUM TEST PREVIEW";
+            setText(
+                testStatus,
+                "PREVIEW ONLY"
+            );
 
-                setQuestionSection(
-                    defaultQuestionHeading,
-                    defaultQuestionDescription
-                );
-            }, 0);
+            setQuestionSection(
+                originalQuestionHeading,
+                "Test submission and scoring will be connected when the test engine is implemented."
+            );
         });
     }
 
 
     /* ==========================================
-       8. INITIALIZE PAGE FROM URL
+       10. INITIALIZE FROM URL
     ========================================== */
 
     if (subjectParam !== null) {
-        initializeSubjectMode(subjectParam);
+        initializeSubject(subjectParam);
+    } else if (examParam !== null) {
+        initializeExam(examParam);
     } else {
-        initializeMockTestMode();
+        initializeDefaultTest();
     }
 });
