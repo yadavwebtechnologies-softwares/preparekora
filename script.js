@@ -1,4 +1,3 @@
-
 /* =====================================================
    StudyKora — Shared JavaScript
    Design and Develop by Yadav Web Technologies
@@ -32,104 +31,7 @@ const StudyKora = (() => {
     };
 })();
 
-/* 2. Shared mobile navigation */
-
-function initializeNavigation() {
-    const menuToggle = document.getElementById("menu-toggle");
-    const mainNav = document.getElementById("main-nav");
-
-    if (!menuToggle || !mainNav) return;
-
-    const mobileQuery = window.matchMedia("(max-width: 780px)");
-
-    function setMenuState(isOpen) {
-        const shouldOpen = isOpen && mobileQuery.matches;
-
-        mainNav.classList.toggle("is-open", shouldOpen);
-        menuToggle.classList.toggle("is-active", shouldOpen);
-
-        menuToggle.setAttribute("aria-expanded", String(shouldOpen));
-        menuToggle.setAttribute(
-            "aria-label",
-            shouldOpen ? "Close navigation menu" : "Open navigation menu"
-        );
-    }
-
-    function toggleMenu() {
-        const isOpen = mainNav.classList.contains("is-open");
-        setMenuState(!isOpen);
-    }
-
-    menuToggle.addEventListener("click", (event) => {
-        event.stopPropagation();
-        toggleMenu();
-    });
-
-    mainNav.addEventListener("click", (event) => {
-        const link = event.target.closest("a");
-
-        if (link && mobileQuery.matches) {
-            setMenuState(false);
-        }
-    });
-
-    document.addEventListener("click", (event) => {
-        if (!mobileQuery.matches) return;
-
-        const clickedInsideMenu = mainNav.contains(event.target);
-        const clickedToggle = menuToggle.contains(event.target);
-
-        if (!clickedInsideMenu && !clickedToggle) {
-            setMenuState(false);
-        }
-    });
-
-    document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") {
-            setMenuState(false);
-        }
-    });
-
-    function handleViewportChange() {
-        setMenuState(false);
-    }
-
-    if (typeof mobileQuery.addEventListener === "function") {
-        mobileQuery.addEventListener("change", handleViewportChange);
-    } else {
-        /* Fallback for older browsers */
-        mobileQuery.addListener(handleViewportChange);
-    }
-
-    setMenuState(false);
-}
-
-/* 3. Mark the current navigation link */
-
-function initializeActiveNavigation() {
-    const currentPath = window.location.pathname;
-    const currentFile = currentPath.split("/").pop() || "index.html";
-
-    StudyKora.selectAll(".main-nav a[href]").forEach((link) => {
-        let targetUrl;
-
-        try {
-            targetUrl = new URL(link.href, window.location.href);
-        } catch {
-            return;
-        }
-
-        const targetFile = targetUrl.pathname.split("/").pop() || "index.html";
-
-        if (targetFile === currentFile) {
-            link.setAttribute("aria-current", "page");
-        } else {
-            link.removeAttribute("aria-current");
-        }
-    });
-}
-
-/* 4. Shared current-year placeholders */
+/* 2. Shared current-year placeholders */
 
 function initializeCurrentYear() {
     const currentYear = new Date().getFullYear();
@@ -139,7 +41,7 @@ function initializeCurrentYear() {
     });
 }
 
-/* 5. Shared password visibility controls */
+/* 3. Shared password visibility controls */
 
 function initializePasswordToggles() {
     StudyKora.selectAll("[data-toggle-password]").forEach((button) => {
@@ -148,7 +50,13 @@ function initializePasswordToggles() {
         const inputId = button.dataset.togglePassword;
         const input = inputId ? document.getElementById(inputId) : null;
 
-        if (!input) return;
+        if (!input) {
+            console.warn(
+                "[StudyKora] Password toggle input not found:",
+                inputId
+            );
+            return;
+        }
 
         button.dataset.passwordToggleReady = "true";
 
@@ -156,6 +64,7 @@ function initializePasswordToggles() {
             const shouldShow = input.type === "password";
 
             input.type = shouldShow ? "text" : "password";
+
             button.setAttribute("aria-pressed", String(shouldShow));
             button.setAttribute(
                 "aria-label",
@@ -167,24 +76,28 @@ function initializePasswordToggles() {
     });
 }
 
-/* 6. Shared back-to-top controls */
+/* 4. Shared back-to-top controls */
 
 function initializeBackToTop() {
     StudyKora.selectAll("[data-back-to-top]").forEach((button) => {
+        if (button.dataset.backToTopReady === "true") return;
+
+        button.dataset.backToTopReady = "true";
+
         button.addEventListener("click", () => {
+            const reduceMotion = window.matchMedia(
+                "(prefers-reduced-motion: reduce)"
+            ).matches;
+
             window.scrollTo({
                 top: 0,
-                behavior: window.matchMedia(
-                    "(prefers-reduced-motion: reduce)"
-                ).matches
-                    ? "auto"
-                    : "smooth"
+                behavior: reduceMotion ? "auto" : "smooth"
             });
         });
     });
 }
 
-/* 7. Shared external-link safety */
+/* 5. Shared external-link safety */
 
 function initializeExternalLinks() {
     StudyKora.selectAll('a[target="_blank"]').forEach((link) => {
@@ -201,15 +114,44 @@ function initializeExternalLinks() {
     });
 }
 
-/* 8. Initialize common behavior */
+/* 6. Shared diagnostics */
+
+function initializeSharedDiagnostics() {
+    const requiredHeaderElements = [
+        "account-guest",
+        "account-authenticated",
+        "main-nav",
+        "menu-toggle"
+    ];
+
+    const header = document.querySelector(".site-header");
+
+    if (!header) {
+        console.warn(
+            "[StudyKora] Shared header not found on:",
+            window.location.pathname
+        );
+        return;
+    }
+
+    requiredHeaderElements.forEach((id) => {
+        if (!header.querySelector(`#${id}`)) {
+            console.warn(
+                `[StudyKora] Header element #${id} is missing on:`,
+                window.location.pathname
+            );
+        }
+    });
+}
+
+/* 7. Initialize shared behavior */
 
 StudyKora.onReady(() => {
     document.documentElement.classList.add("js-enabled");
 
-    initializeNavigation();
-    initializeActiveNavigation();
     initializeCurrentYear();
     initializePasswordToggles();
     initializeBackToTop();
     initializeExternalLinks();
+    initializeSharedDiagnostics();
 });
