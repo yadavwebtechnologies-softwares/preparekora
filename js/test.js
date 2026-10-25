@@ -1,211 +1,317 @@
 /* ==========================================
-   StudyNow — Test Page
+   StudyNow — Test Page Controller
    Design and Develop by Yadav Web Technologies
 ========================================== */
 
 "use strict";
 
-const testForm = document.getElementById("test-form");
-const testTitle = document.getElementById("test-title");
-const testStatus = document.getElementById("test-status");
+document.addEventListener("DOMContentLoaded", () => {
+    /* ==========================================
+       1. ELEMENT REFERENCES
+    ========================================== */
 
-const subjectCatalogue = {
-    assamese: { name: "Assamese" },
-    culture: { name: "Culture" },
-    computer: { name: "Computer Knowledge" },
-    driving: { name: "Driving Knowledge" },
-    economics: { name: "Economics" },
-    geography: { name: "Geography" },
-    english: { name: "English" },
-    "general-knowledge": { name: "General Knowledge" },
-    polity: { name: "Polity" }
-};
+    const testTitle = document.getElementById("test-title");
+    const testStatus = document.getElementById("test-status");
+    const testForm = document.getElementById("test-form");
 
-function setSubjectPreview(subjectId) {
-    const subject = subjectCatalogue[subjectId];
-
-    const heroDescription = document.querySelector(".hero-content > p");
-    const highlights = document.querySelectorAll(".hero-highlights span");
-    const backLink = document.querySelector(".hero-actions a.btn-outline");
     const instructionsSection = document.getElementById("instructions");
     const questionSection = document.getElementById("questions");
 
-    if (!subject) {
-        testTitle.textContent = "Subject Not Found";
-        testStatus.textContent = "SUBJECT UNAVAILABLE";
-        document.title = "Subject Not Found | StudyNow";
+    const questionHeading = questionSection?.querySelector(".section-title");
+    const questionDescription = questionSection?.querySelector(":scope > p");
+
+    const heroDescription = document.querySelector(".hero-content > p");
+    const heroHighlights = document.querySelectorAll(".hero-highlights span");
+
+    const backLink = document.querySelector(".hero-actions .btn-outline");
+    const metaDescription = document.querySelector('meta[name="description"]');
+
+    if (!testTitle || !testStatus) return;
+
+
+    /* ==========================================
+       2. SUBJECT CATALOGUE
+    ========================================== */
+
+    const subjects = {
+        assamese: "Assamese",
+        culture: "Culture",
+        computer: "Computer Knowledge",
+        driving: "Driving Knowledge",
+        economics: "Economics",
+        geography: "Geography",
+        english: "English",
+        "general-knowledge": "General Knowledge",
+        polity: "Polity"
+    };
+
+
+    /* ==========================================
+       3. ORIGINAL STATIC TEST CONTENT
+    ========================================== */
+
+    const defaultQuestionHeading =
+        questionHeading?.textContent.trim() || "Sample Questions";
+
+    const defaultQuestionDescription =
+        questionDescription?.textContent.trim() ||
+        "These questions demonstrate the test layout.";
+
+    const defaultHeroDescription =
+        heroDescription?.textContent.trim() ||
+        "Practise sample questions on StudyNow.";
+
+    const params = new URLSearchParams(window.location.search);
+    const subjectParam = params.get("subject");
+
+    let pageMode = "test";
+
+    let defaultTestNumber = Number(params.get("test") || 1);
+
+    if (
+        !Number.isInteger(defaultTestNumber) ||
+        defaultTestNumber < 1 ||
+        defaultTestNumber > 10
+    ) {
+        defaultTestNumber = 1;
+    }
+
+
+    /* ==========================================
+       4. COMMON HELPERS
+    ========================================== */
+
+    function updateMetaDescription(description) {
+        if (metaDescription) {
+            metaDescription.content = description;
+        }
+    }
+
+    function updateHighlights(first, second, third) {
+        if (heroHighlights[0]) {
+            heroHighlights[0].textContent = first;
+        }
+
+        if (heroHighlights[1]) {
+            heroHighlights[1].textContent = second;
+        }
+
+        if (heroHighlights[2]) {
+            heroHighlights[2].textContent = third;
+        }
+    }
+
+    function setBackLink(url, label) {
+        if (!backLink) return;
+
+        backLink.href = url;
+        backLink.textContent = label;
+    }
+
+    function setQuestionSection(heading, description) {
+        if (questionHeading) {
+            questionHeading.textContent = heading;
+        }
+
+        if (questionDescription) {
+            questionDescription.textContent = description;
+        }
+    }
+
+
+    /* ==========================================
+       5. SUBJECT PRACTICE MODE
+
+       Example:
+       test.html?subject=economics
+
+       No subject is selected automatically.
+       Only the subject supplied in the URL is used.
+    ========================================== */
+
+    function initializeSubjectMode(subjectId) {
+        pageMode = "subject";
+
+        const normalizedId = subjectId.trim().toLowerCase();
+        const subjectName = subjects[normalizedId];
+
+        // Hide ADRE-only content in subject mode.
+        if (instructionsSection) {
+            instructionsSection.hidden = true;
+        }
+
+        if (testForm) {
+            testForm.hidden = true;
+        }
+
+        setBackLink(
+            "subjects.html#available-subjects",
+            "Back to Subjects"
+        );
+
+        if (!subjectName) {
+            testTitle.textContent = "Subject Not Found";
+            testStatus.textContent = "SUBJECT UNAVAILABLE";
+
+            document.title = "Subject Not Found | StudyNow";
+
+            if (heroDescription) {
+                heroDescription.textContent =
+                    "This subject is unavailable. Return to the subject list and choose a valid subject.";
+            }
+
+            updateHighlights(
+                "Subject unavailable",
+                "Choose a subject",
+                "Try again"
+            );
+
+            setQuestionSection(
+                "Subject Unavailable",
+                "Please return to the subject list and select an available subject."
+            );
+
+            updateMetaDescription(
+                "The requested subject is unavailable on StudyNow."
+            );
+
+            return;
+        }
+
+        testTitle.textContent = `${subjectName} Practice`;
+        testStatus.textContent = "SUBJECT PRACTICE";
+
+        document.title = `${subjectName} Practice | StudyNow`;
 
         if (heroDescription) {
             heroDescription.textContent =
-                "This subject link is unavailable. Return to the subject list and choose another subject.";
+                `Explore ${subjectName} practice. Subject-specific questions and learning content will be shown here when connected.`;
         }
 
-        if (testForm) testForm.hidden = true;
-        if (instructionsSection) instructionsSection.hidden = true;
-
-        if (questionSection) {
-            const heading = questionSection.querySelector(".section-title");
-            const intro = questionSection.querySelector(":scope > p");
-
-            if (heading) heading.textContent = "Subject Unavailable";
-
-            if (intro) {
-                intro.textContent =
-                    "Please select a valid subject from the StudyNow subject list.";
-            }
-        }
-
-        if (backLink) {
-            backLink.href = "subjects.html#available-subjects";
-            backLink.textContent = "Back to Subjects";
-        }
-
-        return;
-    }
-
-    testTitle.textContent = `${subject.name} Practice`;
-    testStatus.textContent = "SUBJECT PRACTICE PREVIEW";
-    document.title = `${subject.name} Practice | StudyNow`;
-
-    const metaDescription = document.querySelector(
-        'meta[name="description"]'
-    );
-
-    if (metaDescription) {
-        metaDescription.content =
-            `Explore ${subject.name} practice on StudyNow.`;
-    }
-
-    if (heroDescription) {
-        heroDescription.textContent =
-            `You selected ${subject.name}. This page is prepared for subject-wise practice. Subject-specific question content will be added in the content upgrade.`;
-    }
-
-    if (highlights[0]) {
-        highlights[0].textContent = subject.name;
-    }
-
-    if (highlights[1]) {
-        highlights[1].textContent = "Subject practice";
-    }
-
-    if (highlights[2]) {
-        highlights[2].textContent = "MCQ content preview";
-    }
-
-    if (backLink) {
-        backLink.href = "subjects.html#available-subjects";
-        backLink.textContent = "Back to Subjects";
-    }
-
-    // The standard instructions are for the ADRE sample test only.
-    if (instructionsSection) {
-        instructionsSection.hidden = true;
-    }
-
-    // Do not show ADRE sample questions for another subject.
-    if (testForm) {
-        testForm.hidden = true;
-    }
-
-    if (questionSection) {
-        const heading = questionSection.querySelector(".section-title");
-        const intro = questionSection.querySelector(":scope > p");
-
-        if (heading) {
-            heading.textContent = `${subject.name} Practice`;
-        }
-
-        if (intro) {
-            intro.textContent =
-                `The ${subject.name} practice page is ready. Subject-specific questions, answers and explanations will be connected in the next content phase.`;
-        }
-
-        let placeholder = document.getElementById(
-            "subject-practice-placeholder"
+        updateHighlights(
+            subjectName,
+            "Subject-wise learning",
+            "Practice preview"
         );
 
-        if (!placeholder) {
-            placeholder = document.createElement("article");
-            placeholder.id = "subject-practice-placeholder";
-            placeholder.className = "why-card";
+        setQuestionSection(
+            `${subjectName} Practice`,
+            `The ${subjectName} practice page is ready. Its questions, answers and explanations will be connected during the content phase.`
+        );
 
-            const placeholderTitle = document.createElement("h3");
-            placeholderTitle.textContent = "Practice content";
+        updateMetaDescription(
+            `Explore ${subjectName} practice and prepare for competitive examinations with StudyNow.`
+        );
+    }
 
-            const placeholderText = document.createElement("p");
-            placeholderText.textContent =
-                "This is a static preview. Subject questions will be loaded here when the practice content is connected.";
 
-            placeholder.append(placeholderTitle, placeholderText);
+    /* ==========================================
+       6. MOCK TEST MODE
 
-            if (testForm) {
-                testForm.insertAdjacentElement("afterend", placeholder);
-            } else {
-                questionSection.appendChild(placeholder);
-            }
+       Examples:
+       test.html
+       test.html?test=1
+       test.html?test=2
+
+       Existing HTML sample questions remain static.
+    ========================================== */
+
+    function initializeMockTestMode() {
+        pageMode = "test";
+
+        if (instructionsSection) {
+            instructionsSection.hidden = false;
         }
+
+        if (testForm) {
+            testForm.hidden = false;
+        }
+
+        const testLabel = defaultTestNumber === 1
+            ? "FREE TEST PREVIEW"
+            : "PREMIUM TEST PREVIEW";
+
+        testTitle.textContent =
+            `ADRE Grade III — Mock Test ${defaultTestNumber}`;
+
+        testStatus.textContent = testLabel;
+
+        document.title =
+            `ADRE Grade III Mock Test ${defaultTestNumber} | StudyNow`;
+
+        if (heroDescription) {
+            heroDescription.textContent = defaultHeroDescription;
+        }
+
+        updateHighlights(
+            "150 Questions in Full Test",
+            "180 Minutes",
+            "English"
+        );
+
+        setBackLink(
+            "mock-tests.html?exam=adre-grade-iii",
+            "Back to Mock Tests"
+        );
+
+        setQuestionSection(
+            defaultQuestionHeading,
+            defaultQuestionDescription
+        );
+
+        updateMetaDescription(
+            "Practise sample questions and explore the StudyNow mock test interface."
+        );
     }
-}
 
-function initializeTestPage() {
-    const params = new URLSearchParams(window.location.search);
 
-    // Subject mode: test.html?subject=economics
-    if (params.has("subject")) {
-        const subjectId = (params.get("subject") || "").trim().toLowerCase();
-        setSubjectPreview(subjectId);
-        return;
+    /* ==========================================
+       7. TEST SUBMISSION PREVIEW
+
+       No generated popup or fake result.
+       Scoring will be connected later.
+    ========================================== */
+
+    function handleTestSubmit(event) {
+        event.preventDefault();
+
+        if (pageMode !== "test") return;
+
+        testStatus.textContent = "PREVIEW ONLY";
+
+        setQuestionSection(
+            defaultQuestionHeading,
+            "This is a static preview. Answer checking, score calculation, result saving and test history will be connected in the functionality phase."
+        );
     }
 
-    // Existing ADRE test mode: test.html?test=1
-    const rawNumber = Number(params.get("test") || 1);
+    if (testForm) {
+        testForm.addEventListener("submit", handleTestSubmit);
 
-    const testNumber =
-        Number.isInteger(rawNumber) && rawNumber >= 1 && rawNumber <= 10
-            ? rawNumber
-            : 1;
+        testForm.addEventListener("reset", () => {
+            window.setTimeout(() => {
+                if (pageMode !== "test") return;
 
-    if (testTitle) {
-        testTitle.innerHTML = `ADRE Grade III<br>Mock Test ${testNumber}`;
+                testStatus.textContent = defaultTestNumber === 1
+                    ? "FREE TEST PREVIEW"
+                    : "PREMIUM TEST PREVIEW";
+
+                setQuestionSection(
+                    defaultQuestionHeading,
+                    defaultQuestionDescription
+                );
+            }, 0);
+        });
     }
 
-    if (testStatus) {
-        testStatus.textContent =
-            testNumber === 1
-                ? "FREE TEST PREVIEW"
-                : "PREMIUM TEST PREVIEW";
+
+    /* ==========================================
+       8. INITIALIZE PAGE FROM URL
+    ========================================== */
+
+    if (subjectParam !== null) {
+        initializeSubjectMode(subjectParam);
+    } else {
+        initializeMockTestMode();
     }
-
-    document.title =
-        `ADRE Grade III Mock Test ${testNumber} — StudyNow`;
-}
-
-function handleTestSubmit(event) {
-    event.preventDefault();
-
-    const noticeModal = document.getElementById("notice-modal");
-    const noticeTitle = document.getElementById("notice-title");
-    const noticeMessage = document.getElementById("notice-message");
-
-    if (!noticeModal || !noticeTitle || !noticeMessage) return;
-
-    noticeTitle.textContent = "Preview Only";
-    noticeMessage.textContent =
-        "Answer checking, scoring, timer and test submission will be enabled during the functionality upgrade.";
-
-    noticeModal.hidden = false;
-    document.body.classList.add("modal-open");
-
-    const closeButton = noticeModal.querySelector(
-        '[data-action="close-notice"]'
-    );
-
-    if (closeButton) closeButton.focus();
-}
-
-if (testForm) {
-    testForm.addEventListener("submit", handleTestSubmit);
-}
-
-initializeTestPage();
+});
