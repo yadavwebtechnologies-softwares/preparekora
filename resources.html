@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Study Resources | studyKora</title>
-    <meta name="description" content="Explore subject practice, exam preparation, mock tests and current affairs resources on studyKora.">
+    <title>Study Resources for Assam Exams | StudyKora</title>
+    <meta name="description" content="Explore subject practice, exam preparation, mock tests and current affairs resources for Assam competitive exams on StudyKora.">
+    <meta name="keywords" content="StudyKora, Assam exam resources, subject practice, mock tests, Assam competitive exams, current affairs, English practice, mathematics MCQs">
     <meta name="theme-color" content="#28734f">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/resources.html">
 
+    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/resources.html">
     <link rel="stylesheet" href="style.css">
 
     <script src="script.js" defer></script>
@@ -22,22 +23,27 @@
     <header class="site-header">
         <div class="header-inner">
 
-            <a href="index.html" class="brand" aria-label="studyKora home">
+            <a href="index.html" class="brand" aria-label="StudyKora home">
+                <span class="brand-mark" aria-hidden="true">
+                    <span style="font-size:23px;font-weight:800;">s</span>
+                </span>
+
                 <span class="brand-text">
-                    <span class="brand-name"><span style="color:#111;">study</span><span style="color:#777;">kora</span></span>
+                    <span class="brand-name" style="font-size:19px;"><span style="color:#111111;">study</span><span style="color:#777777;">kora</span></span>
                 </span>
             </a>
 
             <nav class="main-nav" id="main-nav" aria-label="Main navigation">
-                <a href="index.html" data-page="home">Home</a>
-                <a href="subject.html" data-page="subjects">Subjects</a>
-                <a href="current-affairs.html" data-page="current-affairs">Current Affairs</a>
-                <a href="mock-tests.html" data-page="mock-tests">Mock Tests</a>
-                <a href="daily-practice.html" data-page="daily-practice">Daily Practice</a>
+                <a href="index.html" data-page="index.html">Home</a>
+                <a href="subject.html" data-page="subject.html">Subjects</a>
+                <a href="current-affairs.html" data-page="current-affairs.html">Current Affairs</a>
+                <a href="mock-tests.html" data-page="mock-tests.html">Mock Tests</a>
+                <a href="daily-practice.html" data-page="daily-practice.html">Daily Practice</a>
             </nav>
 
             <div class="header-actions">
 
+                <!-- Logged-out account actions -->
                 <div class="account-guest" id="account-guest">
                     <a href="auth.html?mode=login"
                        class="btn btn-outline"
@@ -52,12 +58,12 @@
                     </a>
                 </div>
 
+                <!-- Logged-in account action -->
                 <div class="account-authenticated" id="account-authenticated" hidden>
                     <a href="profile.html"
                        class="account-profile-trigger"
                        id="account-profile-trigger"
-                       aria-label="Open profile">
-
+                       aria-label="Open your profile">
                         <svg id="account-profile-avatar"
                              viewBox="0 0 24 24"
                              fill="none"
@@ -65,7 +71,7 @@
                             <circle cx="12" cy="8" r="4"
                                     stroke="currentColor"
                                     stroke-width="1.7"/>
-                            <path d="M4.5 21c.5-4.2 3.4-6.5 7.5-6.5s7 2.3 7.5 6.5"
+                            <path d="M4 21c0-4.2 3.2-7 8-7s8 2.8 8 7"
                                   stroke="currentColor"
                                   stroke-width="1.7"
                                   stroke-linecap="round"/>
@@ -73,14 +79,13 @@
                     </a>
                 </div>
 
-                <button
-                    type="button"
-                    class="menu-toggle"
-                    id="menu-toggle"
-                    aria-label="Open navigation menu"
-                    aria-controls="main-nav"
-                    aria-expanded="false">
-
+                <!-- Mobile Navigation Toggle -->
+                <button type="button"
+                        class="menu-toggle"
+                        id="menu-toggle"
+                        aria-label="Open navigation menu"
+                        aria-controls="main-nav"
+                        aria-expanded="false">
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M4 7h16M4 12h16M4 17h16"
                               stroke="currentColor"
@@ -95,8 +100,8 @@
 
     <main class="page-content">
 
-        <!-- Page Hero -->
-        <section class="page-hero">
+        <!-- Main Hero -->
+        <section class="page-hero" id="resources-main-hero">
             <div class="page-hero-inner">
 
                 <span class="page-hero-icon" aria-hidden="true">
@@ -123,13 +128,14 @@
                     <span class="page-hero-stat">Subject Practice</span>
                     <span class="page-hero-stat">Exam Preparation</span>
                     <span class="page-hero-stat">Current Affairs</span>
+                    <span class="page-hero-stat">Practice MCQs</span>
                 </div>
 
             </div>
         </section>
 
         <!-- Resource Directory -->
-        <section class="content-section">
+        <section class="content-section" id="resources-directory">
             <div class="container">
 
                 <div class="section-heading">
@@ -141,10 +147,10 @@
                     </div>
                 </div>
 
-                <div class="listing-grid mt-md">
+                <div class="listing-grid">
 
-                    <!-- Subjects -->
-                    <a href="subject.html" class="resource-card">
+                    <!-- Subject Directory -->
+                    <a href="subject.html" class="listing-card">
                         <span class="card-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 0 4 22z"
@@ -169,7 +175,7 @@
                     </a>
 
                     <!-- Mock Tests -->
-                    <a href="mock-tests.html" class="resource-card">
+                    <a href="mock-tests.html" class="listing-card">
                         <span class="card-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <rect x="5" y="3" width="14" height="18" rx="2"
@@ -193,7 +199,7 @@
                     </a>
 
                     <!-- Exam Organizations -->
-                    <a href="organization.html" class="resource-card">
+                    <a href="organization.html" class="listing-card">
                         <span class="card-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <path d="M3 10h18M5 10v9m4-9v9m6-9v9m4-9v9M3 21h18M12 3 2.5 8h19z"
@@ -215,7 +221,7 @@
                     </a>
 
                     <!-- Current Affairs -->
-                    <a href="current-affairs.html" class="resource-card">
+                    <a href="current-affairs.html" class="listing-card">
                         <span class="card-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <rect x="3" y="4" width="18" height="16" rx="2"
@@ -239,7 +245,7 @@
                     </a>
 
                     <!-- Daily Practice -->
-                    <a href="daily-practice.html" class="resource-card">
+                    <a href="daily-practice.html" class="listing-card">
                         <span class="card-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <circle cx="12" cy="12" r="9"
@@ -265,7 +271,7 @@
 
                     <!-- General Knowledge -->
                     <a href="subject.html?subject=general-knowledge"
-                       class="resource-card">
+                       class="listing-card">
                         <span class="card-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <circle cx="12" cy="12" r="9"
@@ -289,7 +295,7 @@
                     </a>
 
                     <!-- English -->
-                    <a href="subject.html?subject=english" class="resource-card">
+                    <a href="subject.html?subject=english" class="listing-card">
                         <span class="card-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <path d="m4 19 6.5-15h3L20 19M6 14h12M4 21h16"
@@ -312,7 +318,7 @@
 
                     <!-- Mathematics -->
                     <a href="subject.html?subject=mathematics"
-                       class="resource-card">
+                       class="listing-card">
                         <span class="card-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <rect x="4" y="3" width="16" height="18" rx="2"
@@ -341,7 +347,7 @@
         </section>
 
         <!-- Continue Learning -->
-        <section class="content-section">
+        <section class="content-section" id="resources-continue">
             <div class="container">
 
                 <div class="content-card">
@@ -349,6 +355,7 @@
 
                         <div>
                             <span class="section-eyebrow">Continue Learning</span>
+
                             <h2 class="section-title">Choose Your Next Step</h2>
 
                             <p class="section-description">
@@ -357,15 +364,18 @@
                         </div>
 
                         <div class="content-stack">
-                            <a href="subject.html" class="btn btn-primary btn-full">
+                            <a href="subject.html"
+                               class="btn btn-primary btn-full">
                                 Explore Subjects
                             </a>
 
-                            <a href="mock-tests.html" class="btn btn-outline btn-full">
+                            <a href="mock-tests.html"
+                               class="btn btn-outline btn-full">
                                 Browse Mock Tests
                             </a>
 
-                            <a href="daily-practice.html" class="btn btn-outline btn-full">
+                            <a href="daily-practice.html"
+                               class="btn btn-outline btn-full">
                                 Daily Practice
                             </a>
                         </div>
@@ -383,9 +393,13 @@
         <div class="footer-main">
 
             <div class="footer-brand">
-                <a href="index.html" class="brand" aria-label="studyKora home">
+                <a href="index.html" class="brand" aria-label="StudyKora home">
+                    <span class="brand-mark" aria-hidden="true">
+                        <span style="font-size:23px;font-weight:800;">s</span>
+                    </span>
+
                     <span class="brand-text">
-                        <span class="brand-name"><span style="color:#111;">study</span><span style="color:#777;">kora</span></span>
+                        <span class="brand-name" style="font-size:19px;"><span style="color:#111111;">study</span><span style="color:#777777;">kora</span></span>
                     </span>
                 </a>
 
@@ -415,6 +429,7 @@
             <div class="footer-column">
                 <h3>Information</h3>
                 <ul class="footer-links">
+                    <li><a href="why-studynow.html">About</a></li>
                     <li><a href="faq.html">FAQs</a></li>
                     <li><a href="privacy-policy.html">Privacy Policy</a></li>
                     <li><a href="credits.html">Credits</a></li>
@@ -424,8 +439,13 @@
         </div>
 
         <div class="footer-bottom">
-            <span>&copy; <span data-current-year></span> studyKora. All rights reserved.</span>
-            <span class="site-credit">Design and Develop by Yadav Web Technologies</span>
+            <span>
+                &copy; <span data-current-year></span> StudyKora. All rights reserved.
+            </span>
+
+            <span class="site-credit">
+                Designed and developed by Yadav Web Technologies
+            </span>
         </div>
     </footer>
 
