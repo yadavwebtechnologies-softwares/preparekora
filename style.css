@@ -1444,3 +1444,116 @@ button.listing-card {
         font-size: 23px;
     }
 }
+/* ==========================================
+   HOMEPAGE — COMPACT CONTENT TYPOGRAPHY
+   Scoped to index.html only
+========================================== */
+
+.home-page main .hero-content > p {
+    max-width: 520px;
+    font-size: 11px;
+    line-height: 1.7;
+}
+
+.home-page main .hero-content h1 {
+    font-size: clamp(28px, 3.2vw, 38px);
+}
+
+.home-page main .hero-actions {
+    margin-top: 17px;
+}
+
+.home-page main .hero-highlights {
+    margin-top: 15px;
+    gap: 7px 12px;
+}
+
+.home-page main .hero-highlights span {
+    font-size: 9px;
+}
+
+.home-page main .progress-caption,
+.home-page main .visual-footer span {
+    font-size: 9px;
+}
+
+.home-page main .section-title {
+    font-size: 9px;
+}
+
+.home-page main .view-all {
+    font-size: 9px;
+    color: var(--green);
+}
+
+.home-page main .card-category {
+    font-size: 7px;
+}
+
+.home-page main .card-title {
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.home-page main .card-description {
+    font-size: 9px;
+    line-height: 1.35;
+}
+
+.home-page main .daily-card {
+    color: var(--text);
+    text-decoration: none;
+}
+
+.home-page main .daily-card-title {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.home-page main .daily-card-description {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 9px;
+    line-height: 1.4;
+}
+
+.home-page main .why-card h3 {
+    font-size: 10px;
+}
+
+.home-page main .why-card p {
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+.home-page main .card-icon {
+    background: var(--green-soft);
+    color: var(--green);
+}
+
+.home-page main .listing-card:hover {
+    border-color: var(--green);
+}
+
+@media (max-width: 650px) {
+    .home-page main .hero-section {
+        gap: 22px;
+        padding-top: 30px;
+        padding-bottom: 30px;
+    }
+
+    .home-page main .hero-content h1 {
+        font-size: clamp(27px, 7vw, 34px);
+    }
+
+    .home-page main .hero-content > p {
+        font-size: 10px;
+    }
+
+    .home-page main .hero-highlights span {
+        font-size: 8px;
+    }
+}
