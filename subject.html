@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Subjects | studyKora</title>
-    <meta name="description" content="Explore subject-wise MCQ practice for Assam competitive exams with studyKora.">
+    <title>Subjects for Assam Exams | StudyKora</title>
+    <meta name="description" content="Explore subject-wise MCQ practice for Assam competitive exams on StudyKora. Practise English, Assamese, mathematics, reasoning, general knowledge and more.">
+    <meta name="keywords" content="StudyKora, Assam competitive exams, subject-wise MCQ, English practice, Assamese grammar, mathematics, reasoning, general knowledge, Assam exam preparation">
     <meta name="theme-color" content="#28734f">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/subject.html">
 
+    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/subject.html">
     <link rel="stylesheet" href="style.css">
 
     <script src="script.js" defer></script>
@@ -23,24 +24,28 @@
     <header class="site-header">
         <div class="header-inner">
 
-            <a href="index.html" class="brand" aria-label="studyKora home">
+            <a href="index.html" class="brand" aria-label="StudyKora home">
+                <span class="brand-mark" aria-hidden="true">
+                    <span style="font-size:23px;font-weight:800;">s</span>
+                </span>
+
                 <span class="brand-text">
-                    <span class="brand-name"><span class="brand-name-primary">study</span><span class="brand-name-muted">kora</span></span>
+                    <span class="brand-name" style="font-size:19px;"><span style="color:#111111;">study</span><span style="color:#777777;">kora</span></span>
                 </span>
             </a>
 
             <nav class="main-nav" id="main-nav" aria-label="Main navigation">
-                <a href="index.html" data-page="home">Home</a>
-                <a href="subject.html" data-page="subjects" aria-current="page">Subjects</a>
-                <a href="current-affairs.html" data-page="current-affairs">Current Affairs</a>
-                <a href="mock-tests.html" data-page="mock-tests">Mock Tests</a>
-                <a href="daily-practice.html" data-page="daily-practice">Daily Practice</a>
+                <a href="index.html" data-page="index.html">Home</a>
+                <a href="subject.html" data-page="subject.html" aria-current="page">Subjects</a>
+                <a href="current-affairs.html" data-page="current-affairs.html">Current Affairs</a>
+                <a href="mock-tests.html" data-page="mock-tests.html">Mock Tests</a>
+                <a href="daily-practice.html" data-page="daily-practice.html">Daily Practice</a>
             </nav>
 
             <div class="header-actions">
 
-                <!-- Logged-out User Actions -->
-                <div id="account-guest" class="account-guest">
+                <!-- Logged-out account actions -->
+                <div class="account-guest" id="account-guest">
                     <a href="auth.html?mode=login"
                        class="btn btn-outline"
                        id="account-login-link">
@@ -54,116 +59,35 @@
                     </a>
                 </div>
 
-                <!-- Logged-in User Actions -->
-                <div id="account-authenticated"
-                     class="account-authenticated"
-                     hidden>
-
-                    <button
-                        type="button"
-                        class="account-profile-trigger"
-                        id="account-profile-trigger"
-                        aria-label="Open account menu"
-                        aria-controls="account-profile-panel"
-                        aria-expanded="false">
-
+                <!-- Logged-in account action -->
+                <div class="account-authenticated" id="account-authenticated" hidden>
+                    <a href="profile.html"
+                       class="account-profile-trigger"
+                       id="account-profile-trigger"
+                       aria-label="Open your profile">
                         <svg id="account-profile-avatar"
                              viewBox="0 0 24 24"
-                             width="24"
-                             height="24"
                              fill="none"
                              aria-hidden="true">
                             <circle cx="12" cy="8" r="4"
                                     stroke="currentColor"
                                     stroke-width="1.7"/>
-                            <path d="M4.5 20a7.5 7.5 0 0 1 15 0"
+                            <path d="M4 21c0-4.2 3.2-7 8-7s8 2.8 8 7"
                                   stroke="currentColor"
                                   stroke-width="1.7"
                                   stroke-linecap="round"/>
                         </svg>
-                    </button>
-
-                    <!-- Profile Menu -->
-                    <div class="account-profile-panel"
-                         id="account-profile-panel"
-                         hidden>
-
-                        <div class="account-profile-heading">
-
-                            <div class="account-profile-avatar-large"
-                                 id="account-profile-avatar-large"
-                                 aria-hidden="true">
-                                <svg viewBox="0 0 24 24"
-                                     width="30"
-                                     height="30"
-                                     fill="none">
-                                    <circle cx="12" cy="8" r="4"
-                                            stroke="currentColor"
-                                            stroke-width="1.7"/>
-                                    <path d="M4.5 20a7.5 7.5 0 0 1 15 0"
-                                          stroke="currentColor"
-                                          stroke-width="1.7"
-                                          stroke-linecap="round"/>
-                                </svg>
-                            </div>
-
-                            <div class="account-profile-details">
-                                <p id="account-profile-name">Account</p>
-                                <p id="account-profile-email"></p>
-                            </div>
-
-                            <button type="button"
-                                    id="account-panel-close"
-                                    class="account-panel-close"
-                                    aria-label="Close profile menu">
-                                <svg viewBox="0 0 24 24"
-                                     width="18"
-                                     height="18"
-                                     fill="none"
-                                     aria-hidden="true">
-                                    <path d="m6 6 12 12M18 6 6 18"
-                                          stroke="currentColor"
-                                          stroke-width="1.8"
-                                          stroke-linecap="round"/>
-                                </svg>
-                            </button>
-
-                        </div>
-
-                        <div class="account-profile-menu">
-                            <button type="button"
-                                    id="account-settings-open"
-                                    class="account-menu-item">
-                                <svg viewBox="0 0 24 24"
-                                     width="19"
-                                     height="19"
-                                     fill="none"
-                                     aria-hidden="true">
-                                    <circle cx="12" cy="12" r="3"
-                                            stroke="currentColor"
-                                            stroke-width="1.7"/>
-                                    <path d="m19.4 15 .1.1 1.1.9-1.2 2.1-1.4-.5a8 8 0 0 1-1.7 1l-.2 1.5h-2.4l-.3-1.5a8 8 0 0 1-1.8-1l-1.4.5-1.2-2.1 1.1-.9a7 7 0 0 1 0-2l-1.1-.9 1.2-2.1 1.4.5a8 8 0 0 1 1.8-1l.3-1.5h2.4l.2 1.5a8 8 0 0 1 1.7 1l1.4-.5 1.2 2.1-1.1.9a7 7 0 0 1-.1 1.9Z"
-                                          stroke="currentColor"
-                                          stroke-width="1.3"
-                                          stroke-linejoin="round"/>
-                                </svg>
-                                <span>Settings</span>
-                            </button>
-                        </div>
-
-                    </div>
+                    </a>
                 </div>
 
-                <!-- Mobile Navigation -->
+                <!-- Mobile Navigation Toggle -->
                 <button type="button"
                         class="menu-toggle"
                         id="menu-toggle"
                         aria-label="Open navigation menu"
                         aria-controls="main-nav"
                         aria-expanded="false">
-                    <svg viewBox="0 0 24 24"
-                         fill="none"
-                         aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M4 7h16M4 12h16M4 17h16"
                               stroke="currentColor"
                               stroke-width="1.8"
@@ -177,7 +101,7 @@
 
     <main class="page-content">
 
-        <!-- Subject Directory Hero -->
+        <!-- Main Subject Hero -->
         <section class="page-hero" id="subject-directory-hero">
             <div class="page-hero-inner">
 
@@ -210,7 +134,7 @@
             </div>
         </section>
 
-        <!-- Selected Subject Hero: Controlled by subject.js -->
+        <!-- Selected Subject Hero -->
         <section class="page-hero" id="subject-detail-hero" hidden>
             <div class="page-hero-inner">
 
@@ -242,13 +166,12 @@
                 <div class="hero-actions">
                     <a href="test.html"
                        id="subject-start-test"
-                       class="btn btn-light btn-large">
+                       class="btn btn-light">
                         Start Practice
                         <span aria-hidden="true">&rarr;</span>
                     </a>
 
-                    <a href="subject.html"
-                       class="btn btn-outline">
+                    <a href="subject.html" class="btn btn-outline">
                         All Subjects
                     </a>
                 </div>
@@ -263,13 +186,14 @@
                 <div class="section-heading">
                     <div>
                         <h2 class="section-title">All Subjects</h2>
+
                         <p class="section-description">
                             Search or filter subjects to find your next practice topic.
                         </p>
                     </div>
                 </div>
 
-                <!-- Subject Search -->
+                <!-- Search -->
                 <div class="panel subject-search-panel">
                     <div class="form-group">
                         <label class="form-label" for="subject-search">
@@ -277,19 +201,19 @@
                         </label>
 
                         <input
-                            class="form-control"
                             type="search"
+                            class="form-control"
                             id="subject-search"
-                            placeholder="Search General Knowledge, English, Geography..."
+                            placeholder="Search English, Geography, Mathematics..."
                             autocomplete="off"
                             aria-describedby="subject-result-count">
                     </div>
                 </div>
 
-                <!-- Subject Filters -->
+                <!-- Category Filters -->
                 <div class="filter-row"
                      id="subject-filters"
-                     aria-label="Filter subjects by category">
+                     aria-label="Filter subjects">
 
                     <button type="button"
                             class="filter-button is-active"
@@ -594,6 +518,7 @@
 
                         <div>
                             <span class="section-eyebrow">Continue Learning</span>
+
                             <h2 class="section-title">Choose Your Next Step</h2>
 
                             <p class="section-description">
@@ -628,9 +553,13 @@
         <div class="footer-main">
 
             <div class="footer-brand">
-                <a href="index.html" class="brand" aria-label="studyKora home">
+                <a href="index.html" class="brand" aria-label="StudyKora home">
+                    <span class="brand-mark" aria-hidden="true">
+                        <span style="font-size:23px;font-weight:800;">s</span>
+                    </span>
+
                     <span class="brand-text">
-                        <span class="brand-name"><span class="brand-name-primary">study</span><span class="brand-name-muted">kora</span></span>
+                        <span class="brand-name" style="font-size:19px;"><span style="color:#111111;">study</span><span style="color:#777777;">kora</span></span>
                     </span>
                 </a>
 
@@ -671,11 +600,11 @@
 
         <div class="footer-bottom">
             <span>
-                &copy; <span data-current-year></span> studyKora. All rights reserved.
+                &copy; <span data-current-year></span> StudyKora. All rights reserved.
             </span>
 
             <span class="site-credit">
-                Design and Develop by Yadav Web Technologies
+                Designed and developed by Yadav Web Technologies
             </span>
         </div>
     </footer>
