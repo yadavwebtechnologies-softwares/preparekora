@@ -5,19 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Account Access | StudyNow</title>
-    <meta name="description" content="Sign in to StudyNow, create an account, or recover your password for exam preparation.">
+    <meta name="description" content="Login, create your StudyNow account, or securely recover your password.">
     <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/auth.html">
     <meta name="robots" content="noindex, follow">
 
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="auth.css">
+
+    <script src="script.js" defer></script>
     <script src="js/auth.js" defer></script>
 </head>
 
 <body class="auth-page">
     <div class="auth-layout">
 
-        <!-- Left branding panel -->
+        <!-- Branding panel -->
         <aside class="auth-side">
             <a href="index.html" class="auth-brand" aria-label="StudyNow Home">
                 <span class="auth-brand-name">StudyNow</span>
@@ -38,8 +40,8 @@
                     <div class="auth-benefit">
                         <span class="auth-benefit-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none">
-                                <path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H20v17H7.5A2.5 2.5 0 0 0 5 21.5z"/>
-                                <path d="M5 4.5v17M9 7h7M9 11h7"/>
+                                <path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H20v19H7.5A3.5 3.5 0 0 0 4 24z"/>
+                                <path d="M4 5.5V24M8 7h8M8 11h8"/>
                             </svg>
                         </span>
                         <span>
@@ -57,7 +59,7 @@
                         </span>
                         <span>
                             <strong>Mock Tests</strong>
-                            <small>Practice for your target examination.</small>
+                            <small>Practise for your target examination.</small>
                         </span>
                     </div>
 
@@ -69,8 +71,8 @@
                             </svg>
                         </span>
                         <span>
-                            <strong>Track Your Progress</strong>
-                            <small>Review your performance as you learn.</small>
+                            <strong>Secure Account</strong>
+                            <small>Keep your learning progress connected.</small>
                         </span>
                     </div>
                 </div>
@@ -82,18 +84,19 @@
             </div>
         </aside>
 
-        <!-- Right authentication area -->
+        <!-- Authentication panel -->
         <main class="auth-main">
             <div class="auth-main-inner">
 
-                <a href="index.html" class="auth-mobile-brand">
-                    StudyNow
-                </a>
+                <a href="index.html" class="auth-mobile-brand">StudyNow</a>
 
                 <div class="auth-form-wrap">
 
                     <!-- LOGIN -->
-                    <section class="auth-panel" id="login-panel" data-auth-panel="login">
+                    <section class="auth-panel"
+                             id="login-panel"
+                             data-auth-panel="login">
+
                         <div class="auth-card">
                             <div class="auth-heading">
                                 <h2>Welcome back</h2>
@@ -102,7 +105,7 @@
 
                             <form id="login-form">
                                 <div class="auth-field">
-                                    <label for="login-email">Email</label>
+                                    <label for="login-email">Email Address</label>
                                     <input
                                         type="email"
                                         id="login-email"
@@ -116,6 +119,7 @@
 
                                 <div class="auth-field">
                                     <label for="login-password">Password</label>
+
                                     <div class="auth-password-wrap">
                                         <input
                                             type="password"
@@ -126,6 +130,7 @@
                                             autocomplete="current-password"
                                             required
                                         >
+
                                         <button
                                             type="button"
                                             class="auth-password-toggle"
@@ -136,15 +141,19 @@
                                     </div>
                                 </div>
 
-                                <div class="auth-message" id="login-message"
-                                     role="status" aria-live="polite"></div>
+                                <p class="auth-message"
+                                   id="login-message"
+                                   role="status"
+                                   aria-live="polite"></p>
 
                                 <button type="submit" class="auth-submit">
                                     Login
                                 </button>
 
                                 <div class="auth-forgot-link">
-                                    <a href="auth.html?mode=forgot">Forgot your password?</a>
+                                    <a href="auth.html?mode=forgot">
+                                        Forgot your password?
+                                    </a>
                                 </div>
 
                                 <p class="auth-switch-text">
@@ -160,6 +169,7 @@
                              id="signup-panel"
                              data-auth-panel="signup"
                              hidden>
+
                         <div class="auth-card">
                             <div class="auth-heading">
                                 <h2>Create your account</h2>
@@ -181,7 +191,7 @@
                                 </div>
 
                                 <div class="auth-field">
-                                    <label for="signup-email">Email</label>
+                                    <label for="signup-email">Email Address</label>
                                     <input
                                         type="email"
                                         id="signup-email"
@@ -194,7 +204,26 @@
                                 </div>
 
                                 <div class="auth-field">
+                                    <label for="signup-whatsapp">WhatsApp Number</label>
+                                    <input
+                                        type="tel"
+                                        id="signup-whatsapp"
+                                        name="whatsapp"
+                                        class="auth-input"
+                                        placeholder="+91 98765 43210"
+                                        autocomplete="tel"
+                                        inputmode="tel"
+                                        maxlength="20"
+                                        required
+                                    >
+                                    <small class="auth-field-hint">
+                                        Include your country code, such as +91.
+                                    </small>
+                                </div>
+
+                                <div class="auth-field">
                                     <label for="signup-password">Password</label>
+
                                     <div class="auth-password-wrap">
                                         <input
                                             type="password"
@@ -206,6 +235,7 @@
                                             minlength="8"
                                             required
                                         >
+
                                         <button
                                             type="button"
                                             class="auth-password-toggle"
@@ -214,27 +244,43 @@
                                             aria-pressed="false"
                                         >Show</button>
                                     </div>
+
                                     <small class="auth-field-hint">
                                         Use at least 8 characters.
                                     </small>
                                 </div>
 
                                 <div class="auth-field">
-                                    <label for="signup-confirm-password">Confirm Password</label>
-                                    <input
-                                        type="password"
-                                        id="signup-confirm-password"
-                                        name="confirmPassword"
-                                        class="auth-input"
-                                        placeholder="Re-enter your password"
-                                        autocomplete="new-password"
-                                        minlength="8"
-                                        required
-                                    >
+                                    <label for="signup-confirm-password">
+                                        Confirm Password
+                                    </label>
+
+                                    <div class="auth-password-wrap">
+                                        <input
+                                            type="password"
+                                            id="signup-confirm-password"
+                                            name="confirmPassword"
+                                            class="auth-input"
+                                            placeholder="Re-enter your password"
+                                            autocomplete="new-password"
+                                            minlength="8"
+                                            required
+                                        >
+
+                                        <button
+                                            type="button"
+                                            class="auth-password-toggle"
+                                            data-toggle-password="signup-confirm-password"
+                                            aria-label="Show password"
+                                            aria-pressed="false"
+                                        >Show</button>
+                                    </div>
                                 </div>
 
-                                <div class="auth-message" id="signup-message"
-                                     role="status" aria-live="polite"></div>
+                                <p class="auth-message"
+                                   id="signup-message"
+                                   role="status"
+                                   aria-live="polite"></p>
 
                                 <button type="submit" class="auth-submit">
                                     Create Account
@@ -253,15 +299,19 @@
                              id="forgot-panel"
                              data-auth-panel="forgot"
                              hidden>
+
                         <div class="auth-card">
                             <div class="auth-heading">
-                                <h2>Forgot your password?</h2>
-                                <p>Enter your registered email to recover your account.</p>
+                                <h2>Recover your account</h2>
+                                <p>
+                                    Enter the email address and WhatsApp number
+                                    registered with your StudyNow account.
+                                </p>
                             </div>
 
                             <form id="forgot-form">
                                 <div class="auth-field">
-                                    <label for="forgot-email">Email</label>
+                                    <label for="forgot-email">Email Address</label>
                                     <input
                                         type="email"
                                         id="forgot-email"
@@ -273,12 +323,89 @@
                                     >
                                 </div>
 
-                                <div class="auth-message" id="forgot-message"
-                                     role="status" aria-live="polite"></div>
+                                <div class="auth-field">
+                                    <label for="forgot-whatsapp">
+                                        Registered WhatsApp Number
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        id="forgot-whatsapp"
+                                        name="whatsapp"
+                                        class="auth-input"
+                                        placeholder="+91 98765 43210"
+                                        autocomplete="tel"
+                                        inputmode="tel"
+                                        maxlength="20"
+                                        required
+                                    >
+                                </div>
+
+                                <p class="auth-message"
+                                   id="forgot-message"
+                                   role="status"
+                                   aria-live="polite"></p>
 
                                 <button type="submit" class="auth-submit">
-                                    Reset Password
+                                    Verify Account
                                 </button>
+
+                                <!-- Shown only after successful server-side verification
+                                     and OTP delivery are integrated. -->
+                                <div id="forgot-verification-fields" hidden>
+                                    <div class="auth-field">
+                                        <label for="forgot-otp">
+                                            WhatsApp Verification Code
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="forgot-otp"
+                                            name="otp"
+                                            class="auth-input"
+                                            placeholder="Enter verification code"
+                                            inputmode="numeric"
+                                            autocomplete="one-time-code"
+                                            maxlength="8"
+                                        >
+                                    </div>
+
+                                    <div class="auth-field">
+                                        <label for="reset-password">
+                                            New Password
+                                        </label>
+                                        <input
+                                            type="password"
+                                            id="reset-password"
+                                            name="newPassword"
+                                            class="auth-input"
+                                            placeholder="Create a new password"
+                                            autocomplete="new-password"
+                                            minlength="8"
+                                        >
+                                    </div>
+
+                                    <div class="auth-field">
+                                        <label for="reset-confirm-password">
+                                            Confirm New Password
+                                        </label>
+                                        <input
+                                            type="password"
+                                            id="reset-confirm-password"
+                                            name="confirmNewPassword"
+                                            class="auth-input"
+                                            placeholder="Re-enter new password"
+                                            autocomplete="new-password"
+                                            minlength="8"
+                                        >
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        class="auth-submit"
+                                        id="complete-password-reset"
+                                    >
+                                        Reset Password
+                                    </button>
+                                </div>
 
                                 <p class="auth-switch-text">
                                     Remembered your password?
@@ -295,13 +422,12 @@
                         <path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/>
                         <path d="m8.5 12 2.2 2.2 4.8-5"/>
                     </svg>
-                    <span>Your learning journey starts with your account.</span>
+                    <span>Secure access to your StudyNow account.</span>
                 </div>
 
                 <a href="index.html" class="auth-home-link">Back to StudyNow</a>
             </div>
         </main>
-
     </div>
 </body>
 </html>
