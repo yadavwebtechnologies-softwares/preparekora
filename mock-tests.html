@@ -1,280 +1,675 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Mock Tests | StudyNow</title>
-    <meta name="description" content="Explore competitive exam mock tests on StudyNow and prepare for Assam examinations with focused practice.">
-    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/mock-tests.html">
+    <title>Mock Tests | studyKora</title>
+    <meta name="description" content="Explore mock tests for ADRE, APSC, Assam Police, TET, SSC and other competitive examinations on studyKora.">
+    <meta name="theme-color" content="#28734f">
     <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/mock-tests.html">
 
     <link rel="stylesheet" href="style.css">
+
     <script src="script.js" defer></script>
+    <script src="js/mock-tests.js" defer></script>
 </head>
 
-<body>
+<body class="mock-tests-page">
+
+    <!-- Shared Header -->
     <header class="site-header">
         <div class="header-inner">
-            <a href="index.html" class="brand" aria-label="StudyNow Home">
-                <span class="brand-name">StudyNow</span>
-                <span class="brand-caption">Learn. Practice. Progress.</span>
+
+            <a href="index.html" class="brand" aria-label="studyKora home">
+                <span class="brand-mark" aria-hidden="true">
+                    <span style="font-size: 23px; font-weight: 800;">s</span>
+                </span>
+
+                <span class="brand-text">
+                    <span class="brand-name">studyKora</span>
+                    <span class="brand-caption">Learn. Practice. Progress.</span>
+                </span>
             </a>
 
             <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+                <a href="index.html">Home</a>
+                <a href="subject.html">Subjects</a>
                 <a href="current-affairs.html">Current Affairs</a>
                 <a href="mock-tests.html" aria-current="page">Mock Tests</a>
-                <a href="subjects.html">Subjects</a>
                 <a href="daily-practice.html">Daily Practice</a>
             </nav>
 
             <div class="header-actions">
-                <a href="auth.html?mode=login" class="btn btn-outline">Login</a>
-                <a href="auth.html?mode=signup" class="btn btn-primary">Create Account</a>
+                <a href="auth.html?mode=login" class="btn btn-outline">
+                    Login
+                </a>
+
+                <a href="auth.html?mode=signup" class="btn btn-primary">
+                    Create Account
+                </a>
+
+                <button
+                    type="button"
+                    class="menu-toggle"
+                    id="menu-toggle"
+                    aria-label="Open navigation menu"
+                    aria-controls="main-nav"
+                    aria-expanded="false"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M4 7h16M4 12h16M4 17h16"
+                              stroke="currentColor"
+                              stroke-width="1.8"
+                              stroke-linecap="round"/>
+                    </svg>
+                </button>
             </div>
 
-            <button
-                type="button"
-                class="menu-toggle"
-                id="menu-toggle"
-                aria-label="Toggle navigation"
-                aria-controls="main-nav"
-                aria-expanded="false"
-            >
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
         </div>
     </header>
 
-    <main>
-        <section class="hero-section">
-            <div class="hero-content">
-                <span class="eyebrow">EXAM PREPARATION</span>
+    <main class="page-content">
 
-                <h1>Mock Tests</h1>
+        <!-- Main Mock Tests Banner -->
+        <section class="page-hero" id="mock-tests-main-hero">
+            <div class="page-hero-inner">
 
-                <p>
-                    Explore practice tests for competitive examinations.
-                    Choose an exam to view its available tests and prepare
-                    at your own pace.
+                <span class="page-hero-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <rect x="5" y="3" width="14" height="18" rx="2"
+                              stroke="currentColor" stroke-width="1.7"/>
+                        <path d="M9 3v2h6V3M8.5 10h7M8.5 14h7M8.5 18h4"
+                              stroke="currentColor"
+                              stroke-width="1.7"
+                              stroke-linecap="round"/>
+                    </svg>
+                </span>
+
+                <h1 class="page-hero-title">Mock Tests</h1>
+
+                <p class="page-hero-description">
+                    Prepare for competitive examinations with exam-wise
+                    practice tests and multiple-choice questions.
                 </p>
 
-                <div class="hero-actions">
-                    <a href="#available-tests" class="btn btn-primary btn-large">
-                        Explore Tests
-                    </a>
-
-                    <a href="subjects.html" class="btn btn-outline btn-large">
-                        Browse Subjects
-                    </a>
-                </div>
-            </div>
-
-            <div class="hero-visual">
-                <div class="visual-topline">
-                    <span class="visual-dot" aria-hidden="true"></span>
-                    <span>STUDYNOW PRACTICE</span>
+                <div class="page-hero-stats">
+                    <span class="page-hero-stat">Exam-wise Practice</span>
+                    <span class="page-hero-stat">MCQ Tests</span>
+                    <span class="page-hero-stat">Review Your Answers</span>
                 </div>
 
-                <div class="visual-main">
-                    <span class="visual-label">PREPARE WITH PURPOSE</span>
-                    <h2>Practice.<br>Review.<br>Improve.</h2>
-
-                    <div class="visual-progress">
-                        <span class="progress-track">
-                            <span class="progress-value"></span>
-                        </span>
-                        <span class="progress-caption">
-                            Build confidence with regular practice
-                        </span>
-                    </div>
-                </div>
-
-                <div class="visual-footer">
-                    <div>
-                        <strong>Mock Tests</strong>
-                        <span>Exam-focused practice</span>
-                    </div>
-                    <div>
-                        <strong>Subjects</strong>
-                        <span>Focused revision</span>
-                    </div>
-                </div>
             </div>
         </section>
 
-        <section class="content-section" id="available-tests">
-            <div class="section-heading">
-                <div>
-                    <h2 class="section-title">Available Mock Tests</h2>
-                    <p>Select an examination to explore its practice tests.</p>
-                </div>
-            </div>
+        <!-- Selected Test Category Banner -->
+        <section class="page-hero" id="mock-category-hero" hidden>
+            <div class="page-hero-inner">
 
-            <div class="listing-grid">
-                <a class="listing-card" href="organization.html?exam=assam-vfa">
-                    <span class="card-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M4 20V4M4 20h17"/>
-                            <path d="m7 15 4-4 3 2 5-6"/>
-                        </svg>
-                    </span>
-                    <span class="card-content">
-                        <span class="card-category">COMPETITIVE EXAM</span>
-                        <span class="card-title">Assam VFA</span>
-                        <span class="card-description">
-                            Explore VFA exam preparation and available practice tests.
-                        </span>
-                    </span>
-                    <span class="card-arrow" aria-hidden="true">›</span>
+                <span class="page-hero-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <rect x="5" y="3" width="14" height="18" rx="2"
+                              stroke="currentColor" stroke-width="1.7"/>
+                        <path d="M9 3v2h6V3M8.5 10h7M8.5 14h7"
+                              stroke="currentColor"
+                              stroke-width="1.7"
+                              stroke-linecap="round"/>
+                    </svg>
+                </span>
+
+                <span class="eyebrow" id="mock-category-label">
+                    Mock Test Category
+                </span>
+
+                <h1 class="page-hero-title" id="mock-category-title">
+                    Available Mock Tests
+                </h1>
+
+                <p class="page-hero-description"
+                   id="mock-category-description">
+                    Choose a test to begin your practice.
+                </p>
+
+                <a href="mock-tests.html" class="btn btn-light mt-md">
+                    View All Mock Tests
                 </a>
 
-                <a class="listing-card" href="organization.html?exam=anm-entrance">
-                    <span class="card-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M12 3v18M3 12h18"/>
-                            <rect x="4" y="4" width="16" height="16" rx="3"/>
-                        </svg>
-                    </span>
-                    <span class="card-content">
-                        <span class="card-category">ENTRANCE EXAM</span>
-                        <span class="card-title">ANM Entrance</span>
-                        <span class="card-description">
-                            Explore entrance exam practice and revision resources.
-                        </span>
-                    </span>
-                    <span class="card-arrow" aria-hidden="true">›</span>
-                </a>
-
-                <a class="listing-card" href="organization.html?exam=adre-grade-iii">
-                    <span class="card-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <rect x="4" y="3" width="16" height="18" rx="2"/>
-                            <path d="M8 8h8M8 12h8M8 16h5"/>
-                        </svg>
-                    </span>
-                    <span class="card-content">
-                        <span class="card-category">ASSAM DIRECT RECRUITMENT</span>
-                        <span class="card-title">ADRE Grade III</span>
-                        <span class="card-description">
-                            Explore Grade III mock tests and exam preparation.
-                        </span>
-                    </span>
-                    <span class="card-arrow" aria-hidden="true">›</span>
-                </a>
-
-                <a class="listing-card" href="organization.html?exam=si">
-                    <span class="card-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/>
-                            <path d="m8.5 12 2.2 2.2 4.8-5"/>
-                        </svg>
-                    </span>
-                    <span class="card-content">
-                        <span class="card-category">RECRUITMENT EXAM</span>
-                        <span class="card-title">Sub-Inspector (SI)</span>
-                        <span class="card-description">
-                            Explore SI exam preparation and available practice tests.
-                        </span>
-                    </span>
-                    <span class="card-arrow" aria-hidden="true">›</span>
-                </a>
             </div>
         </section>
 
+        <!-- Test Search and Listing -->
+        <section class="content-section" id="mock-test-directory">
+            <div class="container">
+
+                <div class="section-heading">
+                    <div>
+                        <h2 class="section-title" id="mock-list-heading">
+                            Find Your Mock Test
+                        </h2>
+
+                        <p class="section-description"
+                           id="mock-list-description">
+                            Search by exam name or filter tests by category.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Search -->
+                <div class="panel" style="margin-bottom: 15px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="mock-test-search">
+                            Search Mock Tests
+                        </label>
+
+                        <input
+                            type="search"
+                            class="form-control"
+                            id="mock-test-search"
+                            placeholder="Search ADRE, APSC, Assam Police..."
+                            autocomplete="off"
+                            aria-describedby="mock-test-result-count"
+                        >
+                    </div>
+                </div>
+
+                <!-- Categories -->
+                <div class="filter-row"
+                     id="mock-test-filters"
+                     aria-label="Filter mock tests">
+
+                    <button type="button"
+                            class="filter-button is-active"
+                            data-mock-filter="all"
+                            aria-pressed="true">
+                        All Tests
+                    </button>
+
+                    <button type="button"
+                            class="filter-button"
+                            data-mock-filter="administration"
+                            aria-pressed="false">
+                        APSC
+                    </button>
+
+                    <button type="button"
+                            class="filter-button"
+                            data-mock-filter="recruitment"
+                            aria-pressed="false">
+                        ADRE
+                    </button>
+
+                    <button type="button"
+                            class="filter-button"
+                            data-mock-filter="police"
+                            aria-pressed="false">
+                        Assam Police
+                    </button>
+
+                    <button type="button"
+                            class="filter-button"
+                            data-mock-filter="health"
+                            aria-pressed="false">
+                        Health
+                    </button>
+
+                    <button type="button"
+                            class="filter-button"
+                            data-mock-filter="education"
+                            aria-pressed="false">
+                        TET
+                    </button>
+
+                    <button type="button"
+                            class="filter-button"
+                            data-mock-filter="other"
+                            aria-pressed="false">
+                        Other Exams
+                    </button>
+
+                </div>
+
+                <p class="section-description"
+                   id="mock-test-result-count"
+                   aria-live="polite">
+                    Browse available test entries.
+                </p>
+
+                <!-- Mock Test Cards -->
+                <div class="test-list mt-md" id="mock-test-grid">
+
+                    <article class="test-card"
+                             data-mock-card
+                             data-mock-id="assam-vfa"
+                             data-mock-category="recruitment"
+                             data-mock-name="Assam VFA Exam"
+                             data-mock-description="Practice for Assam VFA recruitment.">
+                        <span class="card-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <rect x="5" y="3" width="14" height="18" rx="2"
+                                      stroke="currentColor" stroke-width="1.7"/>
+                                <path d="M9 8h6M9 12h6M9 16h4"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"/>
+                            </svg>
+                        </span>
+
+                        <div class="test-card-content">
+                            <h3 class="test-card-title">Assam VFA Exam</h3>
+                            <div class="test-card-meta">
+                                <span>Recruitment</span>
+                                <span>Practice test</span>
+                            </div>
+                            <p class="card-description">
+                                Practice questions for the Village Field Assistant examination.
+                            </p>
+                        </div>
+
+                        <a href="test.html?test=assam-vfa"
+                           class="btn btn-primary">
+                            Start Test
+                        </a>
+                    </article>
+
+                    <article class="test-card"
+                             data-mock-card
+                             data-mock-id="apsc-cce"
+                             data-mock-category="administration"
+                             data-mock-name="APSC CCE"
+                             data-mock-description="Assam civil services preparation.">
+                        <span class="card-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M3 10h18M5 10v9m4-9v9m6-9v9m4-9v9M3 21h18M12 3 2.5 8h19z"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+
+                        <div class="test-card-content">
+                            <h3 class="test-card-title">APSC CCE Practice</h3>
+                            <div class="test-card-meta">
+                                <span>Civil Services</span>
+                                <span>Practice test</span>
+                            </div>
+                            <p class="card-description">
+                                General studies and civil services preparation.
+                            </p>
+                        </div>
+
+                        <a href="test.html?test=apsc-cce"
+                           class="btn btn-primary">
+                            Start Test
+                        </a>
+                    </article>
+
+                    <article class="test-card"
+                             data-mock-card
+                             data-mock-id="adre-grade-iii"
+                             data-mock-category="recruitment"
+                             data-mock-name="ADRE Grade III"
+                             data-mock-description="Grade III recruitment preparation.">
+                        <span class="card-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <rect x="5" y="3" width="14" height="18" rx="2"
+                                      stroke="currentColor" stroke-width="1.7"/>
+                                <path d="M9 8h6M9 12h6M9 16h4"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"/>
+                            </svg>
+                        </span>
+
+                        <div class="test-card-content">
+                            <h3 class="test-card-title">ADRE Grade III</h3>
+                            <div class="test-card-meta">
+                                <span>Recruitment</span>
+                                <span>Practice test</span>
+                            </div>
+                            <p class="card-description">
+                                Prepare with Grade III-oriented MCQ practice.
+                            </p>
+                        </div>
+
+                        <a href="test.html?test=adre-grade-iii"
+                           class="btn btn-primary">
+                            Start Test
+                        </a>
+                    </article>
+
+                    <article class="test-card"
+                             data-mock-card
+                             data-mock-id="adre-grade-iv"
+                             data-mock-category="recruitment"
+                             data-mock-name="ADRE Grade IV"
+                             data-mock-description="Grade IV recruitment preparation.">
+                        <span class="card-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <rect x="5" y="3" width="14" height="18" rx="2"
+                                      stroke="currentColor" stroke-width="1.7"/>
+                                <path d="M9 8h6M9 12h6M9 16h4"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"/>
+                            </svg>
+                        </span>
+
+                        <div class="test-card-content">
+                            <h3 class="test-card-title">ADRE Grade IV</h3>
+                            <div class="test-card-meta">
+                                <span>Recruitment</span>
+                                <span>Practice test</span>
+                            </div>
+                            <p class="card-description">
+                                Prepare with Grade IV-oriented MCQ practice.
+                            </p>
+                        </div>
+
+                        <a href="test.html?test=adre-grade-iv"
+                           class="btn btn-primary">
+                            Start Test
+                        </a>
+                    </article>
+
+                    <article class="test-card"
+                             data-mock-card
+                             data-mock-id="assam-police-si"
+                             data-mock-category="police"
+                             data-mock-name="Assam Police SI"
+                             data-mock-description="Sub-Inspector recruitment preparation.">
+                        <span class="card-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"
+                                      stroke="currentColor" stroke-width="1.7"
+                                      stroke-linejoin="round"/>
+                                <path d="m8.5 12 2.2 2.2 4.8-5"
+                                      stroke="currentColor" stroke-width="1.7"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+
+                        <div class="test-card-content">
+                            <h3 class="test-card-title">Assam Police SI</h3>
+                            <div class="test-card-meta">
+                                <span>Police Recruitment</span>
+                                <span>Practice test</span>
+                            </div>
+                            <p class="card-description">
+                                Sub-Inspector examination preparation.
+                            </p>
+                        </div>
+
+                        <a href="test.html?test=assam-police-si"
+                           class="btn btn-primary">
+                            Start Test
+                        </a>
+                    </article>
+
+                    <article class="test-card"
+                             data-mock-card
+                             data-mock-id="assam-police-constable"
+                             data-mock-category="police"
+                             data-mock-name="Assam Police Constable"
+                             data-mock-description="Constable recruitment preparation.">
+                        <span class="card-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"
+                                      stroke="currentColor" stroke-width="1.7"
+                                      stroke-linejoin="round"/>
+                                <path d="m8.5 12 2.2 2.2 4.8-5"
+                                      stroke="currentColor" stroke-width="1.7"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+
+                        <div class="test-card-content">
+                            <h3 class="test-card-title">Assam Police Constable</h3>
+                            <div class="test-card-meta">
+                                <span>Police Recruitment</span>
+                                <span>Practice test</span>
+                            </div>
+                            <p class="card-description">
+                                Constable examination preparation.
+                            </p>
+                        </div>
+
+                        <a href="test.html?test=assam-police-constable"
+                           class="btn btn-primary">
+                            Start Test
+                        </a>
+                    </article>
+
+                    <article class="test-card"
+                             data-mock-card
+                             data-mock-id="assam-tet-paper-i"
+                             data-mock-category="education"
+                             data-mock-name="Assam TET Paper I"
+                             data-mock-description="Teacher eligibility preparation.">
+                        <span class="card-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="m3 8 9-5 9 5-9 5z"
+                                      stroke="currentColor" stroke-width="1.7"
+                                      stroke-linejoin="round"/>
+                                <path d="M7 11v5c3 3 7 3 10 0v-5M21 8v6"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"/>
+                            </svg>
+                        </span>
+
+                        <div class="test-card-content">
+                            <h3 class="test-card-title">Assam TET Paper I</h3>
+                            <div class="test-card-meta">
+                                <span>Education</span>
+                                <span>Practice test</span>
+                            </div>
+                            <p class="card-description">
+                                Primary-level teacher eligibility practice.
+                            </p>
+                        </div>
+
+                        <a href="test.html?test=assam-tet-paper-i"
+                           class="btn btn-primary">
+                            Start Test
+                        </a>
+                    </article>
+
+                    <article class="test-card"
+                             data-mock-card
+                             data-mock-id="anm-entrance"
+                             data-mock-category="health"
+                             data-mock-name="ANM Entrance"
+                             data-mock-description="Nursing entrance preparation.">
+                        <span class="card-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="9"
+                                        stroke="currentColor" stroke-width="1.6"/>
+                                <path d="M12 7v10M7 12h10"
+                                      stroke="currentColor"
+                                      stroke-width="2"
+                                      stroke-linecap="round"/>
+                            </svg>
+                        </span>
+
+                        <div class="test-card-content">
+                            <h3 class="test-card-title">ANM Entrance Practice</h3>
+                            <div class="test-card-meta">
+                                <span>Health Sciences</span>
+                                <span>Practice test</span>
+                            </div>
+                            <p class="card-description">
+                                Nursing entrance preparation questions.
+                            </p>
+                        </div>
+
+                        <a href="test.html?test=anm-entrance"
+                           class="btn btn-primary">
+                            Start Test
+                        </a>
+                    </article>
+
+                    <article class="test-card"
+                             data-mock-card
+                             data-mock-id="ssc-general-practice"
+                             data-mock-category="other"
+                             data-mock-name="SSC General Practice"
+                             data-mock-description="SSC aptitude, reasoning and general awareness.">
+                        <span class="card-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <rect x="5" y="3" width="14" height="18" rx="2"
+                                      stroke="currentColor" stroke-width="1.7"/>
+                                <path d="M9 8h6M9 12h6M9 16h4"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"/>
+                            </svg>
+                        </span>
+
+                        <div class="test-card-content">
+                            <h3 class="test-card-title">SSC General Practice</h3>
+                            <div class="test-card-meta">
+                                <span>Other Exams</span>
+                                <span>Practice test</span>
+                            </div>
+                            <p class="card-description">
+                                Reasoning, aptitude and general awareness practice.
+                            </p>
+                        </div>
+
+                        <a href="test.html?test=ssc-general-practice"
+                           class="btn btn-primary">
+                            Start Test
+                        </a>
+                    </article>
+
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state mt-md"
+                     id="mock-test-empty-state"
+                     hidden>
+                    <h3>No mock tests found</h3>
+                    <p>Try a different search term or category.</p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Practice Guidance -->
         <section class="content-section">
-            <div class="section-heading">
-                <div>
-                    <h2 class="section-title">Subject-wise Practice</h2>
-                    <p>Practise individual subjects alongside mock tests.</p>
+            <div class="container">
+
+                <div class="content-card">
+                    <div class="content-columns">
+
+                        <div>
+                            <span class="section-eyebrow">Prepare Consistently</span>
+
+                            <h2 class="section-title">
+                                Improve Through Practice
+                            </h2>
+
+                            <p class="section-description">
+                                Select a test, answer MCQs and review your
+                                performance when the test functionality
+                                is available.
+                            </p>
+                        </div>
+
+                        <div class="content-stack">
+                            <a href="subject.html"
+                               class="btn btn-primary btn-full">
+                                Explore Subjects
+                            </a>
+
+                            <a href="daily-practice.html"
+                               class="btn btn-outline btn-full">
+                                Daily Practice
+                            </a>
+
+                            <a href="current-affairs.html?category=quiz"
+                               class="btn btn-outline btn-full">
+                                Current Affairs Quiz
+                            </a>
+                        </div>
+
+                    </div>
                 </div>
 
-                <a href="subjects.html#available-subjects" class="view-all">
-                    View Subjects <span aria-hidden="true">›</span>
-                </a>
-            </div>
-
-            <div class="listing-grid">
-                <a class="listing-card" href="test.html?subject=economics">
-                    <span class="card-content">
-                        <span class="card-category">SUBJECT PRACTICE</span>
-                        <span class="card-title">Economics</span>
-                        <span class="card-description">
-                            Practise economic concepts and fundamentals.
-                        </span>
-                    </span>
-                    <span class="card-arrow" aria-hidden="true">›</span>
-                </a>
-
-                <a class="listing-card" href="test.html?subject=geography">
-                    <span class="card-content">
-                        <span class="card-category">SUBJECT PRACTICE</span>
-                        <span class="card-title">Geography</span>
-                        <span class="card-description">
-                            Revise geography concepts and important facts.
-                        </span>
-                    </span>
-                    <span class="card-arrow" aria-hidden="true">›</span>
-                </a>
-
-                <a class="listing-card" href="test.html?subject=english">
-                    <span class="card-content">
-                        <span class="card-category">SUBJECT PRACTICE</span>
-                        <span class="card-title">English</span>
-                        <span class="card-description">
-                            Practise grammar, vocabulary and comprehension.
-                        </span>
-                    </span>
-                    <span class="card-arrow" aria-hidden="true">›</span>
-                </a>
-
-                <a class="listing-card" href="test.html?subject=polity">
-                    <span class="card-content">
-                        <span class="card-category">SUBJECT PRACTICE</span>
-                        <span class="card-title">Polity</span>
-                        <span class="card-description">
-                            Revise constitutional and political concepts.
-                        </span>
-                    </span>
-                    <span class="card-arrow" aria-hidden="true">›</span>
-                </a>
             </div>
         </section>
+
     </main>
 
+    <!-- Shared Footer -->
     <footer class="site-footer">
         <div class="footer-main">
+
             <div class="footer-brand">
-                <a href="index.html" class="brand">
-                    <span class="brand-name">StudyNow</span>
+                <a href="index.html" class="brand" aria-label="studyKora home">
+                    <span class="brand-mark" aria-hidden="true">
+                        <span style="font-size: 23px; font-weight: 800;">s</span>
+                    </span>
+
+                    <span class="brand-text">
+                        <span class="brand-name">studyKora</span>
+                        <span class="brand-caption">Learn. Practice. Progress.</span>
+                    </span>
                 </a>
-                <p>
-                    A focused platform for competitive exam preparation,
-                    mock tests and subject-wise practice.
+
+                <p class="footer-description">
+                    Mock tests and MCQ practice for learners preparing
+                    for competitive examinations.
                 </p>
             </div>
 
             <div class="footer-column">
-                <h2>Explore</h2>
-                <a href="current-affairs.html">Current Affairs</a>
-                <a href="mock-tests.html">Mock Tests</a>
-                <a href="subjects.html">Subjects</a>
-                <a href="daily-practice.html">Daily Practice</a>
+                <h3>Practice</h3>
+                <ul class="footer-links">
+                    <li><a href="subject.html">Subjects</a></li>
+                    <li><a href="mock-tests.html">Mock Tests</a></li>
+                    <li><a href="daily-practice.html">Daily Practice</a></li>
+                    <li><a href="current-affairs.html">Current Affairs</a></li>
+                </ul>
             </div>
 
             <div class="footer-column">
-                <h2>Account</h2>
-                <a href="auth.html?mode=login">Login</a>
-                <a href="auth.html?mode=signup">Create Account</a>
-                <a href="index.html">Back to Home</a>
+                <h3>Examinations</h3>
+                <ul class="footer-links">
+                    <li><a href="organization.html?org=apsc">APSC</a></li>
+                    <li><a href="organization.html?org=adre">ADRE</a></li>
+                    <li><a href="organization.html?org=assam-police">Assam Police</a></li>
+                    <li><a href="organization.html?org=ssuhs">SSUHS</a></li>
+                </ul>
             </div>
+
+            <div class="footer-column">
+                <h3>Information</h3>
+                <ul class="footer-links">
+                    <li><a href="why-studynow.html">About</a></li>
+                    <li><a href="resources.html">Resources</a></li>
+                    <li><a href="faq.html">FAQs</a></li>
+                    <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                </ul>
+            </div>
+
         </div>
 
         <div class="footer-bottom">
-            <p>Design and Develop by Yadav Web Technologies</p>
+            <span>
+                &copy; <span data-current-year></span> studyKora. All rights reserved.
+            </span>
+
+            <span class="site-credit">
+                Design and Develop by Yadav Web Technologies
+            </span>
         </div>
     </footer>
+
 </body>
 </html>
