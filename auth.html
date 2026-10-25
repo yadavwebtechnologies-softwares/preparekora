@@ -1,101 +1,87 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Account Access | StudyNow</title>
-    <meta name="description" content="Login, create your StudyNow account, or securely recover your password.">
-    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/auth.html">
+    <title>Login | studyKora</title>
+    <meta name="description" content="Access your studyKora account, register or recover your password.">
+    <meta name="theme-color" content="#28734f">
     <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/auth.html">
 
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="auth.css">
 
     <script src="script.js" defer></script>
     <script src="js/auth.js" defer></script>
 </head>
 
 <body class="auth-page">
-    <div class="auth-layout">
 
-        <!-- Branding panel -->
+    <main class="auth-layout">
+
+        <!-- Left branding panel -->
         <aside class="auth-side">
-            <a href="index.html" class="auth-brand" aria-label="StudyNow Home">
-                <span class="auth-brand-name">StudyNow</span>
+
+            <a href="index.html" class="auth-brand" aria-label="studyKora home">
+                <span class="auth-brand-name">studyKora</span>
                 <span class="auth-brand-caption">Learn. Practice. Progress.</span>
             </a>
 
             <div class="auth-side-content">
-                <span class="auth-eyebrow">YOUR LEARNING JOURNEY</span>
+                <span class="auth-eyebrow">
+                    YOUR LEARNING JOURNEY
+                </span>
 
                 <h1>Your exam preparation starts here</h1>
 
                 <p class="auth-side-description">
-                    Practice questions, prepare for competitive exams,
-                    and build your knowledge one step at a time.
+                    Practise MCQs in English and Assamese for ADRE,
+                    Assam Police, APSC, TET, SSC and other competitive exams.
                 </p>
+            </div>
 
-                <div class="auth-benefits">
-                    <div class="auth-benefit">
-                        <span class="auth-benefit-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H20v19H7.5A3.5 3.5 0 0 0 4 24z"/>
-                                <path d="M4 5.5V24M8 7h8M8 11h8"/>
-                            </svg>
-                        </span>
-                        <span>
-                            <strong>Subject-wise Practice</strong>
-                            <small>Revise topics at your own pace.</small>
-                        </span>
-                    </div>
+            <div class="auth-side-stats">
+                <div class="auth-side-stat">
+                    <strong>15,000+</strong>
+                    <span>MCQs</span>
+                </div>
 
-                    <div class="auth-benefit">
-                        <span class="auth-benefit-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <rect x="4" y="3" width="16" height="18" rx="2"/>
-                                <path d="M8 8h8M8 12h8M8 16h5"/>
-                            </svg>
-                        </span>
-                        <span>
-                            <strong>Mock Tests</strong>
-                            <small>Practise for your target examination.</small>
-                        </span>
-                    </div>
+                <div class="auth-side-stat">
+                    <strong>50+</strong>
+                    <span>Exam categories</span>
+                </div>
 
-                    <div class="auth-benefit">
-                        <span class="auth-benefit-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/>
-                                <path d="m8.5 12 2.2 2.2 4.8-5"/>
-                            </svg>
-                        </span>
-                        <span>
-                            <strong>Secure Account</strong>
-                            <small>Keep your learning progress connected.</small>
-                        </span>
-                    </div>
+                <div class="auth-side-stat">
+                    <strong>Free</strong>
+                    <span>To get started</span>
                 </div>
             </div>
 
-            <div class="auth-side-bottom">
-                <span>Prepare with purpose.</span>
-                <span>Progress with practice.</span>
-            </div>
         </aside>
 
-        <!-- Authentication panel -->
-        <main class="auth-main">
+        <!-- Right authentication area -->
+        <section class="auth-main" aria-label="Account access">
+
             <div class="auth-main-inner">
 
-                <a href="index.html" class="auth-mobile-brand">StudyNow</a>
+                <a href="index.html" class="auth-mobile-brand">
+                    studyKora
+                </a>
 
                 <div class="auth-form-wrap">
 
                     <!-- LOGIN -->
-                    <section class="auth-panel"
-                             id="login-panel"
-                             data-auth-panel="login">
+                    <section
+                        class="auth-panel"
+                        id="login-panel"
+                        data-auth-panel="login"
+                    >
+
+                        <a href="index.html" class="auth-form-brand">
+                            studyKora
+                        </a>
 
                         <div class="auth-card">
                             <div class="auth-heading">
@@ -103,9 +89,13 @@
                                 <p>Enter your credentials to continue.</p>
                             </div>
 
-                            <form id="login-form">
+                            <form id="login-form" novalidate>
+
                                 <div class="auth-field">
-                                    <label for="login-email">Email Address</label>
+                                    <label for="login-email">
+                                        Email
+                                    </label>
+
                                     <input
                                         type="email"
                                         id="login-email"
@@ -118,7 +108,9 @@
                                 </div>
 
                                 <div class="auth-field">
-                                    <label for="login-password">Password</label>
+                                    <label for="login-password">
+                                        Password
+                                    </label>
 
                                     <div class="auth-password-wrap">
                                         <input
@@ -137,48 +129,70 @@
                                             data-toggle-password="login-password"
                                             aria-label="Show password"
                                             aria-pressed="false"
-                                        >Show</button>
+                                        >
+                                            Show
+                                        </button>
                                     </div>
                                 </div>
 
-                                <p class="auth-message"
-                                   id="login-message"
-                                   role="status"
-                                   aria-live="polite"></p>
+                                <p
+                                    class="auth-message"
+                                    id="login-message"
+                                    role="status"
+                                    aria-live="polite"
+                                ></p>
 
-                                <button type="submit" class="auth-submit">
+                                <button
+                                    type="submit"
+                                    class="auth-submit"
+                                    id="login-submit"
+                                >
                                     Login
                                 </button>
 
-                                <div class="auth-forgot-link">
-                                    <a href="auth.html?mode=forgot">
+                                <div class="auth-link-row auth-link-row-center">
+                                    <a href="auth.html?mode=forgot"
+                                       data-show-auth="forgot">
                                         Forgot your password?
                                     </a>
                                 </div>
 
                                 <p class="auth-switch-text">
                                     Don't have an account?
-                                    <a href="auth.html?mode=signup">Create Account</a>
+                                    <a href="auth.html?mode=signup"
+                                       data-show-auth="signup">
+                                        Register
+                                    </a>
                                 </p>
+
                             </form>
                         </div>
+
                     </section>
 
                     <!-- SIGNUP -->
-                    <section class="auth-panel"
-                             id="signup-panel"
-                             data-auth-panel="signup"
-                             hidden>
+                    <section
+                        class="auth-panel"
+                        id="signup-panel"
+                        data-auth-panel="signup"
+                        hidden
+                    >
+
+                        <a href="index.html" class="auth-form-brand">
+                            studyKora
+                        </a>
 
                         <div class="auth-card">
                             <div class="auth-heading">
                                 <h2>Create your account</h2>
-                                <p>Join StudyNow and begin your preparation.</p>
+                                <p>Join studyKora and start practising.</p>
                             </div>
 
-                            <form id="signup-form">
+                            <form id="signup-form" novalidate>
+
                                 <div class="auth-field">
                                     <label for="signup-name">Full Name</label>
+
                                     <input
                                         type="text"
                                         id="signup-name"
@@ -186,12 +200,14 @@
                                         class="auth-input"
                                         placeholder="Enter your full name"
                                         autocomplete="name"
+                                        maxlength="100"
                                         required
                                     >
                                 </div>
 
                                 <div class="auth-field">
-                                    <label for="signup-email">Email Address</label>
+                                    <label for="signup-email">Email</label>
+
                                     <input
                                         type="email"
                                         id="signup-email"
@@ -204,7 +220,10 @@
                                 </div>
 
                                 <div class="auth-field">
-                                    <label for="signup-whatsapp">WhatsApp Number</label>
+                                    <label for="signup-whatsapp">
+                                        WhatsApp Number
+                                    </label>
+
                                     <input
                                         type="tel"
                                         id="signup-whatsapp"
@@ -216,6 +235,7 @@
                                         maxlength="20"
                                         required
                                     >
+
                                     <small class="auth-field-hint">
                                         Include your country code, such as +91.
                                     </small>
@@ -242,7 +262,9 @@
                                             data-toggle-password="signup-password"
                                             aria-label="Show password"
                                             aria-pressed="false"
-                                        >Show</button>
+                                        >
+                                            Show
+                                        </button>
                                     </div>
 
                                     <small class="auth-field-hint">
@@ -273,45 +295,68 @@
                                             data-toggle-password="signup-confirm-password"
                                             aria-label="Show password"
                                             aria-pressed="false"
-                                        >Show</button>
+                                        >
+                                            Show
+                                        </button>
                                     </div>
                                 </div>
 
-                                <p class="auth-message"
-                                   id="signup-message"
-                                   role="status"
-                                   aria-live="polite"></p>
+                                <p
+                                    class="auth-message"
+                                    id="signup-message"
+                                    role="status"
+                                    aria-live="polite"
+                                ></p>
 
-                                <button type="submit" class="auth-submit">
+                                <button
+                                    type="submit"
+                                    class="auth-submit"
+                                    id="signup-submit"
+                                >
                                     Create Account
                                 </button>
 
                                 <p class="auth-switch-text">
                                     Already have an account?
-                                    <a href="auth.html?mode=login">Login</a>
+                                    <a href="auth.html?mode=login"
+                                       data-show-auth="login">
+                                        Login
+                                    </a>
                                 </p>
+
                             </form>
                         </div>
+
                     </section>
 
                     <!-- FORGOT PASSWORD -->
-                    <section class="auth-panel"
-                             id="forgot-panel"
-                             data-auth-panel="forgot"
-                             hidden>
+                    <section
+                        class="auth-panel"
+                        id="forgot-panel"
+                        data-auth-panel="forgot"
+                        hidden
+                    >
+
+                        <a href="index.html" class="auth-form-brand">
+                            studyKora
+                        </a>
 
                         <div class="auth-card">
                             <div class="auth-heading">
                                 <h2>Recover your account</h2>
                                 <p>
-                                    Enter the email address and WhatsApp number
-                                    registered with your StudyNow account.
+                                    Enter the email and WhatsApp number
+                                    registered with your account.
                                 </p>
                             </div>
 
-                            <form id="forgot-form">
+                            <form id="forgot-form" novalidate>
+
                                 <div class="auth-field">
-                                    <label for="forgot-email">Email Address</label>
+                                    <label for="forgot-email">
+                                        Registered Email
+                                    </label>
+
                                     <input
                                         type="email"
                                         id="forgot-email"
@@ -327,6 +372,7 @@
                                     <label for="forgot-whatsapp">
                                         Registered WhatsApp Number
                                     </label>
+
                                     <input
                                         type="tel"
                                         id="forgot-whatsapp"
@@ -340,22 +386,29 @@
                                     >
                                 </div>
 
-                                <p class="auth-message"
-                                   id="forgot-message"
-                                   role="status"
-                                   aria-live="polite"></p>
+                                <p
+                                    class="auth-message"
+                                    id="forgot-message"
+                                    role="status"
+                                    aria-live="polite"
+                                ></p>
 
-                                <button type="submit" class="auth-submit">
+                                <button
+                                    type="submit"
+                                    class="auth-submit"
+                                    id="forgot-submit"
+                                >
                                     Verify Account
                                 </button>
 
-                                <!-- Shown only after successful server-side verification
-                                     and OTP delivery are integrated. -->
-                                <div id="forgot-verification-fields" hidden>
+                                <!-- Must stay hidden until real verification succeeds -->
+                                <div id="forgot-reset-fields" hidden>
+
                                     <div class="auth-field">
                                         <label for="forgot-otp">
-                                            WhatsApp Verification Code
+                                            Verification Code
                                         </label>
+
                                         <input
                                             type="text"
                                             id="forgot-otp"
@@ -369,12 +422,13 @@
                                     </div>
 
                                     <div class="auth-field">
-                                        <label for="reset-password">
+                                        <label for="forgot-new-password">
                                             New Password
                                         </label>
+
                                         <input
                                             type="password"
-                                            id="reset-password"
+                                            id="forgot-new-password"
                                             name="newPassword"
                                             class="auth-input"
                                             placeholder="Create a new password"
@@ -384,13 +438,14 @@
                                     </div>
 
                                     <div class="auth-field">
-                                        <label for="reset-confirm-password">
+                                        <label for="forgot-confirm-password">
                                             Confirm New Password
                                         </label>
+
                                         <input
                                             type="password"
-                                            id="reset-confirm-password"
-                                            name="confirmNewPassword"
+                                            id="forgot-confirm-password"
+                                            name="confirmPassword"
                                             class="auth-input"
                                             placeholder="Re-enter new password"
                                             autocomplete="new-password"
@@ -401,33 +456,54 @@
                                     <button
                                         type="button"
                                         class="auth-submit"
-                                        id="complete-password-reset"
+                                        id="forgot-reset-submit"
                                     >
                                         Reset Password
                                     </button>
+
                                 </div>
 
                                 <p class="auth-switch-text">
                                     Remembered your password?
-                                    <a href="auth.html?mode=login">Back to Login</a>
+                                    <a href="auth.html?mode=login"
+                                       data-show-auth="login">
+                                        Back to Login
+                                    </a>
                                 </p>
+
                             </form>
                         </div>
+
                     </section>
 
                 </div>
 
                 <div class="auth-security-note">
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/>
-                        <path d="m8.5 12 2.2 2.2 4.8-5"/>
+                        <path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"
+                              stroke="currentColor"
+                              stroke-width="1.6"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"/>
+                        <path d="m8.5 12 2.2 2.2 4.8-5"
+                              stroke="currentColor"
+                              stroke-width="1.6"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"/>
                     </svg>
-                    <span>Secure access to your StudyNow account.</span>
+
+                    <span>Secure account access</span>
                 </div>
 
-                <a href="index.html" class="auth-home-link">Back to StudyNow</a>
+                <a href="index.html" class="auth-home-link">
+                    Back to studyKora
+                </a>
+
             </div>
-        </main>
-    </div>
+
+        </section>
+
+    </main>
+
 </body>
 </html>
