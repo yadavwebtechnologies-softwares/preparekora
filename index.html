@@ -3,53 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="StudyNow helps students prepare for competitive exams with mock tests, subject-wise practice and current affairs.">
 
-    <title>StudyNow — Competitive Exam Preparation</title>
+    <title>StudyNow | Competitive Exam Preparation</title>
+    <meta name="description" content="Prepare for competitive exams with StudyNow. Explore Assam recruitment exams, mock tests, subject-wise practice and current affairs.">
+    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/">
+    <meta name="robots" content="index, follow">
+
     <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
 </head>
 
-<body>
+<body class="home-page">
 
     <!-- Header -->
-<header class="site-header">
-    <div class="header-inner">
-        <a href="index.html" class="brand" aria-label="StudyNow Home">
-            <span class="brand-name">StudyNow</span>
-            <span class="brand-caption">Learn. Practice. Progress.</span>
-        </a>
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="index.html" class="brand" aria-label="StudyNow Home">
+                <span class="brand-name">StudyNow</span>
+                <span class="brand-caption">Learn. Practice. Progress.</span>
+            </a>
 
-        <nav class="main-nav" id="main-nav" aria-label="Main navigation">
-            <a href="current-affairs.html">Current Affairs</a>
-            <a href="mock-tests.html">Mock Tests</a>
-            <a href="subjects.html">Subjects</a>
-            <a href="daily-practice.html">Daily Practice</a>
-        </nav>
+            <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+                <a href="#current-affairs">Current Affairs</a>
+                <a href="mock-tests.html">Mock Tests</a>
+                <a href="#subjects">Subjects</a>
+                <a href="daily-practice.html">Daily Practice</a>
+            </nav>
 
-<div class="header-actions">
-    <a href="auth.html?mode=login" class="btn btn-outline">
-        Login
-    </a>
+            <div class="header-actions">
+                <a href="auth.html?mode=login" class="btn btn-outline">Login</a>
+                <a href="auth.html?mode=signup" class="btn btn-primary">Create Account</a>
+            </div>
 
-    <a href="auth.html?mode=signup" class="btn btn-primary">
-        Create Account
-    </a>
-</div>
-
-        <button
-            type="button"
-            class="menu-toggle"
-            id="menu-toggle"
-            aria-label="Toggle navigation"
-            aria-controls="main-nav"
-            aria-expanded="false"
-        >
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-    </div>
-</header>
+            <button
+                type="button"
+                class="menu-toggle"
+                id="menu-toggle"
+                aria-label="Open navigation menu"
+                aria-controls="main-nav"
+                aria-expanded="false"
+            >
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
 
     <main id="main-content">
 
@@ -61,17 +60,16 @@
                 <h1>Prepare smarter.<br>Practice with purpose.</h1>
 
                 <p>
-                    Improve your preparation with competitive exam mock tests,
-                    subject-wise practice and previous-year questions.
+                    Prepare for competitive exams through focused mock tests,
+                    subject-wise questions and regular practice.
                 </p>
 
-                <!-- Fixed Hero Buttons -->
                 <div class="hero-actions">
-                    <a href="#featured-tests" class="btn btn-primary btn-large">
+                    <a href="mock-tests.html" class="btn btn-primary btn-large">
                         Explore Mock Tests
                     </a>
 
-                    <a href="#featured-tests" class="btn btn-outline btn-large">
+                    <a href="organization.html" class="btn btn-outline btn-large">
                         Explore Exams
                     </a>
                 </div>
@@ -79,7 +77,7 @@
                 <div class="hero-highlights">
                     <span>Exam-focused practice</span>
                     <span>Subject-wise questions</span>
-                    <span>Previous-year papers</span>
+                    <span>Answer review</span>
                 </div>
             </div>
 
@@ -119,84 +117,73 @@
         <!-- Organizations -->
         <section class="content-section" id="organizations">
             <div class="section-heading">
-                <div>
-                    <h2 class="section-title">Browse by Organization</h2>
-                </div>
-
-                <a href="#organizations" class="view-all">
+                <h2 class="section-title">Browse by Organization</h2>
+                <a href="organization.html" class="view-all">
                     View All <span aria-hidden="true">›</span>
                 </a>
             </div>
 
             <div class="listing-grid">
 
-                <button type="button" class="listing-card organization-card" data-org="apsc">
+                <a href="organization.html?org=apsc" class="listing-card organization-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <path d="M3.5 6.5h6l2 2h9v10.5H3.5z"></path>
-                            <path d="M3.5 6.5V5A1.5 1.5 0 0 1 5 3.5h4"></path>
+                            <path d="m3 8 9-5 9 5M4 20h16"/>
+                            <path d="M6 9v8M10 9v8M14 9v8M18 9v8M3 21h18"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-category">STATE EXAMINATIONS</span>
                         <span class="card-title">APSC</span>
                         <span class="card-description">3 Exams · 2,908 MCQs</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
-                <button type="button" class="listing-card organization-card" data-org="adre">
+                <a href="organization.html?org=adre" class="listing-card organization-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <path d="M3.5 6.5h6l2 2h9v10.5H3.5z"></path>
-                            <path d="M3.5 6.5V5A1.5 1.5 0 0 1 5 3.5h4"></path>
+                            <rect x="4" y="3" width="16" height="18" rx="2"/>
+                            <path d="M8 8h8M8 12h8M8 16h5"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-category">RECRUITMENT EXAMS</span>
                         <span class="card-title">Assam Direct Recruitment</span>
                         <span class="card-description">4 Exams · 5,700 MCQs</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
-                <button type="button" class="listing-card organization-card" data-org="assam-police">
+                <a href="organization.html?org=assam-police" class="listing-card organization-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <path d="M3.5 6.5h6l2 2h9v10.5H3.5z"></path>
-                            <path d="M3.5 6.5V5A1.5 1.5 0 0 1 5 3.5h4"></path>
+                            <path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/>
+                            <path d="m8.5 12 2.2 2.2 4.8-5"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-category">UNIFORMED SERVICES</span>
                         <span class="card-title">Assam Police</span>
                         <span class="card-description">2 Exams · 2,000 MCQs</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
-                <button type="button" class="listing-card organization-card" data-org="ssuhs">
+                <a href="organization.html?org=ssuhs" class="listing-card organization-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <path d="M3.5 6.5h6l2 2h9v10.5H3.5z"></path>
-                            <path d="M3.5 6.5V5A1.5 1.5 0 0 1 5 3.5h4"></path>
+                            <rect x="4" y="4" width="16" height="16" rx="2"/>
+                            <path d="M12 7v10M7 12h10"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-category">HEALTH EDUCATION</span>
                         <span class="card-title">SSUHS</span>
                         <span class="card-description">1 Exam · 500 MCQs</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
             </div>
         </section>
@@ -204,84 +191,69 @@
         <!-- Featured Tests -->
         <section class="content-section feature-section" id="featured-tests">
             <div class="section-heading">
-                <div>
-                    <h2 class="section-title">Featured Tests</h2>
-                </div>
-
-                <a href="#featured-tests" class="view-all">
+                <h2 class="section-title">Featured Tests</h2>
+                <a href="mock-tests.html" class="view-all">
                     View All <span aria-hidden="true">›</span>
                 </a>
             </div>
 
             <div class="listing-grid">
 
-                <button type="button" class="listing-card test-card" data-test="assam-vfa">
+                <a href="organization.html?exam=assam-vfa" class="listing-card test-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <rect x="6" y="4.5" width="12" height="16" rx="2"></rect>
-                            <path d="M9 4.5V3h6v1.5"></path>
-                            <path d="m9 12 2 2 4-4"></path>
+                            <rect x="5" y="3" width="14" height="18" rx="2"/>
+                            <path d="M9 3v3h6V3M8 12l2 2 5-5"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-title">Assam VFA Exam</span>
-                        <span class="card-description">20 Tests · 100 MCQs each</span>
+                        <span class="card-description">Explore VFA practice tests</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
-                <button type="button" class="listing-card test-card" data-test="anm">
+                <a href="organization.html?exam=anm-entrance" class="listing-card test-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <rect x="6" y="4.5" width="12" height="16" rx="2"></rect>
-                            <path d="M9 4.5V3h6v1.5"></path>
-                            <path d="m9 12 2 2 4-4"></path>
+                            <rect x="5" y="3" width="14" height="18" rx="2"/>
+                            <path d="M12 8v8M8 12h8"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-title">ANM Entrance Exam</span>
-                        <span class="card-description">10 Tests · 50 MCQs each</span>
+                        <span class="card-description">Explore entrance exam practice</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
-                <button type="button" class="listing-card test-card" data-test="adre-grade-iii">
+                <a href="organization.html?exam=adre-grade-iii" class="listing-card test-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <rect x="6" y="4.5" width="12" height="16" rx="2"></rect>
-                            <path d="M9 4.5V3h6v1.5"></path>
-                            <path d="m9 12 2 2 4-4"></path>
+                            <rect x="5" y="3" width="14" height="18" rx="2"/>
+                            <path d="M9 3v3h6V3M8 12h8M8 16h5"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-title">ADRE Grade III</span>
-                        <span class="card-description">10 Tests · 150 MCQs each</span>
+                        <span class="card-description">Explore Grade III mock tests</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
-                <button type="button" class="listing-card test-card" data-test="sub-inspector">
+                <a href="organization.html?exam=assam-police-si" class="listing-card test-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <rect x="6" y="4.5" width="12" height="16" rx="2"></rect>
-                            <path d="M9 4.5V3h6v1.5"></path>
-                            <path d="m9 12 2 2 4-4"></path>
+                            <path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/>
+                            <path d="m8.5 12 2.2 2.2 4.8-5"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
-                        <span class="card-title">Sub Inspector</span>
-                        <span class="card-description">10 Tests · 100 MCQs each</span>
+                        <span class="card-title">Sub-Inspector</span>
+                        <span class="card-description">Explore SI exam practice</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
             </div>
         </section>
@@ -289,144 +261,138 @@
         <!-- Subjects -->
         <section class="content-section subject-section" id="subjects">
             <div class="section-heading">
-                <div>
-                    <h2 class="section-title">Subject-wise Tests</h2>
-                </div>
-
-                <a href="#subjects" class="view-all">
+                <h2 class="section-title">Subject-wise Practice</h2>
+                <a href="subjects.html#available-subjects" class="view-all">
                     View All <span aria-hidden="true">›</span>
                 </a>
             </div>
 
             <div class="listing-grid">
 
-                <button type="button" class="listing-card subject-card" data-subject="assamese">
+                <a href="test.html?subject=assamese" class="listing-card subject-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
-                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H12v19H7.5A3.5 3.5 0 0 0 4 24z"/>
+                            <path d="M12 2h4.5A3.5 3.5 0 0 1 20 5.5V24a3.5 3.5 0 0 0-3.5-3H12"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-title">Assamese</span>
-                        <span class="card-description">15 Tests · 448 MCQs</span>
+                        <span class="card-description">Language and literature</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
-                <button type="button" class="listing-card subject-card" data-subject="culture">
+                <a href="test.html?subject=culture" class="listing-card subject-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
-                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                            <circle cx="12" cy="8" r="5"/>
+                            <path d="M4 21a8 8 0 0 1 16 0M12 3v10"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-title">Culture</span>
-                        <span class="card-description">10 Tests · 200 MCQs</span>
+                        <span class="card-description">Culture and traditions</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
-                <button type="button" class="listing-card subject-card" data-subject="computer">
+                <a href="test.html?subject=computer" class="listing-card subject-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
-                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                            <rect x="3" y="4" width="18" height="13" rx="2"/>
+                            <path d="M8 21h8M12 17v4M7 8h10"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-title">Computer Knowledge</span>
-                        <span class="card-description">9 Tests · 270 MCQs</span>
+                        <span class="card-description">Computer fundamentals</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
-                <button type="button" class="listing-card subject-card" data-subject="driving">
+                <a href="test.html?subject=driving" class="listing-card subject-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
-                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                            <path d="m5 11 1.5-5h11L19 11M3 11h18v7H3z"/>
+                            <path d="M6 18v2M18 18v2M7 14h.01M17 14h.01"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-title">Driving Knowledge</span>
-                        <span class="card-description">6 Tests · 57 MCQs</span>
+                        <span class="card-description">Road safety and traffic rules</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
-                <button type="button" class="listing-card subject-card" data-subject="economics">
+                <a href="test.html?subject=economics" class="listing-card subject-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
-                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                            <path d="M4 20V4M4 20h17M7 15l4-4 3 2 5-6"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-title">Economics</span>
-                        <span class="card-description">5 Tests · 49 MCQs</span>
+                        <span class="card-description">Economic concepts and fundamentals</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
-                <button type="button" class="listing-card subject-card" data-subject="english">
+                <a href="test.html?subject=english" class="listing-card subject-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
-                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H20v19H7.5A3.5 3.5 0 0 0 4 24z"/>
+                            <path d="M8 7h8M8 11h8M8 15h5"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-title">English</span>
-                        <span class="card-description">27 Tests · 800 MCQs</span>
+                        <span class="card-description">Grammar and vocabulary</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
-                <button type="button" class="listing-card subject-card" data-subject="general-knowledge">
+                <a href="test.html?subject=general-knowledge" class="listing-card subject-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
-                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                            <circle cx="12" cy="12" r="9"/>
+                            <path d="M9.5 9a2.5 2.5 0 1 1 4.4 1.6c-1.1 1-1.9 1.3-1.9 2.9M12 17h.01"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-title">General Knowledge</span>
-                        <span class="card-description">17 Tests · 1,628 MCQs</span>
+                        <span class="card-description">General awareness and facts</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
-                <button type="button" class="listing-card subject-card" data-subject="geography">
+                <a href="test.html?subject=geography" class="listing-card subject-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H12v16H7.5A3.5 3.5 0 0 0 4 21z"></path>
-                            <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H12v16h4.5a3.5 3.5 0 0 1 3.5 1z"></path>
+                            <circle cx="12" cy="12" r="9"/>
+                            <path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-title">Geography</span>
-                        <span class="card-description">10 Tests · 200 MCQs</span>
+                        <span class="card-description">Physical and world geography</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
+
+                <a href="test.html?subject=polity" class="listing-card subject-card">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="m3 8 9-5 9 5M4 20h16"/>
+                            <path d="M6 9v8M10 9v8M14 9v8M18 9v8M3 21h18"/>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-title">Polity</span>
+                        <span class="card-description">Constitution and governance</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
 
             </div>
         </section>
@@ -434,81 +400,69 @@
         <!-- Current Affairs -->
         <section class="content-section" id="current-affairs">
             <div class="section-heading">
-                <div>
-                    <h2 class="section-title">Current Affairs</h2>
-                </div>
-
-                <a href="#current-affairs" class="view-all">
+                <h2 class="section-title">Current Affairs</h2>
+                <a href="current-affairs.html" class="view-all">
                     View All <span aria-hidden="true">›</span>
                 </a>
             </div>
 
             <div class="listing-grid">
 
-                <button type="button" class="listing-card" data-current-affairs="daily">
+                <a href="current-affairs.html?category=daily" class="listing-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <rect x="4" y="5" width="16" height="15" rx="2"></rect>
-                            <path d="M8 3v4M16 3v4M4 10h16"></path>
-                            <path d="M8 14h3M8 17h6"></path>
+                            <rect x="4" y="5" width="16" height="15" rx="2"/>
+                            <path d="M8 3v4M16 3v4M4 10h16M8 14h3M8 17h6"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-title">Daily Current Affairs</span>
-                        <span class="card-description">Review important daily updates</span>
+                        <span class="card-description">Important daily updates</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
-                <button type="button" class="listing-card" data-current-affairs="assam">
+                <a href="current-affairs.html?category=assam" class="listing-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <path d="M3 20h18M5 20V9l7-5 7 5v11"></path>
-                            <path d="M9 20v-6h6v6M9 10h.01M15 10h.01"></path>
+                            <path d="M3 20h18M5 20V9l7-5 7 5v11"/>
+                            <path d="M9 20v-6h6v6M9 10h.01M15 10h.01"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-title">Assam Current Affairs</span>
-                        <span class="card-description">State news and important developments</span>
+                        <span class="card-description">State news and developments</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
-                <button type="button" class="listing-card" data-current-affairs="national">
+                <a href="current-affairs.html?category=national" class="listing-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="9"></circle>
-                            <path d="M3.5 12h17M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"></path>
+                            <circle cx="12" cy="12" r="9"/>
+                            <path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-title">National Current Affairs</span>
-                        <span class="card-description">Important national events and updates</span>
+                        <span class="card-description">National events and updates</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
-                <button type="button" class="listing-card" data-current-affairs="quiz">
+                <a href="current-affairs.html?category=quiz" class="listing-card">
                     <span class="card-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
-                            <rect x="5" y="4" width="14" height="17" rx="2"></rect>
-                            <path d="M9 4V3h6v1M8 10h8M8 14h3M8 17h5"></path>
+                            <rect x="5" y="4" width="14" height="17" rx="2"/>
+                            <path d="M9 4V3h6v1M8 10h8M8 14h3M8 17h5"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
                         <span class="card-title">Current Affairs Quiz</span>
-                        <span class="card-description">Practise questions based on current events</span>
+                        <span class="card-description">Questions based on current events</span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </button>
+                </a>
 
             </div>
         </section>
@@ -519,50 +473,47 @@
             <div class="lower-column">
                 <div class="section-heading">
                     <h2 class="section-title">Daily Practice</h2>
-
-                    <a href="#daily-practice" class="view-all">
+                    <a href="daily-practice.html#daily-sets" class="view-all">
                         View All <span aria-hidden="true">›</span>
                     </a>
                 </div>
 
                 <div class="daily-list">
-
-                    <article class="daily-card">
+                    <a href="test.html?subject=general-knowledge" class="daily-card">
                         <span class="date-box">
                             <strong>01</strong>
                             <span>Set</span>
                         </span>
+                        <span class="card-content">
+                            <span class="daily-card-title">Daily General Knowledge</span>
+                            <span class="daily-card-description">Practise general knowledge and review answers.</span>
+                        </span>
+                        <span class="card-arrow" aria-hidden="true">›</span>
+                    </a>
 
-                        <div class="card-content">
-                            <h3>Daily General Knowledge</h3>
-                            <p>Practise general knowledge and review your answers.</p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card">
+                    <a href="subjects.html#available-subjects" class="daily-card">
                         <span class="date-box">
                             <strong>02</strong>
                             <span>Set</span>
                         </span>
+                        <span class="card-content">
+                            <span class="daily-card-title">Assam History Revision</span>
+                            <span class="daily-card-description">Explore history-related revision resources.</span>
+                        </span>
+                        <span class="card-arrow" aria-hidden="true">›</span>
+                    </a>
 
-                        <div class="card-content">
-                            <h3>Assam History Revision</h3>
-                            <p>Revise important topics through focused practice.</p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card">
+                    <a href="subjects.html#available-subjects" class="daily-card">
                         <span class="date-box">
                             <strong>03</strong>
                             <span>Set</span>
                         </span>
-
-                        <div class="card-content">
-                            <h3>Reasoning Practice</h3>
-                            <p>Strengthen your accuracy with practice questions.</p>
-                        </div>
-                    </article>
-
+                        <span class="card-content">
+                            <span class="daily-card-title">Reasoning Practice</span>
+                            <span class="daily-card-description">Explore subjects and practice resources.</span>
+                        </span>
+                        <span class="card-arrow" aria-hidden="true">›</span>
+                    </a>
                 </div>
             </div>
 
@@ -572,14 +523,12 @@
                 </div>
 
                 <div class="why-list">
-
                     <article class="why-card">
                         <span class="why-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24">
-                                <path d="M4 5h16M4 12h9M4 19h16M15 9l3 3-3 3"></path>
+                                <path d="M4 5h16M4 12h9M4 19h16M15 9l3 3-3 3"/>
                             </svg>
                         </span>
-
                         <div class="card-content">
                             <h3>Focused Exam Preparation</h3>
                             <p>Explore exams and subjects in one place.</p>
@@ -589,50 +538,44 @@
                     <article class="why-card">
                         <span class="why-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="9"></circle>
-                                <path d="M12 7v5l3 2"></path>
+                                <circle cx="12" cy="12" r="9"/>
+                                <path d="M12 7v5l3 2"/>
                             </svg>
                         </span>
-
                         <div class="card-content">
                             <h3>Realistic Practice Sessions</h3>
-                            <p>Prepare with timed tests and review your answers.</p>
+                            <p>Practise with a timer and review answers.</p>
                         </div>
                     </article>
 
                     <article class="why-card">
                         <span class="why-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24">
-                                <path d="M4 19V5M4 19h17"></path>
-                                <rect x="7" y="12" width="3" height="4"></rect>
-                                <rect x="12" y="8" width="3" height="8"></rect>
-                                <rect x="17" y="4" width="3" height="12"></rect>
+                                <path d="M4 19V5M4 19h17"/>
+                                <rect x="7" y="12" width="3" height="4"/>
+                                <rect x="12" y="8" width="3" height="8"/>
+                                <rect x="17" y="4" width="3" height="12"/>
                             </svg>
                         </span>
-
                         <div class="card-content">
                             <h3>Track Your Progress</h3>
-                            <p>Identify strengths and subjects needing more practice.</p>
+                            <p>Identify strengths and topics needing more practice.</p>
                         </div>
                     </article>
-
                 </div>
             </div>
 
         </section>
-
     </main>
 
     <!-- Footer -->
     <footer class="site-footer">
-
         <div class="footer-main">
 
             <div class="footer-brand">
                 <a href="index.html" class="brand">
                     <span class="brand-name">StudyNow</span>
                 </a>
-
                 <p>
                     A focused platform for competitive exam preparation,
                     mock tests and subject-wise practice.
@@ -641,32 +584,28 @@
 
             <div class="footer-column">
                 <h2>Explore</h2>
-                <a href="#current-affairs">Current Affairs</a>
-                <a href="#featured-tests">Mock Tests</a>
-                <a href="#subjects">Subjects</a>
-                <a href="#daily-practice">Daily Practice</a>
+                <a href="current-affairs.html">Current Affairs</a>
+                <a href="mock-tests.html">Mock Tests</a>
+                <a href="subjects.html">Subjects</a>
+                <a href="daily-practice.html">Daily Practice</a>
+                <a href="organization.html">Organizations</a>
             </div>
 
             <div class="footer-column">
                 <h2>StudyNow</h2>
                 <a href="#why-studynow">About StudyNow</a>
+                <a href="auth.html?mode=login">Login</a>
+                <a href="auth.html?mode=signup">Create Account</a>
                 <a href="#home">Back to Top</a>
             </div>
 
         </div>
 
         <div class="footer-bottom">
-            <p class="site-credit">
-                Design and Develop by Yadav Web Technologies
-            </p>
-
-            <p class="copyright">
-                StudyNow. All rights reserved.
-            </p>
+            <p class="site-credit">Design and Develop by Yadav Web Technologies</p>
+            <p class="copyright">StudyNow. All rights reserved.</p>
         </div>
-
     </footer>
 
-    <script src="script.js"></script>
 </body>
 </html>
