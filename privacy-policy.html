@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,7 +11,9 @@
     <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/privacy-policy.html">
 
     <link rel="stylesheet" href="style.css">
+
     <script src="script.js" defer></script>
+    <script src="js/shared-header.js" defer></script>
 </head>
 
 <body class="privacy-policy-page">
@@ -22,26 +23,50 @@
         <div class="header-inner">
 
             <a href="index.html" class="brand" aria-label="studyKora home">
-                <span class="brand-mark" aria-hidden="true">
-                    <span style="font-size:23px;font-weight:800;">s</span>
-                </span>
                 <span class="brand-text">
-                    <span class="brand-name">studyKora</span>
-                    <span class="brand-caption">Learn. Practice. Progress.</span>
+                    <span class="brand-name"><span style="color:#111;">study</span><span style="color:#777;">kora</span></span>
                 </span>
             </a>
 
             <nav class="main-nav" id="main-nav" aria-label="Main navigation">
-                <a href="index.html">Home</a>
-                <a href="subject.html">Subjects</a>
-                <a href="current-affairs.html">Current Affairs</a>
-                <a href="mock-tests.html">Mock Tests</a>
-                <a href="daily-practice.html">Daily Practice</a>
+                <a href="index.html" data-page="home">Home</a>
+                <a href="subject.html" data-page="subjects">Subjects</a>
+                <a href="current-affairs.html" data-page="current-affairs">Current Affairs</a>
+                <a href="mock-tests.html" data-page="mock-tests">Mock Tests</a>
+                <a href="daily-practice.html" data-page="daily-practice">Daily Practice</a>
             </nav>
 
             <div class="header-actions">
-                <a href="auth.html?mode=login" class="btn btn-outline">Login</a>
-                <a href="auth.html?mode=signup" class="btn btn-primary">Create Account</a>
+
+                <div class="account-guest" id="account-guest">
+                    <a href="auth.html?mode=login"
+                       class="btn btn-outline"
+                       id="account-login-link">Login</a>
+
+                    <a href="auth.html?mode=signup"
+                       class="btn btn-primary"
+                       id="account-register-link">Create Account</a>
+                </div>
+
+                <div class="account-authenticated" id="account-authenticated" hidden>
+                    <a href="profile.html"
+                       class="account-profile-trigger"
+                       id="account-profile-trigger"
+                       aria-label="Open profile">
+                        <svg id="account-profile-avatar"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             aria-hidden="true">
+                            <circle cx="12" cy="8" r="4"
+                                    stroke="currentColor"
+                                    stroke-width="1.7"/>
+                            <path d="M4.5 21c.5-4.2 3.4-6.5 7.5-6.5s7 2.3 7.5 6.5"
+                                  stroke="currentColor"
+                                  stroke-width="1.7"
+                                  stroke-linecap="round"/>
+                        </svg>
+                    </a>
+                </div>
 
                 <button
                     type="button"
@@ -57,14 +82,14 @@
                               stroke-linecap="round"/>
                     </svg>
                 </button>
-            </div>
 
+            </div>
         </div>
     </header>
 
     <main class="page-content">
 
-        <!-- Page Banner -->
+        <!-- Page Hero -->
         <section class="page-hero">
             <div class="page-hero-inner">
 
@@ -104,10 +129,10 @@
 
                 <div class="content-columns">
 
-                    <!-- Main policy -->
+                    <!-- Main Policy -->
                     <article class="content-stack">
 
-                        <section class="content-card">
+                        <section class="content-card" id="introduction">
                             <span class="section-eyebrow">About This Policy</span>
                             <h2 class="section-title">Introduction</h2>
 
@@ -127,7 +152,7 @@
                             </p>
                         </section>
 
-                        <section class="content-card">
+                        <section class="content-card" id="information">
                             <h2 class="section-title">1. Information You Provide</h2>
 
                             <p class="section-description">
@@ -139,8 +164,10 @@
                                 <li>Your name.</li>
                                 <li>Your email address.</li>
                                 <li>Your WhatsApp number, including country code.</li>
-                                <li>Authentication information handled by the
-                                    selected authentication provider.</li>
+                                <li>
+                                    Authentication information handled by the
+                                    selected authentication provider.
+                                </li>
                             </ul>
 
                             <p class="section-description">
@@ -173,7 +200,7 @@
                             </p>
                         </section>
 
-                        <section class="content-card">
+                        <section class="content-card" id="usage">
                             <h2 class="section-title">3. How Information May Be Used</h2>
 
                             <p class="section-description">
@@ -246,7 +273,7 @@
                             </p>
                         </section>
 
-                        <section class="content-card">
+                        <section class="content-card" id="security">
                             <h2 class="section-title">7. Data Security and Retention</h2>
 
                             <p class="section-description">
@@ -266,7 +293,7 @@
                             </p>
                         </section>
 
-                        <section class="content-card">
+                        <section class="content-card" id="privacy-choices">
                             <h2 class="section-title">8. Your Privacy Choices</h2>
 
                             <p class="section-description">
@@ -307,7 +334,7 @@
                             </p>
                         </section>
 
-                        <section class="content-card">
+                        <section class="content-card" id="contact">
                             <h2 class="section-title">11. Contact and Privacy Requests</h2>
 
                             <p class="section-description">
@@ -324,7 +351,7 @@
 
                     </article>
 
-                    <!-- Policy navigation -->
+                    <!-- Policy Navigation -->
                     <aside class="content-stack">
 
                         <div class="panel">
@@ -359,9 +386,11 @@
                                 <a href="faq.html" class="btn btn-outline btn-full">
                                     Frequently Asked Questions
                                 </a>
+
                                 <a href="credits.html" class="btn btn-outline btn-full">
                                     Website Credits
                                 </a>
+
                                 <a href="index.html" class="btn btn-primary btn-full">
                                     Back to studyKora
                                 </a>
@@ -382,12 +411,8 @@
 
             <div class="footer-brand">
                 <a href="index.html" class="brand" aria-label="studyKora home">
-                    <span class="brand-mark" aria-hidden="true">
-                        <span style="font-size:23px;font-weight:800;">s</span>
-                    </span>
                     <span class="brand-text">
-                        <span class="brand-name">studyKora</span>
-                        <span class="brand-caption">Learn. Practice. Progress.</span>
+                        <span class="brand-name"><span style="color:#111;">study</span><span style="color:#777;">kora</span></span>
                     </span>
                 </a>
 
