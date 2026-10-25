@@ -1,0 +1,484 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Study Resources | studyKora</title>
+    <meta name="description" content="Explore study resources, subject practice, exam preparation guides and current affairs on studyKora.">
+    <meta name="theme-color" content="#28734f">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/resources.html">
+
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+    <script src="js/resources.js" defer></script>
+</head>
+
+<body class="resources-page">
+
+    <!-- Shared Header -->
+    <header class="site-header">
+        <div class="header-inner">
+
+            <a href="index.html" class="brand" aria-label="studyKora home">
+                <span class="brand-mark" aria-hidden="true">
+                    <span style="font-size:23px;font-weight:800;">s</span>
+                </span>
+                <span class="brand-text">
+                    <span class="brand-name">studyKora</span>
+                    <span class="brand-caption">Learn. Practice. Progress.</span>
+                </span>
+            </a>
+
+            <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+                <a href="index.html">Home</a>
+                <a href="subject.html">Subjects</a>
+                <a href="current-affairs.html">Current Affairs</a>
+                <a href="mock-tests.html">Mock Tests</a>
+                <a href="daily-practice.html">Daily Practice</a>
+            </nav>
+
+            <div class="header-actions">
+                <a href="auth.html?mode=login" class="btn btn-outline">Login</a>
+                <a href="auth.html?mode=signup" class="btn btn-primary">Create Account</a>
+
+                <button
+                    type="button"
+                    class="menu-toggle"
+                    id="menu-toggle"
+                    aria-label="Open navigation menu"
+                    aria-controls="main-nav"
+                    aria-expanded="false">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M4 7h16M4 12h16M4 17h16"
+                              stroke="currentColor"
+                              stroke-width="1.8"
+                              stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+
+        </div>
+    </header>
+
+    <main class="page-content">
+
+        <!-- Hero -->
+        <section class="page-hero">
+            <div class="page-hero-inner">
+
+                <span class="page-hero-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v18H6.5A2.5 2.5 0 0 0 4 22z"
+                              stroke="currentColor"
+                              stroke-width="1.7"
+                              stroke-linejoin="round"/>
+                        <path d="M4 4.5V22M8 7h8M8 11h8M8 15h6"
+                              stroke="currentColor"
+                              stroke-width="1.7"
+                              stroke-linecap="round"/>
+                    </svg>
+                </span>
+
+                <h1 class="page-hero-title">Study Resources</h1>
+
+                <p class="page-hero-description">
+                    Find useful preparation sections, subject practice,
+                    current affairs and exam-related resources in one place.
+                </p>
+
+                <div class="page-hero-stats">
+                    <span class="page-hero-stat">Subject Practice</span>
+                    <span class="page-hero-stat">Exam Preparation</span>
+                    <span class="page-hero-stat">Current Affairs</span>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Resource Directory -->
+        <section class="content-section">
+            <div class="container">
+
+                <div class="section-heading">
+                    <div>
+                        <h2 class="section-title">Browse Resources</h2>
+                        <p class="section-description">
+                            Search resources or select a category to narrow the list.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Search -->
+                <div class="panel" style="margin-bottom:15px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="resource-search">
+                            Search Resources
+                        </label>
+
+                        <input
+                            type="search"
+                            id="resource-search"
+                            class="form-control"
+                            placeholder="Search subjects, mock tests, current affairs..."
+                            autocomplete="off"
+                            aria-describedby="resource-result-count">
+                    </div>
+                </div>
+
+                <!-- Category Filters -->
+                <div class="filter-row" id="resource-filters"
+                     aria-label="Filter resources">
+
+                    <button type="button"
+                            class="filter-button is-active"
+                            data-resource-filter="all"
+                            aria-pressed="true">
+                        All Resources
+                    </button>
+
+                    <button type="button"
+                            class="filter-button"
+                            data-resource-filter="subjects"
+                            aria-pressed="false">
+                        Subjects
+                    </button>
+
+                    <button type="button"
+                            class="filter-button"
+                            data-resource-filter="exams"
+                            aria-pressed="false">
+                        Exam Preparation
+                    </button>
+
+                    <button type="button"
+                            class="filter-button"
+                            data-resource-filter="current-affairs"
+                            aria-pressed="false">
+                        Current Affairs
+                    </button>
+
+                    <button type="button"
+                            class="filter-button"
+                            data-resource-filter="practice"
+                            aria-pressed="false">
+                        Practice
+                    </button>
+                </div>
+
+                <p class="section-description"
+                   id="resource-result-count"
+                   aria-live="polite">
+                    Browse available resources.
+                </p>
+
+                <!-- Resource Cards -->
+                <div class="listing-grid mt-md" id="resource-grid">
+
+                    <a href="subject.html"
+                       class="resource-card"
+                       data-resource-card
+                       data-resource-category="subjects"
+                       data-resource-name="Subject Directory"
+                       data-resource-description="Browse general knowledge, English, mathematics, reasoning, computer and other subjects.">
+                        <span class="card-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 0 4 22z"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linejoin="round"/>
+                                <path d="M4 5.5V22M8 7h8M8 11h8"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"/>
+                            </svg>
+                        </span>
+                        <span class="card-content">
+                            <span class="card-title">Subject Directory</span>
+                            <span class="card-description">
+                                Explore subjects and topic-wise MCQs.
+                            </span>
+                        </span>
+                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
+                    </a>
+
+                    <a href="mock-tests.html"
+                       class="resource-card"
+                       data-resource-card
+                       data-resource-category="exams"
+                       data-resource-name="Mock Test Directory"
+                       data-resource-description="Browse APSC, ADRE, Assam Police, TET, health and other exam practice.">
+                        <span class="card-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <rect x="5" y="3" width="14" height="18" rx="2"
+                                      stroke="currentColor" stroke-width="1.7"/>
+                                <path d="M9 8h6M9 12h6M9 16h4"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"/>
+                            </svg>
+                        </span>
+                        <span class="card-content">
+                            <span class="card-title">Mock Test Directory</span>
+                            <span class="card-description">
+                                Find practice tests by examination.
+                            </span>
+                        </span>
+                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
+                    </a>
+
+                    <a href="organization.html"
+                       class="resource-card"
+                       data-resource-card
+                       data-resource-category="exams"
+                       data-resource-name="Exam Organizations"
+                       data-resource-description="Explore APSC, ADRE, Assam Police, SSUHS and other organizations.">
+                        <span class="card-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M3 10h18M5 10v9m4-9v9m6-9v9m4-9v9M3 21h18M12 3 2.5 8h19z"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                        <span class="card-content">
+                            <span class="card-title">Exam Organizations</span>
+                            <span class="card-description">
+                                Explore exams by organization.
+                            </span>
+                        </span>
+                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
+                    </a>
+
+                    <a href="current-affairs.html"
+                       class="resource-card"
+                       data-resource-card
+                       data-resource-category="current-affairs"
+                       data-resource-name="Current Affairs"
+                       data-resource-description="Open daily updates, Assam affairs, national affairs and current affairs quiz.">
+                        <span class="card-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <rect x="3" y="4" width="18" height="16" rx="2"
+                                      stroke="currentColor" stroke-width="1.7"/>
+                                <path d="M7 8h10M7 12h7M7 16h5"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"/>
+                            </svg>
+                        </span>
+                        <span class="card-content">
+                            <span class="card-title">Current Affairs</span>
+                            <span class="card-description">
+                                Browse daily and regional update categories.
+                            </span>
+                        </span>
+                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
+                    </a>
+
+                    <a href="current-affairs.html?category=quiz"
+                       class="resource-card"
+                       data-resource-card
+                       data-resource-category="practice"
+                       data-resource-name="Current Affairs Quiz"
+                       data-resource-description="Use multiple-choice questions to revise current affairs.">
+                        <span class="card-icon" aria-hidden="true">Q</span>
+                        <span class="card-content">
+                            <span class="card-title">Current Affairs Quiz</span>
+                            <span class="card-description">
+                                Revise current affairs with MCQs.
+                            </span>
+                        </span>
+                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
+                    </a>
+
+                    <a href="daily-practice.html"
+                       class="resource-card"
+                       data-resource-card
+                       data-resource-category="practice"
+                       data-resource-name="Daily Practice"
+                       data-resource-description="Try the daily challenge and practise multiple subjects.">
+                        <span class="card-icon" aria-hidden="true">D</span>
+                        <span class="card-content">
+                            <span class="card-title">Daily Practice</span>
+                            <span class="card-description">
+                                Build a regular practice routine.
+                            </span>
+                        </span>
+                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
+                    </a>
+
+                    <a href="subject.html?subject=general-knowledge"
+                       class="resource-card"
+                       data-resource-card
+                       data-resource-category="subjects"
+                       data-resource-name="General Knowledge"
+                       data-resource-description="Practise static GK, important facts and general awareness.">
+                        <span class="card-icon" aria-hidden="true">GK</span>
+                        <span class="card-content">
+                            <span class="card-title">General Knowledge</span>
+                            <span class="card-description">
+                                Open general knowledge practice.
+                            </span>
+                        </span>
+                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
+                    </a>
+
+                    <a href="subject.html?subject=english"
+                       class="resource-card"
+                       data-resource-card
+                       data-resource-category="subjects"
+                       data-resource-name="English Practice"
+                       data-resource-description="Practise English grammar, vocabulary and comprehension.">
+                        <span class="card-icon" aria-hidden="true">EN</span>
+                        <span class="card-content">
+                            <span class="card-title">English Practice</span>
+                            <span class="card-description">
+                                Review grammar and vocabulary topics.
+                            </span>
+                        </span>
+                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
+                    </a>
+
+                    <a href="subject.html?subject=mathematics"
+                       class="resource-card"
+                       data-resource-card
+                       data-resource-category="subjects"
+                       data-resource-name="Mathematics Practice"
+                       data-resource-description="Practise arithmetic, percentages, ratios and numerical ability.">
+                        <span class="card-icon" aria-hidden="true">M</span>
+                        <span class="card-content">
+                            <span class="card-title">Mathematics Practice</span>
+                            <span class="card-description">
+                                Build numerical ability through MCQs.
+                            </span>
+                        </span>
+                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
+                    </a>
+
+                    <a href="auth.html?mode=signup"
+                       class="resource-card"
+                       data-resource-card
+                       data-resource-category="practice"
+                       data-resource-name="Create StudyKora Account"
+                       data-resource-description="Create an account for future account-based progress and results.">
+                        <span class="card-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <circle cx="9" cy="8" r="4"
+                                        stroke="currentColor" stroke-width="1.7"/>
+                                <path d="M2.5 21v-2a6.5 6.5 0 0 1 13 0v2M19 8v6M16 11h6"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"/>
+                            </svg>
+                        </span>
+                        <span class="card-content">
+                            <span class="card-title">Create an Account</span>
+                            <span class="card-description">
+                                Get ready for account-based features.
+                            </span>
+                        </span>
+                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
+                    </a>
+
+                </div>
+
+                <div class="empty-state mt-md" id="resource-empty-state" hidden>
+                    <h3>No resources found</h3>
+                    <p>Try a different search term or choose another category.</p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Related Pages -->
+        <section class="content-section">
+            <div class="container">
+                <div class="content-card">
+                    <div class="content-columns">
+                        <div>
+                            <span class="section-eyebrow">Continue Learning</span>
+                            <h2 class="section-title">Choose Your Next Step</h2>
+                            <p class="section-description">
+                                Move from revision to subject practice or a mock test.
+                            </p>
+                        </div>
+
+                        <div class="content-stack">
+                            <a href="subject.html" class="btn btn-primary btn-full">
+                                Explore Subjects
+                            </a>
+                            <a href="mock-tests.html" class="btn btn-outline btn-full">
+                                Browse Mock Tests
+                            </a>
+                            <a href="daily-practice.html" class="btn btn-outline btn-full">
+                                Daily Practice
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Shared Footer -->
+    <footer class="site-footer">
+        <div class="footer-main">
+
+            <div class="footer-brand">
+                <a href="index.html" class="brand" aria-label="studyKora home">
+                    <span class="brand-mark" aria-hidden="true">
+                        <span style="font-size:23px;font-weight:800;">s</span>
+                    </span>
+                    <span class="brand-text">
+                        <span class="brand-name">studyKora</span>
+                        <span class="brand-caption">Learn. Practice. Progress.</span>
+                    </span>
+                </a>
+                <p class="footer-description">
+                    Study resources and practice links for competitive exam preparation.
+                </p>
+            </div>
+
+            <div class="footer-column">
+                <h3>Practice</h3>
+                <ul class="footer-links">
+                    <li><a href="subject.html">Subjects</a></li>
+                    <li><a href="mock-tests.html">Mock Tests</a></li>
+                    <li><a href="daily-practice.html">Daily Practice</a></li>
+                    <li><a href="current-affairs.html">Current Affairs</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h3>Examinations</h3>
+                <ul class="footer-links">
+                    <li><a href="organization.html?org=apsc">APSC</a></li>
+                    <li><a href="organization.html?org=adre">ADRE</a></li>
+                    <li><a href="organization.html?org=assam-police">Assam Police</a></li>
+                    <li><a href="organization.html?org=ssuhs">SSUHS</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h3>Information</h3>
+                <ul class="footer-links">
+                    <li><a href="faq.html">FAQs</a></li>
+                    <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                    <li><a href="credits.html">Credits</a></li>
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            <span>&copy; <span data-current-year></span> studyKora. All rights reserved.</span>
+            <span class="site-credit">Design and Develop by Yadav Web Technologies</span>
+        </div>
+    </footer>
+
+</body>
+</html>
