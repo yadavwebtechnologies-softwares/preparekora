@@ -1,241 +1,288 @@
 /* ==========================================
-   StudyNow — Organization Details
+   StudyNow — Organization & Exam Navigation
    Design and Develop by Yadav Web Technologies
 ========================================== */
 
 "use strict";
 
-/* ==========================================
-   ORGANIZATION DATA
-========================================== */
-
-const organizations = {
-    apsc: {
-        name: "APSC",
-        category: "STATE EXAMINATIONS",
-        description:
-            "Explore APSC exam categories and prepare with focused practice resources.",
-        exams: 3,
-        questions: "2,908",
-        examList: [
-            "Combined Competitive Examination",
-            "Recruitment Exam Practice",
-            "Other APSC Practice"
-        ]
-    },
-
-    adre: {
-        name: "Assam Direct Recruitment",
-        category: "RECRUITMENT EXAMS",
-        description:
-            "Explore Assam Direct Recruitment exams and prepare through focused practice.",
-        exams: 4,
-        questions: "5,700",
-        examList: [
-            "ADRE Grade III",
-            "ADRE Grade IV",
-            "Driver Recruitment",
-            "Other Recruitment Exams"
-        ]
-    },
-
-    "assam-police": {
-        name: "Assam Police",
-        category: "UNIFORMED SERVICES",
-        description:
-            "Explore Assam Police exam categories and strengthen your preparation.",
-        exams: 2,
-        questions: "2,000",
-        examList: [
-            "Sub Inspector Exam",
-            "Constable Exam"
-        ]
-    },
-
-    ssuhs: {
-        name: "SSUHS",
-        category: "HEALTH EDUCATION",
-        description:
-            "Explore healthcare entrance exam practice and revision resources.",
-        exams: 1,
-        questions: "500",
-        examList: [
-            "Healthcare Entrance Exam"
-        ]
-    }
-};
-
-
-/* ==========================================
-   ELEMENTS
-========================================== */
-
-const titleElement = document.getElementById("organization-title");
-const categoryElement = document.getElementById("organization-category");
-const descriptionElement = document.getElementById("organization-description");
-
-const examCountElement = document.getElementById("exam-count");
-const questionCountElement = document.getElementById("question-count");
-
-const examListElement = document.getElementById("organization-exam-list");
-const aboutElement = document.getElementById("organization-about-text");
-
-
-/* ==========================================
-   EXAM CARD TEMPLATE
-   Reuses shared listing-card components
-========================================== */
-
-function createExamCard(exam, index) {
-    const card = document.createElement("button");
-
-    card.type = "button";
-    card.className = "listing-card test-card";
-    card.dataset.exam = String(index);
-
-    const icon = document.createElement("span");
-    icon.className = "card-icon";
-    icon.setAttribute("aria-hidden", "true");
-
-    icon.innerHTML = `
-        <svg viewBox="0 0 24 24">
-            <rect x="6" y="4.5" width="12" height="16" rx="2"></rect>
-            <path d="M9 4.5V3h6v1.5"></path>
-            <path d="m9 12 2 2 4-4"></path>
-        </svg>
-    `;
-
-    const content = document.createElement("span");
-    content.className = "card-content";
-
-    const category = document.createElement("span");
-    category.className = "card-category";
-    category.textContent = "EXAM CATEGORY";
-
-    const title = document.createElement("span");
-    title.className = "card-title";
-    title.textContent = exam;
-
-    const description = document.createElement("span");
-    description.className = "card-description";
-    description.textContent = "Explore exam practice";
-
-    content.append(category, title, description);
-
-    const arrow = document.createElement("span");
-    arrow.className = "card-arrow";
-    arrow.setAttribute("aria-hidden", "true");
-    arrow.textContent = "›";
-
-    card.append(icon, content, arrow);
-
-    return card;
-}
-
-
-/* ==========================================
-   RENDER ORGANIZATION
-========================================== */
-
-function renderOrganization(organization) {
-    titleElement.textContent = organization.name;
-    categoryElement.textContent = organization.category;
-    descriptionElement.textContent = organization.description;
-
-    examCountElement.textContent =
-        `${organization.exams} Exam Categories`;
-
-    questionCountElement.textContent =
-        `${organization.questions} MCQs`;
-
-    aboutElement.textContent =
-        `${organization.name} exam preparation resources are organized here. Explore the available exam categories and use this page to navigate to relevant practice material.`;
-
-    examListElement.replaceChildren();
-
-    organization.examList.forEach((exam, index) => {
-        examListElement.appendChild(
-            createExamCard(exam, index)
-        );
-    });
-
-    document.title = `${organization.name} Exams — StudyNow`;
-}
-
-
-/* ==========================================
-   UNKNOWN ORGANIZATION
-========================================== */
-
-function renderNotFound() {
-    titleElement.textContent = "Organization Not Found";
-    categoryElement.textContent = "STUDYNOW";
-
-    descriptionElement.textContent =
-        "This organization is unavailable. Return to the homepage to select an available organization.";
-
-    examCountElement.textContent = "Explore";
-    questionCountElement.textContent = "Available Exams";
-
-    aboutElement.textContent =
-        "Choose an organization from the StudyNow homepage to explore its exam categories.";
-
-    examListElement.replaceChildren();
-
-    document.title = "Organization Not Found — StudyNow";
-}
-
-
-/* ==========================================
-   EXAM CARD PLACEHOLDER
-========================================== */
-
-function handleExamClick(event) {
-    const card = event.target.closest("[data-exam]");
-
-    if (!card || !examListElement.contains(card)) {
-        return;
-    }
-
-    const examName = card.querySelector(".card-title")?.textContent.trim();
-
-    if (examName === "ADRE Grade III") {
-        window.location.href = "mock-tests.html?exam=adre-grade-iii";
-        return;
-    }
-
-    const noticeModal = document.getElementById("notice-modal");
-    const noticeTitle = document.getElementById("notice-title");
-    const noticeMessage = document.getElementById("notice-message");
-
-    if (!noticeModal || !noticeTitle || !noticeMessage) return;
-
-    noticeTitle.textContent = examName || "Exam Details";
-    noticeMessage.textContent =
-        "This exam's dedicated page will be added in a future frontend update.";
-
-    noticeModal.hidden = false;
-    document.body.classList.add("modal-open");
-}
-
-
-/* ==========================================
-   INITIALIZE
-========================================== */
-
-function initializeOrganizationPage() {
+document.addEventListener("DOMContentLoaded", () => {
     const params = new URLSearchParams(window.location.search);
-    const organizationId = params.get("org") || "adre";
+    const organizationId = params.get("org");
+    const examId = params.get("exam");
 
-    const organization = organizations[organizationId];
+    const organizationConfigs = {
+        apsc: {
+            name: "APSC",
+            category: "STATE EXAMINATIONS",
+            description: "Explore APSC examination categories and practice resources.",
+            exams: "3 Exam Categories",
+            questions: "2,908 MCQs",
+            groupId: "org-apsc"
+        },
+        adre: {
+            name: "Assam Direct Recruitment",
+            category: "RECRUITMENT EXAMS",
+            description: "Explore ADRE examinations and focused recruitment practice.",
+            exams: "4 Exam Categories",
+            questions: "5,700 MCQs",
+            groupId: "org-adre"
+        },
+        "assam-police": {
+            name: "Assam Police",
+            category: "UNIFORMED SERVICES",
+            description: "Explore police recruitment exams and focused practice resources.",
+            exams: "2 Exam Categories",
+            questions: "2,000 MCQs",
+            groupId: "org-assam-police"
+        },
+        ssuhs: {
+            name: "SSUHS",
+            category: "HEALTH EDUCATION",
+            description: "Explore healthcare entrance exams and revision resources.",
+            exams: "2 Exam Categories",
+            questions: "500 MCQs",
+            groupId: "org-ssuhs"
+        }
+    };
 
-    if (organization) {
-        renderOrganization(organization);
-    } else {
-        renderNotFound();
+    const examConfigs = {
+        "assam-vfa": {
+            title: "Assam VFA",
+            organization: "Recruitment Exam",
+            description: "Explore Assam VFA preparation and mock test resources.",
+            about: "Use this page to access preparation resources for the Assam VFA examination."
+        },
+        "anm-entrance": {
+            title: "ANM Entrance",
+            organization: "Healthcare Entrance",
+            description: "Explore ANM entrance preparation and practice resources.",
+            about: "Prepare for the ANM entrance examination using available learning and revision resources."
+        },
+        "adre-grade-iii": {
+            title: "ADRE Grade III",
+            organization: "Assam Direct Recruitment",
+            description: "Explore ADRE Grade III exam preparation and mock tests.",
+            about: "The Grade III practice collection is organized for focused exam preparation."
+        },
+        "adre-grade-iv": {
+            title: "ADRE Grade IV",
+            organization: "Assam Direct Recruitment",
+            description: "Explore ADRE Grade IV exam preparation resources.",
+            about: "Use this page to find Grade IV preparation resources when available."
+        },
+        "driver-recruitment": {
+            title: "Driver Recruitment",
+            organization: "Assam Direct Recruitment",
+            description: "Explore driver recruitment preparation resources.",
+            about: "This section is for driver recruitment practice material."
+        },
+        "adre-other": {
+            title: "Other Recruitment Exams",
+            organization: "Assam Direct Recruitment",
+            description: "Explore other recruitment exam preparation resources.",
+            about: "Additional recruitment exam categories can be listed here."
+        },
+        "assam-police-si": {
+            title: "Sub-Inspector Exam",
+            organization: "Assam Police",
+            description: "Explore Assam Police Sub-Inspector preparation resources.",
+            about: "Use this page to explore SI exam practice and revision resources."
+        },
+        "assam-police-constable": {
+            title: "Constable Exam",
+            organization: "Assam Police",
+            description: "Explore Assam Police constable recruitment practice.",
+            about: "This section is for constable recruitment preparation."
+        },
+        "healthcare-entrance": {
+            title: "Healthcare Entrance Exam",
+            organization: "SSUHS",
+            description: "Explore healthcare entrance preparation resources.",
+            about: "This section organizes healthcare entrance practice material."
+        },
+        "apsc-cce": {
+            title: "Combined Competitive Examination",
+            organization: "APSC",
+            description: "Explore APSC CCE preparation resources.",
+            about: "This section is for Combined Competitive Examination preparation."
+        },
+        "apsc-recruitment": {
+            title: "Recruitment Exam Practice",
+            organization: "APSC",
+            description: "Explore APSC recruitment exam practice.",
+            about: "This section organizes APSC recruitment practice resources."
+        },
+        "apsc-other": {
+            title: "Other APSC Practice",
+            organization: "APSC",
+            description: "Explore additional APSC practice resources.",
+            about: "Additional APSC examination resources can be listed here."
+        }
+    };
+
+    const heroCategory = document.getElementById("organization-category");
+    const heroTitle = document.getElementById("organization-title");
+    const heroDescription = document.getElementById("organization-description");
+    const examCount = document.getElementById("exam-count");
+    const questionCount = document.getElementById("question-count");
+
+    const overview = document.getElementById("organizations-overview");
+    const organizationExams = document.getElementById("organization-exams");
+    const examDetail = document.getElementById("exam-detail");
+
+    const organizationExamsHeading = document.getElementById(
+        "organization-exams-heading"
+    );
+    const organizationExamsDescription = document.getElementById(
+        "organization-exams-description"
+    );
+
+    const examDetailTitle = document.getElementById("exam-detail-title");
+    const examDetailDescription = document.getElementById("exam-detail-description");
+    const examDetailAbout = document.getElementById("exam-detail-about");
+    const examViewTests = document.getElementById("exam-view-tests");
+
+    const primaryLink = document.getElementById("organization-primary-link");
+    const secondaryLink = document.getElementById("organization-secondary-link");
+
+    function setVisible(element, visible) {
+        if (!element) return;
+
+        element.hidden = !visible;
+        element.style.display = visible ? "" : "none";
     }
 
-    examListElement.addEventListener("click", handleExamClick);
-}
+    function setPageTitle(title) {
+        document.title = `${title} | StudyNow`;
+    }
 
-initializeOrganizationPage();
+    function showOverview() {
+        setVisible(overview, true);
+        setVisible(organizationExams, false);
+        setVisible(examDetail, false);
+
+        heroCategory.textContent = "EXAM PREPARATION";
+        heroTitle.textContent = "Explore Organizations";
+        heroDescription.textContent =
+            "Find your examination and explore the available practice and revision resources.";
+        examCount.textContent = "Multiple Organizations";
+        questionCount.textContent = "Exam Preparation";
+
+        primaryLink.href = "#organizations-overview";
+        primaryLink.textContent = "Explore Organizations";
+
+        secondaryLink.href = "mock-tests.html";
+        secondaryLink.textContent = "Browse Mock Tests";
+
+        setPageTitle("Organizations & Exams");
+    }
+
+    function showOrganization(config) {
+        setVisible(overview, false);
+        setVisible(organizationExams, true);
+        setVisible(examDetail, false);
+
+        document.querySelectorAll("[data-org-group]").forEach((group) => {
+            setVisible(group, group.dataset.orgGroup === organizationId);
+        });
+
+        heroCategory.textContent = config.category;
+        heroTitle.textContent = config.name;
+        heroDescription.textContent = config.description;
+        examCount.textContent = config.exams;
+        questionCount.textContent = config.questions;
+
+        organizationExamsHeading.textContent = `${config.name} Exams`;
+        organizationExamsDescription.textContent =
+            `Select an exam category to view its details.`;
+
+        primaryLink.href = "#organization-exams";
+        primaryLink.textContent = "Explore Exams";
+
+        secondaryLink.href = "organization.html";
+        secondaryLink.textContent = "All Organizations";
+
+        setPageTitle(`${config.name} Exams`);
+    }
+
+    function showExam(config) {
+        setVisible(overview, false);
+        setVisible(organizationExams, false);
+        setVisible(examDetail, true);
+
+        heroCategory.textContent = config.organization;
+        heroTitle.textContent = config.title;
+        heroDescription.textContent = config.description;
+        examCount.textContent = "Exam Details";
+        questionCount.textContent = "Practice Resources";
+
+        examDetailTitle.textContent = config.title;
+        examDetailDescription.textContent = config.description;
+        examDetailAbout.textContent = config.about;
+
+        primaryLink.href = "#exam-detail";
+        primaryLink.textContent = "View Exam Details";
+
+        secondaryLink.href = "organization.html";
+        secondaryLink.textContent = "All Organizations";
+
+        examViewTests.href =
+            `mock-tests.html?exam=${encodeURIComponent(examId)}`;
+
+        setPageTitle(config.title);
+    }
+
+    function showNotFound() {
+        setVisible(overview, false);
+        setVisible(organizationExams, false);
+        setVisible(examDetail, true);
+
+        heroCategory.textContent = "STUDYNOW";
+        heroTitle.textContent = "Exam Not Found";
+        heroDescription.textContent =
+            "This exam or organization is unavailable. Return to the organizations list and select an available option.";
+
+        examCount.textContent = "Explore";
+        questionCount.textContent = "Available Exams";
+
+        examDetailTitle.textContent = "Unavailable Exam";
+        examDetailDescription.textContent =
+            "Choose an organization or exam from the available StudyNow listings.";
+        examDetailAbout.textContent =
+            "This URL does not match a currently available static exam entry.";
+
+        primaryLink.href = "organization.html";
+        primaryLink.textContent = "All Organizations";
+
+        secondaryLink.href = "mock-tests.html";
+        secondaryLink.textContent = "Browse Mock Tests";
+
+        setPageTitle("Exam Not Found");
+    }
+
+    if (examId) {
+        const config = examConfigs[examId];
+
+        if (config) {
+            showExam(config);
+        } else {
+            showNotFound();
+        }
+
+        return;
+    }
+
+    if (organizationId) {
+        const config = organizationConfigs[organizationId];
+
+        if (config) {
+            showOrganization(config);
+        } else {
+            showNotFound();
+        }
+
+        return;
+    }
+
+    showOverview();
+});
