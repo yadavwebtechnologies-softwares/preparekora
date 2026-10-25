@@ -1,295 +1,291 @@
-/* ==========================================
-   StudyNow — Current Affairs
-   Design and Develop by Yadav Web Technologies
-========================================== */
+
+/* =====================================================
+   studyKora — Current Affairs
+   Category selection, search, URL state and page headings
+===================================================== */
 
 "use strict";
 
 document.addEventListener("DOMContentLoaded", () => {
-    const categoryButtons = document.querySelectorAll(
-        "[data-affairs-category]"
+    const searchInput = document.getElementById("current-affairs-search");
+
+    const categoryCards = Array.from(
+        document.querySelectorAll("[data-ca-card]")
     );
 
-    const resourceList = document.getElementById("affairs-resource-list");
-    const resourceHeading = document.getElementById("resource-heading");
-    const resourceSection = document.getElementById("practice-resources");
+    const filterButtons = Array.from(
+        document.querySelectorAll("[data-ca-filter]")
+    );
 
-    if (!resourceList || !resourceHeading) return;
+    const mainHero = document.getElementById(
+        "current-affairs-main-hero"
+    );
 
-    /* ==========================================
-       1. RESOURCE CONFIGURATION
+    const categoryHero = document.getElementById(
+        "current-affairs-category-hero"
+    );
 
-       All destination URLs use existing page names.
-       Replace resource data with real content later.
-    ========================================== */
+    const categoryLabel = document.getElementById(
+        "current-affairs-category-label"
+    );
 
-    const resourceGroups = {
+    const categoryTitle = document.getElementById(
+        "current-affairs-category-title"
+    );
+
+    const categoryDescription = document.getElementById(
+        "current-affairs-category-description"
+    );
+
+    const contentHeading = document.getElementById(
+        "current-affairs-content-heading"
+    );
+
+    const contentDescription = document.getElementById(
+        "current-affairs-content-description"
+    );
+
+    const resultCount = document.getElementById(
+        "current-affairs-result-count"
+    );
+
+    const emptyTitle = document.getElementById(
+        "current-affairs-empty-title"
+    );
+
+    const emptyDescription = document.getElementById(
+        "current-affairs-empty-description"
+    );
+
+    const categoryDetails = {
         daily: {
-            heading: "Daily Current Affairs Resources",
-            resources: [
-                {
-                    title: "Daily Practice",
-                    category: "PRACTICE",
-                    description: "Explore available daily question sets.",
-                    href: "daily-practice.html#daily-sets",
-                    icon: "practice"
-                },
-                {
-                    title: "Mock Tests",
-                    category: "EXAM PREPARATION",
-                    description: "Explore available competitive exam tests.",
-                    href: "mock-tests.html",
-                    icon: "test"
-                },
-                {
-                    title: "Subject Revision",
-                    category: "REVISION",
-                    description: "Choose a subject for focused practice.",
-                    href: "subjects.html#available-subjects",
-                    icon: "book"
-                }
-            ]
+            title: "Daily Updates",
+            description:
+                "Review dated current affairs updates and important events for competitive exam preparation.",
+            contentHeading: "Daily Current Affairs",
+            contentDescription:
+                "Search and explore daily news and revision material.",
+            emptyTitle: "Daily updates are not available yet",
+            emptyDescription:
+                "Verified, dated current affairs content will appear here once it is added."
         },
 
         assam: {
-            heading: "Assam Current Affairs Resources",
-            resources: [
-                {
-                    title: "Assam Exam Preparation",
-                    category: "EXAM PREPARATION",
-                    description: "Explore available Assam exam resources.",
-                    href: "organization.html",
-                    icon: "book"
-                },
-                {
-                    title: "Mock Tests",
-                    category: "PRACTICE",
-                    description: "Browse available examination practice tests.",
-                    href: "mock-tests.html",
-                    icon: "test"
-                },
-                {
-                    title: "Daily Practice",
-                    category: "DAILY LEARNING",
-                    description: "Continue your daily study routine.",
-                    href: "daily-practice.html",
-                    icon: "practice"
-                }
-            ]
+            title: "Assam Affairs",
+            description:
+                "Explore Assam-related events, government initiatives, culture and important developments.",
+            contentHeading: "Assam Current Affairs",
+            contentDescription:
+                "Find updates related to Assam and its important developments.",
+            emptyTitle: "Assam updates are not available yet",
+            emptyDescription:
+                "Verified Assam-related updates will appear here once they are added."
         },
 
         national: {
-            heading: "National Current Affairs Resources",
-            resources: [
-                {
-                    title: "Mock Tests",
-                    category: "EXAM PREPARATION",
-                    description: "Browse available competitive exam tests.",
-                    href: "mock-tests.html",
-                    icon: "test"
-                },
-                {
-                    title: "General Knowledge",
-                    category: "SUBJECT PRACTICE",
-                    description: "Explore general knowledge practice.",
-                    href: "test.html?subject=general-knowledge",
-                    icon: "book"
-                },
-                {
-                    title: "Subject Revision",
-                    category: "REVISION",
-                    description: "Browse available study subjects.",
-                    href: "subjects.html#available-subjects",
-                    icon: "practice"
-                }
-            ]
+            title: "National Affairs",
+            description:
+                "Review important national developments, public policies and events across India.",
+            contentHeading: "National Current Affairs",
+            contentDescription:
+                "Explore national updates relevant to competitive examinations.",
+            emptyTitle: "National updates are not available yet",
+            emptyDescription:
+                "Verified, dated national updates will appear here once they are added."
         },
 
         quiz: {
-            heading: "Current Affairs Quiz Resources",
-            resources: [
-                {
-                    title: "Daily Practice Sets",
-                    category: "QUESTION SETS",
-                    description: "Explore available daily question sets.",
-                    href: "daily-practice.html#daily-sets",
-                    icon: "practice"
-                },
-                {
-                    title: "Mock Test Practice",
-                    category: "MOCK TESTS",
-                    description: "Browse available mock tests.",
-                    href: "mock-tests.html",
-                    icon: "test"
-                },
-                {
-                    title: "Subject-wise Practice",
-                    category: "SUBJECTS",
-                    description: "Choose a subject to continue practising.",
-                    href: "subjects.html#available-subjects",
-                    icon: "book"
-                }
-            ]
+            title: "Current Affairs Quiz",
+            description:
+                "Test your understanding of current affairs through multiple-choice questions.",
+            contentHeading: "Current Affairs Practice",
+            contentDescription:
+                "Search and explore available current affairs practice material.",
+            emptyTitle: "Current affairs quizzes are not available yet",
+            emptyDescription:
+                "Quiz cards will appear here once question sets are configured."
         }
     };
 
+    let activeCategory = "all";
 
-    /* ==========================================
-       2. SVG ICONS
-    ========================================== */
-
-    const icons = {
-        practice: `
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M5 3h14v18H5z"/>
-                <path d="m8 9 2 2 4-4M8 15h8"/>
-            </svg>
-        `,
-
-        test: `
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <rect x="4" y="3" width="16" height="18" rx="2"/>
-                <path d="M8 8h8M8 12h8M8 16h5"/>
-            </svg>
-        `,
-
-        book: `
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H20v19H7.5
-                         A3.5 3.5 0 0 0 4 24z"/>
-                <path d="M4 5.5V24M8 7h8M8 11h8"/>
-            </svg>
-        `
-    };
-
-
-    /* ==========================================
-       3. CREATE RESOURCE CARDS
-    ========================================== */
-
-    function createResourceCard(resource) {
-        const link = document.createElement("a");
-
-        link.className = "listing-card";
-        link.href = resource.href;
-
-        const icon = document.createElement("span");
-        icon.className = "card-icon";
-        icon.setAttribute("aria-hidden", "true");
-        icon.style.background = "var(--green-soft)";
-        icon.style.color = "var(--green)";
-        icon.innerHTML = icons[resource.icon] || icons.book;
-
-        const content = document.createElement("span");
-        content.className = "card-content";
-
-        const category = document.createElement("span");
-        category.className = "card-category";
-        category.textContent = resource.category;
-
-        const title = document.createElement("span");
-        title.className = "card-title";
-        title.textContent = resource.title;
-
-        const description = document.createElement("span");
-        description.className = "card-description";
-        description.textContent = resource.description;
-
-        content.append(category, title, description);
-
-        const arrow = document.createElement("span");
-        arrow.className = "card-arrow";
-        arrow.setAttribute("aria-hidden", "true");
-        arrow.textContent = "›";
-
-        link.append(icon, content, arrow);
-
-        return link;
+    function normalize(value) {
+        return String(value || "").trim().toLocaleLowerCase();
     }
 
+    function getCategoryFromCard(card) {
+        return card.dataset.caId || "";
+    }
 
-    /* ==========================================
-       4. RENDER SELECTED CATEGORY
-    ========================================== */
+    function updateUrl(category) {
+        const url = new URL(window.location.href);
 
-    function renderResources(categoryId, updateUrl = true) {
-        const group = resourceGroups[categoryId];
+        if (category === "all") {
+            url.searchParams.delete("category");
+        } else {
+            url.searchParams.set("category", category);
+        }
 
-        if (!group) {
-            resourceHeading.textContent = "Current Affairs Resources";
+        window.history.replaceState({}, "", url);
+    }
 
-            categoryButtons.forEach((button) => {
-                button.setAttribute("aria-pressed", "false");
-            });
+    function updateBanner(category) {
+        const isSpecificCategory =
+            category !== "all" && Boolean(categoryDetails[category]);
 
-            resourceList.replaceChildren();
+        if (mainHero) {
+            mainHero.hidden = isSpecificCategory;
+        }
 
-            const fragment = document.createDocumentFragment();
+        if (categoryHero) {
+            categoryHero.hidden = !isSpecificCategory;
+        }
 
-            resourceGroups.daily.resources.forEach((resource) => {
-                fragment.appendChild(createResourceCard(resource));
-            });
-
-            resourceList.appendChild(fragment);
+        if (!isSpecificCategory) {
+            document.title = "Current Affairs | studyKora";
             return;
         }
 
-        resourceHeading.textContent = group.heading;
+        const details = categoryDetails[category];
 
-        categoryButtons.forEach((button) => {
-            const isSelected =
-                button.dataset.affairsCategory === categoryId;
+        if (categoryLabel) {
+            categoryLabel.textContent = "Current Affairs";
+        }
 
-            button.setAttribute("aria-pressed", String(isSelected));
+        if (categoryTitle) {
+            categoryTitle.textContent = details.title;
+        }
+
+        if (categoryDescription) {
+            categoryDescription.textContent = details.description;
+        }
+
+        if (contentHeading) {
+            contentHeading.textContent = details.contentHeading;
+        }
+
+        if (contentDescription) {
+            contentDescription.textContent =
+                details.contentDescription;
+        }
+
+        if (emptyTitle) {
+            emptyTitle.textContent = details.emptyTitle;
+        }
+
+        if (emptyDescription) {
+            emptyDescription.textContent = details.emptyDescription;
+        }
+
+        document.title = `${details.title} | studyKora`;
+    }
+
+    function updateFilters() {
+        filterButtons.forEach((button) => {
+            const isActive =
+                button.dataset.caFilter === activeCategory;
+
+            button.classList.toggle("is-active", isActive);
+            button.setAttribute("aria-pressed", String(isActive));
+        });
+    }
+
+    function updateCards() {
+        const query = normalize(searchInput?.value);
+        let visibleCount = 0;
+
+        categoryCards.forEach((card) => {
+            const category = getCategoryFromCard(card);
+
+            const searchableText = normalize([
+                card.dataset.caName,
+                card.dataset.caDescription,
+                card.dataset.caKeywords,
+                card.textContent
+            ].join(" "));
+
+            const matchesSearch = searchableText.includes(query);
+
+            const matchesCategory =
+                activeCategory === "all" ||
+                category === activeCategory;
+
+            const isVisible = matchesSearch && matchesCategory;
+
+            card.hidden = !isVisible;
+
+            if (isVisible) {
+                visibleCount += 1;
+            }
         });
 
-        const fragment = document.createDocumentFragment();
-
-        group.resources.forEach((resource) => {
-            fragment.appendChild(createResourceCard(resource));
-        });
-
-        resourceList.replaceChildren(fragment);
-
-        if (updateUrl) {
-            const url = new URL(window.location.href);
-            url.searchParams.set("category", categoryId);
-
-            window.history.replaceState({}, "", url);
+        if (resultCount) {
+            resultCount.textContent =
+                `${visibleCount} ${
+                    visibleCount === 1 ? "category" : "categories"
+                } found`;
         }
     }
 
+    function setCategory(category, syncUrl = true) {
+        const isValidCategory =
+            category === "all" ||
+            Object.prototype.hasOwnProperty.call(
+                categoryDetails,
+                category
+            );
 
-    /* ==========================================
-       5. CATEGORY BUTTONS
-    ========================================== */
+        activeCategory = isValidCategory ? category : "all";
 
-    categoryButtons.forEach((button) => {
+        updateBanner(activeCategory);
+        updateFilters();
+        updateCards();
+
+        if (syncUrl) {
+            updateUrl(activeCategory);
+        }
+    }
+
+    /* Category filter buttons */
+
+    filterButtons.forEach((button) => {
         button.addEventListener("click", () => {
-            const categoryId = button.dataset.affairsCategory;
+            const category = button.dataset.caFilter;
 
-            if (!resourceGroups[categoryId]) return;
-
-            renderResources(categoryId);
-
-            resourceSection?.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
+            if (category) {
+                setCategory(category);
+            }
         });
     });
 
+    /* Search category cards */
 
-    /* ==========================================
-       6. INITIAL STATE FROM URL
-    ========================================== */
-
-    const params = new URLSearchParams(window.location.search);
-    const initialCategory = params.get("category");
-
-    if (initialCategory && resourceGroups[initialCategory]) {
-        renderResources(initialCategory, false);
-    } else {
-        renderResources(null, false);
+    if (searchInput) {
+        searchInput.addEventListener("input", updateCards);
     }
+
+    /* Support direct links such as ?category=assam */
+
+    function loadCategoryFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const requestedCategory = normalize(params.get("category"));
+
+        if (
+            requestedCategory &&
+            Object.prototype.hasOwnProperty.call(
+                categoryDetails,
+                requestedCategory
+            )
+        ) {
+            setCategory(requestedCategory, false);
+        } else {
+            setCategory("all", false);
+        }
+    }
+
+    window.addEventListener("popstate", loadCategoryFromUrl);
+
+    /* Initial page state */
+
+    loadCategoryFromUrl();
 });
