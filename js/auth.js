@@ -1,57 +1,174 @@
-/* ==========================================
-   StudyNow — Authentication UI Controller
-   Design and Develop by Yadav Web Technologies
-========================================== */
+
+/* =====================================================
+   studyKora — Authentication Page
+   Login, signup, recovery UI and frontend validation
+   Firebase/backend authentication is not connected yet
+===================================================== */
 
 "use strict";
 
 document.addEventListener("DOMContentLoaded", () => {
-    /* ==========================================
-       1. SELECT AUTHENTICATION MODE
-    ========================================== */
+    const $ = (id) => document.getElementById(id);
 
-    const validModes = ["login", "signup", "forgot"];
-    const params = new URLSearchParams(window.location.search);
-    const requestedMode = params.get("mode") || "login";
+    const panels = Array.from(
+        document.querySelectorAll("[data-auth-panel]")
+    );
 
-    const activeMode = validModes.includes(requestedMode)
-        ? requestedMode
-        : "login";
+    const validModes = new Set(["login", "signup", "forgot"]);
 
-    document.querySelectorAll("[data-auth-panel]").forEach((panel) => {
-        panel.hidden = panel.dataset.authPanel !== activeMode;
-    });
+    /* 1. URL-based authentication panels */
 
+    function getModeFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const mode = (params.get("mode") || "login").toLowerCase();
 
-    /* ==========================================
-       2. VALIDATE WHATSAPP NUMBER FORMAT
-
-       This checks only the format.
-       It does not verify account ownership.
-    ========================================== */
-
-    function isValidWhatsAppNumber(value) {
-        const digits = value.replace(/\D/g, "");
-        return digits.length >= 8 && digits.length <= 15;
+        return validModes.has(mode) ? mode : "login";
     }
 
+    function updateUrl(mode) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("mode", mode);
 
-    /* ==========================================
-       3. PASSWORD VISIBILITY
-    ========================================== */
+        window.history.pushState({ mode }, "", url);
+    }
 
-    document.querySelectorAll("[data-toggle-password]").forEach((button) => {
-        button.addEventListener("click", () => {
-            const input = document.getElementById(
-                button.dataset.togglePassword
+    function clearMessages() {
+        [
+            "login-message",
+            "signup-message",
+            "forgot-message"
+        ].forEach((id) => {
+            const element = $(id);
+
+            if (!element) return;
+
+            element.textContent = "";
+            element.classList.remove("is-error", "is-success");
+            delete element.dataset.type;
+        });
+    }
+
+    function showPanel(mode, changeUrl = false) {
+        const safeMode = validModes.has(mode) ? mode : "login";
+
+        panels.forEach((panel) => {
+            panel.hidden = panel.dataset.authPanel !== safeMode;
+        });
+
+        const titles = {
+            login: "Login | studyKora",
+            signup: "Create Account | studyKora",
+            forgot: "Recover Account | studyKora"
+        };
+
+        document.title = titles[safeMode];
+
+        clearMessages();
+
+        if (changeUrl) {
+            updateUrl(safeMode);
+        }
+
+        const activePanel = document.querySelector(
+            `[data-auth-panel="${safeMode}"]`
+        );
+
+        const firstInput = activePanel?.querySelector("input");
+
+        if (firstInput) {
+            firstInput.focus({ preventScroll: true });
+        }
+    }
+
+    document.querySelectorAll("[data-show-auth]").forEach((link) => {
+        link.addEventListener("click", (event) => {
+            const mode = link.dataset.showAuth;
+
+            if (!validModes.has(mode)) return;
+
+            event.preventDefault();
+            showPanel(mode, true);
+        });
+    });
+
+    window.addEventListener("popstate", () => {
+        showPanel(getModeFromUrl());
+    });
+
+    /* 2. Form messages and validation */
+
+    function setMessage(element, message, type = "") {
+        if (!element) return;
+
+        element.textContent = message;
+        element.classList.remove("is-error", "is-success");
+
+        if (type === "error") {
+            element.classList.add("is-error");
+        } else if (type === "success") {
+            element.classList.add("is-success");
+        }
+
+        if (type) {
+            element.dataset.type = type;
+        } else {
+            delete element.dataset.type;
+        }
+    }
+
+    function validateForm(form, messageElement) {
+        if (!form) return false;
+
+        if (!form.checkValidity()) {
+            form.reportValidity();
+
+            setMessage(
+                messageElement,
+                "Please complete all required fields with valid information.",
+                "error"
             );
 
-            if (!input) return;
+            return false;
+        }
 
+        return true;
+    }
+
+    function normalizeEmail(value) {
+        return String(value || "").trim().toLowerCase();
+    }
+
+    function normalizePhone(value) {
+        return String(value || "").replace(/\D/g, "");
+    }
+
+    function isValidPhone(value) {
+        const digits = normalizePhone(value);
+        return digits.length >= 10 && digits.length <= 15;
+    }
+
+    /* 3. Password visibility */
+
+    /*
+       Shared script.js initializes the password toggles first.
+       This fallback initializes them only if they are not ready.
+    */
+
+    document.querySelectorAll("[data-toggle-password]").forEach((button) => {
+        if (button.dataset.passwordToggleReady === "true") return;
+
+        const input = $(button.dataset.togglePassword);
+
+        if (!input) return;
+
+        button.dataset.passwordToggleReady = "true";
+
+        button.addEventListener("click", () => {
             const shouldShow = input.type === "password";
 
             input.type = shouldShow ? "text" : "password";
             button.textContent = shouldShow ? "Hide" : "Show";
+
             button.setAttribute("aria-pressed", String(shouldShow));
             button.setAttribute(
                 "aria-label",
@@ -60,176 +177,238 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    /* 4. Login form */
 
-    /* ==========================================
-       4. LOGIN
+    const loginForm = $("login-form");
+    const loginMessage = $("login-message");
 
-       Connect Firebase Authentication here later.
-    ========================================== */
+    loginForm?.addEventListener("submit", (event) => {
+        event.preventDefault();
 
-    const loginForm = document.getElementById("login-form");
-    const loginMessage = document.getElementById("login-message");
+        if (!validateForm(loginForm, loginMessage)) return;
 
-    if (loginForm && loginMessage) {
-        loginForm.addEventListener("submit", (event) => {
-            event.preventDefault();
+        const email = normalizeEmail($("login-email")?.value);
+        const password = $("login-password")?.value || "";
 
-            loginMessage.textContent =
-                "Login is not active yet. Firebase Authentication must be connected.";
-        });
+        if (!email || !password) {
+            setMessage(
+                loginMessage,
+                "Enter your email address and password.",
+                "error"
+            );
+
+            return;
+        }
+
+        setMessage(
+            loginMessage,
+            "Frontend validation passed. Sign-in is not connected yet; Firebase Authentication must be integrated.",
+            "error"
+        );
+    });
+
+    /* 5. Signup form */
+
+    const signupForm = $("signup-form");
+    const signupMessage = $("signup-message");
+
+    signupForm?.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        if (!validateForm(signupForm, signupMessage)) return;
+
+        const name = String($("signup-name")?.value || "").trim();
+        const email = normalizeEmail($("signup-email")?.value);
+        const whatsapp = String($("signup-whatsapp")?.value || "").trim();
+        const password = $("signup-password")?.value || "";
+        const confirmPassword =
+            $("signup-confirm-password")?.value || "";
+
+        if (name.length < 2) {
+            setMessage(
+                signupMessage,
+                "Please enter your full name.",
+                "error"
+            );
+
+            $("signup-name")?.focus();
+            return;
+        }
+
+        if (!email) {
+            setMessage(
+                signupMessage,
+                "Enter a valid email address.",
+                "error"
+            );
+
+            $("signup-email")?.focus();
+            return;
+        }
+
+        if (!isValidPhone(whatsapp)) {
+            setMessage(
+                signupMessage,
+                "Enter a valid WhatsApp number, including your country code.",
+                "error"
+            );
+
+            $("signup-whatsapp")?.focus();
+            return;
+        }
+
+        if (password.length < 8) {
+            setMessage(
+                signupMessage,
+                "Your password must contain at least 8 characters.",
+                "error"
+            );
+
+            $("signup-password")?.focus();
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setMessage(
+                signupMessage,
+                "The passwords do not match. Please check both fields.",
+                "error"
+            );
+
+            $("signup-confirm-password")?.focus();
+            return;
+        }
+
+        setMessage(
+            signupMessage,
+            "Your details passed frontend checks. Account creation requires Firebase Authentication and secure WhatsApp-number storage.",
+            "error"
+        );
+    });
+
+    /* 6. Forgot-password form */
+
+    const forgotForm = $("forgot-form");
+    const forgotMessage = $("forgot-message");
+    const resetFields = $("forgot-reset-fields");
+
+    /*
+       Reset fields stay hidden until a trusted verification
+       flow is integrated. Browser-side checks cannot verify
+       whether email and WhatsApp belong to the same account.
+    */
+
+    if (resetFields) {
+        resetFields.hidden = true;
     }
 
+    forgotForm?.addEventListener("submit", (event) => {
+        event.preventDefault();
 
-    /* ==========================================
-       5. SIGNUP
+        if (!validateForm(forgotForm, forgotMessage)) return;
 
-       Required fields:
-       Name, email, WhatsApp, password,
-       confirm password.
-    ========================================== */
+        const email = normalizeEmail($("forgot-email")?.value);
+        const whatsapp = String($("forgot-whatsapp")?.value || "").trim();
 
-    const signupForm = document.getElementById("signup-form");
-    const signupName = document.getElementById("signup-name");
-    const signupEmail = document.getElementById("signup-email");
-    const signupWhatsApp = document.getElementById("signup-whatsapp");
-    const signupPassword = document.getElementById("signup-password");
-    const signupConfirmPassword = document.getElementById(
-        "signup-confirm-password"
-    );
-    const signupMessage = document.getElementById("signup-message");
+        if (!email) {
+            setMessage(
+                forgotMessage,
+                "Enter your registered email address.",
+                "error"
+            );
 
-    if (signupForm && signupMessage) {
-        signupForm.addEventListener("submit", (event) => {
-            event.preventDefault();
-            signupMessage.textContent = "";
+            $("forgot-email")?.focus();
+            return;
+        }
 
-            if (!isValidWhatsAppNumber(signupWhatsApp.value.trim())) {
-                signupMessage.textContent =
-                    "Enter a valid WhatsApp number with its country code.";
-                signupWhatsApp.focus();
-                return;
-            }
+        if (!isValidPhone(whatsapp)) {
+            setMessage(
+                forgotMessage,
+                "Enter a valid WhatsApp number, including your country code.",
+                "error"
+            );
 
-            if (signupPassword.value !== signupConfirmPassword.value) {
-                signupMessage.textContent = "Passwords do not match.";
-                signupConfirmPassword.focus();
-                return;
-            }
+            $("forgot-whatsapp")?.focus();
+            return;
+        }
 
-            /*
-             * Later integration:
-             * 1. Create the Firebase Auth account.
-             * 2. Verify the WhatsApp number using an OTP service.
-             * 3. Store the verified WhatsApp number with the user's
-             *    profile in Firebase Realtime Database.
-             *
-             * Do not store passwords in Realtime Database.
-             */
+        setMessage(
+            forgotMessage,
+            "The recovery form is ready. Account verification is not connected yet. A trusted backend must verify the registered details and issue a verification code.",
+            "error"
+        );
+    });
 
-            signupMessage.textContent =
-                "Form validation passed. Account creation and WhatsApp verification require backend integration.";
+    /* 7. Password reset button */
+
+    const resetButton = $("forgot-reset-submit");
+
+    resetButton?.addEventListener("click", () => {
+        const otp = String($("forgot-otp")?.value || "").trim();
+        const password = $("forgot-new-password")?.value || "";
+        const confirmPassword =
+            $("forgot-confirm-password")?.value || "";
+
+        if (!otp || !password || !confirmPassword) {
+            setMessage(
+                forgotMessage,
+                "Enter the verification code and both new-password fields after account verification is enabled.",
+                "error"
+            );
+
+            return;
+        }
+
+        if (password.length < 8) {
+            setMessage(
+                forgotMessage,
+                "The new password must contain at least 8 characters.",
+                "error"
+            );
+
+            $("forgot-new-password")?.focus();
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setMessage(
+                forgotMessage,
+                "The new passwords do not match.",
+                "error"
+            );
+
+            $("forgot-confirm-password")?.focus();
+            return;
+        }
+
+        setMessage(
+            forgotMessage,
+            "Password reset is not connected yet. The verification code must be validated by the backend before a password can be changed.",
+            "error"
+        );
+    });
+
+    /* 8. Normalize phone formatting on blur */
+
+    ["signup-whatsapp", "forgot-whatsapp"].forEach((id) => {
+        const input = $(id);
+
+        input?.addEventListener("blur", () => {
+            const value = String(input.value || "").trim();
+
+            if (!value) return;
+
+            const digits = normalizePhone(value);
+
+            input.value = value.startsWith("+")
+                ? `+${digits}`
+                : digits;
         });
-    }
+    });
 
+    /* 9. Initial panel */
 
-    /* ==========================================
-       6. FORGOT PASSWORD — ACCOUNT DETAILS
-
-       Email + WhatsApp number are required.
-       Client-side code must not decide whether
-       the pair matches a registered account.
-    ========================================== */
-
-    const forgotForm = document.getElementById("forgot-form");
-    const forgotEmail = document.getElementById("forgot-email");
-    const forgotWhatsApp = document.getElementById("forgot-whatsapp");
-    const forgotMessage = document.getElementById("forgot-message");
-
-    const verificationFields = document.getElementById(
-        "forgot-verification-fields"
+    showPanel(
+        new URLSearchParams(window.location.search).get("mode") || "login"
     );
-
-    if (forgotForm && forgotMessage) {
-        forgotForm.addEventListener("submit", (event) => {
-            event.preventDefault();
-            forgotMessage.textContent = "";
-
-            if (!forgotEmail.checkValidity()) {
-                forgotMessage.textContent =
-                    "Enter a valid registered email address.";
-                forgotEmail.focus();
-                return;
-            }
-
-            if (!isValidWhatsAppNumber(forgotWhatsApp.value.trim())) {
-                forgotMessage.textContent =
-                    "Enter a valid WhatsApp number with its country code.";
-                forgotWhatsApp.focus();
-                return;
-            }
-
-            /*
-             * Backend flow to implement:
-             * 1. Match email + WhatsApp number against the account.
-             * 2. If the pair matches, initiate WhatsApp OTP delivery.
-             * 3. Verify the OTP on the server.
-             * 4. Permit password reset only after OTP verification.
-             *
-             * Never trust a browser-only match or a client-set flag.
-             */
-
-            if (verificationFields) {
-                verificationFields.hidden = true;
-            }
-
-            forgotMessage.textContent =
-                "Secure account verification is not connected yet. Password reset will be enabled after email/WhatsApp matching and WhatsApp OTP verification are implemented.";
-        });
-    }
-
-
-    /* ==========================================
-       7. COMPLETE PASSWORD RESET
-
-       This handler deliberately does not reset
-       a password in the static frontend.
-    ========================================== */
-
-    const completeResetButton = document.getElementById(
-        "complete-password-reset"
-    );
-
-    const forgotOtp = document.getElementById("forgot-otp");
-    const resetPassword = document.getElementById("reset-password");
-    const resetConfirmPassword = document.getElementById(
-        "reset-confirm-password"
-    );
-
-    if (completeResetButton && forgotMessage) {
-        completeResetButton.addEventListener("click", () => {
-            if (!forgotOtp.value.trim()) {
-                forgotMessage.textContent =
-                    "Enter the WhatsApp verification code.";
-                forgotOtp.focus();
-                return;
-            }
-
-            if (resetPassword.value.length < 8) {
-                forgotMessage.textContent =
-                    "Your new password must contain at least 8 characters.";
-                resetPassword.focus();
-                return;
-            }
-
-            if (resetPassword.value !== resetConfirmPassword.value) {
-                forgotMessage.textContent =
-                    "The new passwords do not match.";
-                resetConfirmPassword.focus();
-                return;
-            }
-
-            forgotMessage.textContent =
-                "Password reset is not active yet. The OTP must be verified by the backend before the password can be changed.";
-        });
-    }
 });
