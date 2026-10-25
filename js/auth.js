@@ -1,10 +1,9 @@
-
 "use strict";
 
 document.addEventListener("DOMContentLoaded", () => {
     const $ = (id) => document.getElementById(id);
 
-    // studyKora Cloudflare Worker
+    // StudyKora Cloudflare Worker
     const API_BASE =
         "https://studykora-api.yadavsubba2003.workers.dev";
 
@@ -30,15 +29,19 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         } catch {
             throw new Error(
-                "Could not connect to studyKora. Please check your internet connection."
+                "Could not connect to StudyKora. Please check your internet connection."
             );
         }
 
         const data = await response.json().catch(() => ({}));
 
-        if (!response.ok || !data.ok) {
+        // Worker returns { error: "..." } on failure and
+        // does not require an { ok: true } field on success.
+        if (!response.ok) {
             throw new Error(
-                data.message || "Request failed. Please try again."
+                data.message ||
+                data.error ||
+                "Request failed. Please try again."
             );
         }
 
@@ -46,17 +49,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function saveSession(data) {
-        if (!data.idToken || !data.refreshToken || !data.user?.uid) {
+        if (
+            !data.idToken ||
+            !data.refreshToken ||
+            !(data.user?.uid || data.user?.localId) ||
+            !data.user?.email
+        ) {
             throw new Error(
                 "The server returned an invalid session. Please try again."
             );
         }
 
+        const user = {
+            ...data.user,
+            uid: data.user.uid || data.user.localId,
+            localId: data.user.localId || data.user.uid
+        };
+
         try {
             sessionStorage.setItem(
                 SESSION_KEY,
                 JSON.stringify({
-                    user: data.user,
+                    user,
                     idToken: data.idToken,
                     refreshToken: data.refreshToken,
                     expiresIn: data.expiresIn,
@@ -123,9 +137,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         document.title = {
-            login: "Login | studyKora",
-            signup: "Create Account | studyKora",
-            forgot: "Recover Account | studyKora"
+            login: "Login | StudyKora",
+            signup: "Create Account | StudyKora",
+            forgot: "Recover Account | StudyKora"
         }[safeMode];
 
         clearMessages();
@@ -188,7 +202,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!button) return;
 
         if (busy) {
-            button.dataset.originalText = button.textContent;
+            if (!button.dataset.originalText) {
+                button.dataset.originalText = button.textContent;
+            }
+
             button.textContent = busyText;
             button.disabled = true;
         } else {
@@ -253,11 +270,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             setMessage(
                 loginMessage,
-                "Login successful. Opening studyKora...",
+                "Login successful. Opening StudyKora...",
                 "success"
             );
 
-            window.location.assign("./dashboard.html");
+            // Login lands on the homepage, not the dashboard.
+            window.location.assign("./index.html");
         } catch (error) {
             setMessage(
                 loginMessage,
@@ -345,11 +363,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             setMessage(
                 signupMessage,
-                "Account created successfully. Opening studyKora...",
+                "Account created successfully. Opening StudyKora...",
                 "success"
             );
 
-            window.location.assign("./dashboard.html");
+            // Signup also lands on the homepage.
+            window.location.assign("./index.html");
         } catch (error) {
             setMessage(
                 signupMessage,
@@ -368,11 +387,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const resetFields = $("forgot-reset-fields");
     const forgotWhatsapp = $("forgot-whatsapp");
 
-    // Current Worker supports Firebase email-link recovery,
-    // not WhatsApp OTP recovery.
+    // Current Worker supports email-link recovery, not WhatsApp OTP.
     if (resetFields) resetFields.hidden = true;
 
-    // WhatsApp is not used by the current email-recovery endpoint.
     if (forgotWhatsapp) {
         forgotWhatsapp.required = false;
         forgotWhatsapp.removeAttribute("required");
@@ -381,15 +398,16 @@ document.addEventListener("DOMContentLoaded", () => {
     forgotForm?.addEventListener("submit", async (event) => {
         event.preventDefault();
 
-        const email = normalizeEmail($("forgot-email")?.value);
+        const emailInput = $("forgot-email");
+        const email = normalizeEmail(emailInput?.value);
 
-        if (!email || !$("forgot-email")?.checkValidity()) {
+        if (!email || !emailInput?.checkValidity()) {
             setMessage(
                 forgotMessage,
                 "Enter a valid registered email address.",
                 "error"
             );
-            $("forgot-email")?.reportValidity();
+            emailInput?.reportValidity();
             return;
         }
 
