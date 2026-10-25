@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Explore organization-wise competitive exam practice and mock tests on StudyNow.">
 
-    <title>Organization Exams — StudyNow</title>
+    <title>Organizations & Exams | StudyNow</title>
+    <meta name="description" content="Explore organizations, competitive exams and mock test preparation resources on StudyNow.">
+    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/organization.html">
+    <meta name="robots" content="index, follow">
 
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
@@ -13,31 +15,23 @@
 </head>
 
 <body>
-
-    <!-- Shared Header -->
     <header class="site-header">
         <div class="header-inner">
-
             <a href="index.html" class="brand" aria-label="StudyNow Home">
                 <span class="brand-name">StudyNow</span>
                 <span class="brand-caption">Learn. Practice. Progress.</span>
             </a>
 
             <nav class="main-nav" id="main-nav" aria-label="Main navigation">
-                <a href="index.html#current-affairs">Current Affairs</a>
-                <a href="index.html#featured-tests">Mock Tests</a>
-                <a href="index.html#subjects">Subjects</a>
-                <a href="index.html#daily-practice">Daily Practice</a>
+                <a href="current-affairs.html">Current Affairs</a>
+                <a href="mock-tests.html">Mock Tests</a>
+                <a href="subjects.html">Subjects</a>
+                <a href="daily-practice.html">Daily Practice</a>
             </nav>
 
             <div class="header-actions">
-                <button type="button" class="btn btn-outline" data-action="login">
-                    Login
-                </button>
-
-                <button type="button" class="btn btn-primary" data-action="signup">
-                    Create Account
-                </button>
+                <a href="auth.html?mode=login" class="btn btn-outline">Login</a>
+                <a href="auth.html?mode=signup" class="btn btn-primary">Create Account</a>
             </div>
 
             <button
@@ -52,60 +46,58 @@
                 <span></span>
                 <span></span>
             </button>
-
         </div>
     </header>
 
     <main id="main-content">
-
-        <!-- Shared Hero Design -->
-        <section class="hero-section" id="organization-hero">
-
+        <section class="hero-section">
             <div class="hero-content">
                 <span class="eyebrow" id="organization-category">
                     EXAM PREPARATION
                 </span>
 
-                <h1 id="organization-title">Organization Exams</h1>
+                <h1 id="organization-title">Explore Organizations</h1>
 
                 <p id="organization-description">
-                    Explore available exam categories and practice resources
-                    to prepare for your competitive examinations.
+                    Find your examination and explore the available
+                    practice and revision resources.
                 </p>
 
                 <div class="hero-actions">
-                    <a href="#choose-exam" class="btn btn-primary btn-large">
-                        Explore Exams
+                    <a href="#organizations-overview"
+                       class="btn btn-primary btn-large"
+                       id="organization-primary-link">
+                        Explore Organizations
                     </a>
 
-                    <a href="index.html#organizations" class="btn btn-outline btn-large">
-                        All Organizations
+                    <a href="mock-tests.html"
+                       class="btn btn-outline btn-large"
+                       id="organization-secondary-link">
+                        Browse Mock Tests
                     </a>
                 </div>
 
                 <div class="hero-highlights">
-                    <span id="exam-count">Exam categories</span>
-                    <span id="question-count">Practice questions</span>
-                    <span>Focused preparation</span>
+                    <span id="exam-count">Multiple Organizations</span>
+                    <span id="question-count">Exam Preparation</span>
+                    <span>Focused Practice</span>
                 </div>
             </div>
 
-            <!-- Reuse Existing Hero Visual -->
             <div class="hero-visual">
                 <div class="visual-topline">
                     <span class="visual-dot" aria-hidden="true"></span>
-                    <span>YOUR PREPARATION</span>
+                    <span>STUDYNOW EXAM PREPARATION</span>
                 </div>
 
                 <div class="visual-main">
-                    <span class="visual-label">STUDYNOW EXAM PREPARATION</span>
+                    <span class="visual-label">YOUR PREPARATION</span>
                     <h2>Explore.<br>Practice.<br>Improve.</h2>
 
                     <div class="visual-progress">
                         <span class="progress-track">
                             <span class="progress-value"></span>
                         </span>
-
                         <span class="progress-caption">
                             Every practice session counts
                         </span>
@@ -124,140 +116,288 @@
                     </div>
                 </div>
             </div>
-
         </section>
 
-        <!-- Exam Categories -->
-        <section class="content-section" id="choose-exam">
-
+        <!-- Organization overview: visible when no query is selected -->
+        <section class="content-section" id="organizations-overview">
             <div class="section-heading">
                 <div>
-                    <h2 class="section-title">Choose Your Exam</h2>
-                </div>
-
-                <a href="index.html#organizations" class="view-all">
-                    All Organizations <span aria-hidden="true">›</span>
-                </a>
-            </div>
-
-            <div class="listing-grid" id="organization-exam-list">
-                <!-- Exam cards generated by organization.js -->
-            </div>
-
-        </section>
-
-        <!-- Previous Year Papers -->
-        <section class="content-section feature-section" id="previous-papers">
-
-            <div class="section-heading">
-                <div>
-                    <h2 class="section-title">Previous Year Papers</h2>
+                    <h2 class="section-title">Choose an Organization</h2>
+                    <p>Select an organization to view its examination categories.</p>
                 </div>
             </div>
 
             <div class="listing-grid">
-
-                <article class="listing-card">
+                <a href="organization.html?org=apsc" class="listing-card">
                     <span class="card-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M6 3.5h8l4 4v13H6z"></path>
-                            <path d="M14 3.5v4h4M9 12h6M9 16h6"></path>
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="m3 8 9-5 9 5M4 20h16"/>
+                            <path d="M6 9v8M10 9v8M14 9v8M18 9v8M3 21h18"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
-                        <span class="card-title">Previous Year Question Papers</span>
+                        <span class="card-category">STATE EXAMINATIONS</span>
+                        <span class="card-title">APSC</span>
                         <span class="card-description">
-                            Previous papers and revision resources
+                            Explore Assam Public Service Commission exam preparation.
                         </span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </article>
+                </a>
 
-                <article class="listing-card">
+                <a href="organization.html?org=adre" class="listing-card">
                     <span class="card-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <rect x="5" y="4" width="14" height="17" rx="2"></rect>
-                            <path d="M9 4V3h6v1M8 10h8M8 14h8M8 17h5"></path>
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="4" y="3" width="16" height="18" rx="2"/>
+                            <path d="M8 8h8M8 12h8M8 16h5"/>
                         </svg>
                     </span>
-
                     <span class="card-content">
-                        <span class="card-title">Revision Practice</span>
+                        <span class="card-category">RECRUITMENT EXAMS</span>
+                        <span class="card-title">Assam Direct Recruitment</span>
                         <span class="card-description">
-                            Review important topics and questions
+                            Explore ADRE Grade III, Grade IV and related exams.
                         </span>
                     </span>
-
                     <span class="card-arrow" aria-hidden="true">›</span>
-                </article>
+                </a>
 
+                <a href="organization.html?org=assam-police" class="listing-card">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/>
+                            <path d="m8.5 12 2.2 2.2 4.8-5"/>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-category">UNIFORMED SERVICES</span>
+                        <span class="card-title">Assam Police</span>
+                        <span class="card-description">
+                            Explore police recruitment and SI exam preparation.
+                        </span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+
+                <a href="organization.html?org=ssuhs" class="listing-card">
+                    <span class="card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="4" y="4" width="16" height="16" rx="2"/>
+                            <path d="M12 7v10M7 12h10"/>
+                        </svg>
+                    </span>
+                    <span class="card-content">
+                        <span class="card-category">HEALTH EDUCATION</span>
+                        <span class="card-title">SSUHS</span>
+                        <span class="card-description">
+                            Explore healthcare entrance exam preparation.
+                        </span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
             </div>
-
         </section>
 
-        <!-- About -->
-        <section class="content-section" id="about-exams">
-
+        <!-- Organization exam categories: all cards are authored in HTML -->
+        <section class="content-section" id="organization-exams" hidden>
             <div class="section-heading">
                 <div>
-                    <h2 class="section-title">About These Exams</h2>
+                    <h2 class="section-title" id="organization-exams-heading">
+                        Available Exams
+                    </h2>
+                    <p id="organization-exams-description">
+                        Select an examination to view its details.
+                    </p>
+                </div>
+
+                <a href="organization.html" class="view-all">
+                    All Organizations <span aria-hidden="true">›</span>
+                </a>
+            </div>
+
+            <div class="listing-grid" id="org-apsc" data-org-group="apsc" hidden>
+                <a href="organization.html?exam=apsc-cce" class="listing-card">
+                    <span class="card-content">
+                        <span class="card-category">APSC</span>
+                        <span class="card-title">Combined Competitive Examination</span>
+                        <span class="card-description">Explore CCE exam preparation.</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+
+                <a href="organization.html?exam=apsc-recruitment" class="listing-card">
+                    <span class="card-content">
+                        <span class="card-category">APSC</span>
+                        <span class="card-title">Recruitment Exam Practice</span>
+                        <span class="card-description">Browse recruitment exam preparation.</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+
+                <a href="organization.html?exam=apsc-other" class="listing-card">
+                    <span class="card-content">
+                        <span class="card-category">APSC</span>
+                        <span class="card-title">Other APSC Practice</span>
+                        <span class="card-description">Explore additional practice resources.</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+            </div>
+
+            <div class="listing-grid" id="org-adre" data-org-group="adre" hidden>
+                <a href="organization.html?exam=adre-grade-iii" class="listing-card">
+                    <span class="card-content">
+                        <span class="card-category">ASSAM DIRECT RECRUITMENT</span>
+                        <span class="card-title">ADRE Grade III</span>
+                        <span class="card-description">Explore Grade III mock test preparation.</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+
+                <a href="organization.html?exam=adre-grade-iv" class="listing-card">
+                    <span class="card-content">
+                        <span class="card-category">ASSAM DIRECT RECRUITMENT</span>
+                        <span class="card-title">ADRE Grade IV</span>
+                        <span class="card-description">Explore Grade IV exam preparation.</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+
+                <a href="organization.html?exam=driver-recruitment" class="listing-card">
+                    <span class="card-content">
+                        <span class="card-category">ASSAM DIRECT RECRUITMENT</span>
+                        <span class="card-title">Driver Recruitment</span>
+                        <span class="card-description">Explore driver recruitment practice.</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+
+                <a href="organization.html?exam=adre-other" class="listing-card">
+                    <span class="card-content">
+                        <span class="card-category">ASSAM DIRECT RECRUITMENT</span>
+                        <span class="card-title">Other Recruitment Exams</span>
+                        <span class="card-description">Explore additional recruitment exams.</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+            </div>
+
+            <div class="listing-grid" id="org-assam-police"
+                 data-org-group="assam-police" hidden>
+                <a href="organization.html?exam=assam-police-si" class="listing-card">
+                    <span class="card-content">
+                        <span class="card-category">ASSAM POLICE</span>
+                        <span class="card-title">Sub-Inspector Exam</span>
+                        <span class="card-description">Explore SI exam preparation.</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+
+                <a href="organization.html?exam=assam-police-constable" class="listing-card">
+                    <span class="card-content">
+                        <span class="card-category">ASSAM POLICE</span>
+                        <span class="card-title">Constable Exam</span>
+                        <span class="card-description">Explore constable recruitment practice.</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+            </div>
+
+            <div class="listing-grid" id="org-ssuhs" data-org-group="ssuhs" hidden>
+                <a href="organization.html?exam=anm-entrance" class="listing-card">
+                    <span class="card-content">
+                        <span class="card-category">SSUHS</span>
+                        <span class="card-title">ANM Entrance</span>
+                        <span class="card-description">Explore ANM entrance preparation.</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+
+                <a href="organization.html?exam=healthcare-entrance" class="listing-card">
+                    <span class="card-content">
+                        <span class="card-category">SSUHS</span>
+                        <span class="card-title">Healthcare Entrance Exam</span>
+                        <span class="card-description">Explore healthcare entrance practice.</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+            </div>
+        </section>
+
+        <!-- Exam detail view: static content; JS selects the relevant section -->
+        <section class="content-section" id="exam-detail" hidden>
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">EXAM DETAILS</span>
+                    <h2 class="section-title" id="exam-detail-title">Exam Details</h2>
+                    <p id="exam-detail-description">
+                        Explore the examination and its available practice resources.
+                    </p>
                 </div>
             </div>
 
-            <p id="organization-about-text">
-                StudyNow organizes competitive exam preparation resources
-                so students can explore relevant exams and practice material.
-            </p>
+            <div class="why-card">
+                <h3>About this exam</h3>
+                <p id="exam-detail-about">
+                    Exam-specific information will be listed here.
+                </p>
+            </div>
 
+            <div class="listing-grid">
+                <a href="mock-tests.html" class="listing-card" id="exam-view-tests">
+                    <span class="card-content">
+                        <span class="card-category">PRACTICE</span>
+                        <span class="card-title">View Mock Tests</span>
+                        <span class="card-description">
+                            Explore the available mock test collection.
+                        </span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+
+                <a href="subjects.html" class="listing-card">
+                    <span class="card-content">
+                        <span class="card-category">SUBJECT REVISION</span>
+                        <span class="card-title">Explore Subjects</span>
+                        <span class="card-description">
+                            Choose a subject for focused practice.
+                        </span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+            </div>
         </section>
-
     </main>
 
-    <!-- Shared Footer -->
     <footer class="site-footer">
-
         <div class="footer-main">
-
             <div class="footer-brand">
                 <a href="index.html" class="brand">
                     <span class="brand-name">StudyNow</span>
                 </a>
-
-                <p>
-                    A focused platform for competitive exam preparation,
-                    mock tests and subject-wise practice.
-                </p>
+                <p>A focused platform for competitive exam preparation and subject-wise practice.</p>
             </div>
 
             <div class="footer-column">
                 <h2>Explore</h2>
-                <a href="index.html#current-affairs">Current Affairs</a>
-                <a href="index.html#featured-tests">Mock Tests</a>
-                <a href="index.html#subjects">Subjects</a>
-                <a href="index.html#daily-practice">Daily Practice</a>
+                <a href="current-affairs.html">Current Affairs</a>
+                <a href="mock-tests.html">Mock Tests</a>
+                <a href="subjects.html">Subjects</a>
+                <a href="daily-practice.html">Daily Practice</a>
             </div>
 
             <div class="footer-column">
-                <h2>StudyNow</h2>
-                <a href="index.html#why-studynow">About StudyNow</a>
+                <h2>Account</h2>
+                <a href="auth.html?mode=login">Login</a>
+                <a href="auth.html?mode=signup">Create Account</a>
                 <a href="index.html">Back to Home</a>
             </div>
-
         </div>
 
         <div class="footer-bottom">
-            <p class="site-credit">
-                Design and Develop by Yadav Web Technologies
-            </p>
-
-            <p class="copyright">
-                StudyNow. All rights reserved.
-            </p>
+            <p class="site-credit">Design and Develop by Yadav Web Technologies</p>
+            <p class="copyright">StudyNow. All rights reserved.</p>
         </div>
-
     </footer>
-
 </body>
 </html>
