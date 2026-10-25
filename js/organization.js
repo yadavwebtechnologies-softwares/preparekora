@@ -1,470 +1,468 @@
-
-/* =====================================================
-   studyKora — Organization Page
-   Search, category filters, organization details,
-   exam listings and navigation
-===================================================== */
-
 "use strict";
 
 document.addEventListener("DOMContentLoaded", () => {
-    const searchInput = document.getElementById("organization-search");
+    const el = {
+        directoryHero: document.getElementById("organization-directory-hero"),
+        detailHero: document.getElementById("organization-detail-hero"),
+        directory: document.getElementById("organization-directory"),
+        detailContent: document.getElementById("organization-detail-content"),
 
-    const organizationCards = Array.from(
-        document.querySelectorAll("[data-org-card]")
-    );
+        search: document.getElementById("organization-search"),
+        filters: document.getElementById("organization-filters"),
+        grid: document.getElementById("organization-grid"),
+        resultCount: document.getElementById("organization-result-count"),
+        emptyState: document.getElementById("organization-empty-state"),
 
-    const filterButtons = Array.from(
-        document.querySelectorAll("[data-org-filter]")
-    );
+        category: document.getElementById("organization-detail-category"),
+        title: document.getElementById("organization-detail-title"),
+        description: document.getElementById("organization-detail-description"),
+        resourceCount: document.getElementById("organization-detail-exam-count"),
 
-    const resultCount = document.getElementById(
-        "organization-result-count"
-    );
-
-    const emptyState = document.getElementById(
-        "organization-empty-state"
-    );
-
-    const directoryHero = document.getElementById(
-        "organization-directory-hero"
-    );
-
-    const detailHero = document.getElementById(
-        "organization-detail-hero"
-    );
-
-    const directorySection = document.getElementById(
-        "organization-directory"
-    );
-
-    const detailSection = document.getElementById(
-        "organization-detail-content"
-    );
-
-    const detailTitle = document.getElementById(
-        "organization-detail-title"
-    );
-
-    const detailCategory = document.getElementById(
-        "organization-detail-category"
-    );
-
-    const detailDescription = document.getElementById(
-        "organization-detail-description"
-    );
-
-    const detailExamCount = document.getElementById(
-        "organization-detail-exam-count"
-    );
-
-    const detailAbout = document.getElementById(
-        "organization-detail-about"
-    );
-
-    const examList = document.getElementById(
-        "organization-exam-list"
-    );
-
-    const examEmptyState = document.getElementById(
-        "organization-exams-empty"
-    );
-
-    if (!organizationCards.length) return;
+        about: document.getElementById("organization-detail-about"),
+        resourceList: document.getElementById("organization-exam-list"),
+        resourcesEmpty: document.getElementById("organization-exams-empty")
+    };
 
     /*
-     * Frontend sample data.
-     * Exam entries are starting points for the UI.
-     * Configure verified exam details and question sets
-     * before publishing actual practice content.
+     * Verified organization and examination-process information.
+     * Official references are included to help users verify details.
      */
+    const organizationData = {
 
-    const organizations = {
-        apsc: {
-            name: "APSC",
-            fullName: "Assam Public Service Commission",
-            category: "Civil Services",
-            categoryId: "administration",
+        "apsc": {
+            name: "Assam Public Service Commission (APSC)",
+            category: "State Public Service Commission",
+            filter: "administration",
 
             description:
-                "Explore preparation areas for examinations conducted by the Assam Public Service Commission.",
+                "Assam's state public service commission responsible for recruitment and advisory functions within its prescribed scope.",
 
             about:
-                "Use this section to organize subject-wise practice and mock-test links for APSC examinations. Configure the applicable exam syllabus, question sets and test instructions before publishing.",
+                "The Assam Public Service Commission (APSC) performs functions under Article 320 of the Constitution of India and applicable rules. Its responsibilities include advertising and selecting candidates for posts within the Commission's purview and advising the Government of Assam on matters such as service rules, appointment principles, promotions and disciplinary matters affecting state civil services. The exact scope depends on the applicable rules and the particular recruitment notice.",
 
-            exams: [
+            resources: [
                 {
-                    id: "apsc-cce",
-                    name: "APSC Combined Competitive Examination",
-                    description: "General studies and competitive exam practice",
-                    questions: "Configure question count"
+                    title: "APSC Official Website",
+                    description:
+                        "Visit the Commission's official website for recruitment advertisements, examination notices, eligibility requirements, schedules and results.",
+                    url: "http://apsc.nic.in/",
+                    label: "Visit APSC"
                 },
                 {
-                    id: "apsc-general-studies",
-                    name: "APSC General Studies Practice",
-                    description: "General studies practice questions",
-                    questions: "Practice set"
+                    title: "APSC Functions — Government of Assam",
+                    description:
+                        "Read the Assam Government Personnel Department's explanation of the Commission's constitutional functions and responsibilities.",
+                    url: "https://personnel.assam.gov.in/about-us/our-divisions-field-offices",
+                    label: "Read Official Information"
                 }
             ]
         },
 
-        adre: {
-            name: "ADRE",
-            fullName: "Assam Direct Recruitment Examination",
-            category: "Recruitment",
-            categoryId: "recruitment",
+        "adre": {
+            name: "Assam Direct Recruitment Examination (ADRE)",
+            category: "State Recruitment Process",
+            filter: "recruitment",
 
             description:
-                "Explore preparation sections for Assam Direct Recruitment examinations.",
+                "A state-level recruitment examination process for specified Assam Government posts, including Grade III and Grade IV recruitment.",
 
             about:
-                "This section is intended for ADRE-related subject practice and mock tests. Configure the relevant grade, syllabus, marking scheme and question set for each examination.",
+                "ADRE means Assam Direct Recruitment Examination. It is a recruitment examination process, not a separate permanent regulatory authority. For state-wide Grade III and Grade IV recruitment, the relevant State Level Recruitment Commissions publish notices and examination-related information for their respective post categories. Candidates should follow the specific recruitment advertisement to confirm the responsible commission, eligibility, selection stages, deadlines and application portal.",
 
-            exams: [
+            resources: [
                 {
-                    id: "adre-grade-iii",
-                    name: "ADRE Grade III",
-                    description: "Grade III preparation and practice",
-                    questions: "Configure question count"
+                    title: "State Level Recruitment Commission — Class III",
+                    description:
+                        "Official portal associated with Class III recruitment. Check the latest notices and confirm that a link applies to your recruitment cycle.",
+                    url: "https://slrcg3.sebaonline.org/",
+                    label: "Open Class III Portal"
                 },
                 {
-                    id: "adre-grade-iv",
-                    name: "ADRE Grade IV",
-                    description: "Grade IV preparation and practice",
-                    questions: "Configure question count"
+                    title: "State Level Recruitment Commission — Class IV",
+                    description:
+                        "Official portal associated with Class IV recruitment. Consult the relevant advertisement for current instructions and candidate updates.",
+                    url: "https://slrcg4.sebaonline.org/",
+                    label: "Open Class IV Portal"
+                },
+                {
+                    title: "Government of Assam — SLRC Recruitment Information",
+                    description:
+                        "Government department information concerning Grade III and Grade IV recruitment through the State Level Recruitment Commissions.",
+                    url: "https://directoradulteducation.assam.gov.in/latest/recruitment-of-grade-iii-and-grade-iv-through-slrc",
+                    label: "View Government Information"
                 }
             ]
         },
 
         "assam-police": {
             name: "Assam Police",
-            fullName: "Assam Police Recruitment",
-            category: "Police Recruitment",
-            categoryId: "police",
+            category: "State Police Force",
+            filter: "police",
 
             description:
-                "Find preparation sections for Assam Police recruitment examinations.",
+                "The state police force responsible for law enforcement, public order and crime prevention and detection in Assam.",
 
             about:
-                "Use this section to organize police recruitment practice tests. Add verified syllabus topics, eligibility-specific test sets and accurate exam instructions before publishing.",
+                "Assam Police works to maintain law and order, prevent and detect crime, enforce the law impartially and protect the rights of citizens. Recruitment is a separate process from these policing responsibilities. For posts advertised through the State Level Police Recruitment Board (SLPRB), candidates should consult the relevant recruitment notification and official application portal to confirm post-specific eligibility, selection stages and dates.",
 
-            exams: [
+            resources: [
                 {
-                    id: "assam-police-si",
-                    name: "Assam Police Sub-Inspector",
-                    description: "Sub-Inspector recruitment practice",
-                    questions: "Configure question count"
+                    title: "Assam Police — Mission Statement",
+                    description:
+                        "Official Government of Assam information explaining the police force's responsibilities, including maintaining order and preventing and detecting crime.",
+                    url: "https://police.assam.gov.in/about-us/detail/mission-statement",
+                    label: "Read Police Responsibilities"
                 },
                 {
-                    id: "assam-police-constable",
-                    name: "Assam Police Constable",
-                    description: "Constable recruitment practice",
-                    questions: "Configure question count"
+                    title: "State Level Police Recruitment Board (SLPRB)",
+                    description:
+                        "Recruitment portal referenced in Assam Government recruitment notices. Check the latest official advertisement before applying.",
+                    url: "http://slprbassam.in/",
+                    label: "Open Recruitment Portal"
                 }
             ]
         },
 
-        ssuhs: {
-            name: "SSUHS",
-            fullName:
-                "Srimanta Sankaradeva University of Health Sciences",
-
-            category: "Health Sciences",
-            categoryId: "health",
+        "ssuhs": {
+            name: "Srimanta Sankaradeva University of Health Sciences (SSUHS)",
+            category: "State Health Sciences University",
+            filter: "health",
 
             description:
-                "Explore health sciences entrance and examination preparation sections.",
+                "An Assam state university established for health sciences education and academic development.",
 
             about:
-                "This section can contain nursing entrance and health sciences practice material. Verify the admission process, examination details and syllabus for each applicable course.",
+                "Srimanta Sankaradeva University of Health Sciences was established under the Srimanta Sankaradeva University of Health Sciences Act, 2007, and began in 2009. Its jurisdiction extends across Assam. The University aims to support health sciences education, promote academic development and collaboration, and help maintain uniform standards across health sciences faculties. It also publishes information concerning entrance examinations and admissions for programmes under its responsibility. The particular notice determines which examination or admission process applies.",
 
-            exams: [
+            resources: [
                 {
-                    id: "anm-entrance",
-                    name: "ANM Entrance Practice",
-                    description: "Nursing entrance preparation",
-                    questions: "Configure question count"
+                    title: "SSUHS Official Website",
+                    description:
+                        "Visit the University website for official announcements, academic information, admission notices and examination updates.",
+                    url: "https://ssuhs.ac.in/",
+                    label: "Visit SSUHS"
                 },
                 {
-                    id: "health-sciences-practice",
-                    name: "Health Sciences Practice",
-                    description: "Health sciences subject practice",
-                    questions: "Practice set"
+                    title: "SSUHS — Government of Assam Information",
+                    description:
+                        "Government of Assam information about the University's establishment, jurisdiction, mission and academic objectives.",
+                    url: "https://gmch.assam.gov.in/about-us/affiliated-university-ssuhs",
+                    label: "Read University Information"
                 }
             ]
         },
 
         "assam-tet": {
-            name: "Assam TET",
-            fullName: "Assam Teacher Eligibility Test",
-            category: "Education",
-            categoryId: "education",
+            name: "Assam Teacher Eligibility Test (TET)",
+            category: "Teacher Eligibility Examination",
+            filter: "education",
 
             description:
-                "Explore teacher eligibility exam preparation sections.",
+                "An eligibility test used in the teacher qualification process under applicable national and state rules.",
 
             about:
-                "This section can organize teaching aptitude, language, child development and subject-based practice. Configure the relevant paper and syllabus before publishing test material.",
+                "The Teacher Eligibility Test (TET) is an examination, not a government authority or recruiting organisation. It assesses eligibility for specified teaching levels under the applicable rules. Passing TET does not by itself guarantee a teaching appointment: candidates must also meet the required academic and professional qualifications and participate in the relevant recruitment process. The responsible department, examination arrangements and eligible language mediums depend on the specific TET notification.",
 
-            exams: [
+            resources: [
                 {
-                    id: "assam-tet-paper-i",
-                    name: "TET Paper I Practice",
-                    description: "Primary-level teacher eligibility preparation",
-                    questions: "Practice set"
+                    title: "SCERT Assam — TET Notification",
+                    description:
+                        "Official State Council of Educational Research and Training information and notifications concerning Assam TET examinations.",
+                    url: "https://scert.assam.gov.in/latest/notification-regarding-special-tet-2026-for-up-and-lp-level",
+                    label: "Read SCERT Notification"
                 },
                 {
-                    id: "assam-tet-paper-ii",
-                    name: "TET Paper II Practice",
-                    description: "Upper-primary teacher eligibility preparation",
-                    questions: "Practice set"
+                    title: "Special Assam TET Examination Portal",
+                    description:
+                        "Official examination portal associated with the Special Assam TET 2026 notification. Check whether the notice applies to your category and medium.",
+                    url: "https://sebamis.sebaonline.org/spltet2026/",
+                    label: "Open Examination Portal"
                 }
             ]
         },
 
-        ssc: {
-            name: "SSC",
-            fullName: "Staff Selection Commission",
-            category: "Recruitment",
-            categoryId: "recruitment",
+        "ssc": {
+            name: "Staff Selection Commission (SSC)",
+            category: "Central Government Recruitment Commission",
+            filter: "recruitment",
 
             description:
-                "Explore general recruitment preparation sections for SSC examinations.",
+                "A central recruitment commission responsible for selecting candidates for specified posts in Government of India organisations.",
 
             about:
-                "Use this section to organize reasoning, quantitative aptitude, English and general awareness practice for relevant SSC exams.",
+                "The Staff Selection Commission (SSC) conducts recruitment examinations for specified posts in ministries, departments and other organisations of the Government of India. Its responsibilities include recruitment to covered Group B (non-gazetted) and Group C (non-technical) posts, subject to the applicable rules and exemptions. Different examinations cover different qualifications and post categories, so applicants must check the relevant official notification for eligibility, examination scheme, vacancies and deadlines.",
 
-            exams: [
+            resources: [
                 {
-                    id: "ssc-general-practice",
-                    name: "SSC General Practice",
-                    description: "Reasoning, aptitude and general awareness",
-                    questions: "Practice set"
+                    title: "SSC Official Website",
+                    description:
+                        "Official portal for recruitment advertisements, examination calendars, syllabi, candidate instructions, answer keys and results.",
+                    url: "https://ssc.gov.in/",
+                    label: "Visit SSC"
+                },
+                {
+                    title: "SSC — Proactive Disclosures",
+                    description:
+                        "Official information about the Commission's organisation, functions, responsibilities and public disclosures.",
+                    url: "https://ssc.gov.in/rti/proactive-disclosure",
+                    label: "Read Official Disclosure"
                 }
             ]
         }
     };
 
-    let activeCategory = "all";
+    /*
+     * Helper: create elements using textContent to avoid
+     * inserting untrusted strings as HTML.
+     */
+    function createElement(tag, className, text) {
+        const node = document.createElement(tag);
 
-    function normalize(value) {
-        return String(value || "").trim().toLowerCase();
+        if (className) {
+            node.className = className;
+        }
+
+        if (text !== undefined) {
+            node.textContent = text;
+        }
+
+        return node;
     }
 
-    function getOrganizationFromCard(card) {
-        return organizations[card.dataset.orgId] || null;
-    }
+    /*
+     * Search and category filters
+     */
+    function updateDirectory() {
+        if (!el.grid) return;
 
-    /* Search and filter organizations */
+        const searchTerm = el.search
+            ? el.search.value.trim().toLowerCase()
+            : "";
 
-    function updateResults() {
-        const query = normalize(searchInput?.value);
+        const activeButton = el.filters
+            ? el.filters.querySelector(
+                '[data-org-filter][aria-pressed="true"]'
+            )
+            : null;
+
+        const activeFilter = activeButton
+            ? activeButton.dataset.orgFilter
+            : "all";
+
+        const cards = Array.from(
+            el.grid.querySelectorAll("[data-org-card]")
+        );
+
         let visibleCount = 0;
 
-        organizationCards.forEach((card) => {
-            const organization = getOrganizationFromCard(card);
+        cards.forEach((card) => {
+            const name = card.dataset.orgName || "";
+            const id = card.dataset.orgId || "";
+            const category = card.dataset.orgCategory || "";
 
-            if (!organization) {
-                card.hidden = true;
+            const description =
+                card.querySelector(".card-description")?.textContent || "";
+
+            const searchText =
+                `${name} ${id} ${category} ${description}`.toLowerCase();
+
+            const matchesSearch = searchText.includes(searchTerm);
+
+            const matchesCategory =
+                activeFilter === "all" || category === activeFilter;
+
+            const visible = matchesSearch && matchesCategory;
+
+            card.hidden = !visible;
+
+            if (visible) {
+                visibleCount++;
+            }
+        });
+
+        if (el.resultCount) {
+            el.resultCount.textContent =
+                `Showing ${visibleCount} of ${cards.length} organizations.`;
+        }
+
+        if (el.emptyState) {
+            el.emptyState.hidden = visibleCount > 0;
+        }
+    }
+
+    if (el.search) {
+        el.search.addEventListener("input", updateDirectory);
+    }
+
+    if (el.filters) {
+        el.filters.addEventListener("click", (event) => {
+            const button = event.target.closest("[data-org-filter]");
+
+            if (!button || !el.filters.contains(button)) {
                 return;
             }
 
-            const searchableText = normalize([
-                organization.name,
-                organization.fullName,
-                organization.category,
-                organization.description,
-                card.textContent
-            ].join(" "));
+            el.filters
+                .querySelectorAll("[data-org-filter]")
+                .forEach((filterButton) => {
+                    const selected = filterButton === button;
 
-            const matchesSearch = searchableText.includes(query);
+                    filterButton.classList.toggle("is-active", selected);
+                    filterButton.setAttribute(
+                        "aria-pressed",
+                        String(selected)
+                    );
+                });
 
-            const matchesCategory =
-                activeCategory === "all" ||
-                organization.categoryId === activeCategory;
-
-            const isVisible = matchesSearch && matchesCategory;
-
-            card.hidden = !isVisible;
-
-            if (isVisible) visibleCount += 1;
+            updateDirectory();
         });
-
-        if (resultCount) {
-            resultCount.textContent =
-                `${visibleCount} ${
-                    visibleCount === 1 ? "organization" : "organizations"
-                } found`;
-        }
-
-        if (emptyState) {
-            emptyState.hidden = visibleCount !== 0;
-        }
     }
 
-    function setActiveCategory(category) {
-        activeCategory = category;
+    /*
+     * Render official information and reference links
+     * for a selected organization.
+     */
+    function renderOrganization(orgId) {
+        const organization = organizationData[orgId];
 
-        filterButtons.forEach((button) => {
-            const isActive =
-                button.dataset.orgFilter === category;
-
-            button.classList.toggle("is-active", isActive);
-            button.setAttribute("aria-pressed", String(isActive));
-        });
-
-        updateResults();
-    }
-
-    /* Create an exam card safely */
-
-    function createExamCard(exam) {
-        const link = document.createElement("a");
-        link.className = "test-card";
-        link.href = `test.html?test=${encodeURIComponent(exam.id)}`;
-
-        const icon = document.createElement("span");
-        icon.className = "card-icon";
-        icon.setAttribute("aria-hidden", "true");
-
-        const svgNS = "http://www.w3.org/2000/svg";
-        const svg = document.createElementNS(svgNS, "svg");
-
-        svg.setAttribute("viewBox", "0 0 24 24");
-        svg.setAttribute("fill", "none");
-
-        const rect = document.createElementNS(svgNS, "rect");
-        rect.setAttribute("x", "5");
-        rect.setAttribute("y", "3");
-        rect.setAttribute("width", "14");
-        rect.setAttribute("height", "18");
-        rect.setAttribute("rx", "2");
-        rect.setAttribute("stroke", "currentColor");
-        rect.setAttribute("stroke-width", "1.7");
-
-        const path = document.createElementNS(svgNS, "path");
-        path.setAttribute("d", "M9 8h6M9 12h6M9 16h4");
-        path.setAttribute("stroke", "currentColor");
-        path.setAttribute("stroke-width", "1.7");
-        path.setAttribute("stroke-linecap", "round");
-
-        svg.append(rect, path);
-        icon.appendChild(svg);
-
-        const content = document.createElement("span");
-        content.className = "test-card-content";
-
-        const title = document.createElement("span");
-        title.className = "test-card-title";
-        title.textContent = exam.name;
-
-        const metadata = document.createElement("span");
-        metadata.className = "test-card-meta";
-
-        const description = document.createElement("span");
-        description.textContent = exam.description;
-
-        const questionCount = document.createElement("span");
-        questionCount.textContent = exam.questions;
-
-        metadata.append(description, questionCount);
-        content.append(title, metadata);
-
-        const arrow = document.createElement("span");
-        arrow.className = "card-arrow";
-        arrow.setAttribute("aria-hidden", "true");
-        arrow.textContent = "›";
-
-        link.append(icon, content, arrow);
-
-        return link;
-    }
-
-    /* Display selected organization */
-
-    function showOrganization(organizationId) {
-        const organization = organizations[organizationId];
-
-        if (!organization) return false;
-
-        if (directoryHero) directoryHero.hidden = true;
-        if (directorySection) directorySection.hidden = true;
-        if (detailHero) detailHero.hidden = false;
-        if (detailSection) detailSection.hidden = false;
-
-        if (detailTitle) {
-            detailTitle.textContent = organization.fullName;
+        if (!organization) {
+            return false;
         }
 
-        if (detailCategory) {
-            detailCategory.textContent = organization.category;
+        if (el.directoryHero) {
+            el.directoryHero.hidden = true;
         }
 
-        if (detailDescription) {
-            detailDescription.textContent =
-                organization.description;
+        if (el.directory) {
+            el.directory.hidden = true;
         }
 
-        if (detailAbout) {
-            detailAbout.textContent = organization.about;
+        if (el.detailHero) {
+            el.detailHero.hidden = false;
         }
 
-        if (detailExamCount) {
-            const count = organization.exams.length;
-
-            detailExamCount.textContent =
-                `${count} ${count === 1 ? "exam entry" : "exam entries"}`;
+        if (el.detailContent) {
+            el.detailContent.hidden = false;
         }
 
-        if (examList) {
-            examList.replaceChildren();
+        if (el.category) {
+            el.category.textContent = organization.category;
+        }
 
-            organization.exams.forEach((exam) => {
-                examList.appendChild(createExamCard(exam));
+        if (el.title) {
+            el.title.textContent = organization.name;
+        }
+
+        if (el.description) {
+            el.description.textContent = organization.description;
+        }
+
+        if (el.about) {
+            el.about.textContent = organization.about;
+        }
+
+        if (el.resourceCount) {
+            const count = organization.resources.length;
+
+            el.resourceCount.textContent =
+                `${count} official reference${count === 1 ? "" : "s"}`;
+        }
+
+        document.title = `${organization.name} | StudyKora`;
+
+        const metaDescription = document.querySelector(
+            'meta[name="description"]'
+        );
+
+        if (metaDescription) {
+            metaDescription.content = organization.description;
+        }
+
+        /*
+         * Generate official reference cards.
+         */
+        if (el.resourceList) {
+            el.resourceList.replaceChildren();
+
+            organization.resources.forEach((resource) => {
+                const link = createElement("a", "test-card");
+
+                link.href = resource.url;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+                link.setAttribute(
+                    "aria-label",
+                    `${resource.title} — opens in a new tab`
+                );
+
+                const icon = createElement(
+                    "span",
+                    "card-icon",
+                    "↗"
+                );
+
+                icon.setAttribute("aria-hidden", "true");
+
+                const content = createElement(
+                    "span",
+                    "test-card-content"
+                );
+
+                const title = createElement(
+                    "span",
+                    "test-card-title",
+                    resource.title
+                );
+
+                const description = createElement(
+                    "span",
+                    "test-card-meta",
+                    resource.description
+                );
+
+                const label = createElement(
+                    "span",
+                    "card-description",
+                    resource.label
+                );
+
+                content.append(title, description, label);
+
+                const arrow = createElement(
+                    "span",
+                    "card-arrow",
+                    "›"
+                );
+
+                arrow.setAttribute("aria-hidden", "true");
+
+                link.append(icon, content, arrow);
+
+                el.resourceList.appendChild(link);
             });
         }
 
-        if (examEmptyState) {
-            examEmptyState.hidden = organization.exams.length > 0;
+        if (el.resourcesEmpty) {
+            el.resourcesEmpty.hidden =
+                organization.resources.length > 0;
         }
-
-        document.title =
-            `${organization.name} Exams | studyKora`;
 
         return true;
     }
 
-    /* Initialize search */
-
-    if (searchInput) {
-        searchInput.addEventListener("input", updateResults);
-    }
-
-    /* Initialize category filters */
-
-    filterButtons.forEach((button) => {
-        button.addEventListener("click", () => {
-            const category = button.dataset.orgFilter;
-
-            if (category) {
-                setActiveCategory(category);
-            }
-        });
-    });
-
-    /* Load an organization selected through the URL */
-
+    /*
+     * Read selected organization from URL:
+     * organization.html?org=apsc
+     */
     const params = new URLSearchParams(window.location.search);
-    const requestedOrganization = normalize(params.get("org"));
 
-    if (requestedOrganization && organizations[requestedOrganization]) {
-        showOrganization(requestedOrganization);
+    const requestedOrg = (
+        params.get("org") || ""
+    ).trim().toLowerCase();
+
+    if (requestedOrg && organizationData[requestedOrg]) {
+        renderOrganization(requestedOrg);
     } else {
-        if (directoryHero) directoryHero.hidden = false;
-        if (directorySection) directorySection.hidden = false;
-        if (detailHero) detailHero.hidden = true;
-        if (detailSection) detailSection.hidden = true;
-
-        updateResults();
+        updateDirectory();
     }
 });
