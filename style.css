@@ -291,6 +291,14 @@ textarea:focus-visible {
     letter-spacing: -0.45px;
 }
 
+.brand-name-primary {
+    color: #111111;
+}
+
+.brand-name-muted {
+    color: #777777;
+}
+
 .brand-caption {
     margin-top: 3px;
     color: var(--text-muted);
