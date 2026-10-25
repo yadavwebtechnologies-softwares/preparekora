@@ -13,217 +13,171 @@
     <link rel="stylesheet" href="style.css">
 
     <script src="script.js" defer></script>
+    <script src="js/shared-header.js" defer></script>
     <script src="js/subject.js" defer></script>
 </head>
 
 <body class="subject-page">
 
-   <!-- Shared Header -->
-<header class="site-header">
-    <div class="header-inner">
+    <!-- Shared Header -->
+    <header class="site-header">
+        <div class="header-inner">
 
-        <!-- Brand -->
-        <a href="index.html" class="brand" aria-label="studykora home">
-            <span class="brand-mark" aria-hidden="true">
-                <span style="font-size: 23px; font-weight: 800;">s</span>
-            </span>
+            <a href="index.html" class="brand" aria-label="studyKora home">
+                <span class="brand-text">
+                    <span class="brand-name"><span class="brand-name-primary">study</span><span class="brand-name-muted">kora</span></span>
+                </span>
+            </a>
 
-            <span class="brand-text">
-                <span class="brand-name"><span class="brand-name-primary">study</span><span class="brand-name-muted">kora</span></span>
-            </span>
-        </a>
+            <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+                <a href="index.html" data-page="home">Home</a>
+                <a href="subject.html" data-page="subjects" aria-current="page">Subjects</a>
+                <a href="current-affairs.html" data-page="current-affairs">Current Affairs</a>
+                <a href="mock-tests.html" data-page="mock-tests">Mock Tests</a>
+                <a href="daily-practice.html" data-page="daily-practice">Daily Practice</a>
+            </nav>
 
-        <!-- Main Navigation -->
-        <nav class="main-nav" id="main-nav" aria-label="Main navigation">
-            <a href="index.html" aria-current="page">Home</a>
-            <a href="subject.html">Subjects</a>
-            <a href="current-affairs.html">Current Affairs</a>
-            <a href="mock-tests.html">Mock Tests</a>
-            <a href="daily-practice.html">Daily Practice</a>
-        </nav>
+            <div class="header-actions">
 
-        <!-- Header Actions -->
-        <div class="header-actions">
+                <!-- Logged-out User Actions -->
+                <div id="account-guest" class="account-guest">
+                    <a href="auth.html?mode=login"
+                       class="btn btn-outline"
+                       id="account-login-link">
+                        Login
+                    </a>
 
-            <!-- Logged-out User Actions -->
-            <div id="account-guest" class="account-guest">
-                <a
-                    href="auth.html?mode=login"
-                    class="btn btn-outline"
-                    id="account-login-link"
-                >
-                    Login
-                </a>
+                    <a href="auth.html?mode=signup"
+                       class="btn btn-primary"
+                       id="account-register-link">
+                        Create Account
+                    </a>
+                </div>
 
-                <a
-                    href="auth.html?mode=signup"
-                    class="btn btn-primary"
-                    id="account-register-link"
-                >
-                    Create Account
-                </a>
-            </div>
+                <!-- Logged-in User Actions -->
+                <div id="account-authenticated"
+                     class="account-authenticated"
+                     hidden>
 
-            <!-- Logged-in User Actions -->
-            <div
-                id="account-authenticated"
-                class="account-authenticated"
-                hidden
-            >
-                <button
-                    type="button"
-                    class="account-profile-trigger"
-                    id="account-profile-trigger"
-                    aria-label="Open account menu"
-                    aria-controls="account-profile-panel"
-                    aria-expanded="false"
-                >
-                    <svg
-                        id="account-profile-avatar"
-                        viewBox="0 0 24 24"
-                        width="24"
-                        height="24"
-                        fill="none"
-                        aria-hidden="true"
-                    >
-                        <circle
-                            cx="12"
-                            cy="8"
-                            r="4"
-                            stroke="currentColor"
-                            stroke-width="1.7"
-                        />
-                        <path
-                            d="M4.5 20a7.5 7.5 0 0 1 15 0"
-                            stroke="currentColor"
-                            stroke-width="1.7"
-                            stroke-linecap="round"
-                        />
+                    <button
+                        type="button"
+                        class="account-profile-trigger"
+                        id="account-profile-trigger"
+                        aria-label="Open account menu"
+                        aria-controls="account-profile-panel"
+                        aria-expanded="false">
+
+                        <svg id="account-profile-avatar"
+                             viewBox="0 0 24 24"
+                             width="24"
+                             height="24"
+                             fill="none"
+                             aria-hidden="true">
+                            <circle cx="12" cy="8" r="4"
+                                    stroke="currentColor"
+                                    stroke-width="1.7"/>
+                            <path d="M4.5 20a7.5 7.5 0 0 1 15 0"
+                                  stroke="currentColor"
+                                  stroke-width="1.7"
+                                  stroke-linecap="round"/>
+                        </svg>
+                    </button>
+
+                    <!-- Profile Menu -->
+                    <div class="account-profile-panel"
+                         id="account-profile-panel"
+                         hidden>
+
+                        <div class="account-profile-heading">
+
+                            <div class="account-profile-avatar-large"
+                                 id="account-profile-avatar-large"
+                                 aria-hidden="true">
+                                <svg viewBox="0 0 24 24"
+                                     width="30"
+                                     height="30"
+                                     fill="none">
+                                    <circle cx="12" cy="8" r="4"
+                                            stroke="currentColor"
+                                            stroke-width="1.7"/>
+                                    <path d="M4.5 20a7.5 7.5 0 0 1 15 0"
+                                          stroke="currentColor"
+                                          stroke-width="1.7"
+                                          stroke-linecap="round"/>
+                                </svg>
+                            </div>
+
+                            <div class="account-profile-details">
+                                <p id="account-profile-name">Account</p>
+                                <p id="account-profile-email"></p>
+                            </div>
+
+                            <button type="button"
+                                    id="account-panel-close"
+                                    class="account-panel-close"
+                                    aria-label="Close profile menu">
+                                <svg viewBox="0 0 24 24"
+                                     width="18"
+                                     height="18"
+                                     fill="none"
+                                     aria-hidden="true">
+                                    <path d="m6 6 12 12M18 6 6 18"
+                                          stroke="currentColor"
+                                          stroke-width="1.8"
+                                          stroke-linecap="round"/>
+                                </svg>
+                            </button>
+
+                        </div>
+
+                        <div class="account-profile-menu">
+                            <button type="button"
+                                    id="account-settings-open"
+                                    class="account-menu-item">
+                                <svg viewBox="0 0 24 24"
+                                     width="19"
+                                     height="19"
+                                     fill="none"
+                                     aria-hidden="true">
+                                    <circle cx="12" cy="12" r="3"
+                                            stroke="currentColor"
+                                            stroke-width="1.7"/>
+                                    <path d="m19.4 15 .1.1 1.1.9-1.2 2.1-1.4-.5a8 8 0 0 1-1.7 1l-.2 1.5h-2.4l-.3-1.5a8 8 0 0 1-1.8-1l-1.4.5-1.2-2.1 1.1-.9a7 7 0 0 1 0-2l-1.1-.9 1.2-2.1 1.4.5a8 8 0 0 1 1.8-1l.3-1.5h2.4l.2 1.5a8 8 0 0 1 1.7 1l1.4-.5 1.2 2.1-1.1.9a7 7 0 0 1-.1 1.9Z"
+                                          stroke="currentColor"
+                                          stroke-width="1.3"
+                                          stroke-linejoin="round"/>
+                                </svg>
+                                <span>Settings</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Mobile Navigation -->
+                <button type="button"
+                        class="menu-toggle"
+                        id="menu-toggle"
+                        aria-label="Open navigation menu"
+                        aria-controls="main-nav"
+                        aria-expanded="false">
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         aria-hidden="true">
+                        <path d="M4 7h16M4 12h16M4 17h16"
+                              stroke="currentColor"
+                              stroke-width="1.8"
+                              stroke-linecap="round"/>
                     </svg>
                 </button>
 
-                <!-- Profile Menu -->
-                <div
-                    class="account-profile-panel"
-                    id="account-profile-panel"
-                    hidden
-                >
-                    <div class="account-profile-heading">
-
-                        <div
-                            class="account-profile-avatar-large"
-                            id="account-profile-avatar-large"
-                            aria-hidden="true"
-                        >
-                            <svg
-                                viewBox="0 0 24 24"
-                                width="30"
-                                height="30"
-                                fill="none"
-                            >
-                                <circle
-                                    cx="12"
-                                    cy="8"
-                                    r="4"
-                                    stroke="currentColor"
-                                    stroke-width="1.7"
-                                />
-                                <path
-                                    d="M4.5 20a7.5 7.5 0 0 1 15 0"
-                                    stroke="currentColor"
-                                    stroke-width="1.7"
-                                    stroke-linecap="round"
-                                />
-                            </svg>
-                        </div>
-
-                        <div class="account-profile-details">
-                            <p id="account-profile-name">Account</p>
-                            <p id="account-profile-email"></p>
-                        </div>
-
-                        <button
-                            type="button"
-                            id="account-panel-close"
-                            class="account-panel-close"
-                            aria-label="Close profile menu"
-                        >
-                            <svg
-                                viewBox="0 0 24 24"
-                                width="18"
-                                height="18"
-                                fill="none"
-                                aria-hidden="true"
-                            >
-                                <path
-                                    d="m6 6 12 12M18 6 6 18"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="account-profile-menu">
-                        <button
-                            type="button"
-                            id="account-settings-open"
-                            class="account-menu-item"
-                        >
-                            <svg
-                                viewBox="0 0 24 24"
-                                width="19"
-                                height="19"
-                                fill="none"
-                                aria-hidden="true"
-                            >
-                                <circle
-                                    cx="12"
-                                    cy="12"
-                                    r="3"
-                                    stroke="currentColor"
-                                    stroke-width="1.7"
-                                />
-                                <path
-                                    d="m19.4 15 .1.1 1.1.9-1.2 2.1-1.4-.5a8 8 0 0 1-1.7 1l-.2 1.5h-2.4l-.3-1.5a8 8 0 0 1-1.8-1l-1.4.5-1.2-2.1 1.1-.9a7 7 0 0 1 0-2l-1.1-.9 1.2-2.1 1.4.5a8 8 0 0 1 1.8-1l.3-1.5h2.4l.2 1.5a8 8 0 0 1 1.7 1l1.4-.5 1.2 2.1-1.1.9a7 7 0 0 1-.1 1.9Z"
-                                    stroke="currentColor"
-                                    stroke-width="1.3"
-                                    stroke-linejoin="round"
-                                />
-                            </svg>
-                            <span>Settings</span>
-                        </button>
-                    </div>
-                </div>
             </div>
-
-            <!-- Mobile Navigation Toggle -->
-            <button
-                type="button"
-                class="menu-toggle"
-                id="menu-toggle"
-                aria-label="Open navigation menu"
-                aria-controls="main-nav"
-                aria-expanded="false"
-            >
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path
-                        d="M4 7h16M4 12h16M4 17h16"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                    />
-                </svg>
-            </button>
-
         </div>
-    </div>
-</header>
+    </header>
 
     <main class="page-content">
 
-        <!-- Subject Directory Banner -->
+        <!-- Subject Directory Hero -->
         <section class="page-hero" id="subject-directory-hero">
             <div class="page-hero-inner">
 
@@ -256,7 +210,7 @@
             </div>
         </section>
 
-        <!-- Selected Subject Banner: shown by subject.js -->
+        <!-- Selected Subject Hero: Controlled by subject.js -->
         <section class="page-hero" id="subject-detail-hero" hidden>
             <div class="page-hero-inner">
 
@@ -286,14 +240,15 @@
                 </p>
 
                 <div class="hero-actions">
-                    <a href="test.html" id="subject-start-test"
+                    <a href="test.html"
+                       id="subject-start-test"
                        class="btn btn-light btn-large">
                         Start Practice
                         <span aria-hidden="true">&rarr;</span>
                     </a>
 
-                    <a href="subject.html" class="btn btn-outline"
-                       style="background: transparent; color: #fff; border-color: rgba(255,255,255,.6);">
+                    <a href="subject.html"
+                       class="btn btn-outline">
                         All Subjects
                     </a>
                 </div>
@@ -301,7 +256,7 @@
             </div>
         </section>
 
-        <!-- Subject Listing -->
+        <!-- Subject Directory -->
         <section class="content-section" id="subject-directory">
             <div class="container">
 
@@ -314,9 +269,9 @@
                     </div>
                 </div>
 
-                <!-- Search -->
-                <div class="panel" style="margin-bottom: 16px;">
-                    <div class="form-group" style="margin-bottom: 0;">
+                <!-- Subject Search -->
+                <div class="panel subject-search-panel">
+                    <div class="form-group">
                         <label class="form-label" for="subject-search">
                             Search Subjects
                         </label>
@@ -327,13 +282,13 @@
                             id="subject-search"
                             placeholder="Search General Knowledge, English, Geography..."
                             autocomplete="off"
-                            aria-describedby="subject-result-count"
-                        >
+                            aria-describedby="subject-result-count">
                     </div>
                 </div>
 
-                <!-- Filters -->
-                <div class="filter-row" id="subject-filters"
+                <!-- Subject Filters -->
+                <div class="filter-row"
+                     id="subject-filters"
                      aria-label="Filter subjects by category">
 
                     <button type="button"
@@ -379,7 +334,7 @@
                     Browse available subjects below.
                 </p>
 
-                <!-- Cards -->
+                <!-- Subject Cards -->
                 <div class="listing-grid mt-md" id="subject-grid">
 
                     <a href="subject.html?subject=general-knowledge"
@@ -552,7 +507,9 @@
 
                 </div>
 
-                <div class="empty-state mt-md" id="subject-empty-state" hidden>
+                <div class="empty-state mt-md"
+                     id="subject-empty-state"
+                     hidden>
                     <h3>No subjects found</h3>
                     <p>Try another keyword or choose a different category.</p>
                 </div>
@@ -567,11 +524,11 @@
                 <div class="content-columns">
 
                     <div class="content-stack">
+
                         <div class="content-card">
                             <h2 class="section-title">About This Subject</h2>
 
-                            <p class="section-description"
-                               id="subject-detail-about">
+                            <p class="section-description" id="subject-detail-about">
                                 Choose a subject to see its practice information.
                             </p>
 
@@ -588,12 +545,14 @@
                             </p>
 
                             <div class="listing-grid mt-md" id="subject-topics">
-                                <!-- Filled by js/subject.js -->
+                                <!-- Populated by js/subject.js -->
                             </div>
                         </div>
+
                     </div>
 
                     <aside class="content-stack">
+
                         <div class="panel">
                             <h2 class="panel-title">Start Your Preparation</h2>
 
@@ -609,17 +568,54 @@
                             </a>
 
                             <a href="mock-tests.html"
-                               class="btn btn-outline btn-full mt-sm">
+                               class="btn btn-outline btn-full">
                                 Browse Mock Tests
                             </a>
                         </div>
 
                         <div class="notice">
-                            Your practice history and score tracking can be
-                            enabled after account and backend integration.
+                            Practice history and score tracking depend on
+                            the account and backend features being implemented.
                         </div>
+
                     </aside>
 
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Continue Learning -->
+        <section class="content-section">
+            <div class="container">
+
+                <div class="content-card">
+                    <div class="content-columns">
+
+                        <div>
+                            <span class="section-eyebrow">Continue Learning</span>
+                            <h2 class="section-title">Choose Your Next Step</h2>
+
+                            <p class="section-description">
+                                Continue with a mock test, daily practice or current affairs.
+                            </p>
+                        </div>
+
+                        <div class="content-stack">
+                            <a href="mock-tests.html" class="btn btn-primary btn-full">
+                                Browse Mock Tests
+                            </a>
+
+                            <a href="daily-practice.html" class="btn btn-outline btn-full">
+                                Daily Practice
+                            </a>
+
+                            <a href="current-affairs.html" class="btn btn-outline btn-full">
+                                Current Affairs
+                            </a>
+                        </div>
+
+                    </div>
                 </div>
 
             </div>
@@ -633,13 +629,8 @@
 
             <div class="footer-brand">
                 <a href="index.html" class="brand" aria-label="studyKora home">
-                    <span class="brand-mark" aria-hidden="true">
-                        <span style="font-size: 23px; font-weight: 800;">s</span>
-                    </span>
-
                     <span class="brand-text">
-                        <span class="brand-name">studyKora</span>
-                        <span class="brand-caption">Learn. Practice. Progress.</span>
+                        <span class="brand-name"><span class="brand-name-primary">study</span><span class="brand-name-muted">kora</span></span>
                     </span>
                 </a>
 
@@ -651,7 +642,7 @@
             <div class="footer-column">
                 <h3>Practice</h3>
                 <ul class="footer-links">
-                    <li><a href="subject.html">Subjects</a></li>
+                    <li><a href="subject.html" aria-current="page">Subjects</a></li>
                     <li><a href="mock-tests.html">Mock Tests</a></li>
                     <li><a href="daily-practice.html">Daily Practice</a></li>
                     <li><a href="current-affairs.html">Current Affairs</a></li>
@@ -661,10 +652,8 @@
             <div class="footer-column">
                 <h3>Exams</h3>
                 <ul class="footer-links">
-                    <li><a href="organization.html?org=apsc">APSC</a></li>
-                    <li><a href="organization.html?org=adre">ADRE</a></li>
-                    <li><a href="organization.html?org=assam-police">Assam Police</a></li>
-                    <li><a href="organization.html">All Organizations</a></li>
+                    <li><a href="organization.html">Exam Organizations</a></li>
+                    <li><a href="resources.html">Study Resources</a></li>
                 </ul>
             </div>
 
@@ -672,9 +661,9 @@
                 <h3>Information</h3>
                 <ul class="footer-links">
                     <li><a href="why-studynow.html">About</a></li>
-                    <li><a href="resources.html">Resources</a></li>
                     <li><a href="faq.html">FAQs</a></li>
                     <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                    <li><a href="credits.html">Credits</a></li>
                 </ul>
             </div>
 
