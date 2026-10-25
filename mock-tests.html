@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Mock Tests | studyKora</title>
-    <meta name="description" content="Explore mock tests for ADRE, APSC, Assam Police, TET, SSC and other competitive examinations on studyKora.">
+    <title>Mock Tests | StudyKora</title>
+    <meta name="description" content="Explore mock tests for ADRE, APSC, Assam Police, TET, SSC and other competitive examinations on StudyKora.">
     <meta name="theme-color" content="#28734f">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/mock-tests.html">
@@ -13,13 +13,87 @@
     <link rel="stylesheet" href="style.css">
 
     <script src="script.js" defer></script>
+    <script src="js/shared-header.js" defer></script>
     <script src="js/mock-tests.js" defer></script>
 </head>
 
 <body class="mock-tests-page">
 
     <!-- Shared Header -->
-    <div id="site-header"></div>
+    <header class="site-header">
+        <div class="header-inner">
+
+            <a href="index.html" class="brand" aria-label="StudyKora home">
+                <span class="brand-mark" aria-hidden="true">
+                    <span style="font-size:23px;font-weight:800;">s</span>
+                </span>
+                <span class="brand-text">
+                    <span class="brand-name"><span style="color:#111111;">study</span><span style="color:#777777;">kora</span></span>
+                </span>
+            </a>
+
+            <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+                <a href="index.html" data-page="index.html">Home</a>
+                <a href="subject.html" data-page="subject.html">Subjects</a>
+                <a href="current-affairs.html" data-page="current-affairs.html">Current Affairs</a>
+                <a href="mock-tests.html" data-page="mock-tests.html" aria-current="page">Mock Tests</a>
+                <a href="daily-practice.html" data-page="daily-practice.html">Daily Practice</a>
+            </nav>
+
+            <div class="header-actions">
+
+                <div id="account-guest" class="account-guest">
+                    <a href="auth.html?mode=login"
+                       class="btn btn-outline"
+                       id="account-login-link">
+                        Login
+                    </a>
+
+                    <a href="auth.html?mode=signup"
+                       class="btn btn-primary"
+                       id="account-register-link">
+                        Create Account
+                    </a>
+                </div>
+
+                <div id="account-authenticated" class="account-authenticated" hidden>
+                    <a href="profile.html"
+                       class="account-profile-trigger"
+                       id="account-profile-trigger"
+                       aria-label="Open profile"
+                       title="Profile">
+                        <svg id="account-profile-avatar"
+                             viewBox="0 0 24 24"
+                             width="24"
+                             height="24"
+                             fill="none"
+                             aria-hidden="true">
+                            <circle cx="12" cy="8" r="4"
+                                    stroke="currentColor" stroke-width="1.7"/>
+                            <path d="M4.5 20a7.5 7.5 0 0 1 15 0"
+                                  stroke="currentColor" stroke-width="1.7"
+                                  stroke-linecap="round"/>
+                        </svg>
+                    </a>
+                </div>
+
+                <button type="button"
+                        class="menu-toggle"
+                        id="menu-toggle"
+                        aria-label="Open navigation menu"
+                        aria-controls="main-nav"
+                        aria-expanded="false">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M4 7h16M4 12h16M4 17h16"
+                              stroke="currentColor"
+                              stroke-width="1.8"
+                              stroke-linecap="round"/>
+                    </svg>
+                </button>
+
+            </div>
+        </div>
+    </header>
 
     <main class="page-content">
 
@@ -99,16 +173,15 @@
                             Find Your Mock Test
                         </h2>
 
-                        <p class="section-description"
-                           id="mock-list-description">
+                        <p class="section-description" id="mock-list-description">
                             Search by exam name or filter tests by category.
                         </p>
                     </div>
                 </div>
 
                 <!-- Search -->
-                <div class="panel" style="margin-bottom: 15px;">
-                    <div class="form-group" style="margin-bottom: 0;">
+                <div class="panel" style="margin-bottom:15px;">
+                    <div class="form-group" style="margin-bottom:0;">
                         <label class="form-label" for="mock-test-search">
                             Search Mock Tests
                         </label>
@@ -177,7 +250,6 @@
                             aria-pressed="false">
                         Other Exams
                     </button>
-
                 </div>
 
                 <p class="section-description"
@@ -200,8 +272,7 @@
                                 <rect x="5" y="3" width="14" height="18" rx="2"
                                       stroke="currentColor" stroke-width="1.7"/>
                                 <path d="M9 8h6M9 12h6M9 16h4"
-                                      stroke="currentColor"
-                                      stroke-width="1.7"
+                                      stroke="currentColor" stroke-width="1.7"
                                       stroke-linecap="round"/>
                             </svg>
                         </span>
@@ -217,8 +288,7 @@
                             </p>
                         </div>
 
-                        <a href="test.html?test=assam-vfa"
-                           class="btn btn-primary">
+                        <a href="test.html?test=assam-vfa" class="btn btn-primary">
                             Start Test
                         </a>
                     </article>
@@ -232,10 +302,8 @@
                         <span class="card-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <path d="M3 10h18M5 10v9m4-9v9m6-9v9m4-9v9M3 21h18M12 3 2.5 8h19z"
-                                      stroke="currentColor"
-                                      stroke-width="1.7"
-                                      stroke-linecap="round"
-                                      stroke-linejoin="round"/>
+                                      stroke="currentColor" stroke-width="1.7"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </span>
 
@@ -250,8 +318,7 @@
                             </p>
                         </div>
 
-                        <a href="test.html?test=apsc-cce"
-                           class="btn btn-primary">
+                        <a href="test.html?test=apsc-cce" class="btn btn-primary">
                             Start Test
                         </a>
                     </article>
@@ -267,8 +334,7 @@
                                 <rect x="5" y="3" width="14" height="18" rx="2"
                                       stroke="currentColor" stroke-width="1.7"/>
                                 <path d="M9 8h6M9 12h6M9 16h4"
-                                      stroke="currentColor"
-                                      stroke-width="1.7"
+                                      stroke="currentColor" stroke-width="1.7"
                                       stroke-linecap="round"/>
                             </svg>
                         </span>
@@ -284,8 +350,7 @@
                             </p>
                         </div>
 
-                        <a href="test.html?test=adre-grade-iii"
-                           class="btn btn-primary">
+                        <a href="test.html?test=adre-grade-iii" class="btn btn-primary">
                             Start Test
                         </a>
                     </article>
@@ -301,8 +366,7 @@
                                 <rect x="5" y="3" width="14" height="18" rx="2"
                                       stroke="currentColor" stroke-width="1.7"/>
                                 <path d="M9 8h6M9 12h6M9 16h4"
-                                      stroke="currentColor"
-                                      stroke-width="1.7"
+                                      stroke="currentColor" stroke-width="1.7"
                                       stroke-linecap="round"/>
                             </svg>
                         </span>
@@ -318,8 +382,7 @@
                             </p>
                         </div>
 
-                        <a href="test.html?test=adre-grade-iv"
-                           class="btn btn-primary">
+                        <a href="test.html?test=adre-grade-iv" class="btn btn-primary">
                             Start Test
                         </a>
                     </article>
@@ -337,8 +400,7 @@
                                       stroke-linejoin="round"/>
                                 <path d="m8.5 12 2.2 2.2 4.8-5"
                                       stroke="currentColor" stroke-width="1.7"
-                                      stroke-linecap="round"
-                                      stroke-linejoin="round"/>
+                                      stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </span>
 
@@ -353,8 +415,7 @@
                             </p>
                         </div>
 
-                        <a href="test.html?test=assam-police-si"
-                           class="btn btn-primary">
+                        <a href="test.html?test=assam-police-si" class="btn btn-primary">
                             Start Test
                         </a>
                     </article>
@@ -372,8 +433,7 @@
                                       stroke-linejoin="round"/>
                                 <path d="m8.5 12 2.2 2.2 4.8-5"
                                       stroke="currentColor" stroke-width="1.7"
-                                      stroke-linecap="round"
-                                      stroke-linejoin="round"/>
+                                      stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </span>
 
@@ -388,8 +448,7 @@
                             </p>
                         </div>
 
-                        <a href="test.html?test=assam-police-constable"
-                           class="btn btn-primary">
+                        <a href="test.html?test=assam-police-constable" class="btn btn-primary">
                             Start Test
                         </a>
                     </article>
@@ -406,8 +465,7 @@
                                       stroke="currentColor" stroke-width="1.7"
                                       stroke-linejoin="round"/>
                                 <path d="M7 11v5c3 3 7 3 10 0v-5M21 8v6"
-                                      stroke="currentColor"
-                                      stroke-width="1.7"
+                                      stroke="currentColor" stroke-width="1.7"
                                       stroke-linecap="round"/>
                             </svg>
                         </span>
@@ -423,8 +481,7 @@
                             </p>
                         </div>
 
-                        <a href="test.html?test=assam-tet-paper-i"
-                           class="btn btn-primary">
+                        <a href="test.html?test=assam-tet-paper-i" class="btn btn-primary">
                             Start Test
                         </a>
                     </article>
@@ -440,8 +497,7 @@
                                 <circle cx="12" cy="12" r="9"
                                         stroke="currentColor" stroke-width="1.6"/>
                                 <path d="M12 7v10M7 12h10"
-                                      stroke="currentColor"
-                                      stroke-width="2"
+                                      stroke="currentColor" stroke-width="2"
                                       stroke-linecap="round"/>
                             </svg>
                         </span>
@@ -457,8 +513,7 @@
                             </p>
                         </div>
 
-                        <a href="test.html?test=anm-entrance"
-                           class="btn btn-primary">
+                        <a href="test.html?test=anm-entrance" class="btn btn-primary">
                             Start Test
                         </a>
                     </article>
@@ -474,8 +529,7 @@
                                 <rect x="5" y="3" width="14" height="18" rx="2"
                                       stroke="currentColor" stroke-width="1.7"/>
                                 <path d="M9 8h6M9 12h6M9 16h4"
-                                      stroke="currentColor"
-                                      stroke-width="1.7"
+                                      stroke="currentColor" stroke-width="1.7"
                                       stroke-linecap="round"/>
                             </svg>
                         </span>
@@ -491,8 +545,7 @@
                             </p>
                         </div>
 
-                        <a href="test.html?test=ssc-general-practice"
-                           class="btn btn-primary">
+                        <a href="test.html?test=ssc-general-practice" class="btn btn-primary">
                             Start Test
                         </a>
                     </article>
@@ -513,44 +566,29 @@
         <!-- Practice Guidance -->
         <section class="content-section">
             <div class="container">
-
                 <div class="content-card">
                     <div class="content-columns">
-
                         <div>
                             <span class="section-eyebrow">Prepare Consistently</span>
-
-                            <h2 class="section-title">
-                                Improve Through Practice
-                            </h2>
-
+                            <h2 class="section-title">Improve Through Practice</h2>
                             <p class="section-description">
-                                Select a test, answer MCQs and review your
-                                performance when the test functionality
-                                is available.
+                                Select a test, answer MCQs and review your performance.
                             </p>
                         </div>
 
                         <div class="content-stack">
-                            <a href="subject.html"
-                               class="btn btn-primary btn-full">
+                            <a href="subject.html" class="btn btn-primary btn-full">
                                 Explore Subjects
                             </a>
-
-                            <a href="daily-practice.html"
-                               class="btn btn-outline btn-full">
+                            <a href="daily-practice.html" class="btn btn-outline btn-full">
                                 Daily Practice
                             </a>
-
-                            <a href="current-affairs.html?category=quiz"
-                               class="btn btn-outline btn-full">
-                                Current Affairs Quiz
+                            <a href="current-affairs.html" class="btn btn-outline btn-full">
+                                Current Affairs
                             </a>
                         </div>
-
                     </div>
                 </div>
-
             </div>
         </section>
 
@@ -561,20 +599,17 @@
         <div class="footer-main">
 
             <div class="footer-brand">
-                <a href="index.html" class="brand" aria-label="studyKora home">
+                <a href="index.html" class="brand" aria-label="StudyKora home">
                     <span class="brand-mark" aria-hidden="true">
-                        <span style="font-size: 23px; font-weight: 800;">s</span>
+                        <span style="font-size:23px;font-weight:800;">s</span>
                     </span>
-
                     <span class="brand-text">
-                        <span class="brand-name">studyKora</span>
-                        <span class="brand-caption">Learn. Practice. Progress.</span>
+                        <span class="brand-name"><span style="color:#111111;">study</span><span style="color:#777777;">kora</span></span>
                     </span>
                 </a>
-
                 <p class="footer-description">
-                    Mock tests and MCQ practice for learners preparing
-                    for competitive examinations.
+                    A practice platform for Assam competitive exams,
+                    subject-wise MCQs and exam preparation.
                 </p>
             </div>
 
@@ -611,15 +646,10 @@
         </div>
 
         <div class="footer-bottom">
-            <span>
-                &copy; <span data-current-year></span> studyKora. All rights reserved.
-            </span>
-
-            <span class="site-credit">
-                Design and Develop by Yadav Web Technologies
-            </span>
+            <span>&copy; <span data-current-year></span> StudyKora. All rights reserved.</span>
+            <span class="site-credit">Design and Develop by Yadav Web Technologies</span>
         </div>
     </footer>
-    <script src="./js/shared-header.js"></script>
+
 </body>
 </html>
