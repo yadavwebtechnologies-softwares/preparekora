@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Test Result | StudyNow</title>
-    <meta name="description" content="Review your StudyNow mock test score, accuracy and performance.">
+    <meta name="description" content="Review your StudyNow practice test score and answers.">
     <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/result.html">
     <meta name="robots" content="noindex, follow">
 
@@ -23,9 +22,9 @@
             </a>
 
             <nav class="main-nav" id="main-nav" aria-label="Main navigation">
-                <a href="index.html#current-affairs">Current Affairs</a>
+                <a href="current-affairs.html">Current Affairs</a>
                 <a href="mock-tests.html">Mock Tests</a>
-                <a href="subject.html">Subjects</a>
+                <a href="subjects.html">Subjects</a>
                 <a href="daily-practice.html">Daily Practice</a>
             </nav>
 
@@ -33,17 +32,10 @@
                 <a href="dashboard.html" class="btn btn-outline">Dashboard</a>
             </div>
 
-            <button
-                type="button"
-                class="menu-toggle"
-                id="menu-toggle"
-                aria-label="Toggle navigation"
-                aria-controls="main-nav"
-                aria-expanded="false"
-            >
-                <span></span>
-                <span></span>
-                <span></span>
+            <button type="button" class="menu-toggle" id="menu-toggle"
+                aria-label="Toggle navigation" aria-controls="main-nav"
+                aria-expanded="false">
+                <span></span><span></span><span></span>
             </button>
         </div>
     </header>
@@ -53,16 +45,15 @@
             <div class="section-heading">
                 <span class="eyebrow">TEST SUMMARY</span>
                 <h1 class="section-title">Your Test Result</h1>
-                <p id="result-description">
-                    Complete a mock test to view your performance here.
-                </p>
+                <p id="result-description">Your latest test summary will appear here.</p>
             </div>
 
             <div class="why-card">
                 <h2 id="result-test-name">Test Performance</h2>
-                <p id="result-status">
-                    Your result details will appear after a test is completed.
+                <p id="result-status" role="status" aria-live="polite">
+                    Loading result...
                 </p>
+                <p id="result-completed-at"></p>
             </div>
 
             <div class="lower-sections">
@@ -70,69 +61,115 @@
                     <h3>Score</h3>
                     <p id="result-score">—</p>
                 </div>
-
                 <div class="why-card">
                     <h3>Correct Answers</h3>
                     <p id="result-correct">—</p>
                 </div>
-
                 <div class="why-card">
                     <h3>Incorrect Answers</h3>
                     <p id="result-incorrect">—</p>
                 </div>
-
                 <div class="why-card">
                     <h3>Unattempted</h3>
                     <p id="result-unattempted">—</p>
                 </div>
-
                 <div class="why-card">
                     <h3>Accuracy</h3>
                     <p id="result-accuracy">—</p>
                 </div>
-
                 <div class="why-card">
                     <h3>Time Taken</h3>
                     <p id="result-time">—</p>
                 </div>
             </div>
 
-            <section class="content-section">
+            <section class="content-section" id="answer-review-section">
                 <div class="section-heading">
-                    <h2 class="section-title">Answer Review</h2>
-                    <p>Review your answers and explanations after completing a test.</p>
+                    <div>
+                        <h2 class="section-title">Answer Review</h2>
+                        <p>Compare your answers with the correct answers and explanations.</p>
+                    </div>
                 </div>
 
-                <div class="why-card" id="answer-review">
-                    <p>Answer review is not available until test results are connected.</p>
+                <div class="why-card" id="answer-review-empty">
+                    No result is available in this browser session.
+                    Complete a test first to see the review.
+                </div>
+
+                <div class="why-card" id="answer-review-table-wrap" hidden>
+                    <div style="overflow-x:auto;">
+                        <table id="answer-review-table">
+                            <thead>
+                                <tr>
+                                    <th>Question</th>
+                                    <th>Your Answer</th>
+                                    <th>Correct Answer</th>
+                                    <th>Status</th>
+                                    <th>Explanation</th>
+                                </tr>
+                            </thead>
+                            <tbody id="answer-review-body"></tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
             <div class="listing-grid">
-                <a href="mock-tests.html" class="listing-card">
+                <a href="mock-tests.html" class="listing-card" id="retake-test">
                     <span class="card-content">
-                        <span class="card-category">Continue Learning</span>
-                        <span class="card-title">Explore Mock Tests</span>
-                        <span class="card-description">Choose another test for practice.</span>
+                        <span class="card-category">PRACTICE</span>
+                        <span class="card-title">Retake Test</span>
+                        <span class="card-description">Try another practice attempt.</span>
                     </span>
-                    <span class="card-arrow" aria-hidden="true">→</span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </a>
 
-                <a href="daily-practice.html" class="listing-card">
+                <a href="subjects.html#available-subjects" class="listing-card">
                     <span class="card-content">
-                        <span class="card-category">Daily Learning</span>
-                        <span class="card-title">Daily Practice</span>
-                        <span class="card-description">Improve your knowledge with practice sets.</span>
+                        <span class="card-category">SUBJECT PRACTICE</span>
+                        <span class="card-title">Explore Subjects</span>
+                        <span class="card-description">Choose another subject to practise.</span>
                     </span>
-                    <span class="card-arrow" aria-hidden="true">→</span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
+                </a>
+
+                <a href="dashboard.html" class="listing-card">
+                    <span class="card-content">
+                        <span class="card-category">MY ACCOUNT</span>
+                        <span class="card-title">Dashboard</span>
+                        <span class="card-description">Return to your StudyNow dashboard.</span>
+                    </span>
+                    <span class="card-arrow" aria-hidden="true">›</span>
                 </a>
             </div>
         </section>
     </main>
 
     <footer class="site-footer">
+        <div class="footer-main">
+            <div class="footer-brand">
+                <a href="index.html" class="brand">
+                    <span class="brand-name">StudyNow</span>
+                </a>
+                <p>A focused platform for competitive exam preparation and subject-wise practice.</p>
+            </div>
+            <div class="footer-column">
+                <h2>Explore</h2>
+                <a href="current-affairs.html">Current Affairs</a>
+                <a href="mock-tests.html">Mock Tests</a>
+                <a href="subjects.html">Subjects</a>
+                <a href="daily-practice.html">Daily Practice</a>
+            </div>
+            <div class="footer-column">
+                <h2>Account</h2>
+                <a href="auth.html?mode=login">Login</a>
+                <a href="auth.html?mode=signup">Create Account</a>
+                <a href="index.html">Home</a>
+            </div>
+        </div>
         <div class="footer-bottom">
             <p>Design and Develop by Yadav Web Technologies</p>
+            <p>StudyNow. All rights reserved.</p>
         </div>
     </footer>
 </body>
