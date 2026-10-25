@@ -1,426 +1,656 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Practice Test | StudyNow</title>
-    <meta name="description" content="Practise subject-wise questions and mock tests on StudyNow.">
-    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/test.html">
+
+    <title>Mock Test | studyKora</title>
+    <meta name="description" content="Practise multiple-choice questions and review your performance on studyKora.">
+    <meta name="theme-color" content="#28734f">
     <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/test.html">
 
     <link rel="stylesheet" href="style.css">
+
     <script src="script.js" defer></script>
     <script src="js/test.js" defer></script>
 </head>
 
-<body>
+<body class="test-page">
+
+    <!-- Shared Header -->
     <header class="site-header">
         <div class="header-inner">
-            <a href="index.html" class="brand" aria-label="StudyNow Home">
-                <span class="brand-name">StudyNow</span>
-                <span class="brand-caption">Learn. Practice. Progress.</span>
+
+            <a href="index.html" class="brand" aria-label="studyKora home">
+                <span class="brand-mark" aria-hidden="true">
+                    <span style="font-size: 23px; font-weight: 800;">s</span>
+                </span>
+
+                <span class="brand-text">
+                    <span class="brand-name">studyKora</span>
+                    <span class="brand-caption">Learn. Practice. Progress.</span>
+                </span>
             </a>
 
             <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+                <a href="index.html">Home</a>
+                <a href="subject.html">Subjects</a>
                 <a href="current-affairs.html">Current Affairs</a>
                 <a href="mock-tests.html">Mock Tests</a>
-                <a href="subjects.html">Subjects</a>
                 <a href="daily-practice.html">Daily Practice</a>
             </nav>
 
             <div class="header-actions">
-                <a href="auth.html?mode=login" class="btn btn-outline">Login</a>
-                <a href="auth.html?mode=signup" class="btn btn-primary">Create Account</a>
+                <a href="auth.html?mode=login" class="btn btn-outline">
+                    Login
+                </a>
+
+                <button
+                    type="button"
+                    class="menu-toggle"
+                    id="menu-toggle"
+                    aria-label="Open navigation menu"
+                    aria-controls="main-nav"
+                    aria-expanded="false"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M4 7h16M4 12h16M4 17h16"
+                              stroke="currentColor"
+                              stroke-width="1.8"
+                              stroke-linecap="round"/>
+                    </svg>
+                </button>
             </div>
 
-            <button type="button" class="menu-toggle" id="menu-toggle"
-                aria-label="Toggle navigation" aria-controls="main-nav"
-                aria-expanded="false">
-                <span></span><span></span><span></span>
-            </button>
         </div>
     </header>
 
-    <main id="main-content">
-        <section class="hero-section">
-            <div class="hero-content">
-                <span class="eyebrow" id="test-status">PRACTICE PREVIEW</span>
-                <h1 id="test-title">Practice Test</h1>
-                <p id="test-description">
-                    Choose answers to the questions below and submit your test
-                    to view your result and answer review.
+    <main class="page-content">
+
+        <!-- Test Page Banner -->
+        <section class="page-hero" id="test-page-hero">
+            <div class="page-hero-inner">
+
+                <span class="page-hero-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <rect x="5" y="3" width="14" height="18" rx="2"
+                              stroke="currentColor" stroke-width="1.7"/>
+                        <path d="M9 3v2h6V3M8.5 10h7M8.5 14h7M8.5 18h4"
+                              stroke="currentColor"
+                              stroke-width="1.7"
+                              stroke-linecap="round"/>
+                    </svg>
+                </span>
+
+                <h1 class="page-hero-title" id="test-page-title">
+                    Mock Test
+                </h1>
+
+                <p class="page-hero-description" id="test-page-description">
+                    Answer the questions, manage your time and review your result.
                 </p>
 
-                <div class="hero-actions">
-                    <a href="#questions" class="btn btn-primary btn-large">
-                        Start Practice
-                    </a>
-                    <a href="mock-tests.html" class="btn btn-outline btn-large"
-                        id="back-link">Back to Mock Tests</a>
-                </div>
-
-                <div class="hero-highlights">
-                    <span id="question-count">Sample questions</span>
-                    <span id="time-limit-text">20-minute preview</span>
-                    <span>Instant result review</span>
-                </div>
-            </div>
-
-            <div class="hero-visual">
-                <div class="visual-topline">
-                    <span class="visual-dot" aria-hidden="true"></span>
-                    <span>STUDYNOW PRACTICE</span>
-                </div>
-
-                <div class="visual-main">
-                    <span class="visual-label">YOUR PRACTICE SESSION</span>
-                    <h2>Read.<br>Think.<br>Choose.</h2>
-                    <div class="visual-progress">
-                        <span class="progress-track">
-                            <span class="progress-value" id="test-progress"></span>
-                        </span>
-                        <span class="progress-caption" id="answered-count">
-                            0 questions answered
-                        </span>
-                    </div>
-                </div>
-
-                <div class="visual-footer">
-                    <div>
-                        <strong id="timer-label">Time Remaining</strong>
-                        <span id="test-timer">20:00</span>
-                    </div>
-                    <div>
-                        <strong>Result</strong>
-                        <span>Score and answer review</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="content-section" id="test-instructions">
-            <div class="section-heading">
-                <div>
-                    <h2 class="section-title">Instructions</h2>
-                    <p>Choose one answer per question. Unanswered questions are allowed.</p>
-                </div>
-            </div>
-
-            <div class="listing-grid">
-                <article class="listing-card">
-                    <span class="card-content">
-                        <span class="card-title">One mark per question</span>
-                        <span class="card-description">Correct answers earn one mark. No negative marking in this preview.</span>
+                <div class="page-hero-stats" id="test-page-stats">
+                    <span class="page-hero-stat" id="test-question-count">
+                        MCQ Practice
                     </span>
-                </article>
 
-                <article class="listing-card">
-                    <span class="card-content">
-                        <span class="card-title">Submit when ready</span>
-                        <span class="card-description">Your result includes correct, incorrect and unattempted counts.</span>
+                    <span class="page-hero-stat" id="test-duration">
+                        Timed Test
                     </span>
-                </article>
+
+                    <span class="page-hero-stat" id="test-total-marks">
+                        Review Your Answers
+                    </span>
+                </div>
+
             </div>
         </section>
 
-        <section class="content-section" id="questions">
-            <div class="section-heading">
-                <div>
-                    <h2 class="section-title">Practice Questions</h2>
-                    <p id="question-introduction">Select your answers below.</p>
-                </div>
+        <!-- Main Test Content -->
+        <section class="content-section">
+            <div class="container">
+
+                <!-- Test Instructions -->
+                <section class="content-card"
+                         id="test-instructions"
+                         aria-labelledby="test-instructions-title">
+
+                    <div class="section-heading">
+                        <div>
+                            <span class="section-eyebrow">Before You Begin</span>
+
+                            <h2 class="section-title" id="test-instructions-title">
+                                Test Instructions
+                            </h2>
+
+                            <p class="section-description"
+                               id="test-instructions-description">
+                                Read the instructions before starting your test.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="content-columns">
+
+                        <div class="content-stack">
+                            <div class="listing-card">
+                                <span class="card-icon" aria-hidden="true">01</span>
+                                <span class="card-content">
+                                    <span class="card-title">Answer Each Question</span>
+                                    <span class="card-description">
+                                        Select one option for every MCQ.
+                                    </span>
+                                </span>
+                            </div>
+
+                            <div class="listing-card">
+                                <span class="card-icon" aria-hidden="true">02</span>
+                                <span class="card-content">
+                                    <span class="card-title">Track Your Progress</span>
+                                    <span class="card-description">
+                                        Navigate between questions and review marked items.
+                                    </span>
+                                </span>
+                            </div>
+
+                            <div class="listing-card">
+                                <span class="card-icon" aria-hidden="true">03</span>
+                                <span class="card-content">
+                                    <span class="card-title">Submit Your Test</span>
+                                    <span class="card-description">
+                                        Review your answers and see your result.
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <h3 class="panel-title">Test Details</h3>
+
+                            <div class="stack-md">
+                                <div>
+                                    <span class="text-muted">Test name</span>
+                                    <p class="no-margin" id="instruction-test-name">
+                                        Loading test...
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <span class="text-muted">Questions</span>
+                                    <p class="no-margin" id="instruction-question-count">
+                                        To be configured
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <span class="text-muted">Duration</span>
+                                    <p class="no-margin" id="instruction-duration">
+                                        To be configured
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <span class="text-muted">Marking scheme</span>
+                                    <p class="no-margin" id="instruction-marking">
+                                        To be configured
+                                    </p>
+                                </div>
+                            </div>
+
+                            <p class="form-message mt-md"
+                               id="test-load-message"
+                               role="status"
+                               aria-live="polite">
+                            </p>
+
+                            <button
+                                type="button"
+                                class="btn btn-primary btn-full"
+                                id="start-test-button"
+                            >
+                                Start Test
+                            </button>
+
+                            <a href="mock-tests.html"
+                               class="btn btn-outline btn-full mt-sm">
+                                Back to Mock Tests
+                            </a>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- Active Test Workspace -->
+                <section id="test-workspace"
+                         class="content-stack"
+                         aria-label="Active test"
+                         hidden>
+
+                    <!-- Status Bar -->
+                    <div class="content-card">
+
+                        <div class="section-heading">
+                            <div>
+                                <span class="section-eyebrow">Test in Progress</span>
+
+                                <h2 class="section-title" id="active-test-title">
+                                    Mock Test
+                                </h2>
+
+                                <p class="section-description"
+                                   id="active-test-subtitle">
+                                    Answer the questions below.
+                                </p>
+                            </div>
+
+                            <div class="panel" aria-live="off">
+                                <span class="text-muted">Time Remaining</span>
+                                <p class="no-margin"
+                                   id="test-timer"
+                                   role="timer"
+                                   aria-label="Time remaining">
+                                    --:--
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="stack-sm">
+                            <div class="section-heading">
+                                <span class="text-muted" id="test-progress-text">
+                                    Question 1 of 1
+                                </span>
+
+                                <span class="status-label is-success"
+                                      id="test-answered-count">
+                                    0 answered
+                                </span>
+                            </div>
+
+                            <div class="leaderboard"
+                                 role="progressbar"
+                                 id="test-progress"
+                                 aria-label="Test completion"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100"
+                                 aria-valuenow="0">
+                                <div id="test-progress-fill"
+                                     style="width: 0%; height: 6px; background: var(--primary);">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Question and Navigation -->
+                    <div class="content-columns">
+
+                        <!-- Question Panel -->
+                        <div class="content-stack">
+
+                            <section class="question-panel"
+                                     aria-labelledby="question-text">
+
+                                <div class="question-meta">
+                                    <span id="question-number">
+                                        Question 1
+                                    </span>
+
+                                    <span class="chip" id="question-marks">
+                                        1 mark
+                                    </span>
+                                </div>
+
+                                <h2 class="question-text" id="question-text">
+                                    Question will appear here.
+                                </h2>
+
+                                <p class="section-description"
+                                   id="question-instruction">
+                                    Choose the most appropriate answer.
+                                </p>
+
+                                <form id="answer-form">
+                                    <div class="option-list"
+                                         id="answer-options"
+                                         role="group"
+                                         aria-label="Answer options">
+                                        <!-- Options are created by js/test.js -->
+                                    </div>
+
+                                    <p class="form-message"
+                                       id="answer-message"
+                                       role="status"
+                                       aria-live="polite">
+                                    </p>
+                                </form>
+
+                                <div class="chip-row mt-md">
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline"
+                                        id="mark-review-button"
+                                        aria-pressed="false"
+                                    >
+                                        Mark for Review
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline"
+                                        id="clear-answer-button"
+                                    >
+                                        Clear Answer
+                                    </button>
+                                </div>
+
+                            </section>
+
+                            <!-- Previous and Next -->
+                            <div class="content-card">
+                                <div class="section-heading">
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline"
+                                        id="previous-question-button"
+                                        disabled
+                                    >
+                                        Previous
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-primary"
+                                        id="next-question-button"
+                                    >
+                                        Next Question
+                                    </button>
+                                </div>
+
+                                <p class="section-description">
+                                    Your selected answers are retained when
+                                    you navigate between questions.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <!-- Question Navigation -->
+                        <aside class="content-stack">
+
+                            <div class="panel">
+                                <h2 class="panel-title">Question Navigation</h2>
+
+                                <p class="panel-description">
+                                    Select a question number to navigate directly.
+                                </p>
+
+                                <div class="chip-row" id="question-navigation-legend">
+                                    <span class="chip chip-primary">Answered</span>
+                                    <span class="chip">Not answered</span>
+                                    <span class="chip">Review</span>
+                                </div>
+
+                                <div class="listing-grid mt-md"
+                                     id="question-navigation">
+                                    <!-- Question buttons are created by js/test.js -->
+                                </div>
+
+                                <p class="section-description mt-md"
+                                   id="navigation-summary">
+                                    No questions answered yet.
+                                </p>
+                            </div>
+
+                            <div class="panel">
+                                <h2 class="panel-title">Submit Your Test</h2>
+
+                                <p class="panel-description">
+                                    Check your progress before submitting.
+                                    Unanswered questions may receive no marks.
+                                </p>
+
+                                <button
+                                    type="button"
+                                    class="btn btn-primary btn-full"
+                                    id="submit-test-button"
+                                >
+                                    Submit Test
+                                </button>
+                            </div>
+
+                        </aside>
+
+                    </div>
+
+                </section>
+
+                <!-- Submission Confirmation -->
+                <section class="content-card mt-md"
+                         id="submit-confirmation"
+                         hidden
+                         aria-labelledby="submit-confirmation-title">
+
+                    <h2 class="section-title"
+                        id="submit-confirmation-title">
+                        Submit this test?
+                    </h2>
+
+                    <p class="section-description"
+                       id="submit-confirmation-description">
+                        Review your progress before submitting. You cannot
+                        change answers after the test is submitted.
+                    </p>
+
+                    <div class="chip-row mt-md">
+                        <span class="chip" id="confirm-answered-count">
+                            Answered: 0
+                        </span>
+
+                        <span class="chip" id="confirm-unanswered-count">
+                            Unanswered: 0
+                        </span>
+
+                        <span class="chip" id="confirm-review-count">
+                            Marked for review: 0
+                        </span>
+                    </div>
+
+                    <div class="chip-row mt-md">
+                        <button type="button"
+                                class="btn btn-outline"
+                                id="cancel-submit-button">
+                            Continue Test
+                        </button>
+
+                        <button type="button"
+                                class="btn btn-primary"
+                                id="confirm-submit-button">
+                            Confirm Submission
+                        </button>
+                    </div>
+
+                </section>
+
+                <!-- Results Screen -->
+                <section class="content-stack"
+                         id="test-result-screen"
+                         hidden
+                         aria-labelledby="result-title">
+
+                    <div class="content-card">
+                        <span class="section-eyebrow">Test Completed</span>
+
+                        <h2 class="section-title" id="result-title">
+                            Your Test Result
+                        </h2>
+
+                        <p class="section-description"
+                           id="result-description">
+                            Review your performance below.
+                        </p>
+
+                        <div class="listing-grid mt-md">
+
+                            <div class="panel">
+                                <span class="text-muted">Score</span>
+                                <p class="no-margin"
+                                   id="result-score">
+                                    0
+                                </p>
+                            </div>
+
+                            <div class="panel">
+                                <span class="text-muted">Correct Answers</span>
+                                <p class="no-margin"
+                                   id="result-correct">
+                                    0
+                                </p>
+                            </div>
+
+                            <div class="panel">
+                                <span class="text-muted">Incorrect Answers</span>
+                                <p class="no-margin"
+                                   id="result-incorrect">
+                                    0
+                                </p>
+                            </div>
+
+                            <div class="panel">
+                                <span class="text-muted">Unanswered</span>
+                                <p class="no-margin"
+                                   id="result-unanswered">
+                                    0
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div class="content-columns mt-md">
+                            <div class="panel">
+                                <span class="text-muted">Accuracy</span>
+                                <p class="no-margin" id="result-accuracy">0%</p>
+                            </div>
+
+                            <div class="panel">
+                                <span class="text-muted">Time Used</span>
+                                <p class="no-margin" id="result-time-used">--:--</p>
+                            </div>
+                        </div>
+
+                        <div class="chip-row mt-md">
+                            <button type="button"
+                                    class="btn btn-primary"
+                                    id="review-answers-button">
+                                Review Answers
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-outline"
+                                    id="retake-test-button">
+                                Retake Test
+                            </button>
+
+                            <a href="mock-tests.html"
+                               class="btn btn-outline">
+                                All Mock Tests
+                            </a>
+                        </div>
+
+                    </div>
+
+                    <!-- Answer Review -->
+                    <section class="content-card"
+                             id="answer-review-section"
+                             hidden>
+
+                        <div class="section-heading">
+                            <div>
+                                <h2 class="section-title">Answer Review</h2>
+                                <p class="section-description">
+                                    Compare your selected answers with the correct answers.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="content-stack"
+                             id="answer-review-list">
+                            <!-- Review items are created by js/test.js -->
+                        </div>
+
+                    </section>
+
+                </section>
+
             </div>
-
-            <p id="test-message" class="form-message" role="status"
-                aria-live="polite"></p>
-
-            <!-- Questions are authored in HTML. JS only filters and scores them. -->
-            <form id="test-form" hidden>
-                <div class="daily-list" id="question-list" hidden>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="assamese" data-answer="a"
-                        data-explanation="Assamese is a major official language of Assam.">
-                        <span class="date-box"><strong>01</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>Which is a major official language of Assam?</h3>
-                            <p><label><input type="radio" name="q01" value="a"> A. Assamese</label></p>
-                            <p><label><input type="radio" name="q01" value="b"> B. Punjabi</label></p>
-                            <p><label><input type="radio" name="q01" value="c"> C. Malayalam</label></p>
-                            <p><label><input type="radio" name="q01" value="d"> D. Marathi</label></p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="assamese" data-answer="b"
-                        data-explanation="Orunodoi was an early Assamese-language periodical first published in 1846.">
-                        <span class="date-box"><strong>02</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>Orunodoi, first published in 1846, was an early periodical in which language?</h3>
-                            <p><label><input type="radio" name="q02" value="a"> A. Hindi</label></p>
-                            <p><label><input type="radio" name="q02" value="b"> B. Assamese</label></p>
-                            <p><label><input type="radio" name="q02" value="c"> C. Tamil</label></p>
-                            <p><label><input type="radio" name="q02" value="d"> D. Gujarati</label></p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="culture" data-answer="a"
-                        data-explanation="Bihu is one of Assam's best-known festivals.">
-                        <span class="date-box"><strong>03</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>Which festival is widely associated with Assam?</h3>
-                            <p><label><input type="radio" name="q03" value="a"> A. Bihu</label></p>
-                            <p><label><input type="radio" name="q03" value="b"> B. Onam</label></p>
-                            <p><label><input type="radio" name="q03" value="c"> C. Pongal</label></p>
-                            <p><label><input type="radio" name="q03" value="d"> D. Lohri</label></p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="culture" data-answer="b"
-                        data-explanation="Sattriya is a classical dance form associated with Assam.">
-                        <span class="date-box"><strong>04</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>Sattriya is a classical dance form associated with which state?</h3>
-                            <p><label><input type="radio" name="q04" value="a"> A. Kerala</label></p>
-                            <p><label><input type="radio" name="q04" value="b"> B. Assam</label></p>
-                            <p><label><input type="radio" name="q04" value="c"> C. Punjab</label></p>
-                            <p><label><input type="radio" name="q04" value="d"> D. Gujarat</label></p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="computer" data-answer="a"
-                        data-explanation="CPU stands for Central Processing Unit.">
-                        <span class="date-box"><strong>05</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>What does CPU stand for?</h3>
-                            <p><label><input type="radio" name="q05" value="a"> A. Central Processing Unit</label></p>
-                            <p><label><input type="radio" name="q05" value="b"> B. Central Program Utility</label></p>
-                            <p><label><input type="radio" name="q05" value="c"> C. Computer Processing User</label></p>
-                            <p><label><input type="radio" name="q05" value="d"> D. Control Program Unit</label></p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="computer" data-answer="b"
-                        data-explanation="RAM is volatile memory, so its contents are lost when power is removed.">
-                        <span class="date-box"><strong>06</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>Which memory normally loses its contents when power is switched off?</h3>
-                            <p><label><input type="radio" name="q06" value="a"> A. ROM</label></p>
-                            <p><label><input type="radio" name="q06" value="b"> B. RAM</label></p>
-                            <p><label><input type="radio" name="q06" value="c"> C. SSD</label></p>
-                            <p><label><input type="radio" name="q06" value="d"> D. Hard disk</label></p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="driving" data-answer="c"
-                        data-explanation="A red traffic signal requires road users to stop.">
-                        <span class="date-box"><strong>07</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>What should a driver do at a red traffic signal?</h3>
-                            <p><label><input type="radio" name="q07" value="a"> A. Speed up</label></p>
-                            <p><label><input type="radio" name="q07" value="b"> B. Overtake</label></p>
-                            <p><label><input type="radio" name="q07" value="c"> C. Stop</label></p>
-                            <p><label><input type="radio" name="q07" value="d"> D. Ignore the signal</label></p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="driving" data-answer="b"
-                        data-explanation="Drivers should check mirrors and blind spots before changing lanes.">
-                        <span class="date-box"><strong>08</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>What should a driver do before changing lanes?</h3>
-                            <p><label><input type="radio" name="q08" value="a"> A. Change lanes immediately</label></p>
-                            <p><label><input type="radio" name="q08" value="b"> B. Check mirrors and blind spots</label></p>
-                            <p><label><input type="radio" name="q08" value="c"> C. Close their eyes briefly</label></p>
-                            <p><label><input type="radio" name="q08" value="d"> D. Rely only on the horn</label></p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="economics" data-answer="b"
-                        data-explanation="GDP measures the value of final goods and services produced within a country during a specified period.">
-                        <span class="date-box"><strong>09</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>What does Gross Domestic Product (GDP) measure?</h3>
-                            <p><label><input type="radio" name="q09" value="a"> A. Only government tax collections</label></p>
-                            <p><label><input type="radio" name="q09" value="b"> B. Value of final goods and services produced within a country over a period</label></p>
-                            <p><label><input type="radio" name="q09" value="c"> C. Only imports</label></p>
-                            <p><label><input type="radio" name="q09" value="d"> D. Only household savings</label></p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="economics" data-answer="c"
-                        data-explanation="Inflation is a sustained rise in the general price level of goods and services.">
-                        <span class="date-box"><strong>10</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>What is inflation?</h3>
-                            <p><label><input type="radio" name="q10" value="a"> A. A general fall in prices only</label></p>
-                            <p><label><input type="radio" name="q10" value="b"> B. A fall in employment only</label></p>
-                            <p><label><input type="radio" name="q10" value="c"> C. A sustained rise in the general price level</label></p>
-                            <p><label><input type="radio" name="q10" value="d"> D. An increase in rainfall</label></p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="geography" data-answer="c"
-                        data-explanation="The Pacific Ocean is the world's largest ocean.">
-                        <span class="date-box"><strong>11</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>Which is the world's largest ocean?</h3>
-                            <p><label><input type="radio" name="q11" value="a"> A. Indian Ocean</label></p>
-                            <p><label><input type="radio" name="q11" value="b"> B. Atlantic Ocean</label></p>
-                            <p><label><input type="radio" name="q11" value="c"> C. Pacific Ocean</label></p>
-                            <p><label><input type="radio" name="q11" value="d"> D. Arctic Ocean</label></p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="geography" data-answer="b"
-                        data-explanation="The Brahmaputra flows through Assam.">
-                        <span class="date-box"><strong>12</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>Which major river flows through Assam?</h3>
-                            <p><label><input type="radio" name="q12" value="a"> A. Godavari</label></p>
-                            <p><label><input type="radio" name="q12" value="b"> B. Brahmaputra</label></p>
-                            <p><label><input type="radio" name="q12" value="c"> C. Narmada</label></p>
-                            <p><label><input type="radio" name="q12" value="d"> D. Tapi</label></p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="english" data-answer="b"
-                        data-explanation="Rapid means fast or quick.">
-                        <span class="date-box"><strong>13</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>Choose the synonym of “Rapid”.</h3>
-                            <p><label><input type="radio" name="q13" value="a"> A. Slow</label></p>
-                            <p><label><input type="radio" name="q13" value="b"> B. Fast</label></p>
-                            <p><label><input type="radio" name="q13" value="c"> C. Weak</label></p>
-                            <p><label><input type="radio" name="q13" value="d"> D. Quiet</label></p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="english" data-answer="c"
-                        data-explanation="The standard plural form of child is children.">
-                        <span class="date-box"><strong>14</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>What is the plural of “child”?</h3>
-                            <p><label><input type="radio" name="q14" value="a"> A. Childs</label></p>
-                            <p><label><input type="radio" name="q14" value="b"> B. Childes</label></p>
-                            <p><label><input type="radio" name="q14" value="c"> C. Children</label></p>
-                            <p><label><input type="radio" name="q14" value="d"> D. Childrens</label></p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="general-knowledge" data-answer="b"
-                        data-explanation="Dispur is the capital of Assam.">
-                        <span class="date-box"><strong>15</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>What is the capital of Assam?</h3>
-                            <p><label><input type="radio" name="q15" value="a"> A. Guwahati</label></p>
-                            <p><label><input type="radio" name="q15" value="b"> B. Dispur</label></p>
-                            <p><label><input type="radio" name="q15" value="c"> C. Jorhat</label></p>
-                            <p><label><input type="radio" name="q15" value="d"> D. Silchar</label></p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="general-knowledge" data-answer="a"
-                        data-explanation="The tiger is India's national animal.">
-                        <span class="date-box"><strong>16</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>What is India's national animal?</h3>
-                            <p><label><input type="radio" name="q16" value="a"> A. Tiger</label></p>
-                            <p><label><input type="radio" name="q16" value="b"> B. Asian elephant</label></p>
-                            <p><label><input type="radio" name="q16" value="c"> C. Lion</label></p>
-                            <p><label><input type="radio" name="q16" value="d"> D. Peacock</label></p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="polity" data-answer="c"
-                        data-explanation="Fundamental Rights are contained in Part III of the Indian Constitution.">
-                        <span class="date-box"><strong>17</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>Which part of the Indian Constitution contains Fundamental Rights?</h3>
-                            <p><label><input type="radio" name="q17" value="a"> A. Part I</label></p>
-                            <p><label><input type="radio" name="q17" value="b"> B. Part II</label></p>
-                            <p><label><input type="radio" name="q17" value="c"> C. Part III</label></p>
-                            <p><label><input type="radio" name="q17" value="d"> D. Part IV</label></p>
-                        </div>
-                    </article>
-
-                    <article class="daily-card" data-question-card
-                        data-subject="polity" data-answer="b"
-                        data-explanation="The President is the constitutional head of the Union of India.">
-                        <span class="date-box"><strong>18</strong><span>MCQ</span></span>
-                        <div class="card-content">
-                            <h3>Who is the constitutional head of the Union of India?</h3>
-                            <p><label><input type="radio" name="q18" value="a"> A. Prime Minister</label></p>
-                            <p><label><input type="radio" name="q18" value="b"> B. President</label></p>
-                            <p><label><input type="radio" name="q18" value="c"> C. Chief Justice of India</label></p>
-                            <p><label><input type="radio" name="q18" value="d"> D. Speaker of the Lok Sabha</label></p>
-                        </div>
-                    </article>
-                </div>
-
-                <div class="hero-actions">
-                    <button type="submit" class="btn btn-primary btn-large" id="submit-test">
-                        Submit Test
-                    </button>
-                    <button type="reset" class="btn btn-outline btn-large">
-                        Clear Answers
-                    </button>
-                </div>
-            </form>
-
-            <div class="why-card" id="subject-content-unavailable" hidden>
-                <h3>Questions unavailable</h3>
-                <p>This subject or examination does not have a question set configured yet.</p>
-                <p><a href="subjects.html#available-subjects">Back to Subjects</a></p>
-            </div>
-
-            <noscript>
-                <p>JavaScript is required to run and score this practice test.</p>
-            </noscript>
         </section>
+
     </main>
 
+    <!-- Shared Footer -->
     <footer class="site-footer">
         <div class="footer-main">
+
             <div class="footer-brand">
-                <a href="index.html" class="brand">
-                    <span class="brand-name">StudyNow</span>
+                <a href="index.html" class="brand" aria-label="studyKora home">
+                    <span class="brand-mark" aria-hidden="true">
+                        <span style="font-size: 23px; font-weight: 800;">s</span>
+                    </span>
+
+                    <span class="brand-text">
+                        <span class="brand-name">studyKora</span>
+                        <span class="brand-caption">Learn. Practice. Progress.</span>
+                    </span>
                 </a>
-                <p>A focused platform for competitive exam preparation and subject-wise practice.</p>
+
+                <p class="footer-description">
+                    MCQ practice and mock tests for competitive exam preparation.
+                </p>
             </div>
+
             <div class="footer-column">
-                <h2>Explore</h2>
-                <a href="current-affairs.html">Current Affairs</a>
-                <a href="mock-tests.html">Mock Tests</a>
-                <a href="subjects.html">Subjects</a>
-                <a href="daily-practice.html">Daily Practice</a>
+                <h3>Practice</h3>
+                <ul class="footer-links">
+                    <li><a href="subject.html">Subjects</a></li>
+                    <li><a href="mock-tests.html">Mock Tests</a></li>
+                    <li><a href="daily-practice.html">Daily Practice</a></li>
+                    <li><a href="current-affairs.html">Current Affairs</a></li>
+                </ul>
             </div>
+
             <div class="footer-column">
-                <h2>Account</h2>
-                <a href="auth.html?mode=login">Login</a>
-                <a href="auth.html?mode=signup">Create Account</a>
-                <a href="index.html">Home</a>
+                <h3>Exams</h3>
+                <ul class="footer-links">
+                    <li><a href="organization.html?org=apsc">APSC</a></li>
+                    <li><a href="organization.html?org=adre">ADRE</a></li>
+                    <li><a href="organization.html?org=assam-police">Assam Police</a></li>
+                    <li><a href="organization.html?org=ssuhs">SSUHS</a></li>
+                </ul>
             </div>
+
+            <div class="footer-column">
+                <h3>Information</h3>
+                <ul class="footer-links">
+                    <li><a href="faq.html">FAQs</a></li>
+                    <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                    <li><a href="credits.html">Credits</a></li>
+                </ul>
+            </div>
+
         </div>
+
         <div class="footer-bottom">
-            <p>Design and Develop by Yadav Web Technologies</p>
-            <p>StudyNow. All rights reserved.</p>
+            <span>
+                &copy; <span data-current-year></span> studyKora. All rights reserved.
+            </span>
+
+            <span class="site-credit">
+                Design and Develop by Yadav Web Technologies
+            </span>
         </div>
     </footer>
+
 </body>
 </html>
