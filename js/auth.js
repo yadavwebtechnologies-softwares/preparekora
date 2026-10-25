@@ -257,7 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 "success"
             );
 
-            window.location.assign("./index.html");
+            window.location.assign("./dashboard.html");
         } catch (error) {
             setMessage(
                 loginMessage,
@@ -349,7 +349,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 "success"
             );
 
-            window.location.assign("./index.html");
+            window.location.assign("./dashboard.html");
         } catch (error) {
             setMessage(
                 signupMessage,
