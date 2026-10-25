@@ -1,229 +1,196 @@
-/* =====================================================
-   StudyKora — Mock Tests
-   Search, category filters and test access
-===================================================== */
-
+/* StudyKora - Mock Tests Page */
 "use strict";
 
-document.addEventListener("DOMContentLoaded", () => {
-    const $ = (id) => document.getElementById(id);
+(() => {
+    const LOG_PREFIX = "[StudyKora Mock Tests]";
 
-    const searchInput = $("mock-test-search");
-    const filterContainer = $("mock-test-filters");
-    const resultCount = $("mock-test-result-count");
-    const grid = $("mock-test-grid");
-    const emptyState = $("mock-test-empty-state");
-
-    const mainHero = $("mock-tests-main-hero");
-    const categoryHero = $("mock-category-hero");
-    const categoryLabel = $("mock-category-label");
-    const categoryTitle = $("mock-category-title");
-    const categoryDescription = $("mock-category-description");
-
-    const listHeading = $("mock-list-heading");
-    const listDescription = $("mock-list-description");
-
-    if (!grid || !filterContainer) {
-        console.error(
-            "[StudyKora Mock Tests] Required elements not found.",
-            { grid: Boolean(grid), filters: Boolean(filterContainer) }
-        );
-        return;
-    }
-
-    const cards = Array.from(grid.querySelectorAll("[data-mock-card]"));
-    const filterButtons = Array.from(
-        filterContainer.querySelectorAll("[data-mock-filter]")
-    );
-
-    const categories = {
-        all: {
-            label: "All Mock Tests",
-            title: "Mock Tests",
-            description: "Browse available mock tests across exam categories.",
-            listTitle: "Find Your Mock Test",
-            listDescription: "Search by exam name or filter tests by category."
-        },
-
+    const CATEGORY_CONFIG = {
         administration: {
-            label: "APSC",
+            name: "APSC",
             title: "APSC Mock Tests",
-            description: "Explore practice tests for Assam civil services examinations.",
-            listTitle: "APSC Practice Tests",
-            listDescription: "Search and browse APSC practice test entries."
+            description: "Practise for Assam civil services examinations."
         },
-
         recruitment: {
-            label: "ADRE",
-            title: "ADRE Mock Tests",
-            description: "Explore practice tests for Assam Direct Recruitment examinations.",
-            listTitle: "ADRE Practice Tests",
-            listDescription: "Search and browse ADRE practice test entries."
+            name: "ADRE",
+            title: "Recruitment Mock Tests",
+            description: "Explore recruitment practice tests, including ADRE."
         },
-
         police: {
-            label: "Assam Police",
+            name: "Assam Police",
             title: "Assam Police Mock Tests",
-            description: "Browse practice tests for Assam Police recruitment.",
-            listTitle: "Assam Police Practice Tests",
-            listDescription: "Search and browse Assam Police practice test entries."
+            description: "Practise for Assam Police recruitment examinations."
         },
-
         health: {
-            label: "Health",
-            title: "Health Entrance Mock Tests",
-            description: "Explore health and nursing entrance practice tests.",
-            listTitle: "Health Practice Tests",
-            listDescription: "Search and browse health-related practice entries."
+            name: "Health",
+            title: "Health Examination Practice",
+            description: "Explore nursing and health-related entrance practice."
         },
-
         education: {
-            label: "TET",
+            name: "TET",
             title: "Teacher Eligibility Tests",
-            description: "Explore practice tests for teacher eligibility examinations.",
-            listTitle: "Education Practice Tests",
-            listDescription: "Search and browse education-related practice entries."
+            description: "Practise questions for teaching eligibility examinations."
         },
-
         other: {
-            label: "Other Exams",
+            name: "Other Exams",
             title: "Other Competitive Exam Tests",
-            description: "Browse practice entries for other competitive examinations.",
-            listTitle: "Other Exam Practice Tests",
-            listDescription: "Search and browse other exam practice entries."
+            description: "Explore practice tests for other competitive examinations."
         }
     };
 
-    const categoryAliases = {
-        apsc: "administration",
-        administration: "administration",
-        adre: "recruitment",
-        recruitment: "recruitment",
-        "assam-police": "police",
-        police: "police",
-        health: "health",
-        tet: "education",
-        education: "education",
-        other: "other",
-        ssc: "other",
-        all: "all"
+    const elements = {
+        mainHero: document.getElementById("mock-tests-main-hero"),
+        categoryHero: document.getElementById("mock-category-hero"),
+        categoryLabel: document.getElementById("mock-category-label"),
+        categoryTitle: document.getElementById("mock-category-title"),
+        categoryDescription: document.getElementById("mock-category-description"),
+
+        search: document.getElementById("mock-test-search"),
+        filters: document.getElementById("mock-test-filters"),
+        filterButtons: Array.from(
+            document.querySelectorAll("[data-mock-filter]")
+        ),
+
+        heading: document.getElementById("mock-list-heading"),
+        description: document.getElementById("mock-list-description"),
+        resultCount: document.getElementById("mock-test-result-count"),
+
+        grid: document.getElementById("mock-test-grid"),
+        cards: Array.from(document.querySelectorAll("[data-mock-card]")),
+        emptyState: document.getElementById("mock-test-empty-state")
     };
 
-    let activeCategory = "all";
-    let searchTerm = "";
+    const state = {
+        category: "all",
+        search: ""
+    };
 
-    /* ---------- Session state ---------- */
-
-    function hasSavedLoginSession() {
-        try {
-            const session = JSON.parse(
-                sessionStorage.getItem("studyKoraSession") || "null"
-            );
-
-            return Boolean(
-                session?.idToken &&
-                session?.user?.email
-            );
-        } catch {
-            return false;
-        }
-    }
-
-    /* ---------- Category selection ---------- */
-
-    function setActiveCategory(category) {
-        activeCategory = categories[category] ? category : "all";
-
-        filterButtons.forEach((button) => {
-            const isActive =
-                button.dataset.mockFilter === activeCategory;
-
-            button.classList.toggle("is-active", isActive);
-            button.setAttribute("aria-pressed", String(isActive));
-        });
-
-        updateCategoryBanner();
-        applyFilters();
-    }
-
-    function updateCategoryBanner() {
-        const data = categories[activeCategory] || categories.all;
-
-        if (activeCategory === "all") {
-            if (mainHero) mainHero.hidden = false;
-            if (categoryHero) categoryHero.hidden = true;
+    function log(message, details) {
+        if (details !== undefined) {
+            console.info(`${LOG_PREFIX} ${message}`, details);
         } else {
-            if (mainHero) mainHero.hidden = true;
-            if (categoryHero) categoryHero.hidden = false;
-
-            if (categoryLabel) {
-                categoryLabel.textContent = data.label;
-            }
-
-            if (categoryTitle) {
-                categoryTitle.textContent = data.title;
-            }
-
-            if (categoryDescription) {
-                categoryDescription.textContent = data.description;
-            }
-        }
-
-        if (listHeading) {
-            listHeading.textContent = data.listTitle;
-        }
-
-        if (listDescription) {
-            listDescription.textContent = data.listDescription;
+            console.info(`${LOG_PREFIX} ${message}`);
         }
     }
 
-    filterButtons.forEach((button) => {
-        button.addEventListener("click", () => {
-            const category = button.dataset.mockFilter;
+    function normalizeCategory(value) {
+        const category = String(value || "").trim().toLowerCase();
 
-            if (!categories[category]) {
-                console.warn(
-                    "[StudyKora Mock Tests] Unknown category:",
-                    category
-                );
-                return;
-            }
+        const aliases = {
+            apsc: "administration",
+            cce: "administration",
+            adre: "recruitment",
+            vfa: "recruitment",
+            "assam-police": "police",
+            tet: "education",
+            anm: "health",
+            nursing: "health",
+            ssc: "other"
+        };
 
-            setActiveCategory(category);
+        const normalized = aliases[category] || category;
+
+        if (
+            normalized === "all" ||
+            Object.prototype.hasOwnProperty.call(CATEGORY_CONFIG, normalized)
+        ) {
+            return normalized;
+        }
+
+        return "all";
+    }
+
+    function getUrlParameters() {
+        return new URLSearchParams(window.location.search);
+    }
+
+    function getCardText(card) {
+        return [
+            card.dataset.mockId,
+            card.dataset.mockName,
+            card.dataset.mockDescription,
+            card.dataset.mockCategory,
+            card.textContent
+        ].filter(Boolean).join(" ").toLowerCase();
+    }
+
+    function matchesSearch(card) {
+        const query = state.search.trim().toLowerCase();
+
+        return !query || getCardText(card).includes(query);
+    }
+
+    function matchesCategory(card) {
+        return state.category === "all" ||
+            card.dataset.mockCategory === state.category;
+    }
+
+    function updateHero() {
+        const config = CATEGORY_CONFIG[state.category];
+        const selected = Boolean(config);
+
+        if (elements.mainHero) {
+            elements.mainHero.hidden = selected;
+            elements.mainHero.style.display = selected ? "none" : "";
+        }
+
+        if (elements.categoryHero) {
+            elements.categoryHero.hidden = !selected;
+            elements.categoryHero.style.display = selected ? "" : "none";
+        }
+
+        if (!selected) {
+            return;
+        }
+
+        if (elements.categoryLabel) {
+            elements.categoryLabel.textContent = config.name;
+        }
+
+        if (elements.categoryTitle) {
+            elements.categoryTitle.textContent = config.title;
+        }
+
+        if (elements.categoryDescription) {
+            elements.categoryDescription.textContent = config.description;
+        }
+    }
+
+    function updateFilters() {
+        elements.filterButtons.forEach((button) => {
+            const selected = button.dataset.mockFilter === state.category;
+
+            button.classList.toggle("is-active", selected);
+            button.setAttribute("aria-pressed", String(selected));
         });
-    });
-
-    /* ---------- Search and card filtering ---------- */
-
-    function cardMatchesCategory(card) {
-        if (activeCategory === "all") return true;
-
-        return card.dataset.mockCategory === activeCategory;
     }
 
-    function cardMatchesSearch(card) {
-        if (!searchTerm) return true;
+    function updateHeading() {
+        const config = CATEGORY_CONFIG[state.category];
 
-        const searchableText = [
-            card.dataset.mockId || "",
-            card.dataset.mockCategory || "",
-            card.dataset.mockName || "",
-            card.dataset.mockDescription || "",
-            card.textContent || ""
-        ].join(" ").toLowerCase();
+        if (elements.heading) {
+            elements.heading.textContent = config
+                ? config.title
+                : "Find Your Mock Test";
+        }
 
-        return searchableText.includes(searchTerm);
+        if (elements.description) {
+            elements.description.textContent = config
+                ? config.description
+                : "Search by exam name or filter tests by category.";
+        }
     }
 
-    function applyFilters() {
+    function updateResults() {
         let visibleCount = 0;
 
-        cards.forEach((card) => {
-            const visible =
-                cardMatchesCategory(card) &&
-                cardMatchesSearch(card);
+        elements.cards.forEach((card) => {
+            const visible = matchesCategory(card) && matchesSearch(card);
 
+            /*
+             * Explicit display styling ensures filtered cards stay hidden
+             * even when stylesheet rules define a display value for cards.
+             */
+            card.style.display = visible ? "" : "none";
             card.hidden = !visible;
 
             if (visible) {
@@ -231,74 +198,154 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
-        if (resultCount) {
-            resultCount.textContent =
-                `Showing ${visibleCount} of ${cards.length} mock tests.`;
+        const total = elements.cards.length;
+
+        if (elements.emptyState) {
+            elements.emptyState.hidden = visibleCount > 0;
+            elements.emptyState.style.display =
+                visibleCount > 0 ? "none" : "";
         }
 
-        if (emptyState) {
-            emptyState.hidden = visibleCount !== 0;
+        if (elements.resultCount) {
+            if (visibleCount === 0) {
+                elements.resultCount.textContent =
+                    total === 0
+                        ? "No mock tests are configured yet."
+                        : "No mock tests match your search or category.";
+            } else {
+                elements.resultCount.textContent =
+                    `Showing ${visibleCount} of ${total} mock tests.`;
+            }
         }
 
-        if (grid) {
-            grid.setAttribute("aria-busy", "false");
-        }
-
-        console.info("[StudyKora Mock Tests] Results updated:", {
-            category: activeCategory,
-            search: searchTerm,
+        log("Results updated.", {
+            category: state.category,
+            search: state.search,
             visible: visibleCount,
-            total: cards.length
+            total
         });
     }
 
-    searchInput?.addEventListener("input", () => {
-        searchTerm = searchInput.value.trim().toLowerCase();
-        applyFilters();
-    });
+    function updateUrl(category) {
+        const url = new URL(window.location.href);
 
-    /* ---------- Category from URL ---------- */
+        if (category === "all") {
+            url.searchParams.delete("category");
+        } else {
+            url.searchParams.set("category", category);
+        }
 
-    function initializeFromURL() {
-        const params = new URLSearchParams(window.location.search);
-        const requestedCategory = (
-            params.get("category") || "all"
-        ).trim().toLowerCase();
+        window.history.replaceState({}, "", url);
+    }
 
-        const mappedCategory =
-            categoryAliases[requestedCategory] || "all";
+    function selectCategory(category, shouldUpdateUrl = true) {
+        state.category = normalizeCategory(category);
 
-        setActiveCategory(mappedCategory);
+        if (shouldUpdateUrl) {
+            updateUrl(state.category);
+        }
 
-        const requestedSearch = params.get("search");
+        updateHero();
+        updateFilters();
+        updateHeading();
+        updateResults();
 
-        if (requestedSearch && searchInput) {
-            searchInput.value = requestedSearch;
-            searchTerm = requestedSearch.trim().toLowerCase();
-            applyFilters();
+        log("Category selected.", state.category);
+    }
+
+    function handleFilterClick(event) {
+        const button = event.target.closest("[data-mock-filter]");
+
+        if (!button) {
+            return;
+        }
+
+        selectCategory(button.dataset.mockFilter);
+    }
+
+    function handleSearch(event) {
+        state.search = event.target.value || "";
+        updateResults();
+    }
+
+    function getSession() {
+        try {
+            return JSON.parse(
+                sessionStorage.getItem("studyKoraSession") || "null"
+            );
+        } catch (error) {
+            console.warn(`${LOG_PREFIX} Unable to read session.`, error);
+            return null;
         }
     }
 
-    /* ---------- Login required for starting tests ---------- */
+    function isLoggedIn() {
+        const session = getSession();
 
-    function initializeTestAccess() {
-        grid.querySelectorAll('a[href*="test.html?test="]').forEach((link) => {
-            link.addEventListener("click", (event) => {
-                if (hasSavedLoginSession()) {
-                    return;
-                }
+        return Boolean(
+            session &&
+            typeof session.idToken === "string" &&
+            session.idToken.length > 0 &&
+            session.user &&
+            typeof session.user.email === "string" &&
+            session.user.email.length > 0
+        );
+    }
 
-                event.preventDefault();
+    function handleTestClick(event) {
+        const link = event.target.closest("[data-test-link]");
 
-                window.location.assign("auth.html?mode=login");
-            });
+        if (!link || isLoggedIn()) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const destination = link.getAttribute("href") || "test.html";
+        const loginUrl = new URL("auth.html", window.location.href);
+
+        loginUrl.searchParams.set("mode", "login");
+        loginUrl.searchParams.set("returnTo", destination);
+
+        log("Guest redirected to login.", destination);
+        window.location.href = loginUrl.toString();
+    }
+
+    function initialize() {
+        if (!elements.grid) {
+            console.warn(`${LOG_PREFIX} Test grid not found.`);
+            return;
+        }
+
+        elements.filters?.addEventListener("click", handleFilterClick);
+        elements.search?.addEventListener("input", handleSearch);
+        elements.grid.addEventListener("click", handleTestClick);
+
+        const params = getUrlParameters();
+
+        state.category = normalizeCategory(params.get("category"));
+        state.search = params.get("search") || "";
+
+        if (elements.search) {
+            elements.search.value = state.search;
+        }
+
+        updateHero();
+        updateFilters();
+        updateHeading();
+        updateResults();
+
+        log("Initialized.", {
+            category: state.category,
+            totalTests: elements.cards.length
         });
     }
 
-    /* ---------- Initialize ---------- */
-
-    initializeTestAccess();
-    initializeFromURL();
-
-    console.info("[StudyKora Mock Tests] Initialized successfully.");
-});
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initialize, {
+            once: true
+        });
+    } else {
+        initialize();
+    }
+})();
