@@ -1,169 +1,215 @@
-/* ==========================================
-   StudyNow — Main JavaScript
+
+/* =====================================================
+   StudyKora — Shared JavaScript
    Design and Develop by Yadav Web Technologies
-========================================== */
+===================================================== */
 
 "use strict";
 
-/* ==========================================
-   1. MOBILE NAVIGATION
-========================================== */
+/* 1. Shared DOM helpers */
 
-const menuToggle = document.getElementById("menu-toggle");
-const mainNav = document.getElementById("main-nav");
+const StudyKora = (() => {
+    const select = (selector, parent = document) =>
+        parent.querySelector(selector);
 
-function closeNavigation() {
+    const selectAll = (selector, parent = document) =>
+        Array.from(parent.querySelectorAll(selector));
+
+    function onReady(callback) {
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", callback, {
+                once: true
+            });
+        } else {
+            callback();
+        }
+    }
+
+    return {
+        select,
+        selectAll,
+        onReady
+    };
+})();
+
+/* 2. Shared mobile navigation */
+
+function initializeNavigation() {
+    const menuToggle = document.getElementById("menu-toggle");
+    const mainNav = document.getElementById("main-nav");
+
     if (!menuToggle || !mainNav) return;
 
-    mainNav.classList.remove("is-open");
-    menuToggle.classList.remove("is-active");
+    const mobileQuery = window.matchMedia("(max-width: 780px)");
 
-    menuToggle.setAttribute("aria-expanded", "false");
-    menuToggle.setAttribute("aria-label", "Open navigation menu");
-}
+    function setMenuState(isOpen) {
+        const shouldOpen = isOpen && mobileQuery.matches;
 
-function toggleNavigation() {
-    if (!menuToggle || !mainNav) return;
+        mainNav.classList.toggle("is-open", shouldOpen);
+        menuToggle.classList.toggle("is-active", shouldOpen);
 
-    const isOpen = mainNav.classList.toggle("is-open");
+        menuToggle.setAttribute("aria-expanded", String(shouldOpen));
+        menuToggle.setAttribute(
+            "aria-label",
+            shouldOpen ? "Close navigation menu" : "Open navigation menu"
+        );
+    }
 
-    menuToggle.classList.toggle("is-active", isOpen);
-    menuToggle.setAttribute("aria-expanded", String(isOpen));
+    function toggleMenu() {
+        const isOpen = mainNav.classList.contains("is-open");
+        setMenuState(!isOpen);
+    }
 
-    menuToggle.setAttribute(
-        "aria-label",
-        isOpen ? "Close navigation menu" : "Open navigation menu"
-    );
-}
+    menuToggle.addEventListener("click", (event) => {
+        event.stopPropagation();
+        toggleMenu();
+    });
 
-if (menuToggle && mainNav) {
-    menuToggle.addEventListener("click", toggleNavigation);
+    mainNav.addEventListener("click", (event) => {
+        const link = event.target.closest("a");
 
-    mainNav.querySelectorAll("a").forEach((link) => {
-        link.addEventListener("click", closeNavigation);
+        if (link && mobileQuery.matches) {
+            setMenuState(false);
+        }
     });
 
     document.addEventListener("click", (event) => {
-        const clickedInsideNavigation =
-            mainNav.contains(event.target) ||
-            menuToggle.contains(event.target);
+        if (!mobileQuery.matches) return;
 
-        if (!clickedInsideNavigation) {
-            closeNavigation();
+        const clickedInsideMenu = mainNav.contains(event.target);
+        const clickedToggle = menuToggle.contains(event.target);
+
+        if (!clickedInsideMenu && !clickedToggle) {
+            setMenuState(false);
         }
     });
 
     document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
-            closeNavigation();
+            setMenuState(false);
         }
     });
 
-    window.addEventListener("resize", () => {
-        if (window.innerWidth > 800) {
-            closeNavigation();
+    function handleViewportChange() {
+        setMenuState(false);
+    }
+
+    if (typeof mobileQuery.addEventListener === "function") {
+        mobileQuery.addEventListener("change", handleViewportChange);
+    } else {
+        /* Fallback for older browsers */
+        mobileQuery.addListener(handleViewportChange);
+    }
+
+    setMenuState(false);
+}
+
+/* 3. Mark the current navigation link */
+
+function initializeActiveNavigation() {
+    const currentPath = window.location.pathname;
+    const currentFile = currentPath.split("/").pop() || "index.html";
+
+    StudyKora.selectAll(".main-nav a[href]").forEach((link) => {
+        let targetUrl;
+
+        try {
+            targetUrl = new URL(link.href, window.location.href);
+        } catch {
+            return;
+        }
+
+        const targetFile = targetUrl.pathname.split("/").pop() || "index.html";
+
+        if (targetFile === currentFile) {
+            link.setAttribute("aria-current", "page");
+        } else {
+            link.removeAttribute("aria-current");
         }
     });
 }
 
+/* 4. Shared current-year placeholders */
 
-/* ==========================================
-   2. AUTHENTICATION PAGE LINKS
+function initializeCurrentYear() {
+    const currentYear = new Date().getFullYear();
 
-   Login, signup and password recovery are
-   handled by auth.html and its own JavaScript.
-   No authentication UI is generated here.
-========================================== */
-
-document.querySelectorAll('[data-action="login"]').forEach((element) => {
-    element.addEventListener("click", () => {
-        window.location.href = "auth.html?mode=login";
+    StudyKora.selectAll("[data-current-year]").forEach((element) => {
+        element.textContent = String(currentYear);
     });
-});
+}
 
-document.querySelectorAll('[data-action="signup"]').forEach((element) => {
-    element.addEventListener("click", () => {
-        window.location.href = "auth.html?mode=signup";
+/* 5. Shared password visibility controls */
+
+function initializePasswordToggles() {
+    StudyKora.selectAll("[data-toggle-password]").forEach((button) => {
+        if (button.dataset.passwordToggleReady === "true") return;
+
+        const inputId = button.dataset.togglePassword;
+        const input = inputId ? document.getElementById(inputId) : null;
+
+        if (!input) return;
+
+        button.dataset.passwordToggleReady = "true";
+
+        button.addEventListener("click", () => {
+            const shouldShow = input.type === "password";
+
+            input.type = shouldShow ? "text" : "password";
+            button.setAttribute("aria-pressed", String(shouldShow));
+            button.setAttribute(
+                "aria-label",
+                shouldShow ? "Hide password" : "Show password"
+            );
+
+            button.textContent = shouldShow ? "Hide" : "Show";
+        });
     });
-});
+}
 
+/* 6. Shared back-to-top controls */
 
-/* ==========================================
-   3. CARD NAVIGATION
-
-   Cards use real HTML links.
-   No placeholder modals or generated cards.
-========================================== */
-
-document.querySelectorAll("[data-subject]").forEach((card) => {
-    if (card.matches("a[href]")) return;
-
-    card.addEventListener("click", () => {
-        const subjectId = card.dataset.subject;
-
-        if (!subjectId) return;
-
-        window.location.href =
-            `test.html?subject=${encodeURIComponent(subjectId)}`;
+function initializeBackToTop() {
+    StudyKora.selectAll("[data-back-to-top]").forEach((button) => {
+        button.addEventListener("click", () => {
+            window.scrollTo({
+                top: 0,
+                behavior: window.matchMedia(
+                    "(prefers-reduced-motion: reduce)"
+                ).matches
+                    ? "auto"
+                    : "smooth"
+            });
+        });
     });
-});
+}
 
-document.querySelectorAll("[data-current-affairs]").forEach((card) => {
-    if (card.matches("a[href]")) return;
+/* 7. Shared external-link safety */
 
-    card.addEventListener("click", () => {
-        const categoryId = card.dataset.currentAffairs;
+function initializeExternalLinks() {
+    StudyKora.selectAll('a[target="_blank"]').forEach((link) => {
+        const relTokens = new Set(
+            (link.getAttribute("rel") || "")
+                .split(/\s+/)
+                .filter(Boolean)
+        );
 
-        if (!categoryId) return;
+        relTokens.add("noopener");
+        relTokens.add("noreferrer");
 
-        window.location.href =
-            `current-affairs.html?category=${encodeURIComponent(categoryId)}`;
+        link.setAttribute("rel", Array.from(relTokens).join(" "));
     });
-});
+}
 
-document.querySelectorAll("[data-org]").forEach((card) => {
-    if (card.matches("a[href]")) return;
+/* 8. Initialize common behavior */
 
-    card.addEventListener("click", () => {
-        const organizationId = card.dataset.org;
-
-        if (!organizationId) return;
-
-        window.location.href =
-            `organization.html?org=${encodeURIComponent(organizationId)}`;
-    });
-});
-
-document.querySelectorAll("[data-test]").forEach((card) => {
-    if (card.matches("a[href]")) return;
-
-    card.addEventListener("click", () => {
-        const testId = card.dataset.test;
-
-        if (!testId) return;
-
-        window.location.href =
-            `test.html?test=${encodeURIComponent(testId)}`;
-    });
-});
-
-
-/* ==========================================
-   4. CURRENT PAGE INITIALIZATION
-========================================== */
-
-function initializeStudyNow() {
-    closeNavigation();
-
+StudyKora.onReady(() => {
     document.documentElement.classList.add("js-enabled");
-}
 
-if (document.readyState === "loading") {
-    document.addEventListener(
-        "DOMContentLoaded",
-        initializeStudyNow,
-        { once: true }
-    );
-} else {
-    initializeStudyNow();
-}
+    initializeNavigation();
+    initializeActiveNavigation();
+    initializeCurrentYear();
+    initializePasswordToggles();
+    initializeBackToTop();
+    initializeExternalLinks();
+});
