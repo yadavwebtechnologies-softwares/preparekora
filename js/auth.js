@@ -1,35 +1,84 @@
 
-/* =====================================================
-   studyKora — Authentication Page
-   Login, signup, recovery UI and frontend validation
-   Firebase/backend authentication is not connected yet
-===================================================== */
-
 "use strict";
 
 document.addEventListener("DOMContentLoaded", () => {
     const $ = (id) => document.getElementById(id);
 
+    // studyKora Cloudflare Worker
+    const API_BASE =
+        "https://studykora-api.yadavsubba2003.workers.dev";
+
+    const SESSION_KEY = "studyKoraSession";
     const panels = Array.from(
         document.querySelectorAll("[data-auth-panel]")
     );
 
     const validModes = new Set(["login", "signup", "forgot"]);
 
-    /* 1. URL-based authentication panels */
+    /* ---------- API connection ---------- */
 
-    function getModeFromUrl() {
-        const params = new URLSearchParams(window.location.search);
-        const mode = (params.get("mode") || "login").toLowerCase();
+    async function apiPost(path, payload) {
+        let response;
 
-        return validModes.has(mode) ? mode : "login";
+        try {
+            response = await fetch(`${API_BASE}${path}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+        } catch {
+            throw new Error(
+                "Could not connect to studyKora. Please check your internet connection."
+            );
+        }
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data.ok) {
+            throw new Error(
+                data.message || "Request failed. Please try again."
+            );
+        }
+
+        return data;
     }
 
-    function updateUrl(mode) {
-        const url = new URL(window.location.href);
-        url.searchParams.set("mode", mode);
+    function saveSession(data) {
+        if (!data.idToken || !data.refreshToken || !data.user?.uid) {
+            throw new Error(
+                "The server returned an invalid session. Please try again."
+            );
+        }
 
-        window.history.pushState({ mode }, "", url);
+        try {
+            sessionStorage.setItem(
+                SESSION_KEY,
+                JSON.stringify({
+                    user: data.user,
+                    idToken: data.idToken,
+                    refreshToken: data.refreshToken,
+                    expiresIn: data.expiresIn,
+                    savedAt: Date.now()
+                })
+            );
+        } catch {
+            throw new Error(
+                "Could not save your login session in this browser."
+            );
+        }
+    }
+
+    /* ---------- Panel navigation ---------- */
+
+    function getModeFromUrl() {
+        const mode = (
+            new URLSearchParams(window.location.search).get("mode") ||
+            "login"
+        ).toLowerCase();
+
+        return validModes.has(mode) ? mode : "login";
     }
 
     function clearMessages() {
@@ -39,7 +88,6 @@ document.addEventListener("DOMContentLoaded", () => {
             "forgot-message"
         ].forEach((id) => {
             const element = $(id);
-
             if (!element) return;
 
             element.textContent = "";
@@ -47,55 +95,6 @@ document.addEventListener("DOMContentLoaded", () => {
             delete element.dataset.type;
         });
     }
-
-    function showPanel(mode, changeUrl = false) {
-        const safeMode = validModes.has(mode) ? mode : "login";
-
-        panels.forEach((panel) => {
-            panel.hidden = panel.dataset.authPanel !== safeMode;
-        });
-
-        const titles = {
-            login: "Login | studyKora",
-            signup: "Create Account | studyKora",
-            forgot: "Recover Account | studyKora"
-        };
-
-        document.title = titles[safeMode];
-
-        clearMessages();
-
-        if (changeUrl) {
-            updateUrl(safeMode);
-        }
-
-        const activePanel = document.querySelector(
-            `[data-auth-panel="${safeMode}"]`
-        );
-
-        const firstInput = activePanel?.querySelector("input");
-
-        if (firstInput) {
-            firstInput.focus({ preventScroll: true });
-        }
-    }
-
-    document.querySelectorAll("[data-show-auth]").forEach((link) => {
-        link.addEventListener("click", (event) => {
-            const mode = link.dataset.showAuth;
-
-            if (!validModes.has(mode)) return;
-
-            event.preventDefault();
-            showPanel(mode, true);
-        });
-    });
-
-    window.addEventListener("popstate", () => {
-        showPanel(getModeFromUrl());
-    });
-
-    /* 2. Form messages and validation */
 
     function setMessage(element, message, type = "") {
         if (!element) return;
@@ -116,23 +115,48 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function validateForm(form, messageElement) {
-        if (!form) return false;
+    function showPanel(mode, changeUrl = false) {
+        const safeMode = validModes.has(mode) ? mode : "login";
 
-        if (!form.checkValidity()) {
-            form.reportValidity();
+        panels.forEach((panel) => {
+            panel.hidden = panel.dataset.authPanel !== safeMode;
+        });
 
-            setMessage(
-                messageElement,
-                "Please complete all required fields with valid information.",
-                "error"
-            );
+        document.title = {
+            login: "Login | studyKora",
+            signup: "Create Account | studyKora",
+            forgot: "Recover Account | studyKora"
+        }[safeMode];
 
-            return false;
+        clearMessages();
+
+        if (changeUrl) {
+            const url = new URL(window.location.href);
+            url.searchParams.set("mode", safeMode);
+            history.pushState({ mode: safeMode }, "", url);
         }
 
-        return true;
+        document.querySelector(
+            `[data-auth-panel="${safeMode}"] input`
+        )?.focus({ preventScroll: true });
     }
+
+    document.querySelectorAll("[data-show-auth]").forEach((link) => {
+        link.addEventListener("click", (event) => {
+            const mode = link.dataset.showAuth;
+
+            if (!validModes.has(mode)) return;
+
+            event.preventDefault();
+            showPanel(mode, true);
+        });
+    });
+
+    window.addEventListener("popstate", () => {
+        showPanel(getModeFromUrl());
+    });
+
+    /* ---------- Validation helpers ---------- */
 
     function normalizeEmail(value) {
         return String(value || "").trim().toLowerCase();
@@ -142,128 +166,156 @@ document.addEventListener("DOMContentLoaded", () => {
         return String(value || "").replace(/\D/g, "");
     }
 
-    function isValidPhone(value) {
-        const digits = normalizePhone(value);
-        return digits.length >= 10 && digits.length <= 15;
+    function validateForm(form, messageElement) {
+        if (!form) return false;
+
+        if (!form.checkValidity()) {
+            form.reportValidity();
+
+            setMessage(
+                messageElement,
+                "Please complete the required fields correctly.",
+                "error"
+            );
+
+            return false;
+        }
+
+        return true;
     }
 
-    /* 3. Password visibility */
+    function setBusy(button, busy, busyText = "Please wait...") {
+        if (!button) return;
 
-    /*
-       Shared script.js initializes the password toggles first.
-       This fallback initializes them only if they are not ready.
-    */
+        if (busy) {
+            button.dataset.originalText = button.textContent;
+            button.textContent = busyText;
+            button.disabled = true;
+        } else {
+            button.textContent =
+                button.dataset.originalText || button.textContent;
+            button.disabled = false;
+        }
+    }
+
+    function getSubmitButton(form) {
+        return form?.querySelector(
+            'button[type="submit"], input[type="submit"], button:not([type])'
+        );
+    }
+
+    /* ---------- Password visibility ---------- */
 
     document.querySelectorAll("[data-toggle-password]").forEach((button) => {
         if (button.dataset.passwordToggleReady === "true") return;
 
         const input = $(button.dataset.togglePassword);
-
         if (!input) return;
 
         button.dataset.passwordToggleReady = "true";
 
         button.addEventListener("click", () => {
-            const shouldShow = input.type === "password";
+            const visible = input.type === "password";
 
-            input.type = shouldShow ? "text" : "password";
-            button.textContent = shouldShow ? "Hide" : "Show";
-
-            button.setAttribute("aria-pressed", String(shouldShow));
+            input.type = visible ? "text" : "password";
+            button.textContent = visible ? "Hide" : "Show";
+            button.setAttribute("aria-pressed", String(visible));
             button.setAttribute(
                 "aria-label",
-                shouldShow ? "Hide password" : "Show password"
+                visible ? "Hide password" : "Show password"
             );
         });
     });
 
-    /* 4. Login form */
+    /* ---------- Login ---------- */
 
     const loginForm = $("login-form");
     const loginMessage = $("login-message");
 
-    loginForm?.addEventListener("submit", (event) => {
+    loginForm?.addEventListener("submit", async (event) => {
         event.preventDefault();
 
         if (!validateForm(loginForm, loginMessage)) return;
 
         const email = normalizeEmail($("login-email")?.value);
         const password = $("login-password")?.value || "";
+        const button = getSubmitButton(loginForm);
 
-        if (!email || !password) {
+        setBusy(button, true);
+
+        try {
+            const data = await apiPost("/auth/login", {
+                email,
+                password
+            });
+
+            saveSession(data);
+
             setMessage(
                 loginMessage,
-                "Enter your email address and password.",
-                "error"
+                "Login successful. Opening studyKora...",
+                "success"
             );
 
-            return;
+            window.location.assign("./index.html");
+        } catch (error) {
+            setMessage(
+                loginMessage,
+                error.message || "Login failed. Please try again.",
+                "error"
+            );
+        } finally {
+            setBusy(button, false);
         }
-
-        setMessage(
-            loginMessage,
-            "Frontend validation passed. Sign-in is not connected yet; Firebase Authentication must be integrated.",
-            "error"
-        );
     });
 
-    /* 5. Signup form */
+    /* ---------- Signup ---------- */
 
     const signupForm = $("signup-form");
     const signupMessage = $("signup-message");
 
-    signupForm?.addEventListener("submit", (event) => {
+    signupForm?.addEventListener("submit", async (event) => {
         event.preventDefault();
 
         if (!validateForm(signupForm, signupMessage)) return;
 
         const name = String($("signup-name")?.value || "").trim();
         const email = normalizeEmail($("signup-email")?.value);
-        const whatsapp = String($("signup-whatsapp")?.value || "").trim();
+        const whatsapp = String(
+            $("signup-whatsapp")?.value || ""
+        ).trim();
         const password = $("signup-password")?.value || "";
         const confirmPassword =
             $("signup-confirm-password")?.value || "";
 
-        if (name.length < 2) {
+        if (name.length < 2 || name.length > 80) {
             setMessage(
                 signupMessage,
-                "Please enter your full name.",
+                "Please enter a valid name.",
                 "error"
             );
-
             $("signup-name")?.focus();
             return;
         }
 
-        if (!email) {
+        const phoneDigits = normalizePhone(whatsapp);
+
+        if (phoneDigits.length < 10 || phoneDigits.length > 15) {
             setMessage(
                 signupMessage,
-                "Enter a valid email address.",
+                "Enter a valid WhatsApp number with country code.",
                 "error"
             );
-
-            $("signup-email")?.focus();
-            return;
-        }
-
-        if (!isValidPhone(whatsapp)) {
-            setMessage(
-                signupMessage,
-                "Enter a valid WhatsApp number, including your country code.",
-                "error"
-            );
-
             $("signup-whatsapp")?.focus();
             return;
         }
 
-        if (password.length < 8) {
+        if (password.length < 8 || password.length > 128) {
             setMessage(
                 signupMessage,
-                "Your password must contain at least 8 characters.",
+                "Password must contain 8–128 characters.",
                 "error"
             );
-
             $("signup-password")?.focus();
             return;
         }
@@ -271,144 +323,118 @@ document.addEventListener("DOMContentLoaded", () => {
         if (password !== confirmPassword) {
             setMessage(
                 signupMessage,
-                "The passwords do not match. Please check both fields.",
+                "The passwords do not match.",
                 "error"
             );
-
             $("signup-confirm-password")?.focus();
             return;
         }
 
-        setMessage(
-            signupMessage,
-            "Your details passed frontend checks. Account creation requires Firebase Authentication and secure WhatsApp-number storage.",
-            "error"
-        );
+        const button = getSubmitButton(signupForm);
+        setBusy(button, true);
+
+        try {
+            const data = await apiPost("/auth/signup", {
+                name,
+                email,
+                whatsapp,
+                password
+            });
+
+            saveSession(data);
+
+            setMessage(
+                signupMessage,
+                "Account created successfully. Opening studyKora...",
+                "success"
+            );
+
+            window.location.assign("./index.html");
+        } catch (error) {
+            setMessage(
+                signupMessage,
+                error.message || "Account creation failed.",
+                "error"
+            );
+        } finally {
+            setBusy(button, false);
+        }
     });
 
-    /* 6. Forgot-password form */
+    /* ---------- Forgot password ---------- */
 
     const forgotForm = $("forgot-form");
     const forgotMessage = $("forgot-message");
     const resetFields = $("forgot-reset-fields");
+    const forgotWhatsapp = $("forgot-whatsapp");
 
-    /*
-       Reset fields stay hidden until a trusted verification
-       flow is integrated. Browser-side checks cannot verify
-       whether email and WhatsApp belong to the same account.
-    */
+    // Current Worker supports Firebase email-link recovery,
+    // not WhatsApp OTP recovery.
+    if (resetFields) resetFields.hidden = true;
 
-    if (resetFields) {
-        resetFields.hidden = true;
+    // WhatsApp is not used by the current email-recovery endpoint.
+    if (forgotWhatsapp) {
+        forgotWhatsapp.required = false;
+        forgotWhatsapp.removeAttribute("required");
     }
 
-    forgotForm?.addEventListener("submit", (event) => {
+    forgotForm?.addEventListener("submit", async (event) => {
         event.preventDefault();
 
-        if (!validateForm(forgotForm, forgotMessage)) return;
-
         const email = normalizeEmail($("forgot-email")?.value);
-        const whatsapp = String($("forgot-whatsapp")?.value || "").trim();
 
-        if (!email) {
+        if (!email || !$("forgot-email")?.checkValidity()) {
             setMessage(
                 forgotMessage,
-                "Enter your registered email address.",
+                "Enter a valid registered email address.",
                 "error"
             );
-
-            $("forgot-email")?.focus();
+            $("forgot-email")?.reportValidity();
             return;
         }
 
-        if (!isValidPhone(whatsapp)) {
+        const button = getSubmitButton(forgotForm);
+        setBusy(button, true);
+
+        try {
+            const data = await apiPost("/auth/forgot-password", {
+                email
+            });
+
             setMessage(
                 forgotMessage,
-                "Enter a valid WhatsApp number, including your country code.",
+                data.message ||
+                    "If the account exists, password-reset instructions will be sent.",
+                "success"
+            );
+        } catch (error) {
+            setMessage(
+                forgotMessage,
+                error.message || "Could not request a password reset.",
                 "error"
             );
-
-            $("forgot-whatsapp")?.focus();
-            return;
+        } finally {
+            setBusy(button, false);
         }
-
-        setMessage(
-            forgotMessage,
-            "The recovery form is ready. Account verification is not connected yet. A trusted backend must verify the registered details and issue a verification code.",
-            "error"
-        );
     });
 
-    /* 7. Password reset button */
-
-    const resetButton = $("forgot-reset-submit");
-
-    resetButton?.addEventListener("click", () => {
-        const otp = String($("forgot-otp")?.value || "").trim();
-        const password = $("forgot-new-password")?.value || "";
-        const confirmPassword =
-            $("forgot-confirm-password")?.value || "";
-
-        if (!otp || !password || !confirmPassword) {
-            setMessage(
-                forgotMessage,
-                "Enter the verification code and both new-password fields after account verification is enabled.",
-                "error"
-            );
-
-            return;
-        }
-
-        if (password.length < 8) {
-            setMessage(
-                forgotMessage,
-                "The new password must contain at least 8 characters.",
-                "error"
-            );
-
-            $("forgot-new-password")?.focus();
-            return;
-        }
-
-        if (password !== confirmPassword) {
-            setMessage(
-                forgotMessage,
-                "The new passwords do not match.",
-                "error"
-            );
-
-            $("forgot-confirm-password")?.focus();
-            return;
-        }
-
-        setMessage(
-            forgotMessage,
-            "Password reset is not connected yet. The verification code must be validated by the backend before a password can be changed.",
-            "error"
-        );
-    });
-
-    /* 8. Normalize phone formatting on blur */
+    /* ---------- Normalize phone fields ---------- */
 
     ["signup-whatsapp", "forgot-whatsapp"].forEach((id) => {
-        const input = $(id);
-
-        input?.addEventListener("blur", () => {
+        $(id)?.addEventListener("blur", (event) => {
+            const input = event.currentTarget;
             const value = String(input.value || "").trim();
 
             if (!value) return;
 
             const digits = normalizePhone(value);
-
             input.value = value.startsWith("+")
                 ? `+${digits}`
                 : digits;
         });
     });
 
-    /* 9. Initial panel */
+    /* ---------- Initial screen ---------- */
 
-    showPanel(
-        new URLSearchParams(window.location.search).get("mode") || "login"
-    );
+    showPanel(getModeFromUrl());
 });
