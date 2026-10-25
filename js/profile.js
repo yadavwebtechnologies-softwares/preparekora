@@ -1,6 +1,8 @@
-// StudyKora Profile
+// StudyKora Profile — Cloudflare Worker API
 document.addEventListener("DOMContentLoaded", async () => {
     const $ = (id) => document.getElementById(id);
+
+    const API_BASE = "https://studykora-api.yadavsubba2003.workers.dev";
 
     const authRequired = $("profile-auth-required");
     const profileContent = $("profile-content");
@@ -10,11 +12,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const profilePhoto = $("profile-photo");
     const profileMessage = $("profile-message");
 
-    const DATABASE_URL =
-        "https://studykora-fc91d-default-rtdb.firebaseio.com";
-
-    let session = null;
-    let profileData = {};
+    let session = readSession();
+    let currentProfile = {};
 
     function readSession() {
         try {
@@ -26,52 +25,47 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
+    function saveSession() {
+        sessionStorage.setItem("studyKoraSession", JSON.stringify(session));
+    }
+
     function showMessage(element, message, isError = false) {
         if (!element) return;
-
         element.textContent = message;
         element.dataset.status = isError ? "error" : "success";
     }
 
-    function getUid() {
-        return session?.user?.localId || session?.user?.uid || null;
-    }
-
-    async function databaseRequest(method, path, data) {
-        const uid = getUid();
-
-        if (!uid || !session?.idToken) {
-            throw new Error("Your session has expired. Please log in again.");
+    async function apiRequest(path, method = "GET", data = {}) {
+        if (!session?.idToken) {
+            throw new Error("Please log in again.");
         }
 
-        const url =
-            `${DATABASE_URL}/${path}.json?auth=` +
-            encodeURIComponent(session.idToken);
-
-        const response = await fetch(url, {
+        const response = await fetch(`${API_BASE}${path}`, {
             method,
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${session.idToken}`
             },
-            ...(data !== undefined
-                ? { body: JSON.stringify(data) }
+            ...(method !== "GET"
+                ? {
+                    body: JSON.stringify({
+                        ...data,
+                        idToken: session.idToken
+                    })
+                }
                 : {})
         });
 
-        const result = await response.json().catch(() => null);
+        const result = await response.json().catch(() => ({}));
 
-        if (!response.ok || result?.error) {
-            throw new Error(
-                typeof result?.error === "string"
-                    ? result.error
-                    : "Unable to access your profile. Please try again."
-            );
+        if (!response.ok) {
+            throw new Error(result.error || "Request failed. Please try again.");
         }
 
         return result;
     }
 
-    function requireLogin() {
+    function showLoggedOut() {
         if (authRequired) authRequired.hidden = false;
         if (profileContent) profileContent.hidden = true;
     }
@@ -79,44 +73,50 @@ document.addEventListener("DOMContentLoaded", async () => {
     async function loadProfile() {
         session = readSession();
 
-        if (!session?.idToken || !getUid() || !session?.user?.email) {
-            requireLogin();
+        if (!session?.idToken || !session?.user?.email) {
+            showLoggedOut();
             return;
         }
 
-        if (authRequired) authRequired.hidden = true;
-        if (profileContent) profileContent.hidden = false;
-
-        profileEmail.value = session.user.email;
-
         try {
-            const data = await databaseRequest(
-                "GET",
-                `users/${encodeURIComponent(getUid())}`
-            );
+            const result = await apiRequest("/profile");
+            currentProfile = result.profile || {};
 
-            profileData = data || {};
+            if (authRequired) authRequired.hidden = true;
+            if (profileContent) profileContent.hidden = false;
 
             profileName.value =
-                profileData.displayName ||
-                profileData.name ||
+                currentProfile.displayName ||
                 session.user.displayName ||
                 "";
 
             profileEmail.value =
-                session.user.email || profileData.email || "";
+                result.user?.email ||
+                session.user.email ||
+                "";
 
-            profilePhoto.value = profileData.photoURL || "";
+            profilePhoto.value =
+                currentProfile.photoURL ||
+                session.user.photoURL ||
+                "";
         } catch (error) {
             showMessage(profileMessage, error.message, true);
+
+            if (
+                /session|token|authentication|log in/i.test(error.message)
+            ) {
+                showLoggedOut();
+            }
         }
     }
 
+    // Save name and photo through the Worker
     profileForm?.addEventListener("submit", async (event) => {
         event.preventDefault();
 
         const name = profileName.value.trim();
         const photoURL = profilePhoto.value.trim();
+        const saveButton = $("profile-save");
 
         if (!name) {
             showMessage(profileMessage, "Please enter your name.", true);
@@ -125,48 +125,44 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (photoURL) {
             try {
-                new URL(photoURL);
+                const url = new URL(photoURL);
+                if (!["http:", "https:"].includes(url.protocol)) {
+                    throw new Error();
+                }
             } catch {
-                showMessage(
-                    profileMessage,
-                    "Please enter a valid photo URL.",
-                    true
-                );
+                showMessage(profileMessage, "Enter a valid photo URL.", true);
                 return;
             }
         }
 
-        const saveButton = $("profile-save");
         if (saveButton) {
             saveButton.disabled = true;
             saveButton.textContent = "Saving...";
         }
 
         try {
-            const updatedProfile = {
+            const result = await apiRequest("/profile", "PATCH", {
                 displayName: name,
-                email: session.user.email,
-                photoURL: photoURL || null
-            };
+                photoURL
+            });
 
-            await databaseRequest(
-                "PATCH",
-                `users/${encodeURIComponent(getUid())}`,
-                updatedProfile
-            );
+            // Keep the returned refreshed tokens, if supplied by the Worker.
+            if (result.idToken) session.idToken = result.idToken;
+            if (result.refreshToken) session.refreshToken = result.refreshToken;
+            if (result.expiresIn) session.expiresIn = result.expiresIn;
+            if (result.user) {
+                session.user = { ...session.user, ...result.user };
+            }
 
-            // Update the locally saved session information.
             session.user.displayName = name;
-            session.user.photoURL = photoURL || null;
+            session.user.photoURL = photoURL;
 
-            sessionStorage.setItem(
-                "studyKoraSession",
-                JSON.stringify(session)
-            );
+            saveSession();
 
-            profileData = {
-                ...profileData,
-                ...updatedProfile
+            currentProfile = {
+                ...currentProfile,
+                displayName: name,
+                photoURL
             };
 
             showMessage(profileMessage, "Profile updated successfully.");
@@ -180,7 +176,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    // Account deletion request: backend endpoint is not available yet.
+    // Show account deletion request form
     $("profile-delete-open")?.addEventListener("click", () => {
         const form = $("profile-delete-form");
         if (form) form.hidden = false;
@@ -191,33 +187,79 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (form) form.hidden = true;
     });
 
-    $("profile-delete-form")?.addEventListener("submit", (event) => {
+    // Submit deletion request; this does not delete the account.
+    $("profile-delete-form")?.addEventListener("submit", async (event) => {
         event.preventDefault();
 
+        const password = $("profile-delete-password").value;
         const confirmation = $("profile-delete-confirm").value.trim();
+        const submitButton = $("profile-delete-submit");
         const message = $("profile-delete-message");
 
-        if (confirmation !== "DELETE") {
-            showMessage(
-                message,
-                "Type DELETE exactly to confirm your request.",
-                true
-            );
+        if (!password) {
+            showMessage(message, "Enter your account password.", true);
             return;
         }
 
-        showMessage(
-            message,
-            "Deletion requests are not connected to the secure backend yet. No request has been submitted.",
-            true
-        );
+        if (confirmation !== "DELETE") {
+            showMessage(message, 'Type DELETE exactly to confirm.', true);
+            return;
+        }
+
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = "Submitting...";
+        }
+
+        try {
+            const result = await apiRequest(
+                "/profile/deletion-request",
+                "POST",
+                { password, confirmation }
+            );
+
+            showMessage(
+                message,
+                result.message || "Deletion request submitted."
+            );
+
+            $("profile-delete-password").value = "";
+            $("profile-delete-confirm").value = "";
+        } catch (error) {
+            showMessage(message, error.message, true);
+        } finally {
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = "Submit Deletion Request";
+            }
+        }
     });
 
-    // Email change requires Firebase re-authentication and verification.
-    $("profile-change-email")?.addEventListener("click", () => {
-        window.alert(
-            "Email changes will be available after secure verification is connected."
-        );
+    // Request email-change verification
+    $("profile-change-email")?.addEventListener("click", async () => {
+        const newEmail = window.prompt("Enter your new email address:");
+        if (!newEmail) return;
+
+        const email = newEmail.trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            window.alert("Enter a valid email address.");
+            return;
+        }
+
+        try {
+            const result = await apiRequest(
+                "/profile/email-change",
+                "POST",
+                { newEmail: email }
+            );
+
+            window.alert(
+                result.message ||
+                "Check your email for verification instructions."
+            );
+        } catch (error) {
+            window.alert(error.message);
+        }
     });
 
     // Logout confirmation
