@@ -3,246 +3,609 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#ffffff">
+
     <title>My Profile | StudyKora</title>
-    <meta name="description" content="Manage your StudyKora account and settings.">
+    <meta name="description" content="Manage your StudyKora profile, personal information and account settings.">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/profile.html">
+
     <link rel="stylesheet" href="style.css">
+
+    <!-- Profile-specific responsive styling; reuses shared StudyKora tokens -->
+    <style>
+        .profile-page .profile-page-content {
+            padding-block: clamp(22px, 4vw, 38px);
+        }
+
+        .profile-page .profile-container {
+            max-width: 1040px;
+        }
+
+        .profile-page .profile-page-heading {
+            margin-bottom: 22px;
+        }
+
+        .profile-page .profile-page-heading .section-title {
+            font-size: clamp(21px, 3vw, 28px);
+            letter-spacing: -0.45px;
+        }
+
+        .profile-page .profile-page-heading .section-description {
+            max-width: 620px;
+            font-size: var(--text-base);
+        }
+
+        .profile-page .brand-name-primary {
+            color: #111111;
+        }
+
+        .profile-page .brand-name-muted {
+            color: #777777;
+        }
+
+        .profile-page .profile-content {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            align-items: start;
+        }
+
+        .profile-page .profile-panel {
+            min-width: 0;
+            padding: clamp(15px, 2.5vw, 22px);
+        }
+
+        .profile-page .profile-panel-header {
+            margin-bottom: 18px;
+        }
+
+        .profile-page .profile-panel-header .panel-title {
+            margin-bottom: 5px;
+            font-size: var(--heading-sm);
+        }
+
+        .profile-page .profile-panel-header .panel-description {
+            margin: 0;
+        }
+
+        .profile-page .profile-identity {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            margin-bottom: 20px;
+            padding-bottom: 17px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .profile-page .profile-avatar {
+            display: grid;
+            flex: 0 0 56px;
+            width: 56px;
+            height: 56px;
+            overflow: hidden;
+            place-items: center;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            background: var(--surface);
+            color: var(--text-secondary);
+        }
+
+        .profile-page .profile-avatar svg {
+            width: 26px;
+            height: 26px;
+        }
+
+        .profile-page .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-page .profile-identity-text {
+            min-width: 0;
+        }
+
+        .profile-page .profile-identity-name {
+            margin: 0;
+            overflow-wrap: anywhere;
+            color: var(--text);
+            font-size: var(--text-md);
+            font-weight: 700;
+        }
+
+        .profile-page .profile-identity-email {
+            margin: 3px 0 0;
+            overflow-wrap: anywhere;
+            color: var(--text-muted);
+            font-size: var(--text-sm);
+        }
+
+        .profile-page .profile-field-note {
+            display: block;
+            margin-top: 5px;
+            color: var(--text-muted);
+            font-size: var(--text-xs);
+            line-height: 1.6;
+        }
+
+        .profile-page .profile-form-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            align-items: center;
+        }
+
+        .profile-page .profile-form-actions .btn {
+            max-width: 100%;
+        }
+
+        .profile-page .profile-status {
+            margin: 0 0 12px;
+            color: var(--text-secondary);
+            font-size: var(--text-sm);
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        .profile-page .profile-status:empty {
+            display: none;
+        }
+
+        .profile-page .profile-status.is-error {
+            color: var(--danger);
+        }
+
+        .profile-page .profile-status.is-success {
+            color: var(--success);
+        }
+
+        .profile-page .profile-delete-panel {
+            border-color: var(--border);
+        }
+
+        .profile-page .profile-delete-panel .panel-title {
+            color: var(--text);
+        }
+
+        .profile-page .profile-logout-confirmation {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .profile-page .profile-logout-confirmation p {
+            margin: 0 0 12px;
+            color: var(--text-secondary);
+            font-size: var(--text-sm);
+        }
+
+        .profile-page .profile-loading {
+            color: var(--text-muted);
+            font-size: var(--text-sm);
+        }
+
+        .profile-page .profile-page-footer {
+            margin-top: 10px;
+        }
+
+        @media (max-width: 760px) {
+            .profile-page .profile-content {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 13px;
+            }
+
+            .profile-page .profile-page-heading {
+                margin-bottom: 17px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .profile-page .profile-page-content {
+                padding-block: 20px;
+            }
+
+            .profile-page .profile-container {
+                padding-inline: var(--container-padding);
+            }
+
+            .profile-page .profile-panel {
+                padding: 14px;
+                border-radius: var(--radius-md);
+            }
+
+            .profile-page .profile-identity {
+                gap: 10px;
+            }
+
+            .profile-page .profile-avatar {
+                flex-basis: 48px;
+                width: 48px;
+                height: 48px;
+            }
+
+            .profile-page .profile-form-actions {
+                align-items: stretch;
+            }
+
+            .profile-page .profile-form-actions .btn {
+                flex: 1 1 auto;
+            }
+        }
+    </style>
+
+    <script src="script.js" defer></script>
+    <script src="js/shared-header.js" defer></script>
+    <script src="js/profile.js" defer></script>
 </head>
 
-<body>
+<body class="profile-page">
 
     <!-- Shared Header -->
-    <div id="site-header"></div>
+    <header class="site-header">
+        <div class="header-inner">
 
-    <main>
-        <section class="content-section">
+            <a href="index.html" class="brand" aria-label="StudyKora home">
+                <span class="brand-mark" aria-hidden="true">
+                    <span style="font-size:23px;font-weight:800;">s</span>
+                </span>
+                <span class="brand-text">
+                    <span class="brand-name"><span class="brand-name-primary">study</span><span class="brand-name-muted">kora</span></span>
+                </span>
+            </a>
 
-            <div class="section-heading">
-                <div>
-                    <p class="section-title">YOUR ACCOUNT</p>
-                    <h1>My Profile</h1>
+            <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+                <a href="index.html" data-page="index.html">Home</a>
+                <a href="subject.html" data-page="subject.html">Subjects</a>
+                <a href="current-affairs.html" data-page="current-affairs.html">Current Affairs</a>
+                <a href="mock-tests.html" data-page="mock-tests.html">Mock Tests</a>
+                <a href="daily-practice.html" data-page="daily-practice.html">Daily Practice</a>
+            </nav>
+
+            <div class="header-actions">
+                <div id="account-guest" class="account-guest">
+                    <a href="auth.html?mode=login" class="btn btn-outline" id="account-login-link">
+                        Login
+                    </a>
+                    <a href="auth.html?mode=signup" class="btn btn-primary" id="account-register-link">
+                        Create Account
+                    </a>
                 </div>
+
+                <div id="account-authenticated" class="account-authenticated" hidden>
+                    <a href="profile.html"
+                       class="account-profile-trigger"
+                       id="account-profile-trigger"
+                       aria-label="Open profile"
+                       aria-current="page"
+                       title="Profile">
+                        <svg id="account-profile-avatar"
+                             viewBox="0 0 24 24"
+                             width="24"
+                             height="24"
+                             fill="none"
+                             aria-hidden="true">
+                            <circle cx="12" cy="8" r="4"
+                                    stroke="currentColor" stroke-width="1.7"/>
+                            <path d="M4.5 20a7.5 7.5 0 0 1 15 0"
+                                  stroke="currentColor" stroke-width="1.7"
+                                  stroke-linecap="round"/>
+                        </svg>
+                    </a>
+                </div>
+
+                <button type="button"
+                        class="menu-toggle"
+                        id="menu-toggle"
+                        aria-label="Open navigation menu"
+                        aria-controls="main-nav"
+                        aria-expanded="false">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M4 7h16M4 12h16M4 17h16"
+                              stroke="currentColor" stroke-width="1.8"
+                              stroke-linecap="round"/>
+                    </svg>
+                </button>
             </div>
+        </div>
+    </header>
 
-            <!-- Signed Out State -->
-            <div class="panel" id="profile-auth-required" hidden>
-                <h2 class="panel-title">Login Required</h2>
-                <p class="panel-description">
-                    Sign in to view and manage your profile.
-                </p>
-                <a href="./auth.html?mode=login" class="btn btn-primary">
-                    Login
-                </a>
-                <a href="./auth.html?mode=signup" class="btn btn-outline">
-                    Create Account
-                </a>
-            </div>
+    <main class="page-content">
+        <section class="content-section profile-page-content">
+            <div class="container profile-container">
 
-            <!-- Account Profile -->
-            <div id="profile-content" class="content-stack" hidden>
+                <div class="section-heading profile-page-heading">
+                    <div>
+                        <h1 class="section-title">My Profile</h1>
+                        <p class="section-description">
+                            Manage your personal details and account settings.
+                        </p>
+                    </div>
+                </div>
 
-                <section class="panel">
-                    <h2 class="panel-title">Profile Information</h2>
+                <!-- Shown when signed out -->
+                <section class="panel" id="profile-auth-required" hidden>
+                    <h2 class="panel-title">Login Required</h2>
                     <p class="panel-description">
-                        View and update your account details.
+                        Log in to view and manage your StudyKora profile.
                     </p>
+                    <div class="profile-form-actions">
+                        <a href="auth.html?mode=login" class="btn btn-primary">Login</a>
+                        <a href="auth.html?mode=signup" class="btn btn-outline">Create Account</a>
+                    </div>
+                </section>
 
-                    <form id="profile-form">
+                <p id="profile-loading" class="profile-loading" role="status">
+                    Loading profile...
+                </p>
 
-                        <div class="form-group">
-                            <label class="form-label" for="profile-name">
-                                Full Name
-                            </label>
-                            <input
-                                class="form-control"
-                                type="text"
-                                id="profile-name"
-                                name="displayName"
-                                maxlength="80"
-                                autocomplete="name"
-                                required
-                            >
-                        </div>
+                <div id="profile-content" class="profile-content" hidden>
 
-                        <div class="form-group">
-                            <label class="form-label" for="profile-email">
-                                Email Address
-                            </label>
-                            <input
-                                class="form-control"
-                                type="email"
-                                id="profile-email"
-                                name="email"
-                                autocomplete="email"
-                                readonly
-                            >
-                            <p class="form-hint">
-                                Email changes require account verification.
+                    <!-- Profile information -->
+                    <section class="panel profile-panel">
+                        <div class="profile-panel-header">
+                            <h2 class="panel-title">Profile Information</h2>
+                            <p class="panel-description">
+                                Update your name and optional profile photo.
                             </p>
                         </div>
 
-                        <div class="form-group">
-                            <label class="form-label" for="profile-photo">
-                                Profile Photo URL (Optional)
-                            </label>
-                            <input
-                                class="form-control"
-                                type="url"
-                                id="profile-photo"
-                                name="photoURL"
-                                placeholder="https://example.com/photo.jpg"
-                            >
+                        <div class="profile-identity">
+                            <div class="profile-avatar" id="profile-avatar-preview" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <circle cx="12" cy="8" r="4"
+                                            stroke="currentColor" stroke-width="1.7"/>
+                                    <path d="M4.5 20a7.5 7.5 0 0 1 15 0"
+                                          stroke="currentColor" stroke-width="1.7"
+                                          stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <div class="profile-identity-text">
+                                <p class="profile-identity-name" id="profile-display-name">Account</p>
+                                <p class="profile-identity-email" id="profile-display-email"></p>
+                            </div>
                         </div>
 
-                        <p
-                            class="form-message"
-                            id="profile-message"
-                            role="status"
-                            aria-live="polite"
-                        ></p>
+                        <form id="profile-form">
+                            <div class="form-group">
+                                <label class="form-label" for="profile-name">Full Name</label>
+                                <input class="form-control"
+                                       type="text"
+                                       id="profile-name"
+                                       name="displayName"
+                                       autocomplete="name"
+                                       minlength="2"
+                                       maxlength="80"
+                                       required>
+                            </div>
 
-                        <button
-                            type="submit"
-                            class="btn btn-primary"
-                            id="profile-save"
-                        >
-                            Save Changes
-                        </button>
-                    </form>
-                </section>
+                            <div class="form-group">
+                                <label class="form-label" for="profile-email">Current Email</label>
+                                <input class="form-control"
+                                       type="email"
+                                       id="profile-email"
+                                       name="email"
+                                       autocomplete="email"
+                                       readonly>
+                                <small class="profile-field-note">
+                                    To change this address, use the email verification section.
+                                </small>
+                            </div>
 
-                <!-- Account Settings -->
-                <section class="panel">
-                    <h2 class="panel-title">Account Settings</h2>
-                    <p class="panel-description">
-                        Manage your account access and deletion request.
-                    </p>
+                            <div class="form-group">
+                                <label class="form-label" for="profile-photo">Profile Photo URL (Optional)</label>
+                                <input class="form-control"
+                                       type="url"
+                                       id="profile-photo"
+                                       name="photoURL"
+                                       placeholder="https://example.com/photo.jpg">
+                                <small class="profile-field-note">
+                                    Use a publicly accessible image URL, or leave this blank.
+                                </small>
+                            </div>
 
-                    <div class="form-group">
-                        <h3>Change Email Address</h3>
-                        <p class="form-hint">
-                            Email changes will require verification.
-                        </p>
-                        <button
-                            type="button"
-                            class="btn btn-outline"
-                            id="profile-change-email"
-                        >
-                            Change Email
-                        </button>
-                    </div>
+                            <p class="form-message profile-status"
+                               id="profile-message"
+                               role="status"
+                               aria-live="polite"></p>
 
-                    <div class="form-group">
-                        <h3>Request Account Deletion</h3>
-                        <p class="form-hint">
-                            Submit a request for your account to be reviewed
-                            for deletion.
-                        </p>
-                        <button
-                            type="button"
-                            class="btn btn-outline"
-                            id="profile-delete-open"
-                        >
+                            <div class="profile-form-actions">
+                                <button type="submit" class="btn btn-primary" id="profile-save">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+
+                    <!-- Email change -->
+                    <section class="panel profile-panel">
+                        <div class="profile-panel-header">
+                            <h2 class="panel-title">Change Email Address</h2>
+                            <p class="panel-description">
+                                Request a verification email for your new address.
+                            </p>
+                        </div>
+
+                        <form id="profile-email-form">
+                            <div class="form-group">
+                                <label class="form-label" for="profile-new-email">New Email Address</label>
+                                <input class="form-control"
+                                       type="email"
+                                       id="profile-new-email"
+                                       name="newEmail"
+                                       autocomplete="email"
+                                       placeholder="Enter your new email"
+                                       required>
+                            </div>
+
+                            <p class="form-message profile-status"
+                               id="profile-email-message"
+                               role="status"
+                               aria-live="polite"></p>
+
+                            <div class="profile-form-actions">
+                                <button type="submit"
+                                        class="btn btn-outline"
+                                        id="profile-email-submit">
+                                    Request Verification
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+
+                    <!-- Account deletion request -->
+                    <section class="panel profile-panel profile-delete-panel">
+                        <div class="profile-panel-header">
+                            <h2 class="panel-title">Request Account Deletion</h2>
+                            <p class="panel-description">
+                                The request is sent for review. Your account will not be deleted automatically.
+                            </p>
+                        </div>
+
+                        <button type="button"
+                                class="btn btn-outline"
+                                id="profile-delete-open">
                             Request Deletion
                         </button>
-                    </div>
 
-                    <form id="profile-delete-form" hidden>
-                        <div class="form-group">
-                            <label class="form-label" for="profile-delete-password">
-                                Account Password
-                            </label>
-                            <input
-                                class="form-control"
-                                type="password"
-                                id="profile-delete-password"
-                                autocomplete="current-password"
-                                required
-                            >
+                        <form id="profile-delete-form" hidden>
+                            <div class="form-group">
+                                <label class="form-label" for="profile-delete-password">
+                                    Confirm Your Password
+                                </label>
+                                <input class="form-control"
+                                       type="password"
+                                       id="profile-delete-password"
+                                       name="password"
+                                       autocomplete="current-password"
+                                       required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="profile-delete-confirm">
+                                    Type DELETE to confirm
+                                </label>
+                                <input class="form-control"
+                                       type="text"
+                                       id="profile-delete-confirm"
+                                       name="confirmation"
+                                       autocomplete="off"
+                                       required>
+                            </div>
+
+                            <p class="form-message profile-status"
+                               id="profile-delete-message"
+                               role="status"
+                               aria-live="polite"></p>
+
+                            <div class="profile-form-actions">
+                                <button type="submit"
+                                        class="btn btn-primary"
+                                        id="profile-delete-submit">
+                                    Submit Request
+                                </button>
+                                <button type="button"
+                                        class="btn btn-outline"
+                                        id="profile-delete-cancel">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+
+                    <!-- Logout -->
+                    <section class="panel profile-panel">
+                        <div class="profile-panel-header">
+                            <h2 class="panel-title">Log Out</h2>
+                            <p class="panel-description">
+                                End your current StudyKora session.
+                            </p>
                         </div>
 
-                        <div class="form-group">
-                            <label class="form-label" for="profile-delete-confirm">
-                                Type DELETE to confirm
-                            </label>
-                            <input
-                                class="form-control"
-                                type="text"
-                                id="profile-delete-confirm"
-                                autocomplete="off"
-                                required
-                            >
+                        <button type="button"
+                                class="btn btn-outline"
+                                id="profile-logout">
+                            Log Out
+                        </button>
+
+                        <div class="profile-logout-confirmation"
+                             id="profile-logout-confirmation"
+                             hidden>
+                            <p>Are you sure you want to log out?</p>
+                            <div class="profile-form-actions">
+                                <button type="button"
+                                        class="btn btn-outline"
+                                        id="profile-logout-cancel">
+                                    Cancel
+                                </button>
+                                <button type="button"
+                                        class="btn btn-primary"
+                                        id="profile-logout-confirm">
+                                    Confirm Log Out
+                                </button>
+                            </div>
                         </div>
+                    </section>
 
-                        <p
-                            class="form-message"
-                            id="profile-delete-message"
-                            role="status"
-                            aria-live="polite"
-                        ></p>
-
-                        <button
-                            type="submit"
-                            class="btn btn-primary"
-                            id="profile-delete-submit"
-                        >
-                            Submit Deletion Request
-                        </button>
-
-                        <button
-                            type="button"
-                            class="btn btn-outline"
-                            id="profile-delete-cancel"
-                        >
-                            Cancel
-                        </button>
-                    </form>
-                </section>
-
-                <!-- Logout -->
-                <section class="panel">
-                    <h2 class="panel-title">Log Out</h2>
-                    <p class="panel-description">
-                        Sign out of your StudyKora account on this session.
-                    </p>
-
-                    <button
-                        type="button"
-                        class="btn btn-outline"
-                        id="profile-logout"
-                    >
-                        Log Out
-                    </button>
-
-                    <div id="profile-logout-confirmation" hidden>
-                        <p class="form-message">
-                            Are you sure you want to log out?
-                        </p>
-
-                        <button
-                            type="button"
-                            class="btn btn-outline"
-                            id="profile-logout-cancel"
-                        >
-                            Cancel
-                        </button>
-
-                        <button
-                            type="button"
-                            class="btn btn-primary"
-                            id="profile-logout-confirm"
-                        >
-                            Confirm Log Out
-                        </button>
-                    </div>
-                </section>
-
+                </div>
             </div>
         </section>
     </main>
 
-<script src="js/shared-header.js"></script>
-<script src="js/profile.js"></script>
+    <!-- Shared Footer -->
+    <footer class="site-footer profile-page-footer">
+        <div class="footer-main">
+            <div class="footer-brand">
+                <a href="index.html" class="brand" aria-label="StudyKora home">
+                    <span class="brand-mark" aria-hidden="true">
+                        <span style="font-size:23px;font-weight:800;">s</span>
+                    </span>
+                    <span class="brand-text">
+                        <span class="brand-name"><span class="brand-name-primary">study</span><span class="brand-name-muted">kora</span></span>
+                    </span>
+                </a>
+                <p class="footer-description">
+                    A practice platform for Assam competitive exams,
+                    subject-wise MCQs and exam preparation.
+                </p>
+            </div>
+
+            <div class="footer-column">
+                <h3>Practice</h3>
+                <ul class="footer-links">
+                    <li><a href="subject.html">Subjects</a></li>
+                    <li><a href="mock-tests.html">Mock Tests</a></li>
+                    <li><a href="daily-practice.html">Daily Practice</a></li>
+                    <li><a href="current-affairs.html">Current Affairs</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h3>StudyKora</h3>
+                <ul class="footer-links">
+                    <li><a href="why-studynow.html">About</a></li>
+                    <li><a href="resources.html">Resources</a></li>
+                    <li><a href="faq.html">FAQs</a></li>
+                    <li><a href="organization.html">Organizations</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h3>Information</h3>
+                <ul class="footer-links">
+                    <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                    <li><a href="credits.html">Credits</a></li>
+                    <li><a href="auth.html?mode=login">Login</a></li>
+                    <li><a href="auth.html?mode=signup">Create Account</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <span>&copy; <span data-current-year></span> StudyKora. All rights reserved.</span>
+            <span class="site-credit">Design and Develop by Yadav Web Technologies</span>
+        </div>
+    </footer>
 
 </body>
 </html>
