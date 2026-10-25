@@ -2257,3 +2257,217 @@ body.auth-page {
         transition: none;
     }
 }
+
+/* =====================================================
+   studyKora — FAQ accordion
+   Append to shared style.css
+===================================================== */
+
+.faq-page [data-faq-item] {
+    padding: 0;
+    overflow: hidden;
+}
+
+.faq-question {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    width: 100%;
+    padding: 15px 16px;
+    border: 0;
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font-family);
+    font-size: var(--text-md);
+    font-weight: 650;
+    line-height: 1.55;
+    text-align: left;
+    cursor: pointer;
+}
+
+.faq-question:hover {
+    background: var(--primary-soft);
+}
+
+.faq-question[aria-expanded="true"] {
+    color: var(--primary-dark);
+    background: var(--primary-soft);
+}
+
+.faq-toggle {
+    display: grid;
+    flex: 0 0 26px;
+    width: 26px;
+    height: 26px;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--primary);
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.faq-answer {
+    padding: 0 16px 15px;
+    border-top: 1px solid var(--border-light);
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-size: var(--text-base);
+    line-height: 1.8;
+}
+
+.faq-answer p {
+    margin: 12px 0 0;
+}
+
+.faq-answer[hidden] {
+    display: none !important;
+}
+
+@media (max-width: 480px) {
+    .faq-question {
+        gap: 10px;
+        padding: 13px 12px;
+        font-size: var(--text-base);
+    }
+
+    .faq-answer {
+        padding: 0 12px 13px;
+        font-size: var(--text-sm);
+    }
+}
+
+/* =====================================================
+   studyKora — Auth Layout Shift Fix
+   Append at the VERY END of style.css
+===================================================== */
+
+/* Desktop: fixed viewport layout */
+@media (min-width: 651px) {
+    .auth-layout {
+        height: 100vh;
+        min-height: 640px;
+        overflow: hidden;
+        align-items: stretch;
+    }
+
+    .auth-side {
+        height: 100%;
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    .auth-main {
+        height: 100%;
+        min-height: 0;
+        padding: 24px clamp(20px, 4vw, 64px);
+        overflow: hidden;
+        align-items: stretch;
+    }
+
+    .auth-main-inner {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        max-height: 100%;
+        margin: 0 auto;
+        overflow: hidden;
+    }
+
+    .auth-form-wrap {
+        flex: 0 1 auto;
+        width: 100%;
+        min-height: 0;
+        max-height: calc(100vh - 145px);
+        overflow-x: hidden;
+        overflow-y: auto;
+        scrollbar-gutter: stable;
+        overscroll-behavior: contain;
+    }
+
+    .auth-panel {
+        width: 100%;
+        padding: 2px 4px;
+    }
+
+    .auth-card {
+        width: 100%;
+    }
+
+    .auth-security-note,
+    .auth-home-link {
+        flex: 0 0 auto;
+    }
+
+    /*
+       Override previous :has() rules that changed alignment
+       when switching to signup or forgot-password.
+    */
+    .auth-page:has(#signup-panel:not([hidden])) .auth-main,
+    .auth-page:has(#forgot-panel:not([hidden])) .auth-main {
+        align-items: stretch;
+    }
+
+    .auth-page:has(#signup-panel:not([hidden])) .auth-main-inner,
+    .auth-page:has(#forgot-panel:not([hidden])) .auth-main-inner {
+        height: 100%;
+        margin-block: 0;
+    }
+}
+
+/* Mobile: natural page scrolling */
+@media (max-width: 650px) {
+    .auth-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+    }
+
+    .auth-main {
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+        align-items: flex-start;
+    }
+
+    .auth-main-inner {
+        display: block;
+        height: auto;
+        min-height: 0;
+        max-height: none;
+        margin: 0 auto;
+        overflow: visible;
+    }
+
+    .auth-form-wrap {
+        flex: initial;
+        height: auto;
+        max-height: none;
+        min-height: 0;
+        overflow: visible;
+        scrollbar-gutter: auto;
+    }
+
+    .auth-panel {
+        padding: 0;
+    }
+
+    .auth-page:has(#signup-panel:not([hidden])) .auth-main,
+    .auth-page:has(#forgot-panel:not([hidden])) .auth-main {
+        align-items: flex-start;
+    }
+
+    .auth-page:has(#signup-panel:not([hidden])) .auth-main-inner,
+    .auth-page:has(#forgot-panel:not([hidden])) .auth-main-inner {
+        height: auto;
+        margin-block: 0;
+    }
+}
