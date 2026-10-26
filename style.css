@@ -2537,3 +2537,255 @@ body.auth-page {
         transition: none;
     }
 }
+/* =========================================
+   StudyKora Profile Enhancements
+   ========================================= */
+
+.sk-profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px 0;
+}
+
+.sk-profile-identity-copy {
+  min-width: 0;
+}
+
+.sk-profile-name {
+  margin: 0;
+  color: #171717;
+  font-size: clamp(19px, 3vw, 25px);
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.sk-profile-email {
+  margin: 5px 0 0;
+  color: #737373;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.sk-profile-avatar {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #e5e5e5;
+  color: #303030;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  user-select: none;
+}
+
+.sk-profile-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.sk-avatar-initials {
+  text-transform: uppercase;
+}
+
+/* Profile loading overlay and background blur */
+
+.sk-profile-loading {
+  position: relative;
+  min-height: 180px;
+  isolation: isolate;
+}
+
+.sk-profile-loading > :not(.sk-profile-loader) {
+  filter: blur(4px);
+  opacity: 0.6;
+  pointer-events: none;
+  user-select: none;
+}
+
+.sk-profile-loader {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 140px;
+  color: #404040;
+  background: rgb(255 255 255 / 35%);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  border-radius: 10px;
+}
+
+.sk-profile-spinner {
+  display: inline-block;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border: 5px solid #d4d4d4;
+  border-top-color: #333333;
+  border-right-color: #555555;
+  border-radius: 50%;
+  animation: sk-profile-spin 0.7s linear infinite;
+}
+
+@keyframes sk-profile-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Test History */
+
+.sk-test-history {
+  width: 100%;
+  margin-top: 24px;
+  color: #171717;
+}
+
+.sk-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.sk-history-heading h2 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.sk-history-heading p {
+  margin: 5px 0 0;
+  color: #737373;
+  font-size: 13px;
+}
+
+.sk-history-body {
+  width: 100%;
+  min-width: 0;
+}
+
+.sk-history-loading {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  color: #555555;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sk-history-empty {
+  padding: 24px 18px;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  background: #fafafa;
+}
+
+.sk-history-empty strong {
+  display: block;
+  color: #262626;
+  font-size: 15px;
+}
+
+.sk-history-empty p {
+  margin: 7px 0 0;
+  color: #737373;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.sk-history-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sk-history-table {
+  width: 100%;
+  min-width: 590px;
+  border-collapse: collapse;
+  background: #ffffff;
+  font-size: 13px;
+  text-align: left;
+}
+
+.sk-history-table th,
+.sk-history-table td {
+  padding: 13px 15px;
+  border-bottom: 1px solid #ededed;
+  white-space: nowrap;
+}
+
+.sk-history-table th {
+  background: #f5f5f5;
+  color: #404040;
+  font-weight: 700;
+}
+
+.sk-history-table td {
+  color: #404040;
+}
+
+.sk-history-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.sk-history-table tbody tr:hover {
+  background: #fafafa;
+}
+
+@media (max-width: 600px) {
+  .sk-profile-identity {
+    gap: 12px;
+    padding: 14px 0;
+  }
+
+  .sk-profile-avatar {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    font-size: 16px;
+  }
+
+  .sk-profile-email {
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+
+  .sk-history-heading h2 {
+    font-size: 18px;
+  }
+
+  .sk-history-empty {
+    padding: 18px 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-profile-spinner {
+    animation-duration: 1.8s;
+  }
+}
