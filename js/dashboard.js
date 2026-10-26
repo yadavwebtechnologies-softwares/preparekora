@@ -1,4 +1,3 @@
-```javascript
 /* =====================================================
    StudyKora — Dashboard
    File: js/dashboard.js
