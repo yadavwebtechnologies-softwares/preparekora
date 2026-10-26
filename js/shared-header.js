@@ -1,454 +1,164 @@
-/* =====================================================
-   StudyKora — Shared Header Logic
-   File: js/shared-header.js
-===================================================== */
+/* ==========================================
+   preparekora.in — Shared Header
+========================================== */
 
 "use strict";
 
-(() => {
+document.addEventListener("DOMContentLoaded", () => {
     const SESSION_KEY = "studyKoraSession";
-    const API_BASE =
-        "https://studykora-api.yadavsubba2003.workers.dev";
+    const MOBILE_QUERY = "(max-width: 800px)";
 
-    const DEFAULT_EXPIRES_IN = 3600;
-    const REFRESH_BUFFER_MS = 120000;
+    const mainNav = document.getElementById("main-nav");
+    const headerActions = document.querySelector(".header-actions");
+    const menuToggle = document.getElementById("menu-toggle");
 
-    let refreshPromise = null;
-    let accountCheckRevision = 0;
+    const guest = document.getElementById("account-guest");
+    const authenticated = document.getElementById("account-authenticated");
+    const profileLink = document.getElementById("account-profile-trigger");
+    const avatar = document.getElementById("account-profile-avatar");
 
-    /* Read and normalize session */
+    const mobileQuery = window.matchMedia(MOBILE_QUERY);
 
-    function readStoredSession() {
+    /* ---------- Read current session ---------- */
+
+    function readSession() {
         try {
-            const raw = sessionStorage.getItem(SESSION_KEY);
+            const rawSession = sessionStorage.getItem(SESSION_KEY);
 
-            if (!raw) {
-                return { session: null, exists: false };
+            if (!rawSession) return null;
+
+            const session = JSON.parse(rawSession);
+
+            if (!session || typeof session !== "object") {
+                return null;
             }
 
-            const stored = JSON.parse(raw);
+            const user = session.user || {};
 
-            if (!stored || typeof stored !== "object") {
-                return { session: null, exists: true };
+            // Match the session format used by the existing auth flow.
+            if (!session.idToken || !(user.uid || session.uid)) {
+                return null;
             }
 
-            const rawUser =
-                stored.user && typeof stored.user === "object"
-                    ? stored.user
-                    : {};
-
-            const uid = String(
-                rawUser.uid ||
-                rawUser.localId ||
-                rawUser.userId ||
-                stored.uid ||
-                ""
-            );
-
-            const email = String(
-                rawUser.email || stored.email || ""
-            ).trim().toLowerCase();
-
-            // Migrate sessions saved by older auth.js versions.
-            const idToken = String(
-                stored.idToken ||
-                stored.accessToken ||
-                stored.token ||
-                ""
-            );
-
-            const refreshToken = String(stored.refreshToken || "");
-
-            const expiryValue = Number(stored.expiresAt);
-            let expiresAt =
-                Number.isFinite(expiryValue) && expiryValue > 0
-                    ? expiryValue
-                    : 0;
-
-            const expirySecondsValue = Number(stored.expiresIn);
-            const expiresIn =
-                Number.isFinite(expirySecondsValue) &&
-                expirySecondsValue > 0
-                    ? expirySecondsValue
-                    : DEFAULT_EXPIRES_IN;
-
-            const savedAtValue = Number(stored.savedAt);
-            let savedAt =
-                Number.isFinite(savedAtValue) && savedAtValue > 0
-                    ? savedAtValue
-                    : 0;
-
-            if (!savedAt && expiresAt) {
-                savedAt = expiresAt - expiresIn * 1000;
-            }
-
-            if (!expiresAt && savedAt) {
-                expiresAt = savedAt + expiresIn * 1000;
-            }
-
-            return {
-                exists: true,
-                needsMigration:
-                    stored.schemaVersion !== 1 ||
-                    stored.idToken !== idToken ||
-                    !stored.savedAt ||
-                    !stored.expiresAt ||
-                    !rawUser.uid ||
-                    !rawUser.email,
-
-                session: {
-                    schemaVersion: 1,
-                    idToken,
-                    refreshToken,
-                    expiresIn,
-                    savedAt,
-                    expiresAt,
-
-                    user: {
-                        ...rawUser,
-                        uid,
-                        localId: String(rawUser.localId || uid),
-                        email,
-                        displayName: String(
-                            rawUser.displayName ||
-                            rawUser.name ||
-                            stored.name ||
-                            ""
-                        ),
-                        photoURL: String(
-                            rawUser.photoURL ||
-                            rawUser.photoUrl ||
-                            ""
-                        ),
-                        whatsapp: String(
-                            rawUser.whatsapp ||
-                            rawUser.phone ||
-                            ""
-                        )
-                    }
-                }
-            };
+            return session;
         } catch (error) {
             console.warn(
-                "[StudyKora Header] Could not read session:",
-                error.message
+                "[preparekora.in] Could not read account session.",
+                error
             );
 
-            return { session: null, exists: true };
+            return null;
         }
     }
 
-    function saveSession(session) {
-        if (
-            !session ||
-            !session.idToken ||
-            !session.refreshToken ||
-            !session.user?.uid ||
-            !session.user?.email
-        ) {
-            throw new Error("Session is incomplete.");
-        }
+    /* ---------- Resolve account name ---------- */
 
-        sessionStorage.setItem(
-            SESSION_KEY,
-            JSON.stringify(session)
-        );
-    }
+    function getDisplayName(session) {
+        const user = session?.user || {};
+        const profile = session?.profile || {};
 
-    function clearSession() {
-        try {
-            sessionStorage.removeItem(SESSION_KEY);
-        } catch (error) {
-            console.warn(
-                "[StudyKora Header] Could not clear session:",
-                error.message
-            );
-        }
-    }
+        const nameCandidates = [
+            profile.displayName,
+            profile.fullName,
+            profile.full_name,
+            profile.name,
+            user.displayName,
+            user.fullName,
+            user.full_name,
+            user.name,
+            session?.displayName,
+            session?.name
+        ];
 
-    /* Toggle guest and authenticated controls */
-
-    function setAccountVisibility(isAuthenticated) {
-        const guest = document.getElementById("account-guest");
-        const authenticated =
-            document.getElementById("account-authenticated");
-
-        if (guest) {
-            guest.hidden = isAuthenticated;
-        }
-
-        if (authenticated) {
-            authenticated.hidden = !isAuthenticated;
-        }
-    }
-
-    /* Remove the old human-shaped profile SVG */
-
-    function prepareProfileControl() {
-        const trigger =
-            document.getElementById("account-profile-trigger");
-
-        if (!trigger) return;
-
-        trigger.replaceChildren();
-        trigger.href = "profile.html";
-        trigger.setAttribute("aria-label", "Open your profile");
-        trigger.setAttribute("title", "Profile");
-    }
-
-    /* Refresh Firebase ID token */
-
-    async function refreshSession(session) {
-        if (refreshPromise) {
-            return refreshPromise;
-        }
-
-        refreshPromise = (async () => {
-            let response;
-
-            try {
-                response = await fetch(
-                    `${API_BASE}/auth/refresh`,
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Accept": "application/json"
-                        },
-                        cache: "no-store",
-                        body: JSON.stringify({
-                            refreshToken: session.refreshToken
-                        })
-                    }
-                );
-            } catch {
-                const error = new Error(
-                    "Unable to contact the authentication service."
-                );
-
-                error.status = 0;
-                throw error;
-            }
-
-            const data = await response.json().catch(() => ({}));
-
-            if (
-                !response.ok ||
-                typeof data.idToken !== "string" ||
-                !data.idToken ||
-                typeof data.refreshToken !== "string" ||
-                !data.refreshToken
-            ) {
-                const error = new Error(
-                    typeof data.error === "string"
-                        ? data.error
-                        : "Session refresh failed."
-                );
-
-                error.status = response.status;
-                throw error;
-            }
-
-            const returnedUid = String(
-                data.user?.uid ||
-                data.user?.localId ||
-                ""
-            );
-
-            if (
-                returnedUid &&
-                returnedUid !== session.user.uid
-            ) {
-                const error = new Error(
-                    "Refreshed account does not match this session."
-                );
-
-                error.status = 401;
-                throw error;
-            }
-
-            const expiryValue = Number(data.expiresIn);
-            const expiresIn =
-                Number.isFinite(expiryValue) && expiryValue > 0
-                    ? expiryValue
-                    : DEFAULT_EXPIRES_IN;
-
-            const savedAt = Date.now();
-
-            const updated = {
-                ...session,
-                schemaVersion: 1,
-                idToken: data.idToken,
-                refreshToken: data.refreshToken,
-                expiresIn,
-                savedAt,
-                expiresAt: savedAt + expiresIn * 1000,
-
-                user: {
-                    ...session.user,
-                    ...(data.user || {}),
-                    uid: returnedUid || session.user.uid,
-                    localId:
-                        data.user?.localId ||
-                        data.user?.uid ||
-                        session.user.localId ||
-                        session.user.uid
-                }
-            };
-
-            saveSession(updated);
-            return updated;
-        })();
-
-        try {
-            return await refreshPromise;
-        } finally {
-            refreshPromise = null;
-        }
-    }
-
-    /* Determine current account state */
-
-    async function updateAccountState() {
-        const revision = ++accountCheckRevision;
-        const result = readStoredSession();
-
-        let session = result.session;
-
-        if (!session) {
-            if (result.exists) {
-                clearSession();
-            }
-
-            setAccountVisibility(false);
-
-            console.info(
-                "[StudyKora Header] Account state: Logged out"
-            );
-
-            return;
-        }
-
-        const hasIdentity = Boolean(
-            session.user?.uid &&
-            session.user?.email &&
-            session.refreshToken
+        const name = nameCandidates.find(
+            value => typeof value === "string" && value.trim()
         );
 
-        if (!hasIdentity) {
-            clearSession();
-            setAccountVisibility(false);
+        if (name) {
+            return name.trim();
+        }
 
-            console.info(
-                "[StudyKora Header] Account state: Logged out"
-            );
+        const email = String(user.email || session?.email || "").trim();
 
+        if (email.includes("@")) {
+            return email.split("@")[0];
+        }
+
+        return "User";
+    }
+
+    /* ---------- Toggle guest/profile UI ---------- */
+
+    function updateAccountUI() {
+        if (!guest || !authenticated || !profileLink || !avatar) {
             return;
         }
 
-        const expiresAt = Number(session.expiresAt) || 0;
+        const session = readSession();
+        const isLoggedIn = Boolean(session);
 
-        const needsRefresh =
-            !session.idToken ||
-            !expiresAt ||
-            Date.now() >= expiresAt - REFRESH_BUFFER_MS;
+        guest.hidden = isLoggedIn;
+        authenticated.hidden = !isLoggedIn;
 
-        if (!needsRefresh) {
-            if (result.needsMigration) {
-                try {
-                    saveSession(session);
-                } catch (error) {
-                    console.error(
-                        "[StudyKora Header] Session migration failed:",
-                        error.message
-                    );
-
-                    setAccountVisibility(false);
-                    return;
-                }
-            }
-
-            setAccountVisibility(true);
-
-            console.info(
-                "[StudyKora Header] Account state: Logged in"
-            );
-
+        if (!isLoggedIn) {
+            avatar.textContent = "U";
+            profileLink.setAttribute("aria-label", "Open your profile");
+            profileLink.removeAttribute("title");
             return;
         }
 
-        // Keep guest buttons visible until refresh succeeds.
-        setAccountVisibility(false);
+        const displayName = getDisplayName(session);
+        const firstCharacter = Array.from(displayName.trim())[0] || "U";
 
-        try {
-            session = await refreshSession(session);
+        avatar.textContent = firstCharacter.toLocaleUpperCase();
 
-            if (revision !== accountCheckRevision) return;
+        profileLink.setAttribute(
+            "aria-label",
+            `Open profile for ${displayName}`
+        );
 
-            setAccountVisibility(true);
+        profileLink.title = `Open profile — ${displayName}`;
+    }
 
-            console.info(
-                "[StudyKora Header] Account state: Logged in"
-            );
-        } catch (error) {
-            if (revision !== accountCheckRevision) return;
+    /* ---------- Responsive profile placement ---------- */
 
-            if (error.status === 401 || error.status === 403) {
-                clearSession();
-                setAccountVisibility(false);
+    function positionProfile() {
+        if (!authenticated || !mainNav || !headerActions) {
+            return;
+        }
 
-                console.info(
-                    "[StudyKora Header] Account state: Logged out"
-                );
-
-                return;
+        if (mobileQuery.matches) {
+            // Place the profile after every navigation link.
+            mainNav.appendChild(authenticated);
+        } else {
+            // Restore the profile to the desktop header.
+            if (menuToggle && menuToggle.parentElement === headerActions) {
+                headerActions.insertBefore(authenticated, menuToggle);
+            } else {
+                headerActions.appendChild(authenticated);
             }
-
-            // A temporary network failure should not erase a session
-            // whose existing ID token has not expired.
-            const tokenStillUnexpired = Boolean(
-                session.idToken &&
-                Number(session.expiresAt) > Date.now()
-            );
-
-            setAccountVisibility(tokenStillUnexpired);
-
-            console.warn(
-                "[StudyKora Header] Refresh unavailable:",
-                error.message
-            );
         }
     }
 
-    /* Active navigation */
+    /* ---------- Active navigation link ---------- */
 
     function updateActiveNavigation() {
-        const nav = document.getElementById("main-nav");
-        if (!nav) return;
+        if (!mainNav) return;
 
-        let currentPath = window.location.pathname;
+        const currentPage =
+            window.location.pathname.split("/").filter(Boolean).pop()
+            || "index.html";
 
-        if (currentPath.endsWith("/")) {
-            currentPath += "index.html";
-        }
+        mainNav.querySelectorAll("a[data-page]").forEach(link => {
+            const targetPage = (
+                link.getAttribute("data-page") ||
+                link.getAttribute("href") ||
+                ""
+            ).split("?")[0].split("#")[0].split("/").pop();
 
-        nav.querySelectorAll("a[href]").forEach((link) => {
-            let targetPath;
+            const isActive = targetPage === currentPage;
 
-            try {
-                targetPath = new URL(
-                    link.href,
-                    window.location.href
-                ).pathname;
-            } catch {
-                return;
-            }
-
-            if (targetPath.endsWith("/")) {
-                targetPath += "index.html";
-            }
-
-            if (targetPath === currentPath) {
+            if (isActive) {
                 link.setAttribute("aria-current", "page");
             } else {
                 link.removeAttribute("aria-current");
@@ -456,144 +166,57 @@
         });
     }
 
-    /* Mobile navigation */
+    /* ---------- Mobile menu ---------- */
 
-    function initializeMobileNavigation() {
-        const nav = document.getElementById("main-nav");
-        const menuToggle = document.getElementById("menu-toggle");
+    function setMenuOpen(isOpen) {
+        if (!mainNav || !menuToggle) return;
 
-        if (!nav || !menuToggle) return;
+        mainNav.classList.toggle("is-open", isOpen);
+        menuToggle.classList.toggle("is-active", isOpen);
 
-        if (menuToggle.dataset.headerMenuReady === "true") {
-            return;
-        }
-
-        menuToggle.dataset.headerMenuReady = "true";
-
-        function setMenuState(open) {
-            const isMobile = window.matchMedia(
-                "(max-width: 780px)"
-            ).matches;
-
-            const shouldOpen = Boolean(open && isMobile);
-
-            nav.classList.toggle("is-open", shouldOpen);
-            menuToggle.classList.toggle("is-active", shouldOpen);
-
-            menuToggle.setAttribute(
-                "aria-expanded",
-                String(shouldOpen)
-            );
-
-            menuToggle.setAttribute(
-                "aria-label",
-                shouldOpen
-                    ? "Close navigation menu"
-                    : "Open navigation menu"
-            );
-        }
-
-        menuToggle.addEventListener("click", (event) => {
-            event.stopPropagation();
-
-            setMenuState(!nav.classList.contains("is-open"));
-        });
-
-        nav.addEventListener("click", (event) => {
-            if (event.target.closest("a")) {
-                setMenuState(false);
-            }
-        });
-
-        document.addEventListener("click", (event) => {
-            if (
-                nav.classList.contains("is-open") &&
-                !nav.contains(event.target) &&
-                !menuToggle.contains(event.target)
-            ) {
-                setMenuState(false);
-            }
-        });
-
-        document.addEventListener("keydown", (event) => {
-            if (event.key === "Escape") {
-                setMenuState(false);
-            }
-        });
-
-        window.addEventListener("resize", () => {
-            setMenuState(false);
-        });
-
-        const mediaQuery = window.matchMedia(
-            "(max-width: 780px)"
+        menuToggle.setAttribute("aria-expanded", String(isOpen));
+        menuToggle.setAttribute(
+            "aria-label",
+            isOpen ? "Close navigation menu" : "Open navigation menu"
         );
+    }
 
-        if (typeof mediaQuery.addEventListener === "function") {
-            mediaQuery.addEventListener("change", () => {
-                setMenuState(false);
+    if (menuToggle && mainNav) {
+        menuToggle.addEventListener("click", () => {
+            const isOpen = mainNav.classList.contains("is-open");
+            setMenuOpen(!isOpen);
+        });
+
+        mainNav.querySelectorAll("a").forEach(link => {
+            link.addEventListener("click", () => {
+                if (mobileQuery.matches) {
+                    setMenuOpen(false);
+                }
             });
-        } else {
-            mediaQuery.addListener(() => {
-                setMenuState(false);
-            });
-        }
-    }
-
-    /* Initialize public header */
-
-    function initializeSharedHeader() {
-        const header = document.querySelector(".site-header");
-
-        // Dashboard uses its own layout, not the public header.
-        if (!header) return;
-
-        prepareProfileControl();
-        initializeMobileNavigation();
-        updateActiveNavigation();
-
-        void updateAccountState();
-
-        window.addEventListener("studyKora:auth-state", () => {
-            void updateAccountState();
         });
 
-        window.addEventListener("pageshow", () => {
-            void updateAccountState();
-        });
-
-        window.addEventListener("focus", () => {
-            void updateAccountState();
-        });
-
-        window.addEventListener("storage", (event) => {
-            if (
-                event.key === SESSION_KEY ||
-                event.key === null
-            ) {
-                void updateAccountState();
+        // Also handle the profile link after it moves into the nav.
+        profileLink?.addEventListener("click", () => {
+            if (mobileQuery.matches) {
+                setMenuOpen(false);
             }
         });
 
-        document.addEventListener("visibilitychange", () => {
-            if (!document.hidden) {
-                void updateAccountState();
-            }
+        mobileQuery.addEventListener?.("change", () => {
+            setMenuOpen(false);
+            positionProfile();
         });
-
-        console.info(
-            "[StudyKora Header] Initialized:",
-            window.location.pathname
-        );
     }
 
-    if (document.readyState === "loading") {
-        document.addEventListener(
-            "DOMContentLoaded",
-            initializeSharedHeader,
-            { once: true }
-        );
-    } else {
-        initializeSharedHeader();
-    }
-})();
+    /* ---------- Footer year ---------- */
+
+    document.querySelectorAll("[data-current-year]").forEach(element => {
+        element.textContent = new Date().getFullYear();
+    });
+
+    /* ---------- Initialisation ---------- */
+
+    updateAccountUI();
+    positionProfile();
+    updateActiveNavigation();
+});
