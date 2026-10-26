@@ -31,7 +31,8 @@ const StudyKora = (() => {
     };
 })();
 
-/* 2. Update website branding */
+
+/* 2. Website branding */
 
 function initializeBranding() {
     const brandElements = StudyKora.selectAll(
@@ -39,49 +40,43 @@ function initializeBranding() {
     );
 
     brandElements.forEach((brand) => {
-        const mainText = document.createElement("span");
-        mainText.className = "brand-main";
-        mainText.textContent = "preparekora";
-        mainText.style.color = "#111111";
+        const brandMain = document.createElement("span");
+        brandMain.className = "brand-main";
+        brandMain.textContent = "preparekora";
 
-        const domainText = document.createElement("span");
-        domainText.className = "brand-domain";
-        domainText.textContent = ".in";
-        domainText.style.color = "#777777";
+        const brandDomain = document.createElement("span");
+        brandDomain.className = "brand-domain";
+        brandDomain.textContent = ".in";
 
         const brandName = document.createElement("span");
         brandName.className = "brand-name";
-        brandName.append(mainText, domainText);
+
+        brandName.append(brandMain, brandDomain);
 
         brand.replaceChildren(brandName);
         brand.setAttribute("aria-label", "preparekora.in");
     });
 
-    /*
-     * Fallback for pages using .brand-name directly
-     * instead of a parent .brand element.
-     */
     if (brandElements.length === 0) {
         StudyKora.selectAll(
             ".brand-name, [data-brand-name]"
         ).forEach((brandName) => {
-            const mainText = document.createElement("span");
-            mainText.className = "brand-main";
-            mainText.textContent = "preparekora";
-            mainText.style.color = "#111111";
+            const brandMain = document.createElement("span");
+            brandMain.className = "brand-main";
+            brandMain.textContent = "preparekora";
 
-            const domainText = document.createElement("span");
-            domainText.className = "brand-domain";
-            domainText.textContent = ".in";
-            domainText.style.color = "#777777";
+            const brandDomain = document.createElement("span");
+            brandDomain.className = "brand-domain";
+            brandDomain.textContent = ".in";
 
-            brandName.replaceChildren(mainText, domainText);
+            brandName.replaceChildren(brandMain, brandDomain);
             brandName.setAttribute("aria-label", "preparekora.in");
         });
     }
 }
 
-/* 3. Shared current-year placeholders */
+
+/* 3. Current year */
 
 function initializeCurrentYear() {
     const currentYear = new Date().getFullYear();
@@ -91,7 +86,8 @@ function initializeCurrentYear() {
     });
 }
 
-/* 4. Shared password visibility controls */
+
+/* 4. Password visibility controls */
 
 function initializePasswordToggles() {
     StudyKora.selectAll("[data-toggle-password]").forEach((button) => {
@@ -106,7 +102,7 @@ function initializePasswordToggles() {
 
         if (!input) {
             console.warn(
-                "[PrepareKora] Password toggle input not found:",
+                "[PrepareKora] Password input not found:",
                 inputId
             );
             return;
@@ -134,7 +130,8 @@ function initializePasswordToggles() {
     });
 }
 
-/* 5. Shared back-to-top controls */
+
+/* 5. Back-to-top controls */
 
 function initializeBackToTop() {
     StudyKora.selectAll("[data-back-to-top]").forEach((button) => {
@@ -157,7 +154,8 @@ function initializeBackToTop() {
     });
 }
 
-/* 6. Shared external-link safety */
+
+/* 6. External-link safety */
 
 function initializeExternalLinks() {
     StudyKora.selectAll('a[target="_blank"]').forEach((link) => {
@@ -170,14 +168,450 @@ function initializeExternalLinks() {
         relTokens.add("noopener");
         relTokens.add("noreferrer");
 
-        link.setAttribute(
-            "rel",
-            Array.from(relTokens).join(" ")
-        );
+        link.setAttribute("rel", Array.from(relTokens).join(" "));
     });
 }
 
-/* 7. Shared header diagnostics */
+
+/* 7. User profile helpers */
+
+function getProfileInitials(name, email) {
+    const cleanName = String(name || "").trim();
+
+    if (cleanName) {
+        const parts = cleanName.split(/\s+/).filter(Boolean);
+
+        if (parts.length >= 2) {
+            return (
+                parts[0].charAt(0) +
+                parts[parts.length - 1].charAt(0)
+            ).toUpperCase();
+        }
+
+        return cleanName
+            .replace(/[^a-zA-Z0-9]/g, "")
+            .slice(0, 2)
+            .toUpperCase() || "U";
+    }
+
+    /*
+     * Email fallback.
+     * A real profile name should be used when available.
+     */
+    const emailName = String(email || "").split("@")[0];
+
+    return emailName
+        .replace(/[0-9._-]/g, "")
+        .slice(0, 2)
+        .toUpperCase() || "U";
+}
+
+
+function normalizeProfile(source) {
+    if (!source || typeof source !== "object") {
+        return {};
+    }
+
+    const nestedUser = source.user &&
+        typeof source.user === "object"
+        ? source.user
+        : {};
+
+    const nestedProfile = source.profile &&
+        typeof source.profile === "object"
+        ? source.profile
+        : {};
+
+    const data = {
+        ...source,
+        ...nestedProfile,
+        ...nestedUser
+    };
+
+    return {
+        uid: data.uid || data.localId || data.id || "",
+
+        name:
+            data.displayName ||
+            data.fullName ||
+            data.name ||
+            data.username ||
+            data.userName ||
+            "",
+
+        email: data.email || "",
+
+        photoURL:
+            data.photoURL ||
+            data.photoUrl ||
+            data.photoURL ||
+            data.profileImageUrl ||
+            data.profilePicture ||
+            data.avatarURL ||
+            data.picture ||
+            ""
+    };
+}
+
+
+function readStoredProfile() {
+    const storageKeys = [
+        "prepareKoraSession",
+        "preparekoraSession",
+        "studyKoraSession",
+        "currentUser",
+        "currentUserProfile",
+        "user",
+        "authUser",
+        "userData"
+    ];
+
+    let combinedProfile = {};
+
+    [localStorage, sessionStorage].forEach((storage) => {
+        storageKeys.forEach((key) => {
+            try {
+                const rawValue = storage.getItem(key);
+
+                if (!rawValue) {
+                    return;
+                }
+
+                const parsedValue = JSON.parse(rawValue);
+                const profile = normalizeProfile(parsedValue);
+
+                Object.keys(profile).forEach((field) => {
+                    if (profile[field]) {
+                        combinedProfile[field] = profile[field];
+                    }
+                });
+            } catch (error) {
+                // Ignore unrelated or non-JSON storage values.
+            }
+        });
+    });
+
+    if (combinedProfile.uid) {
+        [
+            `prepareKoraProfileCache:${combinedProfile.uid}`,
+            `studyKoraProfileCache:${combinedProfile.uid}`
+        ].forEach((key) => {
+            [localStorage, sessionStorage].forEach((storage) => {
+                try {
+                    const rawValue = storage.getItem(key);
+
+                    if (!rawValue) {
+                        return;
+                    }
+
+                    const cachedProfile = normalizeProfile(
+                        JSON.parse(rawValue)
+                    );
+
+                    Object.keys(cachedProfile).forEach((field) => {
+                        if (cachedProfile[field]) {
+                            combinedProfile[field] =
+                                cachedProfile[field];
+                        }
+                    });
+                } catch (error) {
+                    // Ignore invalid cache data.
+                }
+            });
+        });
+    }
+
+    return combinedProfile;
+}
+
+
+/* 8. Header profile UI */
+
+function initializeHeaderProfile() {
+    const header = document.querySelector(".site-header");
+    const mainNav = document.getElementById("main-nav");
+    const authenticatedAccount = document.getElementById(
+        "account-authenticated"
+    );
+
+    if (!header || !mainNav || !authenticatedAccount) {
+        console.warn(
+            "[PrepareKora] Profile UI requires .site-header, " +
+            "#main-nav and #account-authenticated."
+        );
+        return;
+    }
+
+    let profileLink = header.querySelector(
+        ".preparekora-profile-link"
+    );
+
+    if (!profileLink) {
+        profileLink = document.createElement("a");
+
+        profileLink.className = "preparekora-profile-link";
+        profileLink.href = "profile.html";
+        profileLink.hidden = true;
+
+        profileLink.setAttribute(
+            "aria-label",
+            "Open profile"
+        );
+
+        const avatar = document.createElement("span");
+        avatar.className = "preparekora-profile-avatar";
+
+        const avatarImage = document.createElement("img");
+        avatarImage.className = "preparekora-profile-image";
+        avatarImage.alt = "";
+        avatarImage.hidden = true;
+
+        const initials = document.createElement("span");
+        initials.className = "preparekora-profile-initials";
+        initials.textContent = "U";
+
+        avatar.append(avatarImage, initials);
+
+        const userName = document.createElement("span");
+        userName.className = "preparekora-profile-name";
+
+        profileLink.append(avatar, userName);
+    }
+
+    const avatarImage = profileLink.querySelector(
+        ".preparekora-profile-image"
+    );
+
+    const initials = profileLink.querySelector(
+        ".preparekora-profile-initials"
+    );
+
+    const userName = profileLink.querySelector(
+        ".preparekora-profile-name"
+    );
+
+    let currentProfile = {};
+    let databaseRequestStarted = false;
+
+    function renderProfile(profile) {
+        currentProfile = {
+            ...currentProfile,
+            ...normalizeProfile(profile)
+        };
+
+        const name = currentProfile.name.trim();
+        const email = currentProfile.email.trim();
+        const photoURL = currentProfile.photoURL.trim();
+
+        const visibleName =
+            name ||
+            email.split("@")[0] ||
+            "My Profile";
+
+        const avatarText = getProfileInitials(name, email);
+
+        userName.textContent = visibleName;
+        initials.textContent = avatarText;
+
+        profileLink.setAttribute(
+            "aria-label",
+            `Open profile: ${visibleName}`
+        );
+
+        if (photoURL) {
+            avatarImage.onerror = () => {
+                avatarImage.hidden = true;
+                avatarImage.removeAttribute("src");
+                initials.hidden = false;
+            };
+
+            avatarImage.onload = () => {
+                avatarImage.hidden = false;
+                initials.hidden = true;
+            };
+
+            avatarImage.src = photoURL;
+        } else {
+            avatarImage.hidden = true;
+            avatarImage.removeAttribute("src");
+            initials.hidden = false;
+        }
+
+        const hasUser =
+            Boolean(currentProfile.uid) ||
+            Boolean(currentProfile.email);
+
+        profileLink.hidden = !hasUser;
+    }
+
+
+    function placeProfileLink() {
+        const isMobile = window.matchMedia(
+            "(max-width: 768px)"
+        ).matches;
+
+        if (isMobile) {
+            /*
+             * The profile link is appended after all navigation links.
+             */
+            if (profileLink.parentElement !== mainNav) {
+                mainNav.appendChild(profileLink);
+            }
+        } else {
+            /*
+             * Desktop: display the avatar in the authenticated
+             * account section of the header.
+             */
+            if (profileLink.parentElement !== authenticatedAccount) {
+                authenticatedAccount.appendChild(profileLink);
+            }
+        }
+    }
+
+
+    function loadDatabaseProfile(user) {
+        if (
+            databaseRequestStarted ||
+            !user ||
+            !user.uid ||
+            !window.firebase ||
+            typeof window.firebase.database !== "function"
+        ) {
+            return;
+        }
+
+        databaseRequestStarted = true;
+
+        try {
+            const database = window.firebase.database();
+
+            database
+                .ref(`users/${user.uid}`)
+                .once("value")
+                .then((snapshot) => {
+                    if (!snapshot.exists()) {
+                        return;
+                    }
+
+                    const databaseProfile = normalizeProfile(
+                        snapshot.val()
+                    );
+
+                    renderProfile({
+                        ...databaseProfile,
+                        uid: user.uid,
+                        email:
+                            databaseProfile.email ||
+                            user.email ||
+                            "",
+                        photoURL:
+                            databaseProfile.photoURL ||
+                            user.photoURL ||
+                            ""
+                    });
+                })
+                .catch((error) => {
+                    console.warn(
+                        "[PrepareKora] Could not load profile data:",
+                        error
+                    );
+                });
+        } catch (error) {
+            console.warn(
+                "[PrepareKora] Profile database unavailable:",
+                error
+            );
+        }
+    }
+
+
+    function handleAuthenticatedUser(user) {
+        if (!user) {
+            return;
+        }
+
+        const normalizedUser = normalizeProfile(user);
+
+        renderProfile(normalizedUser);
+        loadDatabaseProfile(user);
+    }
+
+
+    /* First, restore any available cached profile. */
+
+    renderProfile(readStoredProfile());
+
+    /* Place the profile at the correct responsive location. */
+
+    placeProfileLink();
+
+    window.addEventListener("resize", placeProfileLink);
+
+
+    /*
+     * Firebase Authentication compatibility.
+     * Supports Firebase's compat SDK when it is already initialized.
+     */
+
+    try {
+        if (
+            window.firebase &&
+            typeof window.firebase.auth === "function"
+        ) {
+            const firebaseAuth = window.firebase.auth();
+
+            if (firebaseAuth.currentUser) {
+                handleAuthenticatedUser(firebaseAuth.currentUser);
+            }
+
+            if (
+                typeof firebaseAuth.onAuthStateChanged === "function"
+            ) {
+                firebaseAuth.onAuthStateChanged((user) => {
+                    if (user) {
+                        databaseRequestStarted = false;
+                        handleAuthenticatedUser(user);
+                    } else {
+                        profileLink.hidden = true;
+                    }
+                });
+            }
+        }
+    } catch (error) {
+        console.warn(
+            "[PrepareKora] Firebase Auth is not available:",
+            error
+        );
+    }
+
+
+    /*
+     * Support an auth object exposed by another shared script.
+     */
+
+    const externalAuth =
+        window.firebaseAuth ||
+        window.auth;
+
+    if (externalAuth && externalAuth.currentUser) {
+        handleAuthenticatedUser(externalAuth.currentUser);
+    }
+
+
+    /*
+     * Other scripts can notify this script when a user logs in
+     * or their profile data changes.
+     */
+
+    window.addEventListener("preparekora:profile-updated", (event) => {
+        if (event.detail) {
+            renderProfile(event.detail);
+        }
+    });
+}
+
+
+/* 9. Shared header diagnostics */
 
 function initializeSharedDiagnostics() {
     const requiredHeaderElements = [
@@ -207,7 +641,8 @@ function initializeSharedDiagnostics() {
     });
 }
 
-/* 8. Initialize shared behavior */
+
+/* 10. Initialize shared behavior */
 
 StudyKora.onReady(() => {
     document.documentElement.classList.add("js-enabled");
@@ -217,5 +652,6 @@ StudyKora.onReady(() => {
     initializePasswordToggles();
     initializeBackToTop();
     initializeExternalLinks();
+    initializeHeaderProfile();
     initializeSharedDiagnostics();
 });
