@@ -1,17 +1,16 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Frequently Asked Questions | studyKora</title>
-    <meta name="description" content="Find answers about studyKora, mock tests, daily practice, study content and account features for competitive exam preparation.">
-    <meta name="keywords" content="studyKora FAQs, mock tests, exam preparation, daily practice, student account, competitive exams">
+    <title>Frequently Asked Questions | StudyKora</title>
+    <meta name="description" content="Find answers about StudyKora, Assam exam preparation, mock tests, daily practice, study resources and account features.">
+    <meta name="keywords" content="StudyKora FAQ, frequently asked questions, Assam exam preparation, mock tests, study resources, account help">
     <meta name="theme-color" content="#28734f">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/faq.html">
 
+    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/faq.html">
     <link rel="stylesheet" href="style.css">
 
     <script src="script.js" defer></script>
@@ -25,46 +24,57 @@
     <header class="site-header">
         <div class="header-inner">
 
-            <a href="index.html" class="brand" aria-label="studyKora home">
+            <a href="index.html" class="brand" aria-label="StudyKora home">
+                <span class="brand-mark" aria-hidden="true">
+                    <span style="font-size: 23px; font-weight: 800;">s</span>
+                </span>
+
                 <span class="brand-text">
-                    <span class="brand-name"><span class="brand-study">study</span><span class="brand-kora">kora</span></span>
+                    <span class="brand-name" style="font-size: 19px;">
+                        <span style="color: #111111;">study</span><span style="color: #777777;">kora</span>
+                    </span>
                 </span>
             </a>
 
             <nav class="main-nav" id="main-nav" aria-label="Main navigation">
-                <a href="index.html" data-page="home">Home</a>
-                <a href="subject.html" data-page="subjects">Subjects</a>
-                <a href="current-affairs.html" data-page="current-affairs">Current Affairs</a>
-                <a href="mock-tests.html" data-page="mock-tests">Mock Tests</a>
-                <a href="daily-practice.html" data-page="daily-practice">Daily Practice</a>
+                <a href="index.html" data-page="index.html">Home</a>
+                <a href="subject.html" data-page="subject.html">Subjects</a>
+                <a href="current-affairs.html" data-page="current-affairs.html">Current Affairs</a>
+                <a href="mock-tests.html" data-page="mock-tests.html">Mock Tests</a>
+                <a href="daily-practice.html" data-page="daily-practice.html">Daily Practice</a>
             </nav>
 
             <div class="header-actions">
 
-                <!-- Signed-out visitors -->
+                <!-- Logged-out account actions -->
                 <div class="account-guest" id="account-guest">
-                    <a href="auth.html?mode=login" class="btn btn-outline">
+                    <a href="auth.html?mode=login"
+                       class="btn btn-outline"
+                       id="account-login-link">
                         Login
                     </a>
-                    <a href="auth.html?mode=signup" class="btn btn-primary">
+
+                    <a href="auth.html?mode=signup"
+                       class="btn btn-primary"
+                       id="account-register-link">
                         Create Account
                     </a>
                 </div>
 
-                <!-- Signed-in users -->
+                <!-- Logged-in account action -->
                 <div class="account-authenticated" id="account-authenticated" hidden>
                     <a href="profile.html"
-                       class="profile-trigger"
+                       class="account-profile-trigger"
                        id="account-profile-trigger"
                        aria-label="Open your profile">
                         <svg id="account-profile-avatar"
                              viewBox="0 0 24 24"
                              fill="none"
                              aria-hidden="true">
-                            <circle cx="12" cy="8" r="3.5"
+                            <circle cx="12" cy="8" r="4"
                                     stroke="currentColor"
                                     stroke-width="1.7"/>
-                            <path d="M5 20c.5-3.5 3.2-5.5 7-5.5s6.5 2 7 5.5"
+                            <path d="M4 21c0-4.2 3.2-7 8-7s8 2.8 8 7"
                                   stroke="currentColor"
                                   stroke-width="1.7"
                                   stroke-linecap="round"/>
@@ -78,9 +88,7 @@
                         aria-label="Open navigation menu"
                         aria-controls="main-nav"
                         aria-expanded="false">
-                    <svg viewBox="0 0 24 24"
-                         fill="none"
-                         aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M4 7h16M4 12h16M4 17h16"
                               stroke="currentColor"
                               stroke-width="1.8"
@@ -94,8 +102,8 @@
 
     <main class="page-content">
 
-        <!-- Page Hero -->
-        <section class="page-hero">
+        <!-- Main Hero -->
+        <section class="page-hero" id="faq-main-hero">
             <div class="page-hero-inner">
 
                 <span class="page-hero-icon" aria-hidden="true">
@@ -103,49 +111,83 @@
                         <circle cx="12" cy="12" r="9"
                                 stroke="currentColor"
                                 stroke-width="1.7"/>
-                        <path d="M9.5 9a2.6 2.6 0 1 1 4.3 2c-1 .9-1.8 1.2-1.8 2.5M12 17h.01"
+                        <path d="M9.5 9a2.5 2.5 0 1 1 4.2 1.9c-1 .9-1.7 1.2-1.7 2.6"
                               stroke="currentColor"
                               stroke-width="1.7"
+                              stroke-linecap="round"/>
+                        <path d="M12 17h.01"
+                              stroke="currentColor"
+                              stroke-width="2.2"
                               stroke-linecap="round"/>
                     </svg>
                 </span>
 
-                <h1 class="page-hero-title">
-                    Frequently Asked Questions
-                </h1>
+                <h1 class="page-hero-title">Frequently Asked Questions</h1>
 
                 <p class="page-hero-description">
-                    Find answers about practice tests, subjects, accounts
-                    and using studyKora for exam preparation.
+                    Find answers to common questions about StudyKora,
+                    exam preparation, mock tests and your account.
                 </p>
+
+                <div class="page-hero-stats">
+                    <span class="page-hero-stat">Getting Started</span>
+                    <span class="page-hero-stat">Mock Tests</span>
+                    <span class="page-hero-stat">Your Account</span>
+                    <span class="page-hero-stat">Study Resources</span>
+                </div>
 
             </div>
         </section>
 
-        <!-- FAQ Accordion -->
-        <section class="content-section">
+        <!-- FAQ Section -->
+        <section class="content-section" id="faq-content-section">
             <div class="container">
 
                 <div class="section-heading">
                     <div>
                         <h2 class="section-title">How Can We Help?</h2>
                         <p class="section-description">
-                            Choose a question to read its answer.
+                            Select a question to read its answer.
                         </p>
                     </div>
                 </div>
 
-                <div class="content-stack mt-md" id="faq-list">
+                <!-- FAQ Search -->
+                <div class="panel" style="margin-bottom: 18px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="faq-search">
+                            Search Questions
+                        </label>
 
-                    <article class="content-card" data-faq-item>
-                        <button type="button"
-                                class="faq-question"
-                                id="faq-q-1"
-                                aria-expanded="false"
-                                aria-controls="faq-a-1">
-                            <span>What is studyKora?</span>
-                            <span class="faq-toggle" aria-hidden="true">+</span>
-                        </button>
+                        <input type="search"
+                               class="form-control"
+                               id="faq-search"
+                               placeholder="Search a question..."
+                               autocomplete="off"
+                               aria-describedby="faq-result-count">
+                    </div>
+                </div>
+
+                <p class="section-description"
+                   id="faq-result-count"
+                   aria-live="polite">
+                    Showing all questions.
+                </p>
+
+                <div class="faq-list" id="faq-list">
+
+                    <!-- FAQ 1 -->
+                    <article class="faq-item" data-faq-item>
+                        <h3 class="faq-heading">
+                            <button class="faq-question"
+                                    type="button"
+                                    id="faq-q-1"
+                                    aria-expanded="false"
+                                    aria-controls="faq-a-1">
+                                What is StudyKora?
+                                <span class="faq-toggle" aria-hidden="true">+</span>
+                            </button>
+                        </h3>
 
                         <div class="faq-answer"
                              id="faq-a-1"
@@ -153,22 +195,25 @@
                              aria-labelledby="faq-q-1"
                              hidden>
                             <p>
-                                studyKora is a study and practice platform designed
-                                to organise subject-wise MCQs, mock tests, daily
-                                practice and current affairs for competitive exam preparation.
+                                StudyKora is an exam-preparation platform
+                                designed to help learners practise questions,
+                                take mock tests and access available study resources.
                             </p>
                         </div>
                     </article>
 
-                    <article class="content-card" data-faq-item>
-                        <button type="button"
-                                class="faq-question"
-                                id="faq-q-2"
-                                aria-expanded="false"
-                                aria-controls="faq-a-2">
-                            <span>How do I start a mock test?</span>
-                            <span class="faq-toggle" aria-hidden="true">+</span>
-                        </button>
+                    <!-- FAQ 2 -->
+                    <article class="faq-item" data-faq-item>
+                        <h3 class="faq-heading">
+                            <button class="faq-question"
+                                    type="button"
+                                    id="faq-q-2"
+                                    aria-expanded="false"
+                                    aria-controls="faq-a-2">
+                                Which exams can I prepare for?
+                                <span class="faq-toggle" aria-hidden="true">+</span>
+                            </button>
+                        </h3>
 
                         <div class="faq-answer"
                              id="faq-a-2"
@@ -176,23 +221,26 @@
                              aria-labelledby="faq-q-2"
                              hidden>
                             <p>
-                                Open <a href="mock-tests.html">Mock Tests</a>,
-                                select a listed test and follow the instructions
-                                on the test page. The current frontend uses sample
-                                questions; exam-specific question sets need to be configured.
+                                StudyKora is intended to support preparation
+                                for examinations such as ADRE, Assam Police,
+                                TET, SSC and other competitive exams, depending
+                                on the content available on the platform.
                             </p>
                         </div>
                     </article>
 
-                    <article class="content-card" data-faq-item>
-                        <button type="button"
-                                class="faq-question"
-                                id="faq-q-3"
-                                aria-expanded="false"
-                                aria-controls="faq-a-3">
-                            <span>Can I practise one subject at a time?</span>
-                            <span class="faq-toggle" aria-hidden="true">+</span>
-                        </button>
+                    <!-- FAQ 3 -->
+                    <article class="faq-item" data-faq-item>
+                        <h3 class="faq-heading">
+                            <button class="faq-question"
+                                    type="button"
+                                    id="faq-q-3"
+                                    aria-expanded="false"
+                                    aria-controls="faq-a-3">
+                                Can I take a mock test without creating an account?
+                                <span class="faq-toggle" aria-hidden="true">+</span>
+                            </button>
+                        </h3>
 
                         <div class="faq-answer"
                              id="faq-a-3"
@@ -200,23 +248,25 @@
                              aria-labelledby="faq-q-3"
                              hidden>
                             <p>
-                                Yes. Open the <a href="subject.html">Subjects</a>
-                                page, choose a subject and use its practice links.
-                                The question bank for each subject can be expanded
-                                as verified content is added.
+                                You can try the initial free mock test without
+                                logging in. An account may be required to access
+                                additional tests and account-based features.
                             </p>
                         </div>
                     </article>
 
-                    <article class="content-card" data-faq-item>
-                        <button type="button"
-                                class="faq-question"
-                                id="faq-q-4"
-                                aria-expanded="false"
-                                aria-controls="faq-a-4">
-                            <span>How does the daily challenge work?</span>
-                            <span class="faq-toggle" aria-hidden="true">+</span>
-                        </button>
+                    <!-- FAQ 4 -->
+                    <article class="faq-item" data-faq-item>
+                        <h3 class="faq-heading">
+                            <button class="faq-question"
+                                    type="button"
+                                    id="faq-q-4"
+                                    aria-expanded="false"
+                                    aria-controls="faq-a-4">
+                                Do I need an account to use StudyKora?
+                                <span class="faq-toggle" aria-hidden="true">+</span>
+                            </button>
+                        </h3>
 
                         <div class="faq-answer"
                              id="faq-a-4"
@@ -224,23 +274,25 @@
                              aria-labelledby="faq-q-4"
                              hidden>
                             <p>
-                                The current <a href="daily-practice.html">Daily Practice</a>
-                                page provides five sample MCQs, instant feedback
-                                and a score for the current session. Saving history
-                                to an account requires backend integration.
+                                Some features may be available without logging
+                                in. Creating an account gives you access to
+                                features that require authentication.
                             </p>
                         </div>
                     </article>
 
-                    <article class="content-card" data-faq-item>
-                        <button type="button"
-                                class="faq-question"
-                                id="faq-q-5"
-                                aria-expanded="false"
-                                aria-controls="faq-a-5">
-                            <span>Which exams does studyKora cover?</span>
-                            <span class="faq-toggle" aria-hidden="true">+</span>
-                        </button>
+                    <!-- FAQ 5 -->
+                    <article class="faq-item" data-faq-item>
+                        <h3 class="faq-heading">
+                            <button class="faq-question"
+                                    type="button"
+                                    id="faq-q-5"
+                                    aria-expanded="false"
+                                    aria-controls="faq-a-5">
+                                How do I create an account?
+                                <span class="faq-toggle" aria-hidden="true">+</span>
+                            </button>
+                        </h3>
 
                         <div class="faq-answer"
                              id="faq-a-5"
@@ -248,23 +300,31 @@
                              aria-labelledby="faq-q-5"
                              hidden>
                             <p>
-                                The current page structure includes categories for
-                                APSC, ADRE, Assam Police, SSUHS, TET, SSC and other
-                                exams. Actual question content and exam details
-                                should be verified and configured before publication.
+                                Open the Create Account page and follow the
+                                registration instructions to set up your account.
+                            </p>
+
+                            <p>
+                                <a href="auth.html?mode=signup"
+                                   id="faq-register-link">
+                                    Create an account
+                                </a>
                             </p>
                         </div>
                     </article>
 
-                    <article class="content-card" data-faq-item>
-                        <button type="button"
-                                class="faq-question"
-                                id="faq-q-6"
-                                aria-expanded="false"
-                                aria-controls="faq-a-6">
-                            <span>Are current affairs articles available?</span>
-                            <span class="faq-toggle" aria-hidden="true">+</span>
-                        </button>
+                    <!-- FAQ 6 -->
+                    <article class="faq-item" data-faq-item>
+                        <h3 class="faq-heading">
+                            <button class="faq-question"
+                                    type="button"
+                                    id="faq-q-6"
+                                    aria-expanded="false"
+                                    aria-controls="faq-a-6">
+                                What happens after I complete a mock test?
+                                <span class="faq-toggle" aria-hidden="true">+</span>
+                            </button>
+                        </h3>
 
                         <div class="faq-answer"
                              id="faq-a-6"
@@ -272,22 +332,25 @@
                              aria-labelledby="faq-q-6"
                              hidden>
                             <p>
-                                The <a href="current-affairs.html">Current Affairs</a>
-                                page and category filters are prepared, but verified,
-                                dated news content still needs to be added.
+                                The results and performance details depend on
+                                the features supported by the selected test.
+                                Check the result screen after submitting your answers.
                             </p>
                         </div>
                     </article>
 
-                    <article class="content-card" data-faq-item>
-                        <button type="button"
-                                class="faq-question"
-                                id="faq-q-7"
-                                aria-expanded="false"
-                                aria-controls="faq-a-7">
-                            <span>How do I create an account?</span>
-                            <span class="faq-toggle" aria-hidden="true">+</span>
-                        </button>
+                    <!-- FAQ 7 -->
+                    <article class="faq-item" data-faq-item>
+                        <h3 class="faq-heading">
+                            <button class="faq-question"
+                                    type="button"
+                                    id="faq-q-7"
+                                    aria-expanded="false"
+                                    aria-controls="faq-a-7">
+                                Is StudyKora suitable for beginners?
+                                <span class="faq-toggle" aria-hidden="true">+</span>
+                            </button>
+                        </h3>
 
                         <div class="faq-answer"
                              id="faq-a-7"
@@ -295,23 +358,25 @@
                              aria-labelledby="faq-q-7"
                              hidden>
                             <p>
-                                Open <a href="auth.html?mode=signup">Create Account</a>
-                                and enter the requested details. Actual registration
-                                depends on the authentication service being configured
-                                and working correctly.
+                                Yes. Learners can use available practice
+                                questions, mock tests and study resources to
+                                build familiarity with exam topics.
                             </p>
                         </div>
                     </article>
 
-                    <article class="content-card" data-faq-item>
-                        <button type="button"
-                                class="faq-question"
-                                id="faq-q-8"
-                                aria-expanded="false"
-                                aria-controls="faq-a-8">
-                            <span>Can I recover my password?</span>
-                            <span class="faq-toggle" aria-hidden="true">+</span>
-                        </button>
+                    <!-- FAQ 8 -->
+                    <article class="faq-item" data-faq-item>
+                        <h3 class="faq-heading">
+                            <button class="faq-question"
+                                    type="button"
+                                    id="faq-q-8"
+                                    aria-expanded="false"
+                                    aria-controls="faq-a-8">
+                                How can I access study resources?
+                                <span class="faq-toggle" aria-hidden="true">+</span>
+                            </button>
+                        </h3>
 
                         <div class="faq-answer"
                              id="faq-a-8"
@@ -319,23 +384,28 @@
                              aria-labelledby="faq-q-8"
                              hidden>
                             <p>
-                                Visit the <a href="auth.html?mode=forgot">password recovery</a>
-                                page and follow the instructions. Successful recovery
-                                depends on the password-reset service being configured
-                                and functional.
+                                Visit the Resources page to explore the
+                                materials and links currently available.
+                            </p>
+
+                            <p>
+                                <a href="resources.html">Browse resources</a>
                             </p>
                         </div>
                     </article>
 
-                    <article class="content-card" data-faq-item>
-                        <button type="button"
-                                class="faq-question"
-                                id="faq-q-9"
-                                aria-expanded="false"
-                                aria-controls="faq-a-9">
-                            <span>Will my test scores be saved?</span>
-                            <span class="faq-toggle" aria-hidden="true">+</span>
-                        </button>
+                    <!-- FAQ 9 -->
+                    <article class="faq-item" data-faq-item>
+                        <h3 class="faq-heading">
+                            <button class="faq-question"
+                                    type="button"
+                                    id="faq-q-9"
+                                    aria-expanded="false"
+                                    aria-controls="faq-a-9">
+                                I forgot my password. What should I do?
+                                <span class="faq-toggle" aria-hidden="true">+</span>
+                            </button>
+                        </h3>
 
                         <div class="faq-answer"
                              id="faq-a-9"
@@ -343,22 +413,31 @@
                              aria-labelledby="faq-q-9"
                              hidden>
                             <p>
-                                Scores are currently calculated in the browser.
-                                Account-based score history and progress tracking
-                                require working database integration.
+                                Open the Login page and use the password-reset
+                                option, if available, to recover access to your account.
+                            </p>
+
+                            <p>
+                                <a href="auth.html?mode=login"
+                                   id="faq-login-link">
+                                    Go to Login
+                                </a>
                             </p>
                         </div>
                     </article>
 
-                    <article class="content-card" data-faq-item>
-                        <button type="button"
-                                class="faq-question"
-                                id="faq-q-10"
-                                aria-expanded="false"
-                                aria-controls="faq-a-10">
-                            <span>Do I need an account to begin practising?</span>
-                            <span class="faq-toggle" aria-hidden="true">+</span>
-                        </button>
+                    <!-- FAQ 10 -->
+                    <article class="faq-item" data-faq-item>
+                        <h3 class="faq-heading">
+                            <button class="faq-question"
+                                    type="button"
+                                    id="faq-q-10"
+                                    aria-expanded="false"
+                                    aria-controls="faq-a-10">
+                                How can I get help with an issue?
+                                <span class="faq-toggle" aria-hidden="true">+</span>
+                            </button>
+                        </h3>
 
                         <div class="faq-answer"
                              id="faq-a-10"
@@ -366,44 +445,59 @@
                              aria-labelledby="faq-q-10"
                              hidden>
                             <p>
-                                Access depends on how each test and practice page
-                                is configured. Any account requirements or access
-                                limits must be enforced by the actual authentication
-                                and test logic.
+                                Check the relevant help information or use the
+                                official contact method provided on StudyKora,
+                                if available.
                             </p>
                         </div>
                     </article>
+
+                    <!-- No Search Results -->
+                    <div class="empty-state"
+                         id="faq-empty-state"
+                         hidden>
+                        <h3>No matching questions found</h3>
+                        <p>Try another keyword to find your answer.</p>
+                    </div>
 
                 </div>
             </div>
         </section>
 
-        <!-- Helpful Links -->
-        <section class="content-section">
+        <!-- Further Help -->
+        <section class="content-section" id="faq-help-section">
             <div class="container">
 
                 <div class="content-card">
                     <div class="content-columns">
 
                         <div>
-                            <span class="section-eyebrow">Ready to Begin?</span>
-                            <h2 class="section-title">Continue Your Preparation</h2>
+                            <span class="section-eyebrow">Need More Help?</span>
+
+                            <h2 class="section-title">
+                                Continue Your Exam Preparation
+                            </h2>
+
                             <p class="section-description">
-                                Explore subjects, practise tests or manage your account.
+                                Explore available resources, practise questions
+                                or review the mock tests on StudyKora.
                             </p>
                         </div>
 
                         <div class="content-stack">
-                            <a href="subject.html" class="btn btn-primary btn-full">
-                                Explore Subjects
+                            <a href="resources.html"
+                               class="btn btn-primary btn-full">
+                                Explore Resources
                             </a>
 
-                            <a href="mock-tests.html" class="btn btn-outline btn-full">
+                            <a href="mock-tests.html"
+                               class="btn btn-outline btn-full">
                                 Browse Mock Tests
                             </a>
 
-                            <a href="auth.html?mode=signup" class="btn btn-outline btn-full">
-                                Create Account
+                            <a href="daily-practice.html"
+                               class="btn btn-outline btn-full">
+                                Daily Practice
                             </a>
                         </div>
 
@@ -420,14 +514,21 @@
         <div class="footer-main">
 
             <div class="footer-brand">
-                <a href="index.html" class="brand" aria-label="studyKora home">
+                <a href="index.html" class="brand" aria-label="StudyKora home">
+                    <span class="brand-mark" aria-hidden="true">
+                        <span style="font-size: 23px; font-weight: 800;">s</span>
+                    </span>
+
                     <span class="brand-text">
-                        <span class="brand-name"><span class="brand-study">study</span><span class="brand-kora">kora</span></span>
+                        <span class="brand-name" style="font-size: 19px;">
+                            <span style="color: #111111;">study</span><span style="color: #777777;">kora</span>
+                        </span>
                     </span>
                 </a>
 
                 <p class="footer-description">
-                    Subject-wise preparation, practice tests and study resources.
+                    Exam preparation, practice questions and study resources
+                    for learners preparing for competitive examinations.
                 </p>
             </div>
 
@@ -442,21 +543,22 @@
             </div>
 
             <div class="footer-column">
-                <h3>Account</h3>
+                <h3>Categories</h3>
                 <ul class="footer-links">
-                    <li><a href="auth.html?mode=login">Login</a></li>
-                    <li><a href="auth.html?mode=signup">Create Account</a></li>
-                    <li><a href="auth.html?mode=forgot">Recover Password</a></li>
+                    <li><a href="subject.html">All Subjects</a></li>
+                    <li><a href="current-affairs.html">Current Affairs</a></li>
+                    <li><a href="mock-tests.html">Practice Tests</a></li>
+                    <li><a href="resources.html">Study Resources</a></li>
                 </ul>
             </div>
 
             <div class="footer-column">
                 <h3>Information</h3>
                 <ul class="footer-links">
+                    <li><a href="why-studynow.html">About</a></li>
                     <li><a href="resources.html">Resources</a></li>
                     <li><a href="faq.html" aria-current="page">FAQs</a></li>
                     <li><a href="privacy-policy.html">Privacy Policy</a></li>
-                    <li><a href="credits.html">Credits</a></li>
                 </ul>
             </div>
 
@@ -464,13 +566,15 @@
 
         <div class="footer-bottom">
             <span>
-                &copy; <span data-current-year></span> studyKora. All rights reserved.
+                &copy; <span data-current-year></span> StudyKora. All rights reserved.
             </span>
+
             <span class="site-credit">
-                Design and Develop by Yadav Web Technologies
+                Designed and developed by Yadav Web Technologies
             </span>
         </div>
     </footer>
 
 </body>
 </html>
+```
