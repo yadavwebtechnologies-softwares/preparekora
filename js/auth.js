@@ -1,15 +1,19 @@
-
 /* =========================================================
    StudyKora Authentication
    File: js/auth.js
 
-   Features:
-   - Login and registration
-   - Forgot/reset password
-   - Show/hide password
-   - Form validation and loading states
-   - Authentication session storage
-   - Auth mode navigation
+   Canonical session:
+   - idToken
+   - refreshToken
+   - expiresIn
+   - savedAt
+   - expiresAt
+   - user.uid / user.email / user.displayName
+
+   Worker-compatible endpoints:
+   - POST /auth/login
+   - POST /auth/signup
+   - POST /auth/forgot-password
 ========================================================= */
 
 (() => {
@@ -19,6 +23,8 @@
         "https://studykora-api.yadavsubba2003.workers.dev";
 
     const SESSION_KEY = "studyKoraSession";
+    const DEFAULT_EXPIRES_IN = 3600;
+    const MAX_NAME_LENGTH = 80;
 
     const $ = (selector, root = document) =>
         root.querySelector(selector);
@@ -26,10 +32,8 @@
     const $$ = (selector, root = document) =>
         Array.from(root.querySelectorAll(selector));
 
-    let forgotChallenge = null;
-
     /* ---------------------------------------------------------
-       API helpers
+       API
     --------------------------------------------------------- */
 
     async function apiRequest(endpoint, payload) {
@@ -42,238 +46,231 @@
                     "Content-Type": "application/json",
                     "Accept": "application/json"
                 },
+                cache: "no-store",
                 body: JSON.stringify(payload)
             });
-        } catch (error) {
+        } catch {
             throw new Error(
-                "Unable to connect to the authentication service. Please check your internet connection and try again."
+                "Unable to connect to StudyKora. Check your internet connection."
             );
         }
 
-        const responseText = await response.text();
+        const text = await response.text();
         let data = {};
 
-        if (responseText) {
+        if (text) {
             try {
-                data = JSON.parse(responseText);
+                data = JSON.parse(text);
             } catch {
-                data = { message: responseText };
+                data = {};
             }
         }
 
-        const errorMessage =
-            typeof data.message === "string"
-                ? data.message
-                : typeof data.error === "string"
+        if (!response.ok) {
+            const message =
+                typeof data.error === "string"
                     ? data.error
-                    : typeof data.error?.message === "string"
-                        ? data.error.message
-                        : typeof data.details === "string"
-                            ? data.details
-                            : "";
+                    : typeof data.message === "string"
+                        ? data.message
+                        : `Request failed (HTTP ${response.status}).`;
 
-        if (
-            !response.ok ||
-            data.success === false ||
-            data.ok === false
-        ) {
+            throw new Error(message);
+        }
+
+        if (!data || typeof data !== "object" || Array.isArray(data)) {
             throw new Error(
-                errorMessage ||
-                `The request failed (${response.status}). Please try again.`
+                "The authentication service returned an invalid response."
             );
         }
 
         return data;
     }
 
-    function getResponseLayers(result) {
-        const layers = [
-            result,
-            result?.data,
-            result?.result,
-            result?.session,
-            result?.data?.session,
-            result?.result?.session
-        ];
-
-        return layers.filter(
-            (item) =>
-                item &&
-                typeof item === "object" &&
-                !Array.isArray(item)
-        );
-    }
-
-    function findValue(layers, keys) {
-        for (const layer of layers) {
-            for (const key of keys) {
-                const value = layer[key];
-
-                if (
-                    value !== undefined &&
-                    value !== null &&
-                    value !== ""
-                ) {
-                    return value;
-                }
-            }
-        }
-
-        return null;
-    }
-
     /* ---------------------------------------------------------
-       Session handling
+       Session
     --------------------------------------------------------- */
 
-    function saveSession(result, fallback = {}) {
-        const layers = getResponseLayers(result);
+    function normalizeUser(rawUser, fallback = {}) {
+        const user =
+            rawUser && typeof rawUser === "object"
+                ? rawUser
+                : {};
 
-        const accessToken = findValue(layers, [
-            "accessToken",
-            "access_token",
-            "idToken",
-            "id_token",
-            "sessionToken",
-            "token",
-            "jwt"
-        ]);
+        const uid =
+            user.uid ||
+            user.localId ||
+            user.userId ||
+            user.user_id ||
+            "";
 
-        const refreshToken = findValue(layers, [
-            "refreshToken",
-            "refresh_token"
-        ]);
+        const email = String(
+            user.email || fallback.email || ""
+        ).trim().toLowerCase();
 
-        const returnedUser = findValue(layers, [
-            "user",
-            "profile",
-            "account"
-        ]);
+        const displayName = String(
+            user.displayName ||
+            user.name ||
+            user.fullName ||
+            fallback.name ||
+            ""
+        ).trim();
 
-        const hasUserDetails = layers.some((layer) =>
-            Boolean(
-                layer.uid ||
-                layer.userId ||
-                layer.user_id ||
-                layer.email
-            )
-        );
+        const photoURL = String(
+            user.photoURL ||
+            user.photoUrl ||
+            ""
+        ).trim();
 
-        const userDetails =
-            returnedUser && typeof returnedUser === "object"
-                ? returnedUser
-                : hasUserDetails
-                    ? layers.find((layer) =>
-                        Boolean(
-                            layer.uid ||
-                            layer.userId ||
-                            layer.user_id ||
-                            layer.email
-                        )
-                    )
-                    : null;
+        const whatsapp = String(
+            user.whatsapp ||
+            user.phone ||
+            fallback.whatsapp ||
+            ""
+        ).trim();
 
-        // Never create a signed-in session from form data alone.
-        if (!accessToken && !refreshToken && !userDetails) {
-            return false;
+        if (!uid || !email) {
+            throw new Error(
+                "The authentication service did not return a valid user identity."
+            );
         }
 
-        const user = {
-            ...(userDetails || {}),
-            name:
-                userDetails?.name ||
-                userDetails?.fullName ||
-                fallback.name ||
-                "",
-            email:
-                userDetails?.email ||
-                fallback.email ||
-                "",
-            whatsapp:
-                userDetails?.whatsapp ||
-                userDetails?.phone ||
-                fallback.whatsapp ||
-                ""
+        return {
+            uid: String(uid),
+            localId: String(user.localId || uid),
+            email,
+            displayName,
+            photoURL,
+            whatsapp
         };
+    }
 
-        const expiresIn = Number(
-            findValue(layers, ["expiresIn", "expires_in"])
-        );
-
-        const expiresAtValue = findValue(layers, [
-            "expiresAt",
-            "expires_at"
-        ]);
-
-        let expiresAt = null;
-
-        if (expiresAtValue) {
-            expiresAt = Number.isFinite(Number(expiresAtValue))
-                ? Number(expiresAtValue)
-                : Date.parse(expiresAtValue);
-        } else if (Number.isFinite(expiresIn) && expiresIn > 0) {
-            expiresAt = Date.now() + expiresIn * 1000;
+    function createSession(response, fallback = {}) {
+        // This Worker returns Firebase's ID token under idToken.
+        // Do not substitute arbitrary fields such as "token" or
+        // "refreshToken" for the ID token.
+        if (
+            typeof response.idToken !== "string" ||
+            !response.idToken.trim()
+        ) {
+            throw new Error(
+                "The server did not return an ID token. Please try again."
+            );
         }
 
-        const session = {
-            accessToken: accessToken || null,
-            token: accessToken || null,
-            refreshToken: refreshToken || null,
-            expiresAt: Number.isFinite(expiresAt) ? expiresAt : null,
-            user,
-            uid:
-                user.uid ||
-                user.userId ||
-                user.user_id ||
-                user.id ||
-                "",
-            name: user.name,
-            email: user.email
+        if (
+            typeof response.refreshToken !== "string" ||
+            !response.refreshToken.trim()
+        ) {
+            throw new Error(
+                "The server did not return a refresh token. Please try again."
+            );
+        }
+
+        const user = normalizeUser(response.user, fallback);
+
+        const parsedExpiry = Number(response.expiresIn);
+
+        const expiresIn =
+            Number.isFinite(parsedExpiry) && parsedExpiry > 0
+                ? parsedExpiry
+                : DEFAULT_EXPIRES_IN;
+
+        const savedAt = Date.now();
+
+        return {
+            schemaVersion: 1,
+            idToken: response.idToken,
+            refreshToken: response.refreshToken,
+            expiresIn,
+            savedAt,
+            expiresAt: savedAt + expiresIn * 1000,
+            user
         };
+    }
+
+    function saveSession(response, fallback = {}) {
+        const session = createSession(response, fallback);
 
         try {
             sessionStorage.setItem(
                 SESSION_KEY,
                 JSON.stringify(session)
             );
-
-            return true;
         } catch {
             throw new Error(
-                "Your browser could not save the login session. Check your browser storage settings and try again."
+                "Could not save your login session. Check browser storage settings."
             );
         }
-    }
 
-    function clearSession() {
-        sessionStorage.removeItem(SESSION_KEY);
+        // Verify that the newly saved session can be read back.
+        try {
+            const stored = JSON.parse(
+                sessionStorage.getItem(SESSION_KEY) || "null"
+            );
+
+            if (
+                !stored ||
+                stored.idToken !== session.idToken ||
+                stored.refreshToken !== session.refreshToken ||
+                stored.user?.uid !== session.user.uid ||
+                stored.user?.email !== session.user.email
+            ) {
+                sessionStorage.removeItem(SESSION_KEY);
+
+                throw new Error(
+                    "The saved login session could not be verified."
+                );
+            }
+        } catch (error) {
+            if (error instanceof SyntaxError) {
+                throw new Error(
+                    "The saved login session is invalid. Please try again."
+                );
+            }
+
+            throw error;
+        }
+
+        return session;
     }
 
     /* ---------------------------------------------------------
-       Message and button helpers
+       Messages
     --------------------------------------------------------- */
 
     function showMessage(element, message, type = "info") {
         if (!element) return;
 
         element.textContent = message;
-        element.dataset.state = type;
+        element.classList.remove("is-error", "is-success");
+
+        if (type === "error") {
+            element.classList.add("is-error");
+        } else if (type === "success") {
+            element.classList.add("is-success");
+        }
+
         element.setAttribute("role", "status");
+        element.setAttribute("aria-live", "polite");
     }
 
     function clearMessages() {
         $$(".auth-message").forEach((element) => {
             element.textContent = "";
-            delete element.dataset.state;
+            element.classList.remove("is-error", "is-success");
         });
     }
+
+    /* ---------------------------------------------------------
+       Loading state
+    --------------------------------------------------------- */
 
     async function withLoading(button, loadingText, callback) {
         if (!button) {
             return callback();
         }
 
-        const originalText = button.textContent.trim();
+        const originalText = button.textContent;
 
         button.disabled = true;
         button.setAttribute("aria-busy", "true");
@@ -289,11 +286,15 @@
     }
 
     /* ---------------------------------------------------------
-       Validation helpers
+       Validation
     --------------------------------------------------------- */
 
     function getFieldValue(id) {
         return $(`#${id}`)?.value.trim() || "";
+    }
+
+    function getPassword(id) {
+        return $(`#${id}`)?.value || "";
     }
 
     function isValidEmail(email) {
@@ -305,8 +306,8 @@
         return digits.length >= 7 && digits.length <= 15;
     }
 
-    function validatePassword(password) {
-        return password.length >= 8;
+    function isValidPassword(password) {
+        return password.length >= 8 && password.length <= 128;
     }
 
     /* ---------------------------------------------------------
@@ -323,35 +324,23 @@
         }
 
         panels.forEach((panel) => {
-            panel.hidden =
-                panel.dataset.authPanel !== mode;
+            panel.hidden = panel.dataset.authPanel !== mode;
         });
-
-        if (mode !== "forgot") {
-            const resetFields = $("#forgot-reset-fields");
-
-            if (resetFields) {
-                resetFields.hidden = true;
-            }
-
-            forgotChallenge = null;
-        }
 
         clearMessages();
 
-        const pageTitles = {
-            login: "Login | studyKora",
-            signup: "Create Account | studyKora",
-            forgot: "Recover Account | studyKora"
+        const titles = {
+            login: "Login | StudyKora",
+            signup: "Create Account | StudyKora",
+            forgot: "Recover Account | StudyKora"
         };
 
-        document.title = pageTitles[mode];
+        document.title = titles[mode];
 
         if (updateUrl) {
             const url = new URL(window.location.href);
-            const currentMode = url.searchParams.get("mode");
 
-            if (currentMode !== mode) {
+            if (url.searchParams.get("mode") !== mode) {
                 url.searchParams.set("mode", mode);
                 window.history.pushState({ mode }, "", url);
             }
@@ -378,42 +367,15 @@
     });
 
     /* ---------------------------------------------------------
-       Show/hide password controls
-    --------------------------------------------------------- */
-
-    $$("[data-toggle-password]").forEach((button) => {
-        button.addEventListener("click", () => {
-            const inputId = button.dataset.togglePassword;
-            const input = document.getElementById(inputId);
-
-            if (!input) return;
-
-            const showPassword = input.type === "password";
-
-            input.type = showPassword ? "text" : "password";
-            button.textContent = showPassword ? "Hide" : "Show";
-            button.setAttribute(
-                "aria-label",
-                showPassword ? "Hide password" : "Show password"
-            );
-            button.setAttribute(
-                "aria-pressed",
-                String(showPassword)
-            );
-        });
-    });
-
-    /* ---------------------------------------------------------
        Login
     --------------------------------------------------------- */
 
-    const loginForm = $("#login-form");
-
-    loginForm?.addEventListener("submit", async (event) => {
+    $("#login-form")?.addEventListener("submit", async (event) => {
         event.preventDefault();
 
-        const email = getFieldValue("login-email");
-        const password = $("#login-password")?.value || "";
+        const email = getFieldValue("login-email").toLowerCase();
+        const password = getPassword("login-password");
+
         const message = $("#login-message");
         const button = $("#login-submit");
 
@@ -422,8 +384,8 @@
             return;
         }
 
-        if (!password) {
-            showMessage(message, "Enter your password.", "error");
+        if (!password || password.length > 128) {
+            showMessage(message, "Enter a valid password.", "error");
             return;
         }
 
@@ -431,18 +393,13 @@
 
         try {
             await withLoading(button, "Logging in...", async () => {
-                const result = await apiRequest("/auth/login", {
+                const response = await apiRequest("/auth/login", {
                     email,
                     password
                 });
 
-                const saved = saveSession(result, { email });
-
-                if (!saved) {
-                    throw new Error(
-                        "The login service did not return a usable session. Please check the Worker response configuration."
-                    );
-                }
+                // Save the canonical session before redirecting.
+                saveSession(response, { email });
 
                 window.location.assign("index.html");
             });
@@ -459,52 +416,45 @@
        Signup
     --------------------------------------------------------- */
 
-    const signupForm = $("#signup-form");
-
-    signupForm?.addEventListener("submit", async (event) => {
+    $("#signup-form")?.addEventListener("submit", async (event) => {
         event.preventDefault();
 
         const name = getFieldValue("signup-name");
-        const email = getFieldValue("signup-email");
+        const email = getFieldValue("signup-email").toLowerCase();
         const whatsapp = getFieldValue("signup-whatsapp");
-        const password = $("#signup-password")?.value || "";
-        const confirmPassword =
-            $("#signup-confirm-password")?.value || "";
+        const password = getPassword("signup-password");
+        const confirmPassword = getPassword("signup-confirm-password");
 
         const message = $("#signup-message");
         const button = $("#signup-submit");
 
-        if (name.length < 2) {
+        if (name.length < 2 || name.length > MAX_NAME_LENGTH) {
             showMessage(
                 message,
-                "Enter your full name.",
+                "Name must contain between 2 and 80 characters.",
                 "error"
             );
             return;
         }
 
         if (!isValidEmail(email)) {
-            showMessage(
-                message,
-                "Enter a valid email address.",
-                "error"
-            );
+            showMessage(message, "Enter a valid email address.", "error");
             return;
         }
 
         if (!isValidPhone(whatsapp)) {
             showMessage(
                 message,
-                "Enter a valid WhatsApp number with the country code.",
+                "Enter a valid WhatsApp number with country code.",
                 "error"
             );
             return;
         }
 
-        if (!validatePassword(password)) {
+        if (!isValidPassword(password)) {
             showMessage(
                 message,
-                "Your password must contain at least 8 characters.",
+                "Password must contain between 8 and 128 characters.",
                 "error"
             );
             return;
@@ -523,38 +473,20 @@
 
         try {
             await withLoading(button, "Creating account...", async () => {
-                const result = await apiRequest("/auth/signup", {
+                const response = await apiRequest("/auth/signup", {
                     name,
                     email,
                     whatsapp,
                     password
                 });
 
-                const saved = saveSession(result, {
+                saveSession(response, {
                     name,
                     email,
                     whatsapp
                 });
 
-                if (saved) {
-                    window.location.assign("index.html");
-                    return;
-                }
-
-                // If signup does not return a session, ask the user to log in.
-                const loginEmail = $("#login-email");
-
-                if (loginEmail) {
-                    loginEmail.value = email;
-                }
-
-                setMode("login");
-
-                showMessage(
-                    $("#login-message"),
-                    "Your account was created. Please log in to continue.",
-                    "success"
-                );
+                window.location.assign("index.html");
             });
         } catch (error) {
             showMessage(
@@ -566,34 +498,27 @@
     });
 
     /* ---------------------------------------------------------
-       Forgot password: verify account / request reset
+       Forgot password
+
+       Worker contract:
+       POST /auth/forgot-password
+       { email }
+
+       Firebase sends the password reset email. The current Worker
+       does not implement WhatsApp OTP verification.
     --------------------------------------------------------- */
 
-    const forgotForm = $("#forgot-form");
-
-    forgotForm?.addEventListener("submit", async (event) => {
+    $("#forgot-form")?.addEventListener("submit", async (event) => {
         event.preventDefault();
 
         const email = getFieldValue("forgot-email");
-        const whatsapp = getFieldValue("forgot-whatsapp");
-
         const message = $("#forgot-message");
         const button = $("#forgot-submit");
-        const resetFields = $("#forgot-reset-fields");
 
         if (!isValidEmail(email)) {
             showMessage(
                 message,
-                "Enter a valid registered email address.",
-                "error"
-            );
-            return;
-        }
-
-        if (!isValidPhone(whatsapp)) {
-            showMessage(
-                message,
-                "Enter a valid registered WhatsApp number.",
+                "Enter a valid email address.",
                 "error"
             );
             return;
@@ -602,165 +527,37 @@
         clearMessages();
 
         try {
-            await withLoading(button, "Verifying...", async () => {
-                const result = await apiRequest("/auth/forgot-password", {
-                    email,
-                    whatsapp
-                });
+            await withLoading(button, "Sending request...", async () => {
+                const response = await apiRequest(
+                    "/auth/forgot-password",
+                    { email }
+                );
 
-                const layers = getResponseLayers(result);
-
-                forgotChallenge = {
-                    challengeId: findValue(layers, [
-                        "challengeId",
-                        "challenge_id",
-                        "verificationId",
-                        "verification_id"
-                    ]),
-                    resetToken: findValue(layers, [
-                        "resetToken",
-                        "reset_token"
-                    ])
-                };
+                const resetFields = $("#forgot-reset-fields");
 
                 if (resetFields) {
-                    resetFields.hidden = false;
+                    resetFields.hidden = true;
                 }
 
                 showMessage(
                     message,
-                    result.message ||
-                    "Continue with the verification code and your new password, if requested by the verification process.",
+                    response.message ||
+                        "If the account exists, a password reset email will be sent. Check your inbox and follow the link.",
                     "success"
                 );
-
-                $("#forgot-otp")?.focus();
             });
         } catch (error) {
             showMessage(
                 message,
                 error.message ||
-                "Account verification could not be completed.",
+                    "Could not request a password reset. Please try again.",
                 "error"
             );
         }
     });
 
     /* ---------------------------------------------------------
-       Forgot password: reset password
-    --------------------------------------------------------- */
-
-    const resetButton = $("#forgot-reset-submit");
-
-    resetButton?.addEventListener("click", async () => {
-        const email = getFieldValue("forgot-email");
-        const whatsapp = getFieldValue("forgot-whatsapp");
-        const otp = getFieldValue("forgot-otp");
-
-        const newPassword = $("#forgot-new-password")?.value || "";
-        const confirmPassword =
-            $("#forgot-confirm-password")?.value || "";
-
-        const message = $("#forgot-message");
-
-        if (!isValidEmail(email) || !isValidPhone(whatsapp)) {
-            showMessage(
-                message,
-                "Enter your registered email and WhatsApp number first.",
-                "error"
-            );
-            return;
-        }
-
-        if (!otp) {
-            showMessage(
-                message,
-                "Enter the verification code.",
-                "error"
-            );
-            return;
-        }
-
-        if (!validatePassword(newPassword)) {
-            showMessage(
-                message,
-                "Your new password must contain at least 8 characters.",
-                "error"
-            );
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            showMessage(
-                message,
-                "The new passwords do not match.",
-                "error"
-            );
-            return;
-        }
-
-        clearMessages();
-
-        try {
-            await withLoading(
-                resetButton,
-                "Resetting password...",
-                async () => {
-                    const payload = {
-                        email,
-                        whatsapp,
-                        otp,
-                        newPassword
-                    };
-
-                    if (forgotChallenge?.challengeId) {
-                        payload.challengeId =
-                            forgotChallenge.challengeId;
-                    }
-
-                    if (forgotChallenge?.resetToken) {
-                        payload.resetToken =
-                            forgotChallenge.resetToken;
-                    }
-
-                    const result = await apiRequest(
-                        "/auth/reset-password",
-                        payload
-                    );
-
-                    // Clear temporary reset data and show login.
-                    $("#login-email").value = email;
-                    $("#login-password").value = "";
-                    $("#forgot-form").reset();
-
-                    if ($("#forgot-reset-fields")) {
-                        $("#forgot-reset-fields").hidden = true;
-                    }
-
-                    forgotChallenge = null;
-
-                    setMode("login");
-
-                    showMessage(
-                        $("#login-message"),
-                        result.message ||
-                        "Password reset completed. You can now log in with your new password.",
-                        "success"
-                    );
-                }
-            );
-        } catch (error) {
-            showMessage(
-                message,
-                error.message ||
-                "Password reset failed. Please verify your details and try again.",
-                "error"
-            );
-        }
-    });
-
-    /* ---------------------------------------------------------
-       Initialise page
+       Initialise
     --------------------------------------------------------- */
 
     function initialiseAuthPage() {
@@ -769,7 +566,6 @@
 
         setMode(requestedMode, false);
 
-        // Reset fields should never be visible on initial page load.
         const resetFields = $("#forgot-reset-fields");
 
         if (resetFields) {
@@ -778,5 +574,4 @@
     }
 
     initialiseAuthPage();
-
 })();
