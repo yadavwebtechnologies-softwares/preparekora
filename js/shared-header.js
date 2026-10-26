@@ -31,14 +31,20 @@
         function updateAccountState() {
             const session = getSession();
 
-            const loggedIn = Boolean(
-                session &&
-                typeof session.idToken === "string" &&
-                session.idToken.length > 0 &&
-                session.user &&
-                typeof session.user.email === "string" &&
-                session.user.email.length > 0
-            );
+const hasToken = [
+    session?.idToken,
+    session?.accessToken,
+    session?.token
+].some(token =>
+    typeof token === "string" && token.trim().length > 0
+);
+
+const loggedIn = Boolean(
+    hasToken &&
+    session?.user &&
+    typeof session.user.email === "string" &&
+    session.user.email.trim().length > 0
+);
 
             if (guest) {
                 guest.hidden = loggedIn;
