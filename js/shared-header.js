@@ -597,4 +597,3 @@
         initializeSharedHeader();
     }
 })();
-```
