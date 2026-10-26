@@ -1,52 +1,25 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Login | studyKora</title>
-    <meta name="description" content="Access your studyKora account, register or recover your password.">
+    <title>Login | StudyKora</title>
+    <meta name="description" content="Log in to StudyKora, create an account or recover access to your competitive exam preparation account.">
+    <meta name="keywords" content="StudyKora login, StudyKora register, account recovery, Assam competitive exam preparation">
     <meta name="theme-color" content="#28734f">
     <meta name="robots" content="noindex, follow">
-    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/auth.html">
 
+    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studyKora/auth.html">
     <link rel="stylesheet" href="style.css">
 
-    <!-- Auth-page styling fixes -->
     <style>
-        /* Fix duplicate green input borders */
-        .auth-page .auth-input {
-            border: 1px solid #cbd5d1;
-            outline: none;
-            box-shadow: none;
-        }
-
-        .auth-page .auth-input:focus,
-        .auth-page .auth-input:focus-visible {
-            border: 1px solid #28734f;
-            outline: none;
-            box-shadow: none;
-        }
-
-        /* Prevent browser autofill from adding a blue background */
-        .auth-page .auth-input:-webkit-autofill,
-        .auth-page .auth-input:-webkit-autofill:hover,
-        .auth-page .auth-input:-webkit-autofill:focus,
-        .auth-page .auth-input:-webkit-autofill:active {
-            -webkit-text-fill-color: #111;
-            caret-color: #111;
-            -webkit-box-shadow: 0 0 0 1000px #fff inset;
-            box-shadow: 0 0 0 1000px #fff inset;
-        }
-
-        /* Consistent studyKora branding */
         .auth-page .brand-study {
-            color: #111;
+            color: #111111;
         }
 
         .auth-page .brand-kora {
-            color: #777;
+            color: #777777;
         }
 
         .auth-page .auth-brand-name,
@@ -60,7 +33,17 @@
         }
 
         .auth-page .auth-brand-caption {
-            color: #777;
+            color: #777777;
+        }
+
+        .auth-page .auth-input:-webkit-autofill,
+        .auth-page .auth-input:-webkit-autofill:hover,
+        .auth-page .auth-input:-webkit-autofill:focus,
+        .auth-page .auth-input:-webkit-autofill:active {
+            -webkit-text-fill-color: #111111;
+            caret-color: #111111;
+            -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+            box-shadow: 0 0 0 1000px #ffffff inset;
         }
     </style>
 
@@ -72,10 +55,10 @@
 
     <main class="auth-layout">
 
-        <!-- Left Branding Panel -->
+        <!-- Branding Panel -->
         <aside class="auth-side">
 
-            <a href="index.html" class="auth-brand" aria-label="studyKora home">
+            <a href="index.html" class="auth-brand" aria-label="StudyKora home">
                 <span class="auth-brand-name">
                     <span class="brand-study">study</span><span class="brand-kora">kora</span>
                 </span>
@@ -83,9 +66,7 @@
             </a>
 
             <div class="auth-side-content">
-                <span class="auth-eyebrow">
-                    YOUR LEARNING JOURNEY
-                </span>
+                <span class="auth-eyebrow">YOUR LEARNING JOURNEY</span>
 
                 <h1>Your exam preparation starts here</h1>
 
@@ -114,26 +95,27 @@
 
         </aside>
 
-        <!-- Right Authentication Area -->
+        <!-- Authentication Area -->
         <section class="auth-main" aria-label="Account access">
 
             <div class="auth-main-inner">
 
-                <!-- Mobile Branding -->
-                <a href="index.html" class="auth-mobile-brand" aria-label="studyKora home">
+                <a href="index.html"
+                   class="auth-mobile-brand"
+                   aria-label="StudyKora home">
                     <span class="brand-study">study</span><span class="brand-kora">kora</span>
                 </a>
 
                 <div class="auth-form-wrap">
 
                     <!-- LOGIN -->
-                    <section
-                        class="auth-panel"
-                        id="login-panel"
-                        data-auth-panel="login"
-                    >
+                    <section class="auth-panel"
+                             id="login-panel"
+                             data-auth-panel="login">
 
-                        <a href="index.html" class="auth-form-brand" aria-label="studyKora home">
+                        <a href="index.html"
+                           class="auth-form-brand"
+                           aria-label="StudyKora home">
                             <span class="brand-study">study</span><span class="brand-kora">kora</span>
                         </a>
 
@@ -148,16 +130,14 @@
 
                                 <div class="auth-field">
                                     <label for="login-email">Email</label>
-
                                     <input
                                         type="email"
                                         id="login-email"
                                         name="email"
                                         class="auth-input"
                                         placeholder="Enter your email"
-                                        autocomplete="email"
-                                        required
-                                    >
+                                        autocomplete="username"
+                                        required>
                                 </div>
 
                                 <div class="auth-field">
@@ -171,52 +151,42 @@
                                             class="auth-input"
                                             placeholder="Enter your password"
                                             autocomplete="current-password"
-                                            required
-                                        >
+                                            required>
 
                                         <button
                                             type="button"
                                             class="auth-password-toggle"
                                             data-toggle-password="login-password"
                                             aria-label="Show password"
-                                            aria-pressed="false"
-                                        >
+                                            aria-pressed="false">
                                             Show
                                         </button>
                                     </div>
                                 </div>
 
-                                <p
-                                    class="auth-message"
-                                    id="login-message"
-                                    role="status"
-                                    aria-live="polite"
-                                ></p>
+                                <p class="auth-message"
+                                   id="login-message"
+                                   role="status"
+                                   aria-live="polite"></p>
 
-                                <button
-                                    type="submit"
-                                    class="auth-submit"
-                                    id="login-submit"
-                                >
+                                <button type="submit"
+                                        class="auth-submit"
+                                        id="login-submit">
                                     Login
                                 </button>
 
                                 <div class="auth-link-row auth-link-row-center">
-                                    <a
-                                        href="auth.html?mode=forgot"
-                                        data-show-auth="forgot"
-                                    >
+                                    <a href="auth.html?mode=forgot"
+                                       data-show-auth="forgot">
                                         Forgot your password?
                                     </a>
                                 </div>
 
                                 <p class="auth-switch-text">
                                     Don't have an account?
-                                    <a
-                                        href="auth.html?mode=signup"
-                                        data-show-auth="signup"
-                                    >
-                                        Register
+                                    <a href="auth.html?mode=signup"
+                                       data-show-auth="signup">
+                                        Create Account
                                     </a>
                                 </p>
 
@@ -225,14 +195,14 @@
                     </section>
 
                     <!-- SIGNUP -->
-                    <section
-                        class="auth-panel"
-                        id="signup-panel"
-                        data-auth-panel="signup"
-                        hidden
-                    >
+                    <section class="auth-panel"
+                             id="signup-panel"
+                             data-auth-panel="signup"
+                             hidden>
 
-                        <a href="index.html" class="auth-form-brand" aria-label="studyKora home">
+                        <a href="index.html"
+                           class="auth-form-brand"
+                           aria-label="StudyKora home">
                             <span class="brand-study">study</span><span class="brand-kora">kora</span>
                         </a>
 
@@ -240,14 +210,13 @@
 
                             <div class="auth-heading">
                                 <h2>Create your account</h2>
-                                <p>Join studyKora and start practising.</p>
+                                <p>Join StudyKora and start practising.</p>
                             </div>
 
                             <form id="signup-form" novalidate>
 
                                 <div class="auth-field">
                                     <label for="signup-name">Full Name</label>
-
                                     <input
                                         type="text"
                                         id="signup-name"
@@ -255,14 +224,13 @@
                                         class="auth-input"
                                         placeholder="Enter your full name"
                                         autocomplete="name"
-                                        maxlength="100"
-                                        required
-                                    >
+                                        minlength="2"
+                                        maxlength="80"
+                                        required>
                                 </div>
 
                                 <div class="auth-field">
                                     <label for="signup-email">Email</label>
-
                                     <input
                                         type="email"
                                         id="signup-email"
@@ -270,13 +238,11 @@
                                         class="auth-input"
                                         placeholder="Enter your email"
                                         autocomplete="email"
-                                        required
-                                    >
+                                        required>
                                 </div>
 
                                 <div class="auth-field">
                                     <label for="signup-whatsapp">WhatsApp Number</label>
-
                                     <input
                                         type="tel"
                                         id="signup-whatsapp"
@@ -286,8 +252,7 @@
                                         autocomplete="tel"
                                         inputmode="tel"
                                         maxlength="20"
-                                        required
-                                    >
+                                        required>
 
                                     <small class="auth-field-hint">
                                         Include your country code, such as +91.
@@ -306,16 +271,15 @@
                                             placeholder="Create a password"
                                             autocomplete="new-password"
                                             minlength="8"
-                                            required
-                                        >
+                                            maxlength="128"
+                                            required>
 
                                         <button
                                             type="button"
                                             class="auth-password-toggle"
                                             data-toggle-password="signup-password"
                                             aria-label="Show password"
-                                            aria-pressed="false"
-                                        >
+                                            aria-pressed="false">
                                             Show
                                         </button>
                                     </div>
@@ -339,42 +303,35 @@
                                             placeholder="Re-enter your password"
                                             autocomplete="new-password"
                                             minlength="8"
-                                            required
-                                        >
+                                            maxlength="128"
+                                            required>
 
                                         <button
                                             type="button"
                                             class="auth-password-toggle"
                                             data-toggle-password="signup-confirm-password"
                                             aria-label="Show password"
-                                            aria-pressed="false"
-                                        >
+                                            aria-pressed="false">
                                             Show
                                         </button>
                                     </div>
                                 </div>
 
-                                <p
-                                    class="auth-message"
-                                    id="signup-message"
-                                    role="status"
-                                    aria-live="polite"
-                                ></p>
+                                <p class="auth-message"
+                                   id="signup-message"
+                                   role="status"
+                                   aria-live="polite"></p>
 
-                                <button
-                                    type="submit"
-                                    class="auth-submit"
-                                    id="signup-submit"
-                                >
+                                <button type="submit"
+                                        class="auth-submit"
+                                        id="signup-submit">
                                     Create Account
                                 </button>
 
                                 <p class="auth-switch-text">
                                     Already have an account?
-                                    <a
-                                        href="auth.html?mode=login"
-                                        data-show-auth="login"
-                                    >
+                                    <a href="auth.html?mode=login"
+                                       data-show-auth="login">
                                         Login
                                     </a>
                                 </p>
@@ -384,14 +341,14 @@
                     </section>
 
                     <!-- FORGOT PASSWORD -->
-                    <section
-                        class="auth-panel"
-                        id="forgot-panel"
-                        data-auth-panel="forgot"
-                        hidden
-                    >
+                    <section class="auth-panel"
+                             id="forgot-panel"
+                             data-auth-panel="forgot"
+                             hidden>
 
-                        <a href="index.html" class="auth-form-brand" aria-label="studyKora home">
+                        <a href="index.html"
+                           class="auth-form-brand"
+                           aria-label="StudyKora home">
                             <span class="brand-study">study</span><span class="brand-kora">kora</span>
                         </a>
 
@@ -400,15 +357,18 @@
                             <div class="auth-heading">
                                 <h2>Recover your account</h2>
                                 <p>
-                                    Enter the email and WhatsApp number
-                                    registered with your account.
+                                    Enter the email address associated with
+                                    your StudyKora account. We'll request
+                                    a password-reset email.
                                 </p>
                             </div>
 
                             <form id="forgot-form" novalidate>
 
                                 <div class="auth-field">
-                                    <label for="forgot-email">Registered Email</label>
+                                    <label for="forgot-email">
+                                        Registered Email
+                                    </label>
 
                                     <input
                                         type="email"
@@ -417,109 +377,24 @@
                                         class="auth-input"
                                         placeholder="Enter your registered email"
                                         autocomplete="email"
-                                        required
-                                    >
+                                        required>
                                 </div>
 
-                                <div class="auth-field">
-                                    <label for="forgot-whatsapp">
-                                        Registered WhatsApp Number
-                                    </label>
+                                <p class="auth-message"
+                                   id="forgot-message"
+                                   role="status"
+                                   aria-live="polite"></p>
 
-                                    <input
-                                        type="tel"
-                                        id="forgot-whatsapp"
-                                        name="whatsapp"
-                                        class="auth-input"
-                                        placeholder="+91 98765 43210"
-                                        autocomplete="tel"
-                                        inputmode="tel"
-                                        maxlength="20"
-                                        required
-                                    >
-                                </div>
-
-                                <p
-                                    class="auth-message"
-                                    id="forgot-message"
-                                    role="status"
-                                    aria-live="polite"
-                                ></p>
-
-                                <button
-                                    type="submit"
-                                    class="auth-submit"
-                                    id="forgot-submit"
-                                >
-                                    Verify Account
-                                </button>
-
-                                <!-- Hidden until verification succeeds -->
-                                <div id="forgot-reset-fields" hidden>
-
-                                    <div class="auth-field">
-                                        <label for="forgot-otp">Verification Code</label>
-
-                                        <input
-                                            type="text"
-                                            id="forgot-otp"
-                                            name="otp"
-                                            class="auth-input"
-                                            placeholder="Enter verification code"
-                                            inputmode="numeric"
-                                            autocomplete="one-time-code"
-                                            maxlength="8"
-                                        >
-                                    </div>
-
-                                    <div class="auth-field">
-                                        <label for="forgot-new-password">
-                                            New Password
-                                        </label>
-
-                                        <input
-                                            type="password"
-                                            id="forgot-new-password"
-                                            name="newPassword"
-                                            class="auth-input"
-                                            placeholder="Create a new password"
-                                            autocomplete="new-password"
-                                            minlength="8"
-                                        >
-                                    </div>
-
-                                    <div class="auth-field">
-                                        <label for="forgot-confirm-password">
-                                            Confirm New Password
-                                        </label>
-
-                                        <input
-                                            type="password"
-                                            id="forgot-confirm-password"
-                                            name="confirmPassword"
-                                            class="auth-input"
-                                            placeholder="Re-enter new password"
-                                            autocomplete="new-password"
-                                            minlength="8"
-                                        >
-                                    </div>
-
-                                    <button
-                                        type="button"
+                                <button type="submit"
                                         class="auth-submit"
-                                        id="forgot-reset-submit"
-                                    >
-                                        Reset Password
-                                    </button>
-
-                                </div>
+                                        id="forgot-submit">
+                                    Send Reset Email
+                                </button>
 
                                 <p class="auth-switch-text">
                                     Remembered your password?
-                                    <a
-                                        href="auth.html?mode=login"
-                                        data-show-auth="login"
-                                    >
+                                    <a href="auth.html?mode=login"
+                                       data-show-auth="login">
                                         Back to Login
                                     </a>
                                 </p>
@@ -531,33 +406,35 @@
                 </div>
 
                 <div class="auth-security-note">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         aria-hidden="true">
                         <path
                             d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"
                             stroke="currentColor"
                             stroke-width="1.6"
                             stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
+                            stroke-linejoin="round"/>
                         <path
                             d="m8.5 12 2.2 2.2 4.8-5"
                             stroke="currentColor"
                             stroke-width="1.6"
                             stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
+                            stroke-linejoin="round"/>
                     </svg>
 
                     <span>Secure account access</span>
                 </div>
 
                 <a href="index.html" class="auth-home-link">
-                    Back to studyKora
+                    Back to StudyKora
                 </a>
 
             </div>
         </section>
+
     </main>
 
 </body>
 </html>
+```
