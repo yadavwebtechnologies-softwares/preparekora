@@ -2821,8 +2821,6 @@ body.auth-page {
     color: #777777;
 }
 
-/* No icon, box or tagline */
-
 .brand-mark,
 .brand-caption {
     display: none !important;
@@ -2839,18 +2837,24 @@ body.auth-page {
     gap: 8px;
 }
 
-.account-authenticated:not([hidden]) {
+.account-authenticated:not([hidden]),
+#account-authenticated:not([hidden]) {
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* Circular profile trigger */
+.account-authenticated[hidden],
+#account-authenticated[hidden] {
+    display: none !important;
+}
 
 .account-profile-trigger {
     width: 42px;
     height: 42px;
     padding: 0;
+    box-sizing: border-box;
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2880,8 +2884,6 @@ body.auth-page {
     outline-offset: 3px;
 }
 
-/* Profile photo or initials */
-
 .account-profile-trigger img {
     width: 100%;
     height: 100%;
@@ -2890,19 +2892,32 @@ body.auth-page {
     border-radius: inherit;
 }
 
+.account-profile-trigger img[hidden] {
+    display: none !important;
+}
+
 .account-profile-initial {
     width: 100%;
     height: 100%;
+    flex-shrink: 0;
+
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: inherit;
 
+    border-radius: inherit;
     color: #111111;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 800;
     text-transform: uppercase;
+    letter-spacing: normal;
 }
+
+.account-profile-initial[hidden] {
+    display: none !important;
+}
+
+/* Name is hidden on desktop */
 
 .account-profile-label {
     display: none;
@@ -2919,7 +2934,7 @@ body.auth-page {
 
 /* ==========================================
    MOBILE NAVIGATION PROFILE
-   Profile appears after all navigation links
+   One grey profile row after navigation links
 ========================================== */
 
 @media (max-width: 800px) {
@@ -2928,46 +2943,52 @@ body.auth-page {
         letter-spacing: -0.65px;
     }
 
+    .main-nav #account-authenticated:not([hidden]),
+    #main-nav #account-authenticated:not([hidden]),
     .main-nav .account-authenticated:not([hidden]) {
         width: 100%;
         box-sizing: border-box;
 
         display: block;
         margin-top: 8px;
-        padding-top: 10px;
+        padding: 0;
 
-        border-top: 1px solid #e7e7e7;
+        border: 0;
+        background: transparent;
     }
 
-    .main-nav .account-profile-trigger {
+    .main-nav .account-profile-trigger,
+    #main-nav .account-profile-trigger {
         width: 100%;
         min-width: 0;
         min-height: 48px;
         height: auto;
+        padding: 7px 12px;
         box-sizing: border-box;
-
-        padding: 8px 12px;
 
         display: flex;
         align-items: center;
         justify-content: flex-start;
         gap: 11px;
 
-        border: 1px solid transparent;
+        border: 0;
         border-radius: var(--root-radius, var(--radius, 12px));
         background: #eeeeee;
         color: #111111;
     }
 
-    .main-nav .account-profile-trigger:hover {
+    .main-nav .account-profile-trigger:hover,
+    #main-nav .account-profile-trigger:hover {
         background: #e3e3e3;
     }
 
-    .main-nav .account-profile-trigger:focus-visible {
+    .main-nav .account-profile-trigger:focus-visible,
+    #main-nav .account-profile-trigger:focus-visible {
         outline-offset: 2px;
     }
 
-    .main-nav .account-profile-initial {
+    .main-nav .account-profile-initial,
+    #main-nav .account-profile-initial {
         width: 34px;
         height: 34px;
         flex: 0 0 34px;
@@ -2980,13 +3001,16 @@ body.auth-page {
         font-size: 13px;
     }
 
-    .main-nav .account-profile-trigger img {
+    .main-nav .account-profile-trigger img,
+    #main-nav .account-profile-trigger img {
         width: 34px;
         height: 34px;
         flex: 0 0 34px;
+        border-radius: 50%;
     }
 
-    .main-nav .account-profile-label {
+    .main-nav .account-profile-label,
+    #main-nav .account-profile-label {
         display: inline-block;
         min-width: 0;
 
