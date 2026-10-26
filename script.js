@@ -5,6 +5,7 @@
 
 "use strict";
 
+
 /* 1. Shared DOM helpers */
 
 const StudyKora = (() => {
@@ -32,51 +33,52 @@ const StudyKora = (() => {
 })();
 
 
-/* 2. Website branding */
+/* 2. Shared website branding */
 
 function initializeBranding() {
-    const brandElements = StudyKora.selectAll(
+    const brands = StudyKora.selectAll(
         ".brand, [data-site-brand]"
     );
 
-    brandElements.forEach((brand) => {
-        const brandMain = document.createElement("span");
-        brandMain.className = "brand-main";
-        brandMain.textContent = "preparekora";
+    if (brands.length > 0) {
+        brands.forEach((brand) => {
+            const main = document.createElement("span");
+            main.className = "brand-main";
+            main.textContent = "preparekora";
 
-        const brandDomain = document.createElement("span");
-        brandDomain.className = "brand-domain";
-        brandDomain.textContent = ".in";
+            const domain = document.createElement("span");
+            domain.className = "brand-domain";
+            domain.textContent = ".in";
 
-        const brandName = document.createElement("span");
-        brandName.className = "brand-name";
+            const brandName = document.createElement("span");
+            brandName.className = "brand-name";
+            brandName.append(main, domain);
 
-        brandName.append(brandMain, brandDomain);
-
-        brand.replaceChildren(brandName);
-        brand.setAttribute("aria-label", "preparekora.in");
-    });
-
-    if (brandElements.length === 0) {
-        StudyKora.selectAll(
-            ".brand-name, [data-brand-name]"
-        ).forEach((brandName) => {
-            const brandMain = document.createElement("span");
-            brandMain.className = "brand-main";
-            brandMain.textContent = "preparekora";
-
-            const brandDomain = document.createElement("span");
-            brandDomain.className = "brand-domain";
-            brandDomain.textContent = ".in";
-
-            brandName.replaceChildren(brandMain, brandDomain);
-            brandName.setAttribute("aria-label", "preparekora.in");
+            brand.replaceChildren(brandName);
+            brand.setAttribute("aria-label", "preparekora.in");
         });
+
+        return;
     }
+
+    StudyKora.selectAll(
+        ".brand-name, [data-brand-name]"
+    ).forEach((brandName) => {
+        const main = document.createElement("span");
+        main.className = "brand-main";
+        main.textContent = "preparekora";
+
+        const domain = document.createElement("span");
+        domain.className = "brand-domain";
+        domain.textContent = ".in";
+
+        brandName.replaceChildren(main, domain);
+        brandName.setAttribute("aria-label", "preparekora.in");
+    });
 }
 
 
-/* 3. Current year */
+/* 3. Current-year placeholders */
 
 function initializeCurrentYear() {
     const currentYear = new Date().getFullYear();
@@ -173,67 +175,32 @@ function initializeExternalLinks() {
 }
 
 
-/* 7. User profile helpers */
+/* 7. Profile data helpers */
 
-function getProfileInitials(name, email) {
-    const cleanName = String(name || "").trim();
-
-    if (cleanName) {
-        const parts = cleanName.split(/\s+/).filter(Boolean);
-
-        if (parts.length >= 2) {
-            return (
-                parts[0].charAt(0) +
-                parts[parts.length - 1].charAt(0)
-            ).toUpperCase();
-        }
-
-        return cleanName
-            .replace(/[^a-zA-Z0-9]/g, "")
-            .slice(0, 2)
-            .toUpperCase() || "U";
-    }
-
-    /*
-     * Email fallback.
-     * A real profile name should be used when available.
-     */
-    const emailName = String(email || "").split("@")[0];
-
-    return emailName
-        .replace(/[0-9._-]/g, "")
-        .slice(0, 2)
-        .toUpperCase() || "U";
-}
-
-
-function normalizeProfile(source) {
+function normalizeProfileData(source) {
     if (!source || typeof source !== "object") {
-        return {};
+        return {
+            name: "",
+            email: "",
+            photoURL: ""
+        };
     }
 
-    const nestedUser = source.user &&
-        typeof source.user === "object"
-        ? source.user
-        : {};
-
-    const nestedProfile = source.profile &&
+    const profile = source.profile &&
         typeof source.profile === "object"
         ? source.profile
         : {};
 
     const data = {
         ...source,
-        ...nestedProfile,
-        ...nestedUser
+        ...profile
     };
 
     return {
-        uid: data.uid || data.localId || data.id || "",
-
         name:
             data.displayName ||
             data.fullName ||
+            data.full_name ||
             data.name ||
             data.username ||
             data.userName ||
@@ -244,7 +211,6 @@ function normalizeProfile(source) {
         photoURL:
             data.photoURL ||
             data.photoUrl ||
-            data.photoURL ||
             data.profileImageUrl ||
             data.profilePicture ||
             data.avatarURL ||
@@ -254,149 +220,169 @@ function normalizeProfile(source) {
 }
 
 
-function readStoredProfile() {
-    const storageKeys = [
-        "prepareKoraSession",
-        "preparekoraSession",
-        "studyKoraSession",
-        "currentUser",
-        "currentUserProfile",
-        "user",
-        "authUser",
-        "userData"
-    ];
+function getProfileInitials(name, email) {
+    const cleanName = String(name || "").trim();
 
-    let combinedProfile = {};
+    if (cleanName) {
+        const words = cleanName
+            .split(/\s+/)
+            .filter(Boolean);
 
-    [localStorage, sessionStorage].forEach((storage) => {
-        storageKeys.forEach((key) => {
-            try {
-                const rawValue = storage.getItem(key);
+        if (words.length >= 2) {
+            return (
+                words[0].charAt(0) +
+                words[words.length - 1].charAt(0)
+            ).toUpperCase();
+        }
 
-                if (!rawValue) {
-                    return;
-                }
-
-                const parsedValue = JSON.parse(rawValue);
-                const profile = normalizeProfile(parsedValue);
-
-                Object.keys(profile).forEach((field) => {
-                    if (profile[field]) {
-                        combinedProfile[field] = profile[field];
-                    }
-                });
-            } catch (error) {
-                // Ignore unrelated or non-JSON storage values.
-            }
-        });
-    });
-
-    if (combinedProfile.uid) {
-        [
-            `prepareKoraProfileCache:${combinedProfile.uid}`,
-            `studyKoraProfileCache:${combinedProfile.uid}`
-        ].forEach((key) => {
-            [localStorage, sessionStorage].forEach((storage) => {
-                try {
-                    const rawValue = storage.getItem(key);
-
-                    if (!rawValue) {
-                        return;
-                    }
-
-                    const cachedProfile = normalizeProfile(
-                        JSON.parse(rawValue)
-                    );
-
-                    Object.keys(cachedProfile).forEach((field) => {
-                        if (cachedProfile[field]) {
-                            combinedProfile[field] =
-                                cachedProfile[field];
-                        }
-                    });
-                } catch (error) {
-                    // Ignore invalid cache data.
-                }
-            });
-        });
+        return cleanName
+            .replace(/[^a-zA-Z0-9]/g, "")
+            .slice(0, 2)
+            .toUpperCase() || "U";
     }
 
-    return combinedProfile;
+    const emailName = String(email || "").split("@")[0];
+
+    const parts = emailName
+        .split(/[._-]+/)
+        .filter(Boolean);
+
+    if (parts.length >= 2) {
+        return (
+            parts[0].charAt(0) +
+            parts[1].charAt(0)
+        ).toUpperCase();
+    }
+
+    return emailName
+        .replace(/[0-9]/g, "")
+        .slice(0, 2)
+        .toUpperCase() || "U";
 }
 
 
-/* 8. Header profile UI */
+/* 8. Responsive account placement */
+
+function initializeAccountPlacement() {
+    const nav = document.getElementById("main-nav");
+    const account = document.getElementById("account-authenticated");
+
+    if (!nav || !account || !account.parentNode) {
+        return;
+    }
+
+    const originalParent = account.parentNode;
+    const originalNextSibling = account.nextSibling;
+
+    const mobileQuery = window.matchMedia("(max-width: 800px)");
+
+    function updatePlacement() {
+        if (mobileQuery.matches) {
+            /*
+             * Move the existing account section to the very end
+             * of navigation. No extra profile row is created.
+             */
+            if (account.parentNode !== nav) {
+                nav.appendChild(account);
+            }
+        } else if (account.parentNode !== originalParent) {
+            /*
+             * Restore the original desktop location.
+             */
+            const referenceNode =
+                originalNextSibling &&
+                originalNextSibling.parentNode === originalParent
+                    ? originalNextSibling
+                    : null;
+
+            originalParent.insertBefore(account, referenceNode);
+        }
+    }
+
+    updatePlacement();
+
+    if (typeof mobileQuery.addEventListener === "function") {
+        mobileQuery.addEventListener("change", updatePlacement);
+    } else {
+        mobileQuery.addListener(updatePlacement);
+    }
+}
+
+
+/* 9. Existing profile avatar and name */
 
 function initializeHeaderProfile() {
-    const header = document.querySelector(".site-header");
-    const mainNav = document.getElementById("main-nav");
-    const authenticatedAccount = document.getElementById(
-        "account-authenticated"
+    const trigger = document.querySelector(
+        "#account-authenticated .account-profile-trigger, " +
+        ".account-authenticated .account-profile-trigger"
     );
 
-    if (!header || !mainNav || !authenticatedAccount) {
+    if (!trigger) {
         console.warn(
-            "[PrepareKora] Profile UI requires .site-header, " +
-            "#main-nav and #account-authenticated."
+            "[PrepareKora] Existing .account-profile-trigger not found."
         );
         return;
     }
 
-    let profileLink = header.querySelector(
-        ".preparekora-profile-link"
-    );
+    /*
+     * Use the existing HTML elements.
+     * Do not create a second profile link or a duplicate grey row.
+     */
 
-    if (!profileLink) {
-        profileLink = document.createElement("a");
+    let initials = trigger.querySelector(".account-profile-initial");
+    let label = trigger.querySelector(".account-profile-label");
+    let photo = trigger.querySelector("img");
 
-        profileLink.className = "preparekora-profile-link";
-        profileLink.href = "profile.html";
-        profileLink.hidden = true;
-
-        profileLink.setAttribute(
-            "aria-label",
-            "Open profile"
-        );
-
-        const avatar = document.createElement("span");
-        avatar.className = "preparekora-profile-avatar";
-
-        const avatarImage = document.createElement("img");
-        avatarImage.className = "preparekora-profile-image";
-        avatarImage.alt = "";
-        avatarImage.hidden = true;
-
-        const initials = document.createElement("span");
-        initials.className = "preparekora-profile-initials";
-        initials.textContent = "U";
-
-        avatar.append(avatarImage, initials);
-
-        const userName = document.createElement("span");
-        userName.className = "preparekora-profile-name";
-
-        profileLink.append(avatar, userName);
+    if (!initials) {
+        initials = document.createElement("span");
+        initials.className = "account-profile-initial";
+        trigger.prepend(initials);
     }
 
-    const avatarImage = profileLink.querySelector(
-        ".preparekora-profile-image"
-    );
+    if (!label) {
+        label = document.createElement("span");
+        label.className = "account-profile-label";
+        trigger.appendChild(label);
+    }
 
-    const initials = profileLink.querySelector(
-        ".preparekora-profile-initials"
-    );
+    /*
+     * Remove stray direct text nodes so the full name cannot
+     * accidentally appear inside the circular desktop avatar.
+     */
+    Array.from(trigger.childNodes).forEach((node) => {
+        if (
+            node.nodeType === Node.TEXT_NODE &&
+            node.textContent.trim()
+        ) {
+            node.remove();
+        }
+    });
 
-    const userName = profileLink.querySelector(
-        ".preparekora-profile-name"
-    );
+    if (!photo) {
+        photo = document.createElement("img");
+        photo.className = "account-profile-photo";
+        photo.alt = "";
+        photo.hidden = true;
+        trigger.insertBefore(photo, initials);
+    }
 
-    let currentProfile = {};
-    let databaseRequestStarted = false;
+    photo.classList.add("account-profile-photo");
+    photo.alt = "";
+    photo.hidden = true;
 
-    function renderProfile(profile) {
+    let currentProfile = {
+        name: "",
+        email: "",
+        photoURL: ""
+    };
+
+    function renderProfile(source) {
+        const incoming = normalizeProfileData(source);
+
         currentProfile = {
-            ...currentProfile,
-            ...normalizeProfile(profile)
+            name: incoming.name || currentProfile.name,
+            email: incoming.email || currentProfile.email,
+            photoURL: incoming.photoURL || currentProfile.photoURL
         };
 
         const name = currentProfile.name.trim();
@@ -408,219 +394,149 @@ function initializeHeaderProfile() {
             email.split("@")[0] ||
             "My Profile";
 
-        const avatarText = getProfileInitials(name, email);
+        initials.textContent = getProfileInitials(name, email);
+        label.textContent = visibleName;
 
-        userName.textContent = visibleName;
-        initials.textContent = avatarText;
-
-        profileLink.setAttribute(
+        trigger.setAttribute(
             "aria-label",
             `Open profile: ${visibleName}`
         );
 
-        if (photoURL) {
-            avatarImage.onerror = () => {
-                avatarImage.hidden = true;
-                avatarImage.removeAttribute("src");
-                initials.hidden = false;
-            };
-
-            avatarImage.onload = () => {
-                avatarImage.hidden = false;
-                initials.hidden = true;
-            };
-
-            avatarImage.src = photoURL;
-        } else {
-            avatarImage.hidden = true;
-            avatarImage.removeAttribute("src");
+        if (!photoURL) {
+            photo.hidden = true;
+            photo.removeAttribute("src");
             initials.hidden = false;
-        }
-
-        const hasUser =
-            Boolean(currentProfile.uid) ||
-            Boolean(currentProfile.email);
-
-        profileLink.hidden = !hasUser;
-    }
-
-
-    function placeProfileLink() {
-        const isMobile = window.matchMedia(
-            "(max-width: 768px)"
-        ).matches;
-
-        if (isMobile) {
-            /*
-             * The profile link is appended after all navigation links.
-             */
-            if (profileLink.parentElement !== mainNav) {
-                mainNav.appendChild(profileLink);
-            }
-        } else {
-            /*
-             * Desktop: display the avatar in the authenticated
-             * account section of the header.
-             */
-            if (profileLink.parentElement !== authenticatedAccount) {
-                authenticatedAccount.appendChild(profileLink);
-            }
-        }
-    }
-
-
-    function loadDatabaseProfile(user) {
-        if (
-            databaseRequestStarted ||
-            !user ||
-            !user.uid ||
-            !window.firebase ||
-            typeof window.firebase.database !== "function"
-        ) {
             return;
         }
 
-        databaseRequestStarted = true;
+        photo.onload = () => {
+            photo.hidden = false;
+            initials.hidden = true;
+        };
 
-        try {
-            const database = window.firebase.database();
+        photo.onerror = () => {
+            photo.hidden = true;
+            photo.removeAttribute("src");
+            initials.hidden = false;
+        };
 
-            database
-                .ref(`users/${user.uid}`)
-                .once("value")
-                .then((snapshot) => {
-                    if (!snapshot.exists()) {
-                        return;
-                    }
+        if (photo.src !== photoURL) {
+            photo.src = photoURL;
+        }
 
-                    const databaseProfile = normalizeProfile(
-                        snapshot.val()
-                    );
-
-                    renderProfile({
-                        ...databaseProfile,
-                        uid: user.uid,
-                        email:
-                            databaseProfile.email ||
-                            user.email ||
-                            "",
-                        photoURL:
-                            databaseProfile.photoURL ||
-                            user.photoURL ||
-                            ""
-                    });
-                })
-                .catch((error) => {
-                    console.warn(
-                        "[PrepareKora] Could not load profile data:",
-                        error
-                    );
-                });
-        } catch (error) {
-            console.warn(
-                "[PrepareKora] Profile database unavailable:",
-                error
-            );
+        if (photo.complete && photo.naturalWidth > 0) {
+            photo.hidden = false;
+            initials.hidden = true;
         }
     }
 
-
-    function handleAuthenticatedUser(user) {
-        if (!user) {
-            return;
-        }
-
-        const normalizedUser = normalizeProfile(user);
-
-        renderProfile(normalizedUser);
-        loadDatabaseProfile(user);
-    }
-
-
-    /* First, restore any available cached profile. */
-
-    renderProfile(readStoredProfile());
-
-    /* Place the profile at the correct responsive location. */
-
-    placeProfileLink();
-
-    window.addEventListener("resize", placeProfileLink);
-
-
     /*
-     * Firebase Authentication compatibility.
-     * Supports Firebase's compat SDK when it is already initialized.
+     * If another existing script updates the user profile,
+     * it can dispatch this event with the latest profile data.
      */
-
-    try {
-        if (
-            window.firebase &&
-            typeof window.firebase.auth === "function"
-        ) {
-            const firebaseAuth = window.firebase.auth();
-
-            if (firebaseAuth.currentUser) {
-                handleAuthenticatedUser(firebaseAuth.currentUser);
-            }
-
-            if (
-                typeof firebaseAuth.onAuthStateChanged === "function"
-            ) {
-                firebaseAuth.onAuthStateChanged((user) => {
-                    if (user) {
-                        databaseRequestStarted = false;
-                        handleAuthenticatedUser(user);
-                    } else {
-                        profileLink.hidden = true;
-                    }
-                });
-            }
-        }
-    } catch (error) {
-        console.warn(
-            "[PrepareKora] Firebase Auth is not available:",
-            error
-        );
-    }
-
-
-    /*
-     * Support an auth object exposed by another shared script.
-     */
-
-    const externalAuth =
-        window.firebaseAuth ||
-        window.auth;
-
-    if (externalAuth && externalAuth.currentUser) {
-        handleAuthenticatedUser(externalAuth.currentUser);
-    }
-
-
-    /*
-     * Other scripts can notify this script when a user logs in
-     * or their profile data changes.
-     */
-
     window.addEventListener("preparekora:profile-updated", (event) => {
         if (event.detail) {
             renderProfile(event.detail);
         }
     });
+
+    /*
+     * Firebase Authentication compatibility SDK.
+     */
+    function connectFirebase() {
+        if (
+            !window.firebase ||
+            typeof window.firebase.auth !== "function"
+        ) {
+            return;
+        }
+
+        try {
+            const auth = window.firebase.auth();
+
+            function handleUser(user) {
+                if (!user) {
+                    trigger.hidden = true;
+                    return;
+                }
+
+                trigger.hidden = false;
+
+                renderProfile({
+                    name: user.displayName || "",
+                    email: user.email || "",
+                    photoURL: user.photoURL || ""
+                });
+
+                /*
+                 * Read optional profile information from Realtime
+                 * Database. Auth information remains the fallback.
+                 */
+                if (
+                    typeof window.firebase.database !== "function"
+                ) {
+                    return;
+                }
+
+                window.firebase.database()
+                    .ref(`users/${user.uid}`)
+                    .once("value")
+                    .then((snapshot) => {
+                        if (!snapshot.exists()) {
+                            return;
+                        }
+
+                        const databaseProfile = normalizeProfileData(
+                            snapshot.val()
+                        );
+
+                        renderProfile({
+                            name:
+                                databaseProfile.name ||
+                                user.displayName ||
+                                "",
+                            email:
+                                databaseProfile.email ||
+                                user.email ||
+                                "",
+                            photoURL:
+                                databaseProfile.photoURL ||
+                                user.photoURL ||
+                                ""
+                        });
+                    })
+                    .catch((error) => {
+                        console.warn(
+                            "[PrepareKora] Profile data unavailable:",
+                            error
+                        );
+                    });
+            }
+
+            if (auth.currentUser) {
+                handleUser(auth.currentUser);
+            }
+
+            if (typeof auth.onAuthStateChanged === "function") {
+                auth.onAuthStateChanged(handleUser);
+            }
+        } catch (error) {
+            console.warn(
+                "[PrepareKora] Firebase profile initialization failed:",
+                error
+            );
+        }
+    }
+
+    connectFirebase();
+
+    window.addEventListener("preparekora:auth-ready", connectFirebase);
 }
 
 
-/* 9. Shared header diagnostics */
+/* 10. Shared header diagnostics */
 
 function initializeSharedDiagnostics() {
-    const requiredHeaderElements = [
-        "account-guest",
-        "account-authenticated",
-        "main-nav",
-        "menu-toggle"
-    ];
-
     const header = document.querySelector(".site-header");
 
     if (!header) {
@@ -631,7 +547,12 @@ function initializeSharedDiagnostics() {
         return;
     }
 
-    requiredHeaderElements.forEach((id) => {
+    [
+        "account-guest",
+        "account-authenticated",
+        "main-nav",
+        "menu-toggle"
+    ].forEach((id) => {
         if (!header.querySelector(`#${id}`)) {
             console.warn(
                 `[PrepareKora] Header element #${id} is missing on:`,
@@ -642,7 +563,7 @@ function initializeSharedDiagnostics() {
 }
 
 
-/* 10. Initialize shared behavior */
+/* 11. Initialize shared behavior */
 
 StudyKora.onReady(() => {
     document.documentElement.classList.add("js-enabled");
@@ -652,6 +573,7 @@ StudyKora.onReady(() => {
     initializePasswordToggles();
     initializeBackToTop();
     initializeExternalLinks();
+    initializeAccountPlacement();
     initializeHeaderProfile();
     initializeSharedDiagnostics();
 });
