@@ -1,17 +1,19 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Credits & Attribution | studyKora</title>
-    <meta name="description" content="Learn about the design, development, educational content and third-party asset attribution for studyKora.">
-    <meta name="keywords" content="studyKora credits, website attribution, educational resources, Yadav Web Technologies">
+    <title>Credits &amp; Attribution | StudyKora</title>
+    <meta name="description" content="Learn about StudyKora's design, development, educational content, technologies and third-party asset attribution.">
+    <meta name="keywords" content="StudyKora credits, website attribution, educational content, website development, Yadav Web Technologies, third-party asset credits">
     <meta name="theme-color" content="#28734f">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/credits.html">
 
+    <link rel="canonical" href="https://yadavwebtechnologies-softwares.github.io/studynow/credits.html">
     <link rel="stylesheet" href="style.css">
+
     <script src="script.js" defer></script>
     <script src="js/shared-header.js" defer></script>
 </head>
@@ -22,44 +24,57 @@
     <header class="site-header">
         <div class="header-inner">
 
-            <a href="index.html" class="brand" aria-label="studyKora home">
+            <a href="index.html" class="brand" aria-label="StudyKora home">
+                <span class="brand-mark" aria-hidden="true">
+                    <span style="font-size: 23px; font-weight: 800;">s</span>
+                </span>
+
                 <span class="brand-text">
-                    <span class="brand-name"><span class="brand-study">study</span><span class="brand-kora">kora</span></span>
+                    <span class="brand-name" style="font-size: 19px;">
+                        <span style="color: #111111;">study</span><span style="color: #777777;">kora</span>
+                    </span>
                 </span>
             </a>
 
             <nav class="main-nav" id="main-nav" aria-label="Main navigation">
-                <a href="index.html" data-page="home">Home</a>
-                <a href="subject.html" data-page="subjects">Subjects</a>
-                <a href="current-affairs.html" data-page="current-affairs">Current Affairs</a>
-                <a href="mock-tests.html" data-page="mock-tests">Mock Tests</a>
-                <a href="daily-practice.html" data-page="daily-practice">Daily Practice</a>
+                <a href="index.html" data-page="index.html">Home</a>
+                <a href="subject.html" data-page="subject.html">Subjects</a>
+                <a href="current-affairs.html" data-page="current-affairs.html">Current Affairs</a>
+                <a href="mock-tests.html" data-page="mock-tests.html">Mock Tests</a>
+                <a href="daily-practice.html" data-page="daily-practice.html">Daily Practice</a>
             </nav>
 
             <div class="header-actions">
 
+                <!-- Logged-out account actions -->
                 <div class="account-guest" id="account-guest">
-                    <a href="auth.html?mode=login" class="btn btn-outline">
+                    <a href="auth.html?mode=login"
+                       class="btn btn-outline"
+                       id="account-login-link">
                         Login
                     </a>
-                    <a href="auth.html?mode=signup" class="btn btn-primary">
+
+                    <a href="auth.html?mode=signup"
+                       class="btn btn-primary"
+                       id="account-register-link">
                         Create Account
                     </a>
                 </div>
 
+                <!-- Logged-in account action -->
                 <div class="account-authenticated" id="account-authenticated" hidden>
                     <a href="profile.html"
-                       class="profile-trigger"
+                       class="account-profile-trigger"
                        id="account-profile-trigger"
                        aria-label="Open your profile">
                         <svg id="account-profile-avatar"
                              viewBox="0 0 24 24"
                              fill="none"
                              aria-hidden="true">
-                            <circle cx="12" cy="8" r="3.5"
+                            <circle cx="12" cy="8" r="4"
                                     stroke="currentColor"
                                     stroke-width="1.7"/>
-                            <path d="M5 20c.5-3.5 3.2-5.5 7-5.5s6.5 2 7 5.5"
+                            <path d="M4 21c0-4.2 3.2-7 8-7s8 2.8 8 7"
                                   stroke="currentColor"
                                   stroke-width="1.7"
                                   stroke-linecap="round"/>
@@ -73,9 +88,7 @@
                         aria-label="Open navigation menu"
                         aria-controls="main-nav"
                         aria-expanded="false">
-                    <svg viewBox="0 0 24 24"
-                         fill="none"
-                         aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M4 7h16M4 12h16M4 17h16"
                               stroke="currentColor"
                               stroke-width="1.8"
@@ -90,7 +103,7 @@
     <main class="page-content">
 
         <!-- Page Hero -->
-        <section class="page-hero">
+        <section class="page-hero" id="credits-main-hero">
             <div class="page-hero-inner">
 
                 <span class="page-hero-icon" aria-hidden="true">
@@ -109,121 +122,169 @@
                 <h1 class="page-hero-title">Credits &amp; Attribution</h1>
 
                 <p class="page-hero-description">
-                    Information about the design, development, educational
-                    content and resources used by studyKora.
+                    Learn about StudyKora's design, development,
+                    educational content, technologies and acknowledgements.
                 </p>
+
+                <div class="page-hero-stats">
+                    <span class="page-hero-stat">Design</span>
+                    <span class="page-hero-stat">Development</span>
+                    <span class="page-hero-stat">Educational Content</span>
+                    <span class="page-hero-stat">Attribution</span>
+                </div>
 
             </div>
         </section>
 
         <!-- Credits Content -->
-        <section class="content-section">
+        <section class="content-section" id="credits-content-section">
             <div class="container">
+
+                <div class="section-heading">
+                    <div>
+                        <h2 class="section-title">Credits &amp; Acknowledgements</h2>
+                        <p class="section-description">
+                            Information about the people, technologies and
+                            resources associated with the StudyKora website.
+                        </p>
+                    </div>
+                </div>
 
                 <div class="content-columns">
 
+                    <!-- Main Credits -->
                     <div class="content-stack">
 
+                        <!-- Website Design & Development -->
                         <section class="content-card">
-                            <span class="section-eyebrow">Website Design &amp; Development</span>
-                            <h2 class="section-title">studyKora</h2>
+                            <span class="section-eyebrow">
+                                Website Design &amp; Development
+                            </span>
+
+                            <h2 class="section-title">StudyKora</h2>
 
                             <p class="section-description">
-                                studyKora is a competitive-exam preparation
-                                website designed to organise subject-wise
-                                MCQs, mock tests, daily practice and current affairs.
+                                StudyKora is a competitive-exam preparation
+                                platform designed to organise subject-wise
+                                practice questions, mock tests, daily practice
+                                and current affairs.
                             </p>
 
                             <div class="notice mt-md">
-                                Design and development by Yadav Web Technologies.
+                                Designed and developed by Yadav Web Technologies.
                             </div>
                         </section>
 
+                        <!-- Design and Interface -->
                         <section class="content-card">
-                            <h2 class="section-title">Design and Interface</h2>
+                            <span class="section-eyebrow">Interface</span>
+
+                            <h2 class="section-title">Design &amp; User Experience</h2>
 
                             <p class="section-description">
-                                The website uses a shared interface design system
-                                with green primary colours, reusable content cards,
-                                responsive layouts and consistent typography.
+                                StudyKora uses a shared interface design system
+                                with a green primary colour, reusable content
+                                cards, responsive layouts and consistent
+                                navigation patterns.
                             </p>
 
                             <p class="section-description mt-md">
-                                Common styling and browser interactions are managed
-                                through the shared stylesheet and JavaScript files.
+                                Shared styling and common browser interactions
+                                are managed through the website's stylesheet
+                                and JavaScript files.
                             </p>
                         </section>
 
+                        <!-- Educational Content -->
                         <section class="content-card">
+                            <span class="section-eyebrow">Learning Materials</span>
+
                             <h2 class="section-title">Educational Content</h2>
 
                             <p class="section-description">
-                                Educational questions, explanations, study notes
-                                and current affairs should be reviewed for accuracy
-                                before publication. Sample questions used for
-                                interface testing are illustrative and should not
-                                be treated as official examination papers.
+                                Questions, explanations, study notes and current
+                                affairs content are intended to support
+                                competitive-exam preparation.
                             </p>
 
                             <p class="section-description mt-md">
-                                Third-party educational material must be attributed
-                                where required and used in accordance with its
-                                licence and applicable law.
+                                Content should be checked for accuracy before
+                                publication. Illustrative or sample questions
+                                used for interface testing should not be
+                                represented as official examination papers.
+                            </p>
+
+                            <p class="section-description mt-md">
+                                Third-party educational material must be
+                                acknowledged where required and used in
+                                accordance with applicable licences and law.
                             </p>
                         </section>
 
+                        <!-- Technology -->
                         <section class="content-card">
-                            <h2 class="section-title">Technology and Services</h2>
+                            <span class="section-eyebrow">Implementation</span>
+
+                            <h2 class="section-title">Technology &amp; Services</h2>
 
                             <p class="section-description">
-                                The frontend is built using standard web technologies,
-                                including HTML, CSS and JavaScript.
+                                The website frontend uses standard web
+                                technologies, including HTML, CSS and JavaScript.
                             </p>
 
                             <p class="section-description mt-md">
-                                Third-party services and libraries should be listed
-                                here when their use has been confirmed in the
-                                published project. References should reflect the
-                                actual implementation rather than planned features.
+                                Third-party libraries, backend services and
+                                other dependencies should be acknowledged here
+                                when their use has been confirmed in the
+                                published implementation.
                             </p>
                         </section>
 
+                        <!-- Third-party assets -->
                         <section class="content-card">
+                            <span class="section-eyebrow">Acknowledgements</span>
+
                             <h2 class="section-title">Third-Party Assets</h2>
 
                             <p class="section-description">
-                                External fonts, libraries, icons, images and other
-                                assets should be identified here when attribution
-                                is required. Applicable licence conditions should
-                                be checked before publication.
+                                External fonts, icons, images, libraries and
+                                other assets should be identified when
+                                attribution is required by their licence.
                             </p>
 
                             <p class="section-description mt-md">
-                                Only verified asset sources and licence details
-                                should be added to this section.
+                                Only verified source links, creator information
+                                and licence details should be added to this
+                                section. Asset credits should be updated whenever
+                                relevant dependencies change.
                             </p>
                         </section>
 
+                        <!-- Questions -->
                         <section class="content-card">
+                            <span class="section-eyebrow">Corrections</span>
+
                             <h2 class="section-title">Questions About Credits</h2>
 
                             <p class="section-description">
-                                If an attribution needs correction or an asset
-                                requires additional credit, review the original
-                                source and its licence before updating this page.
+                                Attribution information should be corrected
+                                when a verified source, creator or licence
+                                requirement has been identified.
                             </p>
 
                             <p class="section-description mt-md">
-                                Official contact details can be published here
-                                once the website's support contact method has
-                                been finalised.
+                                For any asset that requires additional credit,
+                                review its original source and applicable
+                                licence before updating this page.
                             </p>
                         </section>
 
                     </div>
 
+                    <!-- Sidebar -->
                     <aside class="content-stack">
 
+                        <!-- Website Information -->
                         <div class="panel">
                             <h2 class="panel-title">Website Information</h2>
 
@@ -231,18 +292,18 @@
 
                                 <div>
                                     <span class="text-muted">Website</span>
-                                    <p class="no-margin">studyKora</p>
+                                    <p class="no-margin">StudyKora</p>
                                 </div>
 
                                 <div>
                                     <span class="text-muted">Purpose</span>
                                     <p class="no-margin">
-                                        Competitive exam preparation and practice
+                                        Competitive-exam preparation and practice
                                     </p>
                                 </div>
 
                                 <div>
-                                    <span class="text-muted">Design and Development</span>
+                                    <span class="text-muted">Design &amp; Development</span>
                                     <p class="no-margin">Yadav Web Technologies</p>
                                 </div>
 
@@ -254,41 +315,69 @@
                             </div>
                         </div>
 
+                        <!-- Explore Website -->
                         <div class="panel">
-                            <h2 class="panel-title">Explore studyKora</h2>
+                            <h2 class="panel-title">Explore StudyKora</h2>
 
                             <div class="content-stack">
-                                <a href="subject.html" class="btn btn-outline btn-full">
+                                <a href="subject.html"
+                                   class="btn btn-outline btn-full">
                                     Subjects
                                 </a>
 
-                                <a href="mock-tests.html" class="btn btn-outline btn-full">
+                                <a href="mock-tests.html"
+                                   class="btn btn-outline btn-full">
                                     Mock Tests
                                 </a>
 
-                                <a href="daily-practice.html" class="btn btn-outline btn-full">
+                                <a href="daily-practice.html"
+                                   class="btn btn-outline btn-full">
                                     Daily Practice
                                 </a>
 
-                                <a href="current-affairs.html" class="btn btn-outline btn-full">
+                                <a href="current-affairs.html"
+                                   class="btn btn-outline btn-full">
                                     Current Affairs
                                 </a>
 
-                                <a href="resources.html" class="btn btn-primary btn-full">
+                                <a href="resources.html"
+                                   class="btn btn-primary btn-full">
                                     Study Resources
                                 </a>
                             </div>
                         </div>
 
+                        <!-- Related Information -->
+                        <div class="panel">
+                            <h2 class="panel-title">More Information</h2>
+
+                            <div class="content-stack">
+                                <a href="why-studynow.html"
+                                   class="btn btn-outline btn-full">
+                                    About StudyKora
+                                </a>
+
+                                <a href="faq.html"
+                                   class="btn btn-outline btn-full">
+                                    Frequently Asked Questions
+                                </a>
+
+                                <a href="privacy-policy.html"
+                                   class="btn btn-outline btn-full">
+                                    Privacy Policy
+                                </a>
+                            </div>
+                        </div>
+
                         <div class="notice">
-                            Keep this page updated when verified third-party
-                            assets, libraries or content sources are introduced.
+                            This page should be updated when verified
+                            third-party assets, libraries or content sources
+                            are introduced.
                         </div>
 
                     </aside>
 
                 </div>
-
             </div>
         </section>
 
@@ -299,14 +388,21 @@
         <div class="footer-main">
 
             <div class="footer-brand">
-                <a href="index.html" class="brand" aria-label="studyKora home">
+                <a href="index.html" class="brand" aria-label="StudyKora home">
+                    <span class="brand-mark" aria-hidden="true">
+                        <span style="font-size: 23px; font-weight: 800;">s</span>
+                    </span>
+
                     <span class="brand-text">
-                        <span class="brand-name"><span class="brand-study">study</span><span class="brand-kora">kora</span></span>
+                        <span class="brand-name" style="font-size: 19px;">
+                            <span style="color: #111111;">study</span><span style="color: #777777;">kora</span>
+                        </span>
                     </span>
                 </a>
 
                 <p class="footer-description">
-                    Subject-wise preparation and practice for competitive exams.
+                    Exam preparation, practice questions and study resources
+                    for learners preparing for competitive examinations.
                 </p>
             </div>
 
@@ -321,8 +417,19 @@
             </div>
 
             <div class="footer-column">
+                <h3>Categories</h3>
+                <ul class="footer-links">
+                    <li><a href="subject.html">All Subjects</a></li>
+                    <li><a href="current-affairs.html">Current Affairs</a></li>
+                    <li><a href="mock-tests.html">Practice Tests</a></li>
+                    <li><a href="resources.html">Study Resources</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
                 <h3>Information</h3>
                 <ul class="footer-links">
+                    <li><a href="why-studynow.html">About</a></li>
                     <li><a href="resources.html">Resources</a></li>
                     <li><a href="faq.html">FAQs</a></li>
                     <li><a href="privacy-policy.html">Privacy Policy</a></li>
@@ -330,26 +437,19 @@
                 </ul>
             </div>
 
-            <div class="footer-column">
-                <h3>Account</h3>
-                <ul class="footer-links">
-                    <li><a href="auth.html?mode=login">Login</a></li>
-                    <li><a href="auth.html?mode=signup">Create Account</a></li>
-                    <li><a href="auth.html?mode=forgot">Recover Password</a></li>
-                </ul>
-            </div>
-
         </div>
 
         <div class="footer-bottom">
             <span>
-                &copy; <span data-current-year></span> studyKora. All rights reserved.
+                &copy; <span data-current-year></span> StudyKora. All rights reserved.
             </span>
+
             <span class="site-credit">
-                Design and Develop by Yadav Web Technologies
+                Designed and developed by Yadav Web Technologies
             </span>
         </div>
     </footer>
 
 </body>
 </html>
+```
