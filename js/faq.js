@@ -1,4 +1,3 @@
-```javascript
 document.addEventListener("DOMContentLoaded", () => {
     const faqList = document.getElementById("faq-list");
     const searchInput = document.getElementById("faq-search");
