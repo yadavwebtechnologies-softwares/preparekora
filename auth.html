@@ -13,6 +13,57 @@
 
     <link rel="stylesheet" href="style.css">
 
+    <!-- Auth-page styling fixes -->
+    <style>
+        /* Fix duplicate green input borders */
+        .auth-page .auth-input {
+            border: 1px solid #cbd5d1;
+            outline: none;
+            box-shadow: none;
+        }
+
+        .auth-page .auth-input:focus,
+        .auth-page .auth-input:focus-visible {
+            border: 1px solid #28734f;
+            outline: none;
+            box-shadow: none;
+        }
+
+        /* Prevent browser autofill from adding a blue background */
+        .auth-page .auth-input:-webkit-autofill,
+        .auth-page .auth-input:-webkit-autofill:hover,
+        .auth-page .auth-input:-webkit-autofill:focus,
+        .auth-page .auth-input:-webkit-autofill:active {
+            -webkit-text-fill-color: #111;
+            caret-color: #111;
+            -webkit-box-shadow: 0 0 0 1000px #fff inset;
+            box-shadow: 0 0 0 1000px #fff inset;
+        }
+
+        /* Consistent studyKora branding */
+        .auth-page .brand-study {
+            color: #111;
+        }
+
+        .auth-page .brand-kora {
+            color: #777;
+        }
+
+        .auth-page .auth-brand-name,
+        .auth-page .auth-mobile-brand,
+        .auth-page .auth-form-brand {
+            text-decoration: none;
+        }
+
+        .auth-page .auth-brand-name {
+            font-weight: 700;
+        }
+
+        .auth-page .auth-brand-caption {
+            color: #777;
+        }
+    </style>
+
     <script src="script.js" defer></script>
     <script src="js/auth.js" defer></script>
 </head>
@@ -21,11 +72,13 @@
 
     <main class="auth-layout">
 
-        <!-- Left branding panel -->
+        <!-- Left Branding Panel -->
         <aside class="auth-side">
 
             <a href="index.html" class="auth-brand" aria-label="studyKora home">
-                <span class="auth-brand-name">studyKora</span>
+                <span class="auth-brand-name">
+                    <span class="brand-study">study</span><span class="brand-kora">kora</span>
+                </span>
                 <span class="auth-brand-caption">Learn. Practice. Progress.</span>
             </a>
 
@@ -61,13 +114,14 @@
 
         </aside>
 
-        <!-- Right authentication area -->
+        <!-- Right Authentication Area -->
         <section class="auth-main" aria-label="Account access">
 
             <div class="auth-main-inner">
 
-                <a href="index.html" class="auth-mobile-brand">
-                    studyKora
+                <!-- Mobile Branding -->
+                <a href="index.html" class="auth-mobile-brand" aria-label="studyKora home">
+                    <span class="brand-study">study</span><span class="brand-kora">kora</span>
                 </a>
 
                 <div class="auth-form-wrap">
@@ -79,11 +133,12 @@
                         data-auth-panel="login"
                     >
 
-                        <a href="index.html" class="auth-form-brand">
-                            studyKora
+                        <a href="index.html" class="auth-form-brand" aria-label="studyKora home">
+                            <span class="brand-study">study</span><span class="brand-kora">kora</span>
                         </a>
 
                         <div class="auth-card">
+
                             <div class="auth-heading">
                                 <h2>Welcome back</h2>
                                 <p>Enter your credentials to continue.</p>
@@ -92,9 +147,7 @@
                             <form id="login-form" novalidate>
 
                                 <div class="auth-field">
-                                    <label for="login-email">
-                                        Email
-                                    </label>
+                                    <label for="login-email">Email</label>
 
                                     <input
                                         type="email"
@@ -108,9 +161,7 @@
                                 </div>
 
                                 <div class="auth-field">
-                                    <label for="login-password">
-                                        Password
-                                    </label>
+                                    <label for="login-password">Password</label>
 
                                     <div class="auth-password-wrap">
                                         <input
@@ -151,23 +202,26 @@
                                 </button>
 
                                 <div class="auth-link-row auth-link-row-center">
-                                    <a href="auth.html?mode=forgot"
-                                       data-show-auth="forgot">
+                                    <a
+                                        href="auth.html?mode=forgot"
+                                        data-show-auth="forgot"
+                                    >
                                         Forgot your password?
                                     </a>
                                 </div>
 
                                 <p class="auth-switch-text">
                                     Don't have an account?
-                                    <a href="auth.html?mode=signup"
-                                       data-show-auth="signup">
+                                    <a
+                                        href="auth.html?mode=signup"
+                                        data-show-auth="signup"
+                                    >
                                         Register
                                     </a>
                                 </p>
 
                             </form>
                         </div>
-
                     </section>
 
                     <!-- SIGNUP -->
@@ -178,11 +232,12 @@
                         hidden
                     >
 
-                        <a href="index.html" class="auth-form-brand">
-                            studyKora
+                        <a href="index.html" class="auth-form-brand" aria-label="studyKora home">
+                            <span class="brand-study">study</span><span class="brand-kora">kora</span>
                         </a>
 
                         <div class="auth-card">
+
                             <div class="auth-heading">
                                 <h2>Create your account</h2>
                                 <p>Join studyKora and start practising.</p>
@@ -220,9 +275,7 @@
                                 </div>
 
                                 <div class="auth-field">
-                                    <label for="signup-whatsapp">
-                                        WhatsApp Number
-                                    </label>
+                                    <label for="signup-whatsapp">WhatsApp Number</label>
 
                                     <input
                                         type="tel"
@@ -318,15 +371,16 @@
 
                                 <p class="auth-switch-text">
                                     Already have an account?
-                                    <a href="auth.html?mode=login"
-                                       data-show-auth="login">
+                                    <a
+                                        href="auth.html?mode=login"
+                                        data-show-auth="login"
+                                    >
                                         Login
                                     </a>
                                 </p>
 
                             </form>
                         </div>
-
                     </section>
 
                     <!-- FORGOT PASSWORD -->
@@ -337,11 +391,12 @@
                         hidden
                     >
 
-                        <a href="index.html" class="auth-form-brand">
-                            studyKora
+                        <a href="index.html" class="auth-form-brand" aria-label="studyKora home">
+                            <span class="brand-study">study</span><span class="brand-kora">kora</span>
                         </a>
 
                         <div class="auth-card">
+
                             <div class="auth-heading">
                                 <h2>Recover your account</h2>
                                 <p>
@@ -353,9 +408,7 @@
                             <form id="forgot-form" novalidate>
 
                                 <div class="auth-field">
-                                    <label for="forgot-email">
-                                        Registered Email
-                                    </label>
+                                    <label for="forgot-email">Registered Email</label>
 
                                     <input
                                         type="email"
@@ -401,13 +454,11 @@
                                     Verify Account
                                 </button>
 
-                                <!-- Must stay hidden until real verification succeeds -->
+                                <!-- Hidden until verification succeeds -->
                                 <div id="forgot-reset-fields" hidden>
 
                                     <div class="auth-field">
-                                        <label for="forgot-otp">
-                                            Verification Code
-                                        </label>
+                                        <label for="forgot-otp">Verification Code</label>
 
                                         <input
                                             type="text"
@@ -465,31 +516,36 @@
 
                                 <p class="auth-switch-text">
                                     Remembered your password?
-                                    <a href="auth.html?mode=login"
-                                       data-show-auth="login">
+                                    <a
+                                        href="auth.html?mode=login"
+                                        data-show-auth="login"
+                                    >
                                         Back to Login
                                     </a>
                                 </p>
 
                             </form>
                         </div>
-
                     </section>
 
                 </div>
 
                 <div class="auth-security-note">
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"
-                              stroke="currentColor"
-                              stroke-width="1.6"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"/>
-                        <path d="m8.5 12 2.2 2.2 4.8-5"
-                              stroke="currentColor"
-                              stroke-width="1.6"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"/>
+                        <path
+                            d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                        <path
+                            d="m8.5 12 2.2 2.2 4.8-5"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
                     </svg>
 
                     <span>Secure account access</span>
@@ -500,9 +556,7 @@
                 </a>
 
             </div>
-
         </section>
-
     </main>
 
 </body>
