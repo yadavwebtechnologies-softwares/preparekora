@@ -1,54 +1,51 @@
-/* StudyKora FAQ Accordion
-   Handles FAQ open/close interactions only.
-   No search or filter functionality.
-*/
+/* StudyKora FAQ Accordion */
 
-(() => {
-    "use strict";
+document.addEventListener("DOMContentLoaded", () => {
+    const faqList = document.getElementById("faq-list");
 
-    const faqQuestions = document.querySelectorAll(".faq-question");
+    if (!faqList) return;
 
-    if (!faqQuestions.length) return;
+    const questions = faqList.querySelectorAll(".faq-question");
 
-    function setFaqState(button, isOpen) {
-        const panelId = button.getAttribute("aria-controls");
-        const panel = panelId ? document.getElementById(panelId) : null;
+    questions.forEach((question) => {
+        question.addEventListener("click", () => {
+            const answerId = question.getAttribute("aria-controls");
+            const answer = document.getElementById(answerId);
 
-        if (!panel) return;
+            if (!answer) return;
 
-        button.setAttribute("aria-expanded", String(isOpen));
-        panel.hidden = !isOpen;
+            const isExpanded =
+                question.getAttribute("aria-expanded") === "true";
 
-        const toggle = button.querySelector(".faq-toggle");
+            // Close all FAQ answers for a consistent accordion layout
+            questions.forEach((item) => {
+                const itemAnswerId = item.getAttribute("aria-controls");
+                const itemAnswer = document.getElementById(itemAnswerId);
 
-        if (toggle) {
-            toggle.textContent = isOpen ? "\u2212" : "+";
-        }
-    }
+                item.setAttribute("aria-expanded", "false");
 
-    faqQuestions.forEach((button) => {
-        const panelId = button.getAttribute("aria-controls");
-        const panel = panelId ? document.getElementById(panelId) : null;
+                if (itemAnswer) {
+                    itemAnswer.hidden = true;
+                }
 
-        if (!panel) return;
+                const toggle = item.querySelector(".faq-toggle");
 
-        // Keep the initial accordion state consistent with the HTML.
-        setFaqState(
-            button,
-            button.getAttribute("aria-expanded") === "true" && !panel.hidden
-        );
-
-        button.addEventListener("click", () => {
-            const shouldOpen = button.getAttribute("aria-expanded") !== "true";
-
-            // Close other questions before opening the selected question.
-            faqQuestions.forEach((otherButton) => {
-                if (otherButton !== button) {
-                    setFaqState(otherButton, false);
+                if (toggle) {
+                    toggle.textContent = "+";
                 }
             });
 
-            setFaqState(button, shouldOpen);
+            // Open the selected answer if it was previously closed
+            if (!isExpanded) {
+                question.setAttribute("aria-expanded", "true");
+                answer.hidden = false;
+
+                const toggle = question.querySelector(".faq-toggle");
+
+                if (toggle) {
+                    toggle.textContent = "−";
+                }
+            }
         });
     });
-})();
+});
