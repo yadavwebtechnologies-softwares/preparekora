@@ -1,13 +1,6 @@
 /* =====================================================
    StudyKora — Shared Header Logic
    File: js/shared-header.js
-
-   Responsibilities:
-   - Guest/authenticated header visibility
-   - Canonical session and legacy-session migration
-   - Refresh expired or nearly expired Firebase ID tokens
-   - Small profile control without a human-shaped icon
-   - Active navigation and responsive mobile menu
 ===================================================== */
 
 "use strict";
@@ -21,41 +14,42 @@
     const REFRESH_BUFFER_MS = 120000;
 
     let refreshPromise = null;
-    let stateRevision = 0;
+    let accountCheckRevision = 0;
 
-    function getSession() {
+    /* Read and normalize session */
+
+    function readStoredSession() {
         try {
             const raw = sessionStorage.getItem(SESSION_KEY);
 
             if (!raw) {
-                return { session: null, rawPresent: false };
+                return { session: null, exists: false };
             }
 
             const stored = JSON.parse(raw);
 
             if (!stored || typeof stored !== "object") {
-                return { session: null, rawPresent: true };
+                return { session: null, exists: true };
             }
 
-            const oldUser =
+            const rawUser =
                 stored.user && typeof stored.user === "object"
                     ? stored.user
                     : {};
 
             const uid = String(
-                oldUser.uid ||
-                oldUser.localId ||
-                oldUser.userId ||
+                rawUser.uid ||
+                rawUser.localId ||
+                rawUser.userId ||
                 stored.uid ||
                 ""
             );
 
             const email = String(
-                oldUser.email || stored.email || ""
+                rawUser.email || stored.email || ""
             ).trim().toLowerCase();
 
-            // Older auth.js versions stored Firebase idToken under
-            // accessToken/token. Accept those fields only as migration.
+            // Migrate sessions saved by older auth.js versions.
             const idToken = String(
                 stored.idToken ||
                 stored.accessToken ||
@@ -65,31 +59,25 @@
 
             const refreshToken = String(stored.refreshToken || "");
 
-            const parsedExpiry = Number(stored.expiresIn);
+            const expiryValue = Number(stored.expiresAt);
+            let expiresAt =
+                Number.isFinite(expiryValue) && expiryValue > 0
+                    ? expiryValue
+                    : 0;
+
+            const expirySecondsValue = Number(stored.expiresIn);
             const expiresIn =
-                Number.isFinite(parsedExpiry) && parsedExpiry > 0
-                    ? parsedExpiry
+                Number.isFinite(expirySecondsValue) &&
+                expirySecondsValue > 0
+                    ? expirySecondsValue
                     : DEFAULT_EXPIRES_IN;
 
-            const parsedSavedAt = Number(stored.savedAt);
+            const savedAtValue = Number(stored.savedAt);
             let savedAt =
-                Number.isFinite(parsedSavedAt) && parsedSavedAt > 0
-                    ? parsedSavedAt
+                Number.isFinite(savedAtValue) && savedAtValue > 0
+                    ? savedAtValue
                     : 0;
 
-            let expiresAt = Number(stored.expiresAt);
-
-            if (!Number.isFinite(expiresAt) || expiresAt <= 0) {
-                expiresAt = stored.expiresAt
-                    ? Date.parse(stored.expiresAt)
-                    : 0;
-            }
-
-            if (!Number.isFinite(expiresAt) || expiresAt <= 0) {
-                expiresAt = 0;
-            }
-
-            // Migrate sessions that had expiresAt but no savedAt.
             if (!savedAt && expiresAt) {
                 savedAt = expiresAt - expiresIn * 1000;
             }
@@ -98,66 +86,67 @@
                 expiresAt = savedAt + expiresIn * 1000;
             }
 
-            const session = {
-                schemaVersion: 1,
-                idToken,
-                refreshToken,
-                expiresIn,
-                savedAt,
-                expiresAt,
-                user: {
-                    ...oldUser,
-                    uid,
-                    localId: String(oldUser.localId || uid),
-                    email,
-                    displayName: String(
-                        oldUser.displayName ||
-                        oldUser.name ||
-                        stored.name ||
-                        ""
-                    ),
-                    photoURL: String(
-                        oldUser.photoURL ||
-                        oldUser.photoUrl ||
-                        ""
-                    ),
-                    whatsapp: String(
-                        oldUser.whatsapp ||
-                        oldUser.phone ||
-                        ""
-                    )
-                }
-            };
-
             return {
-                session,
-                rawPresent: true,
+                exists: true,
                 needsMigration:
                     stored.schemaVersion !== 1 ||
                     stored.idToken !== idToken ||
                     !stored.savedAt ||
                     !stored.expiresAt ||
-                    !oldUser.uid ||
-                    !oldUser.email
+                    !rawUser.uid ||
+                    !rawUser.email,
+
+                session: {
+                    schemaVersion: 1,
+                    idToken,
+                    refreshToken,
+                    expiresIn,
+                    savedAt,
+                    expiresAt,
+
+                    user: {
+                        ...rawUser,
+                        uid,
+                        localId: String(rawUser.localId || uid),
+                        email,
+                        displayName: String(
+                            rawUser.displayName ||
+                            rawUser.name ||
+                            stored.name ||
+                            ""
+                        ),
+                        photoURL: String(
+                            rawUser.photoURL ||
+                            rawUser.photoUrl ||
+                            ""
+                        ),
+                        whatsapp: String(
+                            rawUser.whatsapp ||
+                            rawUser.phone ||
+                            ""
+                        )
+                    }
+                }
             };
         } catch (error) {
             console.warn(
-                "[StudyKora Header] Could not read the session:",
+                "[StudyKora Header] Could not read session:",
                 error.message
             );
 
-            return { session: null, rawPresent: true };
+            return { session: null, exists: true };
         }
     }
 
     function saveSession(session) {
         if (
             !session ||
+            !session.idToken ||
             !session.refreshToken ||
             !session.user?.uid ||
             !session.user?.email
         ) {
-            throw new Error("The session is incomplete.");
+            throw new Error("Session is incomplete.");
         }
 
         sessionStorage.setItem(
@@ -169,24 +158,31 @@
     function clearSession() {
         try {
             sessionStorage.removeItem(SESSION_KEY);
-        } catch {
-            // Keep the header in logged-out state even if storage fails.
+        } catch (error) {
+            console.warn(
+                "[StudyKora Header] Could not clear session:",
+                error.message
+            );
         }
     }
 
-    function setAccountVisibility(loggedIn) {
+    /* Toggle guest and authenticated controls */
+
+    function setAccountVisibility(isAuthenticated) {
         const guest = document.getElementById("account-guest");
         const authenticated =
             document.getElementById("account-authenticated");
 
         if (guest) {
-            guest.hidden = loggedIn;
+            guest.hidden = isAuthenticated;
         }
 
         if (authenticated) {
-            authenticated.hidden = !loggedIn;
+            authenticated.hidden = !isAuthenticated;
         }
     }
+
+    /* Remove the old human-shaped profile SVG */
 
     function prepareProfileControl() {
         const trigger =
@@ -194,17 +190,13 @@
 
         if (!trigger) return;
 
-        // The new profile control is a simple soft-grey box.
-        // Remove legacy human/avatar SVGs from existing page markup.
         trigger.replaceChildren();
+        trigger.href = "profile.html";
         trigger.setAttribute("aria-label", "Open your profile");
         trigger.setAttribute("title", "Profile");
-        trigger.setAttribute("href", "profile.html");
     }
 
-    /* -----------------------------------------------------
-       Refresh authentication session
-    ----------------------------------------------------- */
+    /* Refresh Firebase ID token */
 
     async function refreshSession(session) {
         if (refreshPromise) {
@@ -215,28 +207,38 @@
             let response;
 
             try {
-                response = await fetch(`${API_BASE}/auth/refresh`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Accept": "application/json"
-                    },
-                    cache: "no-store",
-                    body: JSON.stringify({
-                        refreshToken: session.refreshToken
-                    })
-                });
+                response = await fetch(
+                    `${API_BASE}/auth/refresh`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Accept": "application/json"
+                        },
+                        cache: "no-store",
+                        body: JSON.stringify({
+                            refreshToken: session.refreshToken
+                        })
+                    }
+                );
             } catch {
                 const error = new Error(
                     "Unable to contact the authentication service."
                 );
+
                 error.status = 0;
                 throw error;
             }
 
             const data = await response.json().catch(() => ({}));
 
-            if (!response.ok) {
+            if (
+                !response.ok ||
+                typeof data.idToken !== "string" ||
+                !data.idToken ||
+                typeof data.refreshToken !== "string" ||
+                !data.refreshToken
+            ) {
                 const error = new Error(
                     typeof data.error === "string"
                         ? data.error
@@ -245,17 +247,6 @@
 
                 error.status = response.status;
                 throw error;
-            }
-
-            if (
-                typeof data.idToken !== "string" ||
-                !data.idToken ||
-                typeof data.refreshToken !== "string" ||
-                !data.refreshToken
-            ) {
-                throw new Error(
-                    "The authentication service returned an incomplete refreshed session."
-                );
             }
 
             const returnedUid = String(
@@ -269,22 +260,22 @@
                 returnedUid !== session.user.uid
             ) {
                 const error = new Error(
-                    "The refreshed account does not match the current account."
+                    "Refreshed account does not match this session."
                 );
 
                 error.status = 401;
                 throw error;
             }
 
-            const parsedExpiry = Number(data.expiresIn);
+            const expiryValue = Number(data.expiresIn);
             const expiresIn =
-                Number.isFinite(parsedExpiry) && parsedExpiry > 0
-                    ? parsedExpiry
+                Number.isFinite(expiryValue) && expiryValue > 0
+                    ? expiryValue
                     : DEFAULT_EXPIRES_IN;
 
             const savedAt = Date.now();
 
-            const refreshed = {
+            const updated = {
                 ...session,
                 schemaVersion: 1,
                 idToken: data.idToken,
@@ -292,6 +283,7 @@
                 expiresIn,
                 savedAt,
                 expiresAt: savedAt + expiresIn * 1000,
+
                 user: {
                     ...session.user,
                     ...(data.user || {}),
@@ -304,8 +296,8 @@
                 }
             };
 
-            saveSession(refreshed);
-            return refreshed;
+            saveSession(updated);
+            return updated;
         })();
 
         try {
@@ -315,18 +307,16 @@
         }
     }
 
-    /* -----------------------------------------------------
-       Account state
-    ----------------------------------------------------- */
+    /* Determine current account state */
 
     async function updateAccountState() {
-        const revision = ++stateRevision;
-        const result = getSession();
+        const revision = ++accountCheckRevision;
+        const result = readStoredSession();
 
         let session = result.session;
 
         if (!session) {
-            if (result.rawPresent) {
+            if (result.exists) {
                 clearSession();
             }
 
@@ -356,28 +346,26 @@
             return;
         }
 
-        const now = Date.now();
-        const tokenExpiry = Number(session.expiresAt) || 0;
+        const expiresAt = Number(session.expiresAt) || 0;
 
-        const tokenNeedsRefresh =
+        const needsRefresh =
             !session.idToken ||
-            !tokenExpiry ||
-            now >= tokenExpiry - REFRESH_BUFFER_MS;
+            !expiresAt ||
+            Date.now() >= expiresAt - REFRESH_BUFFER_MS;
 
-        // A non-expired canonical session does not need a refresh call.
-        if (!tokenNeedsRefresh) {
-            try {
-                if (result.needsMigration) {
+        if (!needsRefresh) {
+            if (result.needsMigration) {
+                try {
                     saveSession(session);
-                }
-            } catch (error) {
-                console.error(
-                    "[StudyKora Header] Could not normalize session:",
-                    error.message
-                );
+                } catch (error) {
+                    console.error(
+                        "[StudyKora Header] Session migration failed:",
+                        error.message
+                    );
 
-                setAccountVisibility(false);
-                return;
+                    setAccountVisibility(false);
+                    return;
+                }
             }
 
             setAccountVisibility(true);
@@ -389,15 +377,13 @@
             return;
         }
 
-        // Do not display the profile control while an expired session
-        // is being restored or refreshed.
+        // Keep guest buttons visible until refresh succeeds.
         setAccountVisibility(false);
 
         try {
             session = await refreshSession(session);
 
-            // Ignore stale async results if a newer state check started.
-            if (revision !== stateRevision) return;
+            if (revision !== accountCheckRevision) return;
 
             setAccountVisibility(true);
 
@@ -405,42 +391,36 @@
                 "[StudyKora Header] Account state: Logged in"
             );
         } catch (error) {
-            if (revision !== stateRevision) return;
+            if (revision !== accountCheckRevision) return;
 
             if (error.status === 401 || error.status === 403) {
                 clearSession();
-            } else {
-                // A temporary network failure should not destroy a
-                // session whose existing ID token has not expired yet.
-                const stillUsable =
-                    Boolean(session.idToken) &&
-                    Number(session.expiresAt) > Date.now();
+                setAccountVisibility(false);
 
-                if (stillUsable) {
-                    setAccountVisibility(true);
-                } else {
-                    setAccountVisibility(false);
-                }
-
-                console.warn(
-                    "[StudyKora Header] Session refresh could not complete:",
-                    error.message
+                console.info(
+                    "[StudyKora Header] Account state: Logged out"
                 );
 
                 return;
             }
 
-            setAccountVisibility(false);
+            // A temporary network failure should not erase a session
+            // whose existing ID token has not expired.
+            const tokenStillUnexpired = Boolean(
+                session.idToken &&
+                Number(session.expiresAt) > Date.now()
+            );
 
-            console.info(
-                "[StudyKora Header] Account state: Logged out"
+            setAccountVisibility(tokenStillUnexpired);
+
+            console.warn(
+                "[StudyKora Header] Refresh unavailable:",
+                error.message
             );
         }
     }
 
-    /* -----------------------------------------------------
-       Active navigation
-    ----------------------------------------------------- */
+    /* Active navigation */
 
     function updateActiveNavigation() {
         const nav = document.getElementById("main-nav");
@@ -448,7 +428,7 @@
 
         let currentPath = window.location.pathname;
 
-        if (currentPath.endsWith("/") || currentPath === "") {
+        if (currentPath.endsWith("/")) {
             currentPath += "index.html";
         }
 
@@ -476,25 +456,26 @@
         });
     }
 
-    /* -----------------------------------------------------
-       Responsive navigation
-    ----------------------------------------------------- */
+    /* Mobile navigation */
 
     function initializeMobileNavigation() {
         const nav = document.getElementById("main-nav");
         const menuToggle = document.getElementById("menu-toggle");
 
         if (!nav || !menuToggle) return;
-        if (menuToggle.dataset.headerMenuReady === "true") return;
+
+        if (menuToggle.dataset.headerMenuReady === "true") {
+            return;
+        }
 
         menuToggle.dataset.headerMenuReady = "true";
 
-        function setMenuState(requestedOpen) {
+        function setMenuState(open) {
             const isMobile = window.matchMedia(
                 "(max-width: 780px)"
             ).matches;
 
-            const shouldOpen = Boolean(requestedOpen && isMobile);
+            const shouldOpen = Boolean(open && isMobile);
 
             nav.classList.toggle("is-open", shouldOpen);
             menuToggle.classList.toggle("is-active", shouldOpen);
@@ -515,9 +496,7 @@
         menuToggle.addEventListener("click", (event) => {
             event.stopPropagation();
 
-            setMenuState(
-                !nav.classList.contains("is-open")
-            );
+            setMenuState(!nav.classList.contains("is-open"));
         });
 
         nav.addEventListener("click", (event) => {
@@ -546,39 +525,35 @@
             setMenuState(false);
         });
 
-        const mobileQuery = window.matchMedia(
+        const mediaQuery = window.matchMedia(
             "(max-width: 780px)"
         );
 
-        if (typeof mobileQuery.addEventListener === "function") {
-            mobileQuery.addEventListener("change", () => {
+        if (typeof mediaQuery.addEventListener === "function") {
+            mediaQuery.addEventListener("change", () => {
                 setMenuState(false);
             });
         } else {
-            mobileQuery.addListener(() => {
+            mediaQuery.addListener(() => {
                 setMenuState(false);
             });
         }
     }
 
-    /* -----------------------------------------------------
-       Initialize
-    ----------------------------------------------------- */
+    /* Initialize public header */
 
     function initializeSharedHeader() {
         const header = document.querySelector(".site-header");
 
-        // The separate dashboard layout does not use the public header.
+        // Dashboard uses its own layout, not the public header.
         if (!header) return;
 
         prepareProfileControl();
         initializeMobileNavigation();
         updateActiveNavigation();
 
-        // Initial session check.
         void updateAccountState();
 
-        // Same-tab events emitted by profile/dashboard auth code.
         window.addEventListener("studyKora:auth-state", () => {
             void updateAccountState();
         });
