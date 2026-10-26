@@ -1,17 +1,24 @@
 /* =====================================================
    StudyKora — Profile and Account Settings
-   Uses the existing Cloudflare Worker API
+   File: js/profile.js
+
+   Uses:
+   - Canonical StudyKora session
+   - Cloudflare Worker API
+   - Firebase ID-token refresh
 ===================================================== */
 
 "use strict";
 
 document.addEventListener("DOMContentLoaded", () => {
-    const $ = (id) => document.getElementById(id);
-
     const API_BASE =
         "https://studykora-api.yadavsubba2003.workers.dev";
 
     const SESSION_KEY = "studyKoraSession";
+    const DEFAULT_EXPIRES_IN = 3600;
+    const REFRESH_BUFFER_MS = 120000;
+
+    const $ = (id) => document.getElementById(id);
 
     const authRequired = $("profile-auth-required");
     const profileLoading = $("profile-loading");
@@ -27,43 +34,212 @@ document.addEventListener("DOMContentLoaded", () => {
     const displayName = $("profile-display-name");
     const displayEmail = $("profile-display-email");
 
-    let session = readSession();
+    let session = null;
     let profileData = {};
+    let refreshPromise = null;
 
-    /* ---------- Session ---------- */
+    /* -----------------------------------------------------
+       Session management
+    ----------------------------------------------------- */
 
     function readSession() {
         try {
-            return JSON.parse(
-                sessionStorage.getItem(SESSION_KEY) || "null"
+            const raw = sessionStorage.getItem(SESSION_KEY);
+            if (!raw) return null;
+
+            const stored = JSON.parse(raw);
+
+            if (!stored || typeof stored !== "object") {
+                return null;
+            }
+
+            /*
+             * Migrate old sessions created by the previous auth.js.
+             * Its accessToken/token fields actually received the
+             * Worker login response's idToken.
+             */
+            const idToken =
+                stored.idToken ||
+                stored.accessToken ||
+                stored.token ||
+                "";
+
+            const rawUser =
+                stored.user && typeof stored.user === "object"
+                    ? stored.user
+                    : {};
+
+            const uid = String(
+                rawUser.uid ||
+                rawUser.localId ||
+                rawUser.userId ||
+                stored.uid ||
+                ""
             );
+
+            const email = String(
+                rawUser.email ||
+                stored.email ||
+                ""
+            ).trim().toLowerCase();
+
+            const parsedExpiresIn = Number(stored.expiresIn);
+            const expiresIn =
+                Number.isFinite(parsedExpiresIn) && parsedExpiresIn > 0
+                    ? parsedExpiresIn
+                    : DEFAULT_EXPIRES_IN;
+
+            const parsedExpiresAt = Number(stored.expiresAt);
+            const parsedSavedAt = Number(stored.savedAt);
+
+            let savedAt =
+                Number.isFinite(parsedSavedAt) && parsedSavedAt > 0
+                    ? parsedSavedAt
+                    : 0;
+
+            let expiresAt =
+                Number.isFinite(parsedExpiresAt) && parsedExpiresAt > 0
+                    ? parsedExpiresAt
+                    : 0;
+
+            /*
+             * Old auth.js saved expiresAt but did not save expiresIn
+             * or savedAt. Derive an approximate savedAt so the
+             * refresh logic can correctly decide what to do.
+             */
+            if (!savedAt && expiresAt) {
+                savedAt = expiresAt - expiresIn * 1000;
+            }
+
+            const normalized = {
+                schemaVersion: 1,
+                idToken: String(idToken),
+                refreshToken: String(stored.refreshToken || ""),
+                expiresIn,
+                savedAt,
+                expiresAt,
+                user: {
+                    ...rawUser,
+                    uid,
+                    localId: String(rawUser.localId || uid),
+                    email,
+                    displayName: String(
+                        rawUser.displayName ||
+                        rawUser.name ||
+                        stored.name ||
+                        ""
+                    ),
+                    photoURL: String(
+                        rawUser.photoURL ||
+                        rawUser.photoUrl ||
+                        ""
+                    ),
+                    whatsapp: String(
+                        rawUser.whatsapp ||
+                        rawUser.phone ||
+                        ""
+                    )
+                }
+            };
+
+            return normalized;
         } catch (error) {
-            console.error("[StudyKora Profile] Invalid session data:", error);
+            console.error(
+                "[StudyKora Profile] Could not read session:",
+                error.message
+            );
+
             return null;
         }
     }
 
     function saveSession() {
-        sessionStorage.setItem(
-            SESSION_KEY,
-            JSON.stringify(session)
+        if (!session) {
+            throw new Error("No session is available to save.");
+        }
+
+        const savedAt = Number(session.savedAt) || Date.now();
+        const expiresIn = Number(session.expiresIn) || DEFAULT_EXPIRES_IN;
+
+        session.schemaVersion = 1;
+        session.savedAt = savedAt;
+        session.expiresIn = expiresIn;
+        session.expiresAt = savedAt + expiresIn * 1000;
+
+        try {
+            sessionStorage.setItem(
+                SESSION_KEY,
+                JSON.stringify(session)
+            );
+        } catch {
+            throw new Error(
+                "Could not save the session. Check your browser storage settings."
+            );
+        }
+
+        try {
+            const saved = JSON.parse(
+                sessionStorage.getItem(SESSION_KEY) || "null"
+            );
+
+            if (
+                !saved ||
+                saved.idToken !== session.idToken ||
+                saved.user?.uid !== session.user?.uid
+            ) {
+                throw new Error("Session verification failed.");
+            }
+        } catch {
+            throw new Error(
+                "The saved session could not be verified."
+            );
+        }
+
+        /*
+         * Same-tab custom event: shared-header.js can listen for
+         * this after it is updated to support this event.
+         */
+        window.dispatchEvent(
+            new CustomEvent("studyKora:auth-state", {
+                detail: { authenticated: true }
+            })
         );
     }
 
     function clearSession() {
-        sessionStorage.removeItem(SESSION_KEY);
-        session = null;
-    }
+        try {
+            sessionStorage.removeItem(SESSION_KEY);
+        } catch {
+            // Continue logging out even if storage is unavailable.
+        }
 
-    function hasSession() {
-        return Boolean(
-            session?.idToken &&
-            session?.user?.email &&
-            (session.user.uid || session.user.localId)
+        session = null;
+
+        window.dispatchEvent(
+            new CustomEvent("studyKora:auth-state", {
+                detail: { authenticated: false }
+            })
         );
     }
 
-    /* ---------- Status messages ---------- */
+    function hasIdentity() {
+        return Boolean(
+            session &&
+            session.user?.uid &&
+            session.user?.email &&
+            (session.idToken || session.refreshToken)
+        );
+    }
+
+    function getSessionError() {
+        return new Error(
+            "Your session has expired or is incomplete. Please log in again."
+        );
+    }
+
+    /* -----------------------------------------------------
+       Status messages and page states
+    ----------------------------------------------------- */
 
     function showMessage(element, message, type = "") {
         if (!element) return;
@@ -79,10 +255,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function showLoading(message = "Loading profile...") {
-        if (!profileLoading) return;
+        if (profileLoading) {
+            profileLoading.textContent = message;
+            profileLoading.hidden = false;
+        }
 
-        profileLoading.textContent = message;
-        profileLoading.hidden = false;
+        if (authRequired) authRequired.hidden = true;
+        if (profileContent) profileContent.hidden = true;
     }
 
     function hideLoading() {
@@ -105,11 +284,140 @@ document.addEventListener("DOMContentLoaded", () => {
         if (profileContent) profileContent.hidden = false;
     }
 
-    /* ---------- Cloudflare Worker API ---------- */
+    /* -----------------------------------------------------
+       Worker API helpers
+    ----------------------------------------------------- */
 
-    async function apiRequest(path, method = "GET", payload) {
+    function isTokenError(status, message) {
+        if (status === 401) return true;
+
+        if (status !== 400) return false;
+
+        return /invalid id token|token expired|session is invalid|session has expired|authentication required/i
+            .test(message || "");
+    }
+
+    async function refreshSessionIfNeeded(force = false) {
+        if (!session?.refreshToken) {
+            if (session?.idToken && !force) {
+                // Let the Worker validate the available ID token.
+                return;
+            }
+
+            throw getSessionError();
+        }
+
+        if (refreshPromise) {
+            await refreshPromise;
+            return;
+        }
+
+        const expiresAt = Number(session.expiresAt) || 0;
+
+        const needsRefresh =
+            force ||
+            !session.idToken ||
+            !expiresAt ||
+            Date.now() >= expiresAt - REFRESH_BUFFER_MS;
+
+        if (!needsRefresh) return;
+
+        const oldSession = session;
+
+        refreshPromise = (async () => {
+            let response;
+
+            try {
+                response = await fetch(`${API_BASE}/auth/refresh`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    cache: "no-store",
+                    body: JSON.stringify({
+                        refreshToken: oldSession.refreshToken
+                    })
+                });
+            } catch {
+                throw new Error(
+                    "Could not connect to StudyKora to refresh your session."
+                );
+            }
+
+            const data = await response.json().catch(() => ({}));
+
+            if (
+                !response.ok ||
+                typeof data.idToken !== "string" ||
+                !data.idToken ||
+                typeof data.refreshToken !== "string" ||
+                !data.refreshToken
+            ) {
+                throw getSessionError();
+            }
+
+            const returnedUid = String(
+                data.user?.uid ||
+                data.user?.localId ||
+                ""
+            );
+
+            if (
+                returnedUid &&
+                oldSession.user?.uid &&
+                returnedUid !== oldSession.user.uid
+            ) {
+                throw new Error(
+                    "The refreshed account does not match your current session."
+                );
+            }
+
+            const parsedExpiry = Number(data.expiresIn);
+            const expiresIn =
+                Number.isFinite(parsedExpiry) && parsedExpiry > 0
+                    ? parsedExpiry
+                    : DEFAULT_EXPIRES_IN;
+
+            const savedAt = Date.now();
+
+            /*
+             * The Worker refresh response returns user identifiers,
+             * not a complete user object. Preserve existing details.
+             */
+            session = {
+                ...oldSession,
+                schemaVersion: 1,
+                idToken: data.idToken,
+                refreshToken: data.refreshToken,
+                expiresIn,
+                savedAt,
+                expiresAt: savedAt + expiresIn * 1000,
+                user: {
+                    ...oldSession.user,
+                    ...(data.user || {}),
+                    uid: returnedUid || oldSession.user.uid,
+                    localId:
+                        data.user?.localId ||
+                        data.user?.uid ||
+                        oldSession.user.localId ||
+                        oldSession.user.uid
+                }
+            };
+
+            saveSession();
+        })();
+
+        try {
+            await refreshPromise;
+        } finally {
+            refreshPromise = null;
+        }
+    }
+
+    async function performRequest(path, method, payload) {
         if (!session?.idToken) {
-            throw new Error("Please log in again to continue.");
+            throw getSessionError();
         }
 
         let response;
@@ -119,13 +427,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 method,
                 headers: {
                     "Content-Type": "application/json",
+                    "Accept": "application/json",
                     "Authorization": `Bearer ${session.idToken}`
                 },
+                cache: "no-store",
                 ...(payload !== undefined
                     ? { body: JSON.stringify(payload) }
                     : {})
             });
-        } catch (error) {
+        } catch {
             throw new Error(
                 "Could not connect to StudyKora. Check your internet connection."
             );
@@ -134,77 +444,114 @@ document.addEventListener("DOMContentLoaded", () => {
         const result = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-            throw new Error(
-                result.message ||
-                result.error ||
-                `Request failed (HTTP ${response.status}).`
-            );
+            const message =
+                typeof result.error === "string"
+                    ? result.error
+                    : typeof result.message === "string"
+                        ? result.message
+                        : `Request failed (HTTP ${response.status}).`;
+
+            const error = new Error(message);
+            error.status = response.status;
+
+            throw error;
         }
 
         return result;
     }
 
+    async function apiRequest(path, method = "GET", payload) {
+        if (!hasIdentity()) {
+            throw getSessionError();
+        }
+
+        await refreshSessionIfNeeded();
+
+        try {
+            return await performRequest(path, method, payload);
+        } catch (error) {
+            /*
+             * Retry once only when the Worker reports an ID-token
+             * error. Do not refresh on ordinary database-rule errors.
+             */
+            if (!isTokenError(error.status, error.message)) {
+                throw error;
+            }
+
+            await refreshSessionIfNeeded(true);
+
+            return performRequest(path, method, payload);
+        }
+    }
+
+    /* -----------------------------------------------------
+       Update session from Worker responses
+    ----------------------------------------------------- */
+
     function updateSessionFromResponse(data) {
-        if (data.idToken) {
-            session.idToken = data.idToken;
+        if (!session) {
+            throw getSessionError();
         }
 
-        if (data.refreshToken) {
-            session.refreshToken = data.refreshToken;
-        }
+        const parsedExpiry = Number(data.expiresIn);
+        const expiresIn =
+            Number.isFinite(parsedExpiry) && parsedExpiry > 0
+                ? parsedExpiry
+                : session.expiresIn || DEFAULT_EXPIRES_IN;
 
-        if (data.expiresIn) {
-            session.expiresIn = data.expiresIn;
-        }
+        const savedAt = Date.now();
+
+        session = {
+            ...session,
+            idToken: data.idToken || session.idToken,
+            refreshToken: data.refreshToken || session.refreshToken,
+            expiresIn,
+            savedAt,
+            expiresAt: savedAt + expiresIn * 1000,
+            user: {
+                ...session.user,
+                ...(data.user || {})
+            }
+        };
 
         if (data.user) {
-            session.user = {
-                ...session.user,
-                ...data.user,
-                uid:
-                    data.user.uid ||
-                    data.user.localId ||
-                    session.user.uid,
-                localId:
-                    data.user.localId ||
-                    data.user.uid ||
-                    session.user.localId
-            };
+            session.user.uid =
+                data.user.uid ||
+                data.user.localId ||
+                session.user.uid;
+
+            session.user.localId =
+                data.user.localId ||
+                data.user.uid ||
+                session.user.localId;
         }
 
-        session.savedAt = Date.now();
         saveSession();
     }
 
-    /* ---------- Profile photo preview ---------- */
+    /* -----------------------------------------------------
+       Profile photo preview
+    ----------------------------------------------------- */
 
     function renderDefaultAvatar() {
         if (!avatarPreview) return;
 
         avatarPreview.replaceChildren();
 
-        const svgNS = "http://www.w3.org/2000/svg";
-        const svg = document.createElementNS(svgNS, "svg");
+        const imagePlaceholder = document.createElement("span");
+        imagePlaceholder.textContent = "SK";
+        imagePlaceholder.setAttribute("aria-hidden", "true");
 
-        svg.setAttribute("viewBox", "0 0 24 24");
-        svg.setAttribute("fill", "none");
-        svg.setAttribute("aria-hidden", "true");
+        imagePlaceholder.style.display = "grid";
+        imagePlaceholder.style.width = "100%";
+        imagePlaceholder.style.height = "100%";
+        imagePlaceholder.style.placeItems = "center";
+        imagePlaceholder.style.background = "#eceeef";
+        imagePlaceholder.style.color = "#777";
+        imagePlaceholder.style.fontSize = "12px";
+        imagePlaceholder.style.fontWeight = "700";
 
-        const head = document.createElementNS(svgNS, "circle");
-        head.setAttribute("cx", "12");
-        head.setAttribute("cy", "8");
-        head.setAttribute("r", "4");
-        head.setAttribute("stroke", "currentColor");
-        head.setAttribute("stroke-width", "1.7");
-
-        const body = document.createElementNS(svgNS, "path");
-        body.setAttribute("d", "M4.5 20a7.5 7.5 0 0 1 15 0");
-        body.setAttribute("stroke", "currentColor");
-        body.setAttribute("stroke-width", "1.7");
-        body.setAttribute("stroke-linecap", "round");
-
-        svg.append(head, body);
-        avatarPreview.appendChild(svg);
+        avatarPreview.appendChild(imagePlaceholder);
     }
 
     function updateAvatarPreview(url) {
@@ -243,21 +590,82 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     profilePhoto?.addEventListener("input", () => {
-        const value = profilePhoto.value.trim();
-        if (!value) {
-            renderDefaultAvatar();
-            return;
-        }
-
-        updateAvatarPreview(value);
+        updateAvatarPreview(profilePhoto.value.trim());
     });
 
-    /* ---------- Load account profile ---------- */
+    /* -----------------------------------------------------
+       Render profile data
+    ----------------------------------------------------- */
+
+    function renderProfile(data) {
+        profileData = data.profile || {};
+
+        const accountName =
+            profileData.displayName ||
+            profileData.name ||
+            session.user.displayName ||
+            session.user.name ||
+            session.user.email.split("@")[0] ||
+            "Account";
+
+        const accountEmail =
+            data.user?.email ||
+            session.user.email ||
+            profileData.email ||
+            "";
+
+        const accountPhoto =
+            profileData.photoURL ||
+            session.user.photoURL ||
+            "";
+
+        profileName.value =
+            accountName === "Account" ? "" : accountName;
+
+        profileEmail.value = accountEmail;
+        profilePhoto.value = accountPhoto;
+
+        if (displayName) {
+            displayName.textContent = accountName;
+        }
+
+        if (displayEmail) {
+            displayEmail.textContent = accountEmail;
+        }
+
+        // Keep the canonical session user fields updated.
+        session.user = {
+            ...session.user,
+            uid:
+                data.user?.uid ||
+                data.user?.localId ||
+                session.user.uid,
+            localId:
+                data.user?.localId ||
+                data.user?.uid ||
+                session.user.localId,
+            email: accountEmail,
+            displayName: accountName,
+            photoURL: accountPhoto,
+            whatsapp:
+                profileData.whatsapp ||
+                session.user.whatsapp ||
+                ""
+        };
+
+        saveSession();
+        updateAvatarPreview(accountPhoto);
+        showProfile();
+    }
+
+    /* -----------------------------------------------------
+       Load account profile
+    ----------------------------------------------------- */
 
     async function loadProfile() {
         session = readSession();
 
-        if (!hasSession()) {
+        if (!hasIdentity()) {
             showLoggedOut();
             return;
         }
@@ -266,64 +674,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
             const data = await apiRequest("/profile");
-            profileData = data.profile || {};
 
-            if (data.user) {
-                session.user = {
-                    ...session.user,
-                    ...data.user,
-                    uid:
-                        data.user.uid ||
-                        data.user.localId ||
-                        session.user.uid,
-                    localId:
-                        data.user.localId ||
-                        data.user.uid ||
-                        session.user.localId
-                };
-
-                saveSession();
-            }
-
-            const accountName =
-                profileData.displayName ||
-                profileData.name ||
-                session.user.displayName ||
-                "Account";
-
-            const accountEmail =
-                data.user?.email ||
-                session.user.email ||
-                profileData.email ||
-                "";
-
-            const accountPhoto =
-                profileData.photoURL ||
-                session.user.photoURL ||
-                "";
-
-            profileName.value =
-                accountName === "Account" ? "" : accountName;
-
-            profileEmail.value = accountEmail;
-            profilePhoto.value = accountPhoto;
-
-            if (displayName) {
-                displayName.textContent = accountName;
-            }
-
-            if (displayEmail) {
-                displayEmail.textContent = accountEmail;
-            }
-
-            updateAvatarPreview(accountPhoto);
-            showProfile();
-
+            renderProfile(data);
         } catch (error) {
-            console.error("[StudyKora Profile] Load failed:", error);
+            console.error(
+                "[StudyKora Profile] Load failed:",
+                error.message
+            );
 
             if (
-                /invalid id token|token expired|session.*expired|authentication required|please log in again/i
+                /session has expired|session is incomplete|session does not match/i
                     .test(error.message)
             ) {
                 clearSession();
@@ -344,7 +704,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    /* ---------- Save name and photo ---------- */
+    /* -----------------------------------------------------
+       Save profile name and photo
+    ----------------------------------------------------- */
 
     profileForm?.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -373,7 +735,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const url = new URL(photoURL);
 
                 if (!["https:", "http:"].includes(url.protocol)) {
-                    throw new Error("Unsupported protocol");
+                    throw new Error("Unsupported URL protocol");
                 }
             } catch {
                 showMessage(
@@ -386,14 +748,20 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        saveButton.disabled = true;
-        saveButton.textContent = "Saving...";
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.textContent = "Saving...";
+        }
 
         try {
-            const result = await apiRequest("/profile", "PATCH", {
-                displayName: name,
-                photoURL
-            });
+            const result = await apiRequest(
+                "/profile",
+                "PATCH",
+                {
+                    displayName: name,
+                    photoURL
+                }
+            );
 
             updateSessionFromResponse(result);
 
@@ -402,6 +770,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 displayName: name,
                 photoURL
             };
+
+            session.user.displayName = name;
+            session.user.photoURL = photoURL;
+            saveSession();
 
             if (displayName) {
                 displayName.textContent = name;
@@ -418,17 +790,28 @@ document.addEventListener("DOMContentLoaded", () => {
                 result.message || "Profile updated successfully.",
                 "success"
             );
-
         } catch (error) {
-            showMessage(profileMessage, error.message, "error");
-            console.error("[StudyKora Profile] Save failed:", error);
+            showMessage(
+                profileMessage,
+                error.message || "Could not save your profile.",
+                "error"
+            );
+
+            console.error(
+                "[StudyKora Profile] Save failed:",
+                error.message
+            );
         } finally {
-            saveButton.disabled = false;
-            saveButton.textContent = "Save Changes";
+            if (saveButton) {
+                saveButton.disabled = false;
+                saveButton.textContent = "Save Changes";
+            }
         }
     });
 
-    /* ---------- Request email verification ---------- */
+    /* -----------------------------------------------------
+       Request email change
+    ----------------------------------------------------- */
 
     const emailForm = $("profile-email-form");
     const newEmailInput = $("profile-new-email");
@@ -443,8 +826,11 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const newEmail = newEmailInput.value.trim().toLowerCase();
-        const currentEmail = profileEmail.value.trim().toLowerCase();
+        const newEmail =
+            newEmailInput.value.trim().toLowerCase();
+
+        const currentEmail =
+            profileEmail.value.trim().toLowerCase();
 
         if (newEmail === currentEmail) {
             showMessage(
@@ -456,8 +842,10 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        emailSubmit.disabled = true;
-        emailSubmit.textContent = "Requesting...";
+        if (emailSubmit) {
+            emailSubmit.disabled = true;
+            emailSubmit.textContent = "Requesting...";
+        }
 
         try {
             const result = await apiRequest(
@@ -472,17 +860,24 @@ document.addEventListener("DOMContentLoaded", () => {
                     "Verification instructions have been requested. Check your email.",
                 "success"
             );
-
         } catch (error) {
             showMessage(emailMessage, error.message, "error");
-            console.error("[StudyKora Profile] Email request failed:", error);
+
+            console.error(
+                "[StudyKora Profile] Email request failed:",
+                error.message
+            );
         } finally {
-            emailSubmit.disabled = false;
-            emailSubmit.textContent = "Request Verification";
+            if (emailSubmit) {
+                emailSubmit.disabled = false;
+                emailSubmit.textContent = "Request Verification";
+            }
         }
     });
 
-    /* ---------- Account deletion request ---------- */
+    /* -----------------------------------------------------
+       Account deletion request
+    ----------------------------------------------------- */
 
     const deleteForm = $("profile-delete-form");
     const deleteOpen = $("profile-delete-open");
@@ -493,15 +888,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const deleteSubmit = $("profile-delete-submit");
 
     deleteOpen?.addEventListener("click", () => {
+        if (!deleteForm) return;
+
         deleteForm.hidden = false;
         deleteOpen.hidden = true;
-        deletePassword.focus();
+        deletePassword?.focus();
     });
 
     deleteCancel?.addEventListener("click", () => {
-        deleteForm.reset();
-        deleteForm.hidden = true;
-        deleteOpen.hidden = false;
+        deleteForm?.reset();
+
+        if (deleteForm) deleteForm.hidden = true;
+        if (deleteOpen) deleteOpen.hidden = false;
+
         showMessage(deleteMessage, "");
     });
 
@@ -529,8 +928,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!confirmed) return;
 
-        deleteSubmit.disabled = true;
-        deleteSubmit.textContent = "Submitting...";
+        if (deleteSubmit) {
+            deleteSubmit.disabled = true;
+            deleteSubmit.textContent = "Submitting...";
+        }
 
         try {
             const result = await apiRequest(
@@ -550,17 +951,24 @@ document.addEventListener("DOMContentLoaded", () => {
             );
 
             deleteForm.reset();
-
         } catch (error) {
             showMessage(deleteMessage, error.message, "error");
-            console.error("[StudyKora Profile] Deletion request failed:", error);
+
+            console.error(
+                "[StudyKora Profile] Deletion request failed:",
+                error.message
+            );
         } finally {
-            deleteSubmit.disabled = false;
-            deleteSubmit.textContent = "Submit Request";
+            if (deleteSubmit) {
+                deleteSubmit.disabled = false;
+                deleteSubmit.textContent = "Submit Request";
+            }
         }
     });
 
-    /* ---------- Logout ---------- */
+    /* -----------------------------------------------------
+       Logout
+    ----------------------------------------------------- */
 
     const logoutButton = $("profile-logout");
     const logoutConfirmation = $("profile-logout-confirmation");
@@ -568,13 +976,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const logoutConfirm = $("profile-logout-confirm");
 
     logoutButton?.addEventListener("click", () => {
-        logoutConfirmation.hidden = false;
+        if (logoutConfirmation) logoutConfirmation.hidden = false;
         logoutButton.hidden = true;
     });
 
     logoutCancel?.addEventListener("click", () => {
-        logoutConfirmation.hidden = true;
-        logoutButton.hidden = false;
+        if (logoutConfirmation) logoutConfirmation.hidden = true;
+        if (logoutButton) logoutButton.hidden = false;
     });
 
     logoutConfirm?.addEventListener("click", () => {
@@ -582,7 +990,9 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.replace("index.html");
     });
 
-    /* ---------- Initialize ---------- */
+    /* -----------------------------------------------------
+       Initialise
+    ----------------------------------------------------- */
 
     loadProfile();
 });
