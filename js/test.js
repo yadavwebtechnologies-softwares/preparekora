@@ -1,14 +1,19 @@
-
 /* =====================================================
-   studyKora — MCQ Test Engine
-   Timer, answers, navigation, review and results
-   Frontend demo; Firebase integration comes later
+   StudyKora — MCQ Test Engine
+   Timer, answers, navigation, review, results
+   Firebase Realtime Database result persistence
 ===================================================== */
 
 "use strict";
 
 document.addEventListener("DOMContentLoaded", () => {
     const $ = (id) => document.getElementById(id);
+
+    const API_BASE =
+        "https://studykora-api.yadavsubba2003.workers.dev";
+
+    const DB_BASE =
+        "https://studykora-fc91d-default-rtdb.firebaseio.com";
 
     const elements = {
         instructions: $("test-instructions"),
@@ -84,8 +89,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /* -----------------------------------------------
        1. Sample question bank
-       These are illustrative practice questions,
-       not official examination papers.
     ----------------------------------------------- */
 
     const questionBanks = {
@@ -461,6 +464,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     } else if (requestedSubject && subjectNames[requestedSubject]) {
         testName = `${subjectNames[requestedSubject]} Practice`;
+
         const bankMap = {
             "general-knowledge": "general",
             assamese: "general",
@@ -541,6 +545,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let finishedAt = null;
     let testStarted = false;
     let testFinished = false;
+    let resultSaveStarted = false;
 
     let selectedAnswers = Array(totalQuestions).fill(null);
     let markedForReview = Array(totalQuestions).fill(false);
@@ -775,7 +780,10 @@ document.addEventListener("DOMContentLoaded", () => {
             elements.timer.textContent = formatTime(remainingSeconds);
 
             if (remainingSeconds <= 60) {
-                elements.timer.setAttribute("aria-label", "One minute or less remaining");
+                elements.timer.setAttribute(
+                    "aria-label",
+                    "One minute or less remaining"
+                );
             }
 
             if (remainingSeconds <= 0) {
@@ -873,6 +881,343 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    /* -----------------------------------------------
+       2. Firebase session helpers
+    ----------------------------------------------- */
+
+    function readSessionObject(storage, key) {
+        try {
+            const raw = storage.getItem(key);
+            if (!raw) return null;
+
+            const value = JSON.parse(raw);
+
+            return value && typeof value === "object"
+                ? value
+                : null;
+        } catch (_) {
+            return null;
+        }
+    }
+
+    function findStudyKoraSession() {
+        const stores = [
+            window.sessionStorage,
+            window.localStorage
+        ];
+
+        for (const storage of stores) {
+            for (let index = 0; index < storage.length; index += 1) {
+                const key = storage.key(index);
+                if (!key) continue;
+
+                const data = readSessionObject(storage, key);
+                if (!data) continue;
+
+                const user =
+                    data.user && typeof data.user === "object"
+                        ? data.user
+                        : {};
+
+                const uid =
+                    user.uid ||
+                    user.localId ||
+                    data.uid ||
+                    data.localId;
+
+                const idToken =
+                    data.idToken ||
+                    data.accessToken ||
+                    data.token;
+
+                const refreshToken = data.refreshToken;
+
+                if (uid && idToken) {
+                    return {
+                        storage,
+                        key,
+                        data,
+                        user,
+                        uid,
+                        idToken,
+                        refreshToken
+                    };
+                }
+            }
+        }
+
+        return null;
+    }
+
+    async function getStudyKoraSession() {
+        const session = findStudyKoraSession();
+
+        if (!session) return null;
+
+        const expiresAt = Number(
+            session.data.expiresAt || 0
+        );
+
+        const savedAt = Number(
+            session.data.savedAt || 0
+        );
+
+        const expiresIn = Number(
+            session.data.expiresIn || 0
+        );
+
+        const calculatedExpiry =
+            expiresAt ||
+            (
+                savedAt && expiresIn
+                    ? savedAt + expiresIn * 1000
+                    : 0
+            );
+
+        const needsRefresh =
+            !session.idToken ||
+            (
+                calculatedExpiry > 0 &&
+                calculatedExpiry < Date.now() + 60000
+            );
+
+        if (needsRefresh && session.refreshToken) {
+            try {
+                const response = await fetch(
+                    `${API_BASE}/auth/refresh`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            refreshToken: session.refreshToken
+                        })
+                    }
+                );
+
+                const payload = await response.json();
+
+                if (!response.ok || !payload.idToken) {
+                    throw new Error(
+                        payload.error ||
+                        "Could not refresh authentication session."
+                    );
+                }
+
+                session.data.idToken = payload.idToken;
+
+                session.data.refreshToken =
+                    payload.refreshToken ||
+                    session.refreshToken;
+
+                session.data.expiresIn =
+                    Number(payload.expiresIn || 3600);
+
+                session.data.savedAt = Date.now();
+
+                session.data.expiresAt =
+                    Date.now() +
+                    session.data.expiresIn * 1000;
+
+                session.data.user = {
+                    ...session.user,
+                    ...(payload.user || {})
+                };
+
+                session.idToken = session.data.idToken;
+                session.refreshToken = session.data.refreshToken;
+                session.user = session.data.user;
+
+                session.storage.setItem(
+                    session.key,
+                    JSON.stringify(session.data)
+                );
+            } catch (error) {
+                console.warn(
+                    "[StudyKora] Token refresh failed:",
+                    error.message
+                );
+            }
+        }
+
+        return session;
+    }
+
+    function makeAttemptId() {
+        if (
+            window.crypto &&
+            typeof window.crypto.randomUUID === "function"
+        ) {
+            return window.crypto.randomUUID();
+        }
+
+        return (
+            "attempt_" +
+            Date.now() +
+            "_" +
+            Math.random().toString(36).slice(2, 12)
+        );
+    }
+
+    function buildAttemptRecord(result) {
+        const answers = questions.map((question, index) => {
+            const selected = selectedAnswers[index];
+            const correct = question.answer;
+
+            return {
+                questionIndex: index + 1,
+                question: question.question,
+                selectedAnswer: selected,
+                selectedOption:
+                    selected === null
+                        ? null
+                        : question.options[selected],
+                correctAnswer: correct,
+                correctOption: question.options[correct],
+                isCorrect: selected === correct,
+                unanswered: selected === null,
+                markedForReview: Boolean(markedForReview[index]),
+                explanation: question.explanation
+            };
+        });
+
+        return {
+            attemptId: makeAttemptId(),
+
+            testId:
+                requestedTest ||
+                requestedSubject ||
+                requestedTopic ||
+                bankName,
+
+            testTitle: testName,
+            subject: requestedSubject || bankName,
+            topic: requestedTopic || null,
+
+            completedAt: new Date().toISOString(),
+
+            totalQuestions: result.totalQuestions,
+            correctAnswers: result.correctCount,
+            incorrectAnswers: result.incorrectCount,
+            unanswered: result.unansweredCount,
+
+            score: result.score,
+            totalMarks,
+            accuracy: result.accuracy,
+
+            timeTakenSeconds: result.timeTakenSeconds,
+            timeExpired: result.timeExpired,
+
+            answers
+        };
+    }
+
+    async function saveTestAttempt(result) {
+        const session = await getStudyKoraSession();
+
+        if (!session || !session.uid || !session.idToken) {
+            return {
+                saved: false,
+                reason: "sign-in-required"
+            };
+        }
+
+        const record = buildAttemptRecord(result);
+
+        const url =
+            `${DB_BASE}/users/${encodeURIComponent(session.uid)}` +
+            `/testAttempts/${encodeURIComponent(record.attemptId)}.json` +
+            `?auth=${encodeURIComponent(session.idToken)}`;
+
+        const response = await fetch(url, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(record)
+        });
+
+        const payload = await response.json().catch(() => null);
+
+        if (!response.ok) {
+            throw new Error(
+                payload && payload.error
+                    ? payload.error
+                    : `Firebase save failed (${response.status}).`
+            );
+        }
+
+        return {
+            saved: true,
+            attemptId: record.attemptId
+        };
+    }
+
+    async function saveAndReportResult(result) {
+        if (resultSaveStarted) return;
+        resultSaveStarted = true;
+
+        if (elements.resultDescription) {
+            elements.resultDescription.textContent =
+                "Your result is ready. Saving your test record…";
+        }
+
+        try {
+            const outcome = await saveTestAttempt(result);
+
+            if (outcome.saved) {
+                if (elements.resultDescription) {
+                    elements.resultDescription.textContent =
+                        "Your answers have been evaluated. Your test result has been saved to your account.";
+                }
+
+                console.info(
+                    "[StudyKora] Test attempt saved:",
+                    outcome.attemptId
+                );
+
+                window.dispatchEvent(
+                    new CustomEvent("studyKora:test-saved", {
+                        detail: {
+                            attemptId: outcome.attemptId,
+                            testId:
+                                requestedTest ||
+                                requestedSubject ||
+                                requestedTopic ||
+                                bankName,
+                            testTitle: testName,
+                            score: result.score,
+                            totalMarks,
+                            accuracy: result.accuracy
+                        }
+                    })
+                );
+
+                return;
+            }
+
+            if (elements.resultDescription) {
+                elements.resultDescription.textContent =
+                    "Your result is ready, but it was not saved because you are not signed in. Sign in to save test history to your account.";
+            }
+        } catch (error) {
+            console.error(
+                "[StudyKora] Unable to save test attempt:",
+                error
+            );
+
+            if (elements.resultDescription) {
+                elements.resultDescription.textContent =
+                    "Your result is shown, but saving it failed. Please check your connection and Firebase access before taking another test.";
+            }
+        }
+    }
+
+    /* -----------------------------------------------
+       3. Finish and calculate the test result
+    ----------------------------------------------- */
+
     function finishTest(timeExpired = false) {
         if (testFinished) return;
 
@@ -882,21 +1227,41 @@ document.addEventListener("DOMContentLoaded", () => {
         stopTimer();
 
         const correctCount = questions.reduce((total, question, index) => {
-            return total + (selectedAnswers[index] === question.answer ? 1 : 0);
+            return total + (
+                selectedAnswers[index] === question.answer
+                    ? 1
+                    : 0
+            );
         }, 0);
 
         const answeredCount = getAnsweredCount();
+
         const incorrectCount = selectedAnswers.reduce((total, answer, index) => {
             return total + (
-                answer !== null && answer !== questions[index].answer ? 1 : 0
+                answer !== null &&
+                answer !== questions[index].answer
+                    ? 1
+                    : 0
             );
         }, 0);
 
         const unansweredCount = totalQuestions - answeredCount;
         const score = correctCount * marksPerQuestion;
+
         const accuracy = answeredCount > 0
             ? Math.round((correctCount / answeredCount) * 100)
             : 0;
+
+        const result = {
+            totalQuestions,
+            correctCount,
+            incorrectCount,
+            unansweredCount,
+            score,
+            accuracy,
+            timeTakenSeconds: getElapsedSeconds(),
+            timeExpired
+        };
 
         elements.instructions.hidden = true;
         elements.workspace.hidden = true;
@@ -905,6 +1270,7 @@ document.addEventListener("DOMContentLoaded", () => {
         elements.reviewSection.hidden = true;
 
         elements.resultTitle.textContent = "Your Test Result";
+
         elements.resultDescription.textContent = timeExpired
             ? "The time limit has ended. Here is your result."
             : "Your answers have been evaluated.";
@@ -914,7 +1280,8 @@ document.addEventListener("DOMContentLoaded", () => {
         elements.resultIncorrect.textContent = String(incorrectCount);
         elements.resultUnanswered.textContent = String(unansweredCount);
         elements.resultAccuracy.textContent = `${accuracy}%`;
-        elements.resultTime.textContent = formatTime(getElapsedSeconds());
+        elements.resultTime.textContent =
+            formatTime(getElapsedSeconds());
 
         buildReview();
 
@@ -924,6 +1291,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 : "smooth",
             block: "start"
         });
+
+        // Save only once per completed attempt.
+        void saveAndReportResult(result);
     }
 
     function resetTest() {
@@ -935,6 +1305,7 @@ document.addEventListener("DOMContentLoaded", () => {
         finishedAt = null;
         testStarted = false;
         testFinished = false;
+        resultSaveStarted = false;
 
         selectedAnswers = Array(totalQuestions).fill(null);
         markedForReview = Array(totalQuestions).fill(false);
@@ -961,7 +1332,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /* -----------------------------------------------
-       2. Event handlers
+       4. Event handlers
     ----------------------------------------------- */
 
     elements.start.addEventListener("click", () => {
@@ -1054,7 +1425,7 @@ document.addEventListener("DOMContentLoaded", () => {
     elements.retake.addEventListener("click", resetTest);
 
     /* -----------------------------------------------
-       3. Initial setup
+       5. Initial setup
     ----------------------------------------------- */
 
     setPageDetails();
