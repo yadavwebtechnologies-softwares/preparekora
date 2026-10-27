@@ -23,6 +23,7 @@
         <button type="button" class="admin-nav-link" data-view="requests">Account Requests</button>
         <button type="button" class="admin-nav-link" data-view="notifications">Notifications</button>
         <button type="button" class="admin-nav-link" data-view="import">Import</button>
+        <button type="button" class="admin-nav-link" data-view="db">Database</button>
     </nav>
     <div class="admin-sidebar-footer">
         <span id="admin-email" class="admin-email"></span>
@@ -56,7 +57,6 @@
         </div>
     </section>
 
-    <!-- Overview -->
     <section class="admin-view" id="view-overview" hidden>
         <div class="admin-stats" id="overview-stats">
             <div class="admin-stat"><span class="admin-stat-label">Total Users</span><span class="admin-stat-value" id="stat-users">—</span></div>
@@ -81,7 +81,6 @@
         </div>
     </section>
 
-    <!-- Tests -->
     <section class="admin-view" id="view-tests" hidden>
         <div class="admin-toolbar">
             <button type="button" class="admin-btn admin-btn-primary" id="tests-new">+ New Test</button>
@@ -147,7 +146,6 @@
         </div>
     </section>
 
-    <!-- Subjects -->
     <section class="admin-view" id="view-subjects" hidden>
         <div class="admin-toolbar">
             <button type="button" class="admin-btn admin-btn-primary" id="subjects-new">+ New Subject</button>
@@ -200,7 +198,6 @@
         </div>
     </section>
 
-    <!-- Organizations -->
     <section class="admin-view" id="view-organizations" hidden>
         <div class="admin-toolbar">
             <button type="button" class="admin-btn admin-btn-primary" id="orgs-new">+ New Organization</button>
@@ -238,7 +235,6 @@
         </div>
     </section>
 
-    <!-- Users -->
     <section class="admin-view" id="view-users" hidden>
         <div class="admin-toolbar">
             <input type="search" id="users-search" class="admin-input" placeholder="Search by email, name or UID…">
@@ -277,7 +273,7 @@
             <p class="admin-muted" id="user-detail-attempts-empty" hidden>No test attempts.</p>
         </div>
     </section>
-    <!-- Requests -->
+
     <section class="admin-view" id="view-requests" hidden>
         <div class="admin-card">
             <h2 class="admin-card-title">Deletion Requests</h2>
@@ -325,7 +321,6 @@
         </div>
     </section>
 
-    <!-- Notifications -->
     <section class="admin-view" id="view-notifications" hidden>
         <div class="admin-card">
             <h2 class="admin-card-title">Send Notification</h2>
@@ -353,7 +348,7 @@
             </form>
         </div>
     </section>
-        <!-- Import -->
+
     <section class="admin-view" id="view-import" hidden>
         <div class="admin-card">
             <h2 class="admin-card-title">Import Subjects</h2>
@@ -449,6 +444,49 @@
                 <button type="button" class="admin-btn admin-btn-primary" id="import-mcqs-submit">Import MCQs</button>
             </div>
             <div id="import-mcqs-result" class="admin-muted" style="margin-top: 10px;"></div>
+        </div>
+    </section>
+
+    <section class="admin-view" id="view-db" hidden>
+        <div class="admin-card">
+            <h2 class="admin-card-title">Realtime Database Manager</h2>
+            <p class="admin-muted">Browse, edit and delete database nodes. All changes are immediate — no rollback.</p>
+
+            <label class="admin-label">Path
+                <div style="display: flex; gap: 8px; margin-top: 4px;">
+                    <input class="admin-input" id="db-path" placeholder="users or tests or subjects/..." style="flex: 1; margin-top: 0;">
+                    <button type="button" class="admin-btn admin-btn-primary" id="db-load" style="flex: 0 0 auto;">Load</button>
+                </div>
+            </label>
+            <p class="admin-muted" style="font-size: 11px; margin-top: 6px;">
+                Allowed roots: <code>users</code>, <code>tests</code>, <code>subjects</code>, <code>organizations</code>, <code>leaderboard</code>, <code>publicLeaderboard</code>
+            </p>
+
+            <p class="admin-muted" id="db-breadcrumb" style="font-size: 12px; margin-top: 12px;"></p>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+                <button type="button" class="admin-btn admin-btn-ghost" id="db-up" hidden>↑ Up</button>
+                <button type="button" class="admin-btn admin-btn-ghost" id="db-refresh" hidden>Refresh</button>
+                <button type="button" class="admin-btn admin-btn-ghost" id="db-edit-root" hidden>Edit this node</button>
+                <button type="button" class="admin-btn admin-row-btn-danger" id="db-delete-root" hidden>Delete this node</button>
+            </div>
+
+            <div id="db-result" style="margin-top: 14px;">
+                <p class="admin-muted">Enter a path above and click Load.</p>
+            </div>
+        </div>
+
+        <div class="admin-card" id="db-edit-card" hidden>
+            <h2 class="admin-card-title" id="db-edit-title">Edit Node</h2>
+            <p class="admin-muted" id="db-edit-path"></p>
+            <label class="admin-label">Value (JSON)
+                <textarea class="admin-input" id="db-edit-value" rows="12" style="font-family: monospace; font-size: 12px;"></textarea>
+            </label>
+            <div class="admin-form-actions">
+                <button type="button" class="admin-btn admin-btn-ghost" id="db-edit-cancel">Cancel</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="db-edit-save">Save</button>
+            </div>
+            <p class="admin-muted" id="db-edit-message"></p>
         </div>
     </section>
 
