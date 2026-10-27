@@ -1,47 +1,60 @@
 // ============================================================
 // PrepareKora Worker — Test CRUD + publish + submit
+// Backend storage: Firebase Realtime Database
 // Ownership enforced server-side.
-// Correct answers never leave the server on public endpoints.
-// Scoring happens server-side on submit.
+// Correct answers never leave the server until submit.
 // ============================================================
 
-import { json, error, requireAuth, uid, now, readJSON } from "./utils.js";
+import { json, error, uid, now, readJSON } from "./utils.js";
+import { verifyFirebaseIdToken, dbGet, dbPut, dbPatch, dbDelete } from "./firebase.js";
 import { getPublisherName } from "./auth.js";
 
-/* ---------- Validation ---------- */
+/* ---------- Local auth guard (Firebase ID token) ---------- */
+
+async function requireAuth(request, env) {
+  const header = request.headers.get("Authorization") || "";
+  if (!header.startsWith("Bearer ")) return null;
+
+  const token = header.slice(7).trim();
+  if (!token) return null;
+
+  const projectId = env.FIREBASE_PROJECT_ID;
+  if (!projectId) return null;
+
+  const payload = await verifyFirebaseIdToken(token, projectId);
+  if (!payload || !payload.uid) return null;
+
+  return { sub: payload.uid, email: payload.email };
+}
+
+/* ---------- Constants ---------- */
 
 const MAX_TITLE_LENGTH = 200;
 const MIN_MINUTES = 1;
 const MAX_MINUTES = 180;
 const MAX_QUESTIONS = 200;
 const OPTIONS_PER_QUESTION = 4;
+const MAX_SUBMISSIONS_PER_TEST = 500;
+
+/* ---------- Validation ---------- */
 
 function validateQuestion(q, index) {
   const n = index + 1;
 
-  if (!q || typeof q !== "object") {
-    return `Question ${n}: invalid entry`;
-  }
-
-  if (typeof q.q !== "string" || !q.q.trim()) {
-    return `Question ${n}: text is required`;
-  }
+  if (!q || typeof q !== "object") return `Question ${n}: invalid entry`;
+  if (typeof q.q !== "string" || !q.q.trim()) return `Question ${n}: text required`;
 
   if (!Array.isArray(q.options) || q.options.length !== OPTIONS_PER_QUESTION) {
     return `Question ${n}: exactly ${OPTIONS_PER_QUESTION} options required`;
   }
-
   for (let i = 0; i < q.options.length; i++) {
     const opt = q.options[i];
-    if (typeof opt !== "string" || !opt.trim()) {
-      return `Question ${n}: option ${i + 1} is empty`;
-    }
+    if (typeof opt !== "string" || !opt.trim()) return `Question ${n}: option ${i + 1} empty`;
   }
 
   if (typeof q.answer !== "number" || !Number.isInteger(q.answer)) {
     return `Question ${n}: answer index must be a number`;
   }
-
   if (q.answer < 0 || q.answer >= OPTIONS_PER_QUESTION) {
     return `Question ${n}: answer index must be 0-${OPTIONS_PER_QUESTION - 1}`;
   }
@@ -50,9 +63,7 @@ function validateQuestion(q, index) {
 }
 
 function validateTestPayload(body) {
-  if (!body || typeof body !== "object") {
-    return "Invalid request body";
-  }
+  if (!body || typeof body !== "object") return "Invalid request body";
 
   const title = String(body.title || "").trim();
   if (!title) return "Test title is required";
@@ -88,7 +99,7 @@ function buildTestMeta(test) {
     publisherId: test.publisherId,
     publisherName: test.publisherName,
     minutes: test.minutes,
-    questionCount: test.questions.length,
+    questionCount: Array.isArray(test.questions) ? test.questions.length : 0,
     status: test.status,
     createdAt: test.createdAt,
     updatedAt: test.updatedAt
@@ -112,25 +123,22 @@ function normalizeQuestions(rawList) {
 /* GET /api/tests — list all published tests */
 
 export async function handleListPublic(env) {
-  const list = await env.KV.list({ prefix: "test:" });
+  const all = await dbGet(env, "tests");
+  if (!all || typeof all !== "object") return json({ tests: [] });
+
   const published = [];
 
-  for (const key of list.keys) {
-    const meta = key.metadata;
-    if (meta && meta.status === "published") {
-      published.push({
-        id: meta.id,
-        title: meta.title,
-        publisherName: meta.publisherName,
-        minutes: meta.minutes,
-        questionCount: meta.questionCount,
-        createdAt: meta.createdAt,
-        updatedAt: meta.updatedAt
-      });
-    }
-  }
+  Object.keys(all).forEach(function (key) {
+    const test = all[key];
+    if (!test || typeof test !== "object") return;
+    if (test.status !== "published") return;
 
-  published.sort(function (a, b) { return b.createdAt - a.createdAt; });
+    published.push(buildTestMeta(test));
+  });
+
+  published.sort(function (a, b) {
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
 
   return json({ tests: published });
 }
@@ -138,16 +146,16 @@ export async function handleListPublic(env) {
 /* GET /api/tests/:id — single published test (no answers) */
 
 export async function handleGetPublic(env, id) {
-  const test = await env.KV.get(`test:${id}`, { type: "json" });
+  const test = await dbGet(env, "tests/" + id);
 
-  if (!test || test.status !== "published") {
+  if (!test || typeof test !== "object" || test.status !== "published") {
     return error("Test not found", 404);
   }
 
-  const safeQuestions = test.questions.map(function (q) {
+  const safeQuestions = (test.questions || []).map(function (q) {
     return {
       q: q.q,
-      options: q.options.slice()
+      options: Array.isArray(q.options) ? q.options.slice() : []
     };
   });
 
@@ -164,40 +172,15 @@ export async function handleGetPublic(env, id) {
    PUBLIC — SUBMIT (server-side scoring)
    ============================================================ */
 
-/**
- * POST /api/tests/:id/submit
- *
- * Request body:
- *   {
- *     answers: { "0": 2, "1": 0, ... },   // index -> chosen option (0-3)
- *     userName: "optional display name"   // stored with submission for admin
- *   }
- *
- * Response:
- *   {
- *     correct: number,
- *     wrong: number,
- *     unattempted: number,
- *     total: number,
- *     percent: number,
- *     correctAnswers: { "0": 2, "1": 1, ... }   // question index -> correct option
- *   }
- *
- * Answers and correctAnswers are only returned after submit — cannot be
- * fetched beforehand. Client cannot fake a higher score.
- */
-
 export async function handleSubmit(request, env, id) {
-  const test = await env.KV.get(`test:${id}`, { type: "json" });
+  const test = await dbGet(env, "tests/" + id);
 
-  if (!test || test.status !== "published") {
+  if (!test || typeof test !== "object" || test.status !== "published") {
     return error("Test not found", 404);
   }
 
   const body = await readJSON(request);
-  if (!body || typeof body !== "object") {
-    return error("Invalid request body", 400);
-  }
+  if (!body || typeof body !== "object") return error("Invalid request body", 400);
 
   const answers = body.answers;
   if (!answers || typeof answers !== "object" || Array.isArray(answers)) {
@@ -208,11 +191,8 @@ export async function handleSubmit(request, env, id) {
     ? body.userName.trim().slice(0, 60)
     : "";
 
-  const total = test.questions.length;
-  let correct = 0;
-  let wrong = 0;
-  let unattempted = 0;
-
+  const total = Array.isArray(test.questions) ? test.questions.length : 0;
+  let correct = 0, wrong = 0, unattempted = 0;
   const correctAnswers = {};
 
   for (let i = 0; i < total; i++) {
@@ -221,13 +201,10 @@ export async function handleSubmit(request, env, id) {
 
     const raw = answers[String(i)];
 
-    /* Unanswered */
     if (raw === undefined || raw === null) {
       unattempted += 1;
       continue;
     }
-
-    /* Malformed answer — treat as unanswered rather than exploit */
     if (typeof raw !== "number" || !Number.isInteger(raw) || raw < 0 || raw >= OPTIONS_PER_QUESTION) {
       unattempted += 1;
       continue;
@@ -239,10 +216,9 @@ export async function handleSubmit(request, env, id) {
 
   const percent = total > 0 ? Math.round((correct / total) * 100) : 0;
 
-  /* Optional: append a lightweight submission record for the admin.
-     Only summary — no per-question choices — to keep KV writes small. */
+  /* Log submission (best-effort, capped) */
   try {
-    const subId = `${now()}-${uid(6)}`;
+    const subId = now() + "-" + uid(4);
     const submission = {
       id: subId,
       testId: test.id,
@@ -256,29 +232,21 @@ export async function handleSubmit(request, env, id) {
       submittedAt: now()
     };
 
-    /* Keep last 500 submissions per test (simple cap).
-       Keys sort lexicographically by timestamp prefix. */
-    const prefix = `submission:${test.id}:`;
-    const list = await env.KV.list({ prefix: prefix, limit: 1000 });
+    await dbPut(env, "submissions/" + test.id + "/" + subId, submission);
 
-    if (list.keys.length >= 500) {
-      /* Delete oldest entries to stay under cap */
-      const toDelete = list.keys
-        .sort(function (a, b) { return a.name.localeCompare(b.name); })
-        .slice(0, list.keys.length - 499);
-      for (const k of toDelete) {
-        await env.KV.delete(k.name);
+    /* Trim old submissions if above cap */
+    const existing = await dbGet(env, "submissions/" + test.id);
+    if (existing && typeof existing === "object") {
+      const keys = Object.keys(existing).sort();
+      if (keys.length > MAX_SUBMISSIONS_PER_TEST) {
+        const toRemove = keys.slice(0, keys.length - MAX_SUBMISSIONS_PER_TEST);
+        const patch = {};
+        toRemove.forEach(function (k) { patch[k] = null; });
+        await dbPatch(env, "submissions/" + test.id, patch);
       }
     }
-
-    await env.KV.put(
-      `${prefix}${subId}`,
-      JSON.stringify(submission),
-      { metadata: { testId: test.id, at: submission.submittedAt } }
-    );
   } catch (err) {
-    /* Submission logging must never block a result.
-       If KV write fails, still return the score. */
+    /* Non-fatal */
   }
 
   return json({
@@ -295,41 +263,39 @@ export async function handleSubmit(request, env, id) {
    ADMIN — own tests only
    ============================================================ */
 
-/* GET /api/admin/tests — list own tests */
-
 export async function handleListOwn(request, env) {
   const session = await requireAuth(request, env);
   if (!session) return error("Unauthorized", 401);
 
-  const list = await env.KV.list({ prefix: "test:" });
+  const all = await dbGet(env, "tests");
+  if (!all || typeof all !== "object") return json({ tests: [] });
+
   const own = [];
 
-  for (const key of list.keys) {
-    const meta = key.metadata;
-    if (meta && meta.publisherId === session.sub) {
-      own.push(meta);
-    }
-  }
+  Object.keys(all).forEach(function (key) {
+    const test = all[key];
+    if (!test || typeof test !== "object") return;
+    if (test.publisherId !== session.sub) return;
+    own.push(buildTestMeta(test));
+  });
 
-  own.sort(function (a, b) { return b.updatedAt - a.updatedAt; });
+  own.sort(function (a, b) {
+    return (b.updatedAt || 0) - (a.updatedAt || 0);
+  });
 
   return json({ tests: own });
 }
-
-/* GET /api/admin/tests/:id — own test (with answers) */
 
 export async function handleGetOwn(request, env, id) {
   const session = await requireAuth(request, env);
   if (!session) return error("Unauthorized", 401);
 
-  const test = await env.KV.get(`test:${id}`, { type: "json" });
-  if (!test) return error("Test not found", 404);
+  const test = await dbGet(env, "tests/" + id);
+  if (!test || typeof test !== "object") return error("Test not found", 404);
   if (test.publisherId !== session.sub) return error("Forbidden", 403);
 
-  return json({ test });
+  return json({ test: test });
 }
-
-/* POST /api/admin/tests — create draft */
 
 export async function handleCreate(request, env) {
   const session = await requireAuth(request, env);
@@ -341,7 +307,7 @@ export async function handleCreate(request, env) {
   const validationError = validateTestPayload(body);
   if (validationError) return error(validationError, 400);
 
-  const id = `${session.sub}-${uid(8)}`;
+  const id = session.sub.slice(0, 4) + "-" + uid(8);
   const publisherName = await getPublisherName(env, session.sub);
   const ts = now();
 
@@ -357,21 +323,17 @@ export async function handleCreate(request, env) {
     questions: normalizeQuestions(body.questions)
   };
 
-  await env.KV.put(`test:${id}`, JSON.stringify(test), {
-    metadata: buildTestMeta(test)
-  });
+  await dbPut(env, "tests/" + id, test);
 
   return json({ test: test });
 }
-
-/* PUT /api/admin/tests/:id — update own test */
 
 export async function handleUpdate(request, env, id) {
   const session = await requireAuth(request, env);
   if (!session) return error("Unauthorized", 401);
 
-  const existing = await env.KV.get(`test:${id}`, { type: "json" });
-  if (!existing) return error("Test not found", 404);
+  const existing = await dbGet(env, "tests/" + id);
+  if (!existing || typeof existing !== "object") return error("Test not found", 404);
   if (existing.publisherId !== session.sub) return error("Forbidden", 403);
 
   const body = await readJSON(request);
@@ -380,7 +342,6 @@ export async function handleUpdate(request, env, id) {
   const validationError = validateTestPayload(body);
   if (validationError) return error(validationError, 400);
 
-  /* Publisher identity stays immutable — resolved fresh in case display name changed */
   const publisherName = await getPublisherName(env, existing.publisherId);
 
   const updated = Object.assign({}, existing, {
@@ -391,35 +352,27 @@ export async function handleUpdate(request, env, id) {
     updatedAt: now()
   });
 
-  await env.KV.put(`test:${id}`, JSON.stringify(updated), {
-    metadata: buildTestMeta(updated)
-  });
+  await dbPut(env, "tests/" + id, updated);
 
   return json({ test: updated });
 }
-
-/* DELETE /api/admin/tests/:id — delete own test */
 
 export async function handleDelete(request, env, id) {
   const session = await requireAuth(request, env);
   if (!session) return error("Unauthorized", 401);
 
-  const existing = await env.KV.get(`test:${id}`, { type: "json" });
-  if (!existing) return error("Test not found", 404);
+  const existing = await dbGet(env, "tests/" + id);
+  if (!existing || typeof existing !== "object") return error("Test not found", 404);
   if (existing.publisherId !== session.sub) return error("Forbidden", 403);
 
-  await env.KV.delete(`test:${id}`);
+  await dbDelete(env, "tests/" + id);
 
   return json({ ok: true });
 }
 
-/* POST /api/admin/tests/:id/publish — publish own test */
-
 export async function handlePublish(request, env, id) {
   return setPublishStatus(request, env, id, "published");
 }
-
-/* POST /api/admin/tests/:id/unpublish — revert to draft */
 
 export async function handleUnpublish(request, env, id) {
   return setPublishStatus(request, env, id, "draft");
@@ -429,11 +382,10 @@ async function setPublishStatus(request, env, id, targetStatus) {
   const session = await requireAuth(request, env);
   if (!session) return error("Unauthorized", 401);
 
-  const existing = await env.KV.get(`test:${id}`, { type: "json" });
-  if (!existing) return error("Test not found", 404);
+  const existing = await dbGet(env, "tests/" + id);
+  if (!existing || typeof existing !== "object") return error("Test not found", 404);
   if (existing.publisherId !== session.sub) return error("Forbidden", 403);
 
-  /* Snapshot publisher name at publish time. Immutable afterward. */
   const publisherName = await getPublisherName(env, existing.publisherId);
 
   const updated = Object.assign({}, existing, {
@@ -442,9 +394,7 @@ async function setPublishStatus(request, env, id, targetStatus) {
     updatedAt: now()
   });
 
-  await env.KV.put(`test:${id}`, JSON.stringify(updated), {
-    metadata: buildTestMeta(updated)
-  });
+  await dbPut(env, "tests/" + id, updated);
 
   return json({ test: buildTestMeta(updated) });
 }
