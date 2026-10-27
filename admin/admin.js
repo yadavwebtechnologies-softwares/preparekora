@@ -13,15 +13,12 @@
         session: null,
         view: "overview",
         users: { offset: 0, limit: 50, search: "", total: 0, page: [] },
-        tests: [],
-        subjects: [],
-        organizations: [],
-        editingTest: null,
-        editingSubject: null,
-        editingOrg: null,
+        tests: [], subjects: [], organizations: [],
+        editingTest: null, editingSubject: null, editingOrg: null,
         activeRequest: null,
         dbPath: "users",
-        dbEditingPath: null
+        dbEditingPath: null,
+        audit: { offset: 0, limit: 50, total: 0, action: "", target: "", activeEntryId: null }
     };
 
     function readSession() {
@@ -40,7 +37,6 @@
         const headers = { "Accept": "application/json" };
         if (body !== undefined) headers["Content-Type"] = "application/json";
         if (state.session?.idToken) headers.Authorization = `Bearer ${state.session.idToken}`;
-
         const response = await fetch(`${API}${endpoint}`, {
             method, headers, cache: "no-store",
             ...(body !== undefined ? { body: JSON.stringify(body) } : {})
@@ -48,7 +44,6 @@
         const text = await response.text();
         let data = {};
         try { data = text ? JSON.parse(text) : {}; } catch {}
-
         if (!response.ok) {
             const err = new Error(data.error || data.message || `HTTP ${response.status}`);
             err.status = response.status;
@@ -61,7 +56,7 @@
 
     function setView(name) {
         state.view = name;
-        ["gate","loading","unauthorized","overview","tests","subjects","organizations","users","user-detail","requests","notifications","import","db"]
+        ["gate","loading","unauthorized","overview","tests","subjects","organizations","users","user-detail","requests","notifications","import","db","audit"]
             .forEach((v) => {
                 const el = $(`#view-${v}`);
                 if (el) el.hidden = v !== name;
@@ -70,7 +65,7 @@
         const titles = {
             overview: "Overview", tests: "Tests", subjects: "Subjects", organizations: "Organizations",
             users: "Users", "user-detail": "User Detail", requests: "Account Requests", notifications: "Notifications",
-            import: "Bulk Import", db: "Database Manager"
+            import: "Bulk Import", db: "Database Manager", audit: "Audit Log"
         };
         $("#admin-page-title").textContent = titles[name] || "Admin";
     }
@@ -132,18 +127,12 @@
         const btn = $("#admin-backfill");
         const msg = $("#admin-backfill-message");
         if (!btn || !msg) return;
-        btn.disabled = true;
-        btn.textContent = "Backfilling…";
-        msg.textContent = "";
+        btn.disabled = true; btn.textContent = "Backfilling…"; msg.textContent = "";
         try {
             const res = await api("/admin/backfill-tests", { method: "POST" });
             msg.textContent = res.message || "Done.";
-        } catch (error) {
-            msg.textContent = error.message || "Backfill failed.";
-        } finally {
-            btn.disabled = false;
-            btn.textContent = "Backfill Tests → Subjects";
-        }
+        } catch (error) { msg.textContent = error.message || "Backfill failed."; }
+        finally { btn.disabled = false; btn.textContent = "Backfill Tests → Subjects"; }
     }
 
     /* ---------- Users ---------- */
@@ -169,16 +158,13 @@
                     [u.displayName || "—", u.email || "—", u.whatsapp || "—",
                      u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—",
                      String(u.attempts)].forEach((t) => {
-                        const td = document.createElement("td");
-                        td.textContent = t; tr.appendChild(td);
+                        const td = document.createElement("td"); td.textContent = t; tr.appendChild(td);
                     });
                     const actionTd = document.createElement("td");
                     const btn = document.createElement("button");
                     btn.type = "button"; btn.className = "admin-row-btn"; btn.textContent = "View";
                     btn.addEventListener("click", () => openUser(u.uid));
-                    actionTd.appendChild(btn);
-                    tr.appendChild(actionTd);
-                    body.appendChild(tr);
+                    actionTd.appendChild(btn); tr.appendChild(actionTd); body.appendChild(tr);
                 });
             }
             const pageNum = Math.floor(state.users.offset / state.users.limit) + 1;
@@ -217,8 +203,7 @@
                  `${a.correctAnswers || 0} / ${a.totalMarks || a.totalQuestions || 0}`,
                  typeof a.accuracy === "number" ? `${a.accuracy}%` : "—",
                  formatDuration(a.timeTakenSeconds)].forEach((t) => {
-                    const td = document.createElement("td");
-                    td.textContent = t; tr.appendChild(td);
+                    const td = document.createElement("td"); td.textContent = t; tr.appendChild(td);
                 });
                 body.appendChild(tr);
             });
@@ -230,17 +215,11 @@
 
     function renderStatusBadge(status) {
         const span = document.createElement("span");
-        span.className = "admin-row-btn";
-        span.style.cursor = "default";
-        span.style.fontWeight = "600";
+        span.className = "admin-row-btn"; span.style.cursor = "default"; span.style.fontWeight = "600";
         span.textContent = status || "pending";
-        if (status === "approved" || status === "completed") {
-            span.style.color = "#067647"; span.style.borderColor = "#c9e3d0";
-        } else if (status === "rejected") {
-            span.style.color = "#b42318"; span.style.borderColor = "#f5d5d2";
-        } else if (status === "under_review") {
-            span.style.color = "#b54708"; span.style.borderColor = "#fce6c9";
-        }
+        if (status === "approved" || status === "completed") { span.style.color = "#067647"; span.style.borderColor = "#c9e3d0"; }
+        else if (status === "rejected") { span.style.color = "#b42318"; span.style.borderColor = "#f5d5d2"; }
+        else if (status === "under_review") { span.style.color = "#b54708"; span.style.borderColor = "#fce6c9"; }
         return span;
     }
 
@@ -248,10 +227,8 @@
         const td = document.createElement("td");
         if (text) {
             td.textContent = text;
-            td.style.maxWidth = "220px";
-            td.style.overflow = "hidden";
-            td.style.textOverflow = "ellipsis";
-            td.title = text;
+            td.style.maxWidth = "220px"; td.style.overflow = "hidden";
+            td.style.textOverflow = "ellipsis"; td.title = text;
         } else { td.textContent = "—"; td.className = "admin-muted"; }
         return td;
     }
@@ -276,8 +253,7 @@
                     const btn = document.createElement("button");
                     btn.type = "button"; btn.className = "admin-row-btn"; btn.textContent = "Review";
                     btn.addEventListener("click", () => openRequestReview(r, "deletion"));
-                    actionTd.appendChild(btn); tr.appendChild(actionTd);
-                    delBody.appendChild(tr);
+                    actionTd.appendChild(btn); tr.appendChild(actionTd); delBody.appendChild(tr);
                 });
             }
             const emBody = $("#requests-email-body");
@@ -298,8 +274,7 @@
                     const btn = document.createElement("button");
                     btn.type = "button"; btn.className = "admin-row-btn"; btn.textContent = "Review";
                     btn.addEventListener("click", () => openRequestReview(r, "email"));
-                    actionTd.appendChild(btn); tr.appendChild(actionTd);
-                    emBody.appendChild(tr);
+                    actionTd.appendChild(btn); tr.appendChild(actionTd); emBody.appendChild(tr);
                 });
             }
         } catch (error) { console.error(`${LOG} Requests:`, error); }
@@ -323,18 +298,13 @@
         if (!state.activeRequest) return;
         const msg = $("#request-review-message");
         msg.textContent = "";
-        const payload = {
-            status: $("#request-status").value,
-            response: $("#request-response").value.trim()
-        };
+        const payload = { status: $("#request-status").value, response: $("#request-response").value.trim() };
         try {
             const res = await api(
                 `/admin/requests/${encodeURIComponent(state.activeRequest.uid)}/${state.activeRequest.type}`,
                 { method: "PATCH", body: payload }
             );
-            msg.textContent = res.notificationCreated
-                ? "Saved. Notification sent to user."
-                : "Saved (no response text, so no notification sent).";
+            msg.textContent = res.notificationCreated ? "Saved. Notification sent." : "Saved (no notification).";
             $("#request-review-card").hidden = true;
             state.activeRequest = null;
             await loadRequests();
@@ -355,8 +325,7 @@
             }
             data.items.forEach((s) => {
                 const opt = document.createElement("option");
-                opt.value = s.id;
-                opt.textContent = `${s.name} (${s.id})`;
+                opt.value = s.id; opt.textContent = `${s.name} (${s.id})`;
                 if (s.id === selectedId) opt.selected = true;
                 select.appendChild(opt);
             });
@@ -384,8 +353,7 @@
                 [t.id, t.title, t.subjectId || "—", t.category || "—",
                  String(t.questions?.length || 0),
                  t.published === false ? "No" : "Yes"].forEach((txt) => {
-                    const td = document.createElement("td");
-                    td.textContent = txt; tr.appendChild(td);
+                    const td = document.createElement("td"); td.textContent = txt; tr.appendChild(td);
                 });
                 const actions = document.createElement("td");
                 actions.className = "admin-row-actions";
@@ -405,8 +373,7 @@
     async function openTestForm(test) {
         state.editingTest = test || null;
         $("#tests-form-title").textContent = test ? "Edit Test" : "New Test";
-        $("#test-id").value = test?.id || "";
-        $("#test-id").disabled = !!test;
+        $("#test-id").value = test?.id || ""; $("#test-id").disabled = !!test;
         $("#test-title").value = test?.title || "";
         $("#test-category").value = test?.category || "general";
         $("#test-duration").value = test?.duration || 600;
@@ -426,42 +393,18 @@
         const wrap = document.createElement("div");
         wrap.className = "admin-q-block";
         wrap.innerHTML = `
-            <div class="admin-q-head">
-                <span>Question ${idx}</span>
-                <button type="button" class="admin-row-btn admin-row-btn-danger admin-q-remove">Remove</button>
-            </div>
-            <label class="admin-label">Question text
-                <input class="admin-input admin-q-text" value="" maxlength="500" required>
-            </label>
-            <div class="admin-q-options">
-                ${[0,1,2,3].map((i)=>`
-                    <label>${String.fromCharCode(65+i)}</label>
-                    <input class="admin-input admin-q-opt" data-opt="${i}" value="" maxlength="200" required>
-                `).join("")}
-            </div>
+            <div class="admin-q-head"><span>Question ${idx}</span><button type="button" class="admin-row-btn admin-row-btn-danger admin-q-remove">Remove</button></div>
+            <label class="admin-label">Question text<input class="admin-input admin-q-text" maxlength="500" required></label>
+            <div class="admin-q-options">${[0,1,2,3].map((i)=>`<label>${String.fromCharCode(65+i)}</label><input class="admin-input admin-q-opt" data-opt="${i}" maxlength="200" required>`).join("")}</div>
             <div class="admin-q-row">
-                <label class="admin-label">Correct answer (A–D)
-                    <select class="admin-input admin-q-answer">
-                        <option value="0">A</option><option value="1">B</option>
-                        <option value="2">C</option><option value="3">D</option>
-                    </select>
-                </label>
-                <label class="admin-label">Explanation (optional)
-                    <input class="admin-input admin-q-expl" maxlength="500">
-                </label>
-            </div>
-        `;
-        const opts = wrap.querySelectorAll(".admin-q-opt");
-        if (Array.isArray(q.options)) {
-            opts.forEach((el, i) => { el.value = q.options[i] || ""; });
-        }
+                <label class="admin-label">Correct answer (A–D)<select class="admin-input admin-q-answer"><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></label>
+                <label class="admin-label">Explanation (optional)<input class="admin-input admin-q-expl" maxlength="500"></label>
+            </div>`;
+        if (Array.isArray(q.options)) wrap.querySelectorAll(".admin-q-opt").forEach((el, i) => { el.value = q.options[i] || ""; });
         if (q.question) wrap.querySelector(".admin-q-text").value = q.question;
         if (Number.isInteger(q.answer)) wrap.querySelector(".admin-q-answer").value = String(q.answer);
         if (q.explanation) wrap.querySelector(".admin-q-expl").value = q.explanation;
-        wrap.querySelector(".admin-q-remove").addEventListener("click", () => {
-            wrap.remove();
-            renumberQuestions();
-        });
+        wrap.querySelector(".admin-q-remove").addEventListener("click", () => { wrap.remove(); renumberQuestions(); });
         $("#test-questions").appendChild(wrap);
     }
 
@@ -485,10 +428,7 @@
         const msg = $("#test-form-message");
         msg.textContent = "";
         const subjectId = $("#test-subject").value;
-        if (!subjectId) {
-            msg.textContent = "Select a subject first. Create one under Subjects if none exist.";
-            return;
-        }
+        if (!subjectId) { msg.textContent = "Select a subject first."; return; }
         const payload = {
             id: $("#test-id").value.trim().toLowerCase(),
             title: $("#test-title").value.trim(),
@@ -501,11 +441,8 @@
             questions: collectQuestions()
         };
         try {
-            if (state.editingTest) {
-                await api(`/admin/tests/${encodeURIComponent(state.editingTest.id)}`, { method: "PATCH", body: payload });
-            } else {
-                await api("/admin/tests", { method: "POST", body: payload });
-            }
+            if (state.editingTest) await api(`/admin/tests/${encodeURIComponent(state.editingTest.id)}`, { method: "PATCH", body: payload });
+            else await api("/admin/tests", { method: "POST", body: payload });
             $("#tests-form-card").hidden = true;
             await loadTests();
         } catch (error) { msg.textContent = error.message; }
@@ -513,10 +450,8 @@
 
     async function deleteTest(id) {
         if (!confirm(`Delete test "${id}"? This cannot be undone.`)) return;
-        try {
-            await api(`/admin/tests/${encodeURIComponent(id)}`, { method: "DELETE" });
-            await loadTests();
-        } catch (error) { alert(error.message); }
+        try { await api(`/admin/tests/${encodeURIComponent(id)}`, { method: "DELETE" }); await loadTests(); }
+        catch (error) { alert(error.message); }
     }
 
     /* ---------- Subjects ---------- */
@@ -537,10 +472,8 @@
             data.items.forEach((s) => {
                 const tr = document.createElement("tr");
                 const topicCount = Array.isArray(s.topics) ? s.topics.length : 0;
-                [s.id, s.name, s.category || "—", String(topicCount),
-                 s.published === false ? "No" : "Yes"].forEach((t) => {
-                    const td = document.createElement("td");
-                    td.textContent = t || "—"; tr.appendChild(td);
+                [s.id, s.name, s.category || "—", String(topicCount), s.published === false ? "No" : "Yes"].forEach((t) => {
+                    const td = document.createElement("td"); td.textContent = t || "—"; tr.appendChild(td);
                 });
                 const actions = document.createElement("td");
                 actions.className = "admin-row-actions";
@@ -560,8 +493,7 @@
     function openSubjectForm(s) {
         state.editingSubject = s || null;
         $("#subjects-form-title").textContent = s ? "Edit Subject" : "New Subject";
-        $("#subject-id").value = s?.id || "";
-        $("#subject-id").disabled = !!s;
+        $("#subject-id").value = s?.id || ""; $("#subject-id").disabled = !!s;
         $("#subject-name").value = s?.name || "";
         $("#subject-category").value = s?.category || "";
         $("#subject-published").value = s?.published === false ? "false" : "true";
@@ -577,7 +509,7 @@
     async function saveSubject(e) {
         e.preventDefault();
         const msg = $("#subject-form-message");
-        const splitCsv = (val) => (val || "").split(",").map((x) => x.trim()).filter(Boolean);
+        const splitCsv = (v) => (v || "").split(",").map((x) => x.trim()).filter(Boolean);
         const payload = {
             id: $("#subject-id").value.trim().toLowerCase(),
             name: $("#subject-name").value.trim(),
@@ -589,11 +521,8 @@
             topics: splitCsv($("#subject-topics").value)
         };
         try {
-            if (state.editingSubject) {
-                await api(`/admin/subjects/${encodeURIComponent(state.editingSubject.id)}`, { method: "PATCH", body: payload });
-            } else {
-                await api("/admin/subjects", { method: "POST", body: payload });
-            }
+            if (state.editingSubject) await api(`/admin/subjects/${encodeURIComponent(state.editingSubject.id)}`, { method: "PATCH", body: payload });
+            else await api("/admin/subjects", { method: "POST", body: payload });
             $("#subjects-form-card").hidden = true;
             await loadSubjects();
         } catch (error) { msg.textContent = error.message; }
@@ -623,8 +552,7 @@
             data.items.forEach((o) => {
                 const tr = document.createElement("tr");
                 [o.id, o.name, o.category || "—", o.published === false ? "No" : "Yes"].forEach((t) => {
-                    const td = document.createElement("td");
-                    td.textContent = t || "—"; tr.appendChild(td);
+                    const td = document.createElement("td"); td.textContent = t || "—"; tr.appendChild(td);
                 });
                 const actions = document.createElement("td");
                 actions.className = "admin-row-actions";
@@ -635,8 +563,7 @@
                 delBtn.type = "button"; delBtn.className = "admin-row-btn admin-row-btn-danger"; delBtn.textContent = "Delete";
                 delBtn.addEventListener("click", () => deleteOrg(o.id));
                 actions.append(editBtn, delBtn);
-                tr.appendChild(actions);
-                body.appendChild(tr);
+                tr.appendChild(actions); body.appendChild(tr);
             });
         } catch (error) { console.error(`${LOG} Organizations:`, error); }
     }
@@ -644,8 +571,7 @@
     function openOrgForm(o) {
         state.editingOrg = o || null;
         $("#orgs-form-title").textContent = o ? "Edit Organization" : "New Organization";
-        $("#org-id").value = o?.id || "";
-        $("#org-id").disabled = !!o;
+        $("#org-id").value = o?.id || ""; $("#org-id").disabled = !!o;
         $("#org-name").value = o?.name || "";
         $("#org-category").value = o?.category || "";
         $("#org-published").value = o?.published === false ? "false" : "true";
@@ -666,11 +592,8 @@
             description: $("#org-description").value.trim()
         };
         try {
-            if (state.editingOrg) {
-                await api(`/admin/organizations/${encodeURIComponent(state.editingOrg.id)}`, { method: "PATCH", body: payload });
-            } else {
-                await api("/admin/organizations", { method: "POST", body: payload });
-            }
+            if (state.editingOrg) await api(`/admin/organizations/${encodeURIComponent(state.editingOrg.id)}`, { method: "PATCH", body: payload });
+            else await api("/admin/organizations", { method: "POST", body: payload });
             $("#orgs-form-card").hidden = true;
             await loadOrganizations();
         } catch (error) { msg.textContent = error.message; }
@@ -706,28 +629,23 @@
     function formatImportReport(out, data) {
         out.replaceChildren();
         const lines = [];
-        if (data.created && data.created.length) {
-            lines.push(`Created: ${data.created.length}` + (data.created.length <= 10 ? ` (${data.created.join(", ")})` : ""));
-        }
-        if (data.updated && data.updated.length) {
-            lines.push(`Updated: ${data.updated.length}` + (data.updated.length <= 10 ? ` (${data.updated.join(", ")})` : ""));
-        }
+        if (data.created?.length) lines.push(`Created: ${data.created.length}` + (data.created.length <= 10 ? ` (${data.created.join(", ")})` : ""));
+        if (data.updated?.length) lines.push(`Updated: ${data.updated.length}` + (data.updated.length <= 10 ? ` (${data.updated.join(", ")})` : ""));
         if (data.added) lines.push(`Questions added: ${data.added}`);
         if (data.totalQuestions) lines.push(`Total questions now: ${data.totalQuestions}`);
-        if (data.failed && data.failed.length) lines.push(`Failed: ${data.failed.length}`);
+        if (data.failed?.length) lines.push(`Failed: ${data.failed.length}`);
         lines.forEach((line) => {
             const div = document.createElement("div");
             div.textContent = line;
             if (line.startsWith("Failed")) div.style.color = "#b42318";
             out.appendChild(div);
         });
-        if (data.failed && data.failed.length) {
+        if (data.failed?.length) {
             const details = document.createElement("ul");
             data.failed.forEach((f) => {
                 const li = document.createElement("li");
                 li.textContent = `${f.id}: ${f.error}`;
-                li.style.color = "#b42318";
-                li.style.fontSize = "12px";
+                li.style.color = "#b42318"; li.style.fontSize = "12px";
                 details.appendChild(li);
             });
             out.appendChild(details);
@@ -737,8 +655,7 @@
     function showImportError(out, error) {
         out.replaceChildren();
         const head = document.createElement("div");
-        head.style.color = "#b42318";
-        head.style.fontWeight = "600";
+        head.style.color = "#b42318"; head.style.fontWeight = "600";
         head.textContent = error.message || "Import failed.";
         out.appendChild(head);
         if (Array.isArray(error.details) && error.details.length) {
@@ -746,16 +663,9 @@
             error.details.slice(0, 20).forEach((d) => {
                 const li = document.createElement("li");
                 li.textContent = `Item ${typeof d.index === "number" ? d.index + 1 : "?"}${d.id ? ` (${d.id})` : ""}: ${d.error}`;
-                li.style.color = "#b42318";
-                li.style.fontSize = "12px";
+                li.style.color = "#b42318"; li.style.fontSize = "12px";
                 list.appendChild(li);
             });
-            if (error.details.length > 20) {
-                const li = document.createElement("li");
-                li.textContent = `…and ${error.details.length - 20} more`;
-                li.style.fontSize = "12px";
-                list.appendChild(li);
-            }
             out.appendChild(list);
         }
         if (Array.isArray(error.conflicts) && error.conflicts.length) {
@@ -772,10 +682,8 @@
         const overwrite = $("#import-subjects-overwrite").checked;
         if (!json) { out.textContent = "Paste JSON first."; return; }
         let items;
-        try {
-            items = JSON.parse(json);
-            if (!Array.isArray(items)) throw new Error("JSON must be an array.");
-        } catch (e) { out.textContent = `Invalid JSON: ${e.message}`; return; }
+        try { items = JSON.parse(json); if (!Array.isArray(items)) throw new Error("JSON must be an array."); }
+        catch (e) { out.textContent = `Invalid JSON: ${e.message}`; return; }
         if (!items.length) { out.textContent = "Array is empty."; return; }
         if (!confirm(`Import ${items.length} subject(s)${overwrite ? " (overwrite existing)" : ""}?`)) return;
         out.textContent = "Importing…";
@@ -792,10 +700,8 @@
         const overwrite = $("#import-tests-overwrite").checked;
         if (!json) { out.textContent = "Paste JSON first."; return; }
         let items;
-        try {
-            items = JSON.parse(json);
-            if (!Array.isArray(items)) throw new Error("JSON must be an array.");
-        } catch (e) { out.textContent = `Invalid JSON: ${e.message}`; return; }
+        try { items = JSON.parse(json); if (!Array.isArray(items)) throw new Error("JSON must be an array."); }
+        catch (e) { out.textContent = `Invalid JSON: ${e.message}`; return; }
         if (!items.length) { out.textContent = "Array is empty."; return; }
         if (!confirm(`Import ${items.length} test(s)${overwrite ? " (overwrite existing)" : ""}?`)) return;
         out.textContent = "Importing…";
@@ -813,10 +719,8 @@
         if (!testId) { out.textContent = "Select a target test."; return; }
         if (!json) { out.textContent = "Paste JSON first."; return; }
         let questions;
-        try {
-            questions = JSON.parse(json);
-            if (!Array.isArray(questions)) throw new Error("JSON must be an array.");
-        } catch (e) { out.textContent = `Invalid JSON: ${e.message}`; return; }
+        try { questions = JSON.parse(json); if (!Array.isArray(questions)) throw new Error("JSON must be an array."); }
+        catch (e) { out.textContent = `Invalid JSON: ${e.message}`; return; }
         if (!questions.length) { out.textContent = "Array is empty."; return; }
         if (!confirm(`Append ${questions.length} question(s) to "${testId}"?`)) return;
         out.textContent = "Importing…";
@@ -835,7 +739,7 @@
         try {
             const data = await api("/admin/tests");
             if (!data.items.length) {
-                select.innerHTML = '<option value="">No tests yet — import or create a test first</option>';
+                select.innerHTML = '<option value="">No tests yet</option>';
                 return;
             }
             data.items.forEach((t) => {
@@ -846,12 +750,11 @@
                 select.appendChild(opt);
             });
         } catch (error) {
-            console.error(`${LOG} Populate import tests:`, error);
             select.innerHTML = '<option value="">Error loading tests</option>';
         }
     }
 
-    /* ---------- Database Manager ---------- */
+    /* ---------- DB Manager ---------- */
 
     function describeValue(val) {
         if (val === null) return "null";
@@ -868,29 +771,17 @@
         const crumb = $("#db-breadcrumb");
         if (crumb) crumb.textContent = `Path: /${path}`;
         const segments = path.split("/");
-
-        const up = $("#db-up");
-        if (up) {
-            up.hidden = segments.length <= 1;
-        }
-        const editRoot = $("#db-edit-root");
-        if (editRoot) {
-            editRoot.hidden = false;
-        }
-        const delRoot = $("#db-delete-root");
-        if (delRoot) {
-            delRoot.hidden = segments.length <= 1;
-        }
+        const up = $("#db-up"); if (up) up.hidden = segments.length <= 1;
+        const editRoot = $("#db-edit-root"); if (editRoot) editRoot.hidden = false;
+        const delRoot = $("#db-delete-root"); if (delRoot) delRoot.hidden = segments.length <= 1;
     }
 
     function renderDbObject(container, path, obj) {
         const keys = Object.keys(obj).sort();
         if (!keys.length) {
             const p = document.createElement("p");
-            p.className = "admin-muted";
-            p.textContent = "(Empty object)";
-            container.appendChild(p);
-            return;
+            p.className = "admin-muted"; p.textContent = "(Empty object)";
+            container.appendChild(p); return;
         }
         const table = document.createElement("table");
         table.className = "admin-table";
@@ -899,42 +790,24 @@
         keys.forEach((key) => {
             const val = obj[key];
             const type = Array.isArray(val) ? "array" : val === null ? "null" : typeof val;
-            const preview = describeValue(val);
             const tr = document.createElement("tr");
-
             const keyTd = document.createElement("td");
             const keyBtn = document.createElement("button");
-            keyBtn.type = "button";
-            keyBtn.className = "admin-row-btn";
-            keyBtn.textContent = key;
+            keyBtn.type = "button"; keyBtn.className = "admin-row-btn"; keyBtn.textContent = key;
             keyBtn.addEventListener("click", () => loadDbPath(`${path}/${key}`));
             keyTd.appendChild(keyBtn);
-
-            const typeTd = document.createElement("td");
-            typeTd.textContent = type;
-
+            const typeTd = document.createElement("td"); typeTd.textContent = type;
             const previewTd = document.createElement("td");
-            previewTd.textContent = preview;
-            previewTd.style.maxWidth = "300px";
-            previewTd.style.overflow = "hidden";
-            previewTd.style.textOverflow = "ellipsis";
-            previewTd.style.whiteSpace = "nowrap";
-
-            const actionsTd = document.createElement("td");
-            actionsTd.className = "admin-row-actions";
-
+            previewTd.textContent = describeValue(val);
+            previewTd.style.maxWidth = "300px"; previewTd.style.overflow = "hidden";
+            previewTd.style.textOverflow = "ellipsis"; previewTd.style.whiteSpace = "nowrap";
+            const actionsTd = document.createElement("td"); actionsTd.className = "admin-row-actions";
             const editBtn = document.createElement("button");
-            editBtn.type = "button";
-            editBtn.className = "admin-row-btn";
-            editBtn.textContent = "Edit";
+            editBtn.type = "button"; editBtn.className = "admin-row-btn"; editBtn.textContent = "Edit";
             editBtn.addEventListener("click", () => openDbEdit(`${path}/${key}`, val));
-
             const delBtn = document.createElement("button");
-            delBtn.type = "button";
-            delBtn.className = "admin-row-btn admin-row-btn-danger";
-            delBtn.textContent = "Delete";
+            delBtn.type = "button"; delBtn.className = "admin-row-btn admin-row-btn-danger"; delBtn.textContent = "Delete";
             delBtn.addEventListener("click", () => deleteDbNode(`${path}/${key}`));
-
             actionsTd.append(editBtn, delBtn);
             tr.append(keyTd, typeTd, previewTd, actionsTd);
             tbody.appendChild(tr);
@@ -945,28 +818,17 @@
 
     function renderDbScalar(container, path, value) {
         const wrap = document.createElement("div");
-        wrap.style.padding = "14px";
-        wrap.style.background = "var(--bg-soft)";
-        wrap.style.borderRadius = "6px";
-
+        wrap.style.padding = "14px"; wrap.style.background = "var(--bg-soft)"; wrap.style.borderRadius = "6px";
         const typeP = document.createElement("p");
-        typeP.className = "admin-muted";
-        typeP.style.margin = "0 0 8px";
+        typeP.className = "admin-muted"; typeP.style.margin = "0 0 8px";
         typeP.textContent = `Type: ${value === null ? "null" : typeof value}`;
-
         const valP = document.createElement("p");
-        valP.style.fontFamily = "monospace";
-        valP.style.fontSize = "13px";
-        valP.style.whiteSpace = "pre-wrap";
-        valP.style.margin = "0 0 10px";
+        valP.style.fontFamily = "monospace"; valP.style.fontSize = "13px";
+        valP.style.whiteSpace = "pre-wrap"; valP.style.margin = "0 0 10px";
         valP.textContent = String(value);
-
         const editBtn = document.createElement("button");
-        editBtn.type = "button";
-        editBtn.className = "admin-row-btn";
-        editBtn.textContent = "Edit value";
+        editBtn.type = "button"; editBtn.className = "admin-row-btn"; editBtn.textContent = "Edit value";
         editBtn.addEventListener("click", () => openDbEdit(path, value));
-
         wrap.append(typeP, valP, editBtn);
         container.appendChild(wrap);
     }
@@ -974,20 +836,16 @@
     function renderDbNode(path, response) {
         const result = $("#db-result");
         result.replaceChildren();
-
         if (!response.exists || response.data === null) {
             const empty = document.createElement("p");
             empty.className = "admin-muted";
-            empty.textContent = "(Node does not exist — you can write a value by clicking 'Edit this node')";
+            empty.textContent = "(Node does not exist — use 'Edit this node' to write)";
             result.appendChild(empty);
-            updateDbBreadcrumb(path);
-            return;
+            updateDbBreadcrumb(path); return;
         }
-
         const data = response.data;
         if (Array.isArray(data)) {
-            const obj = {};
-            data.forEach((v, i) => { obj[i] = v; });
+            const obj = {}; data.forEach((v, i) => { obj[i] = v; });
             renderDbObject(result, path, obj);
         } else if (data && typeof data === "object") {
             renderDbObject(result, path, data);
@@ -1006,9 +864,7 @@
         try {
             const data = await api(`/admin/db?path=${encodeURIComponent(path)}`);
             renderDbNode(path, data);
-        } catch (error) {
-            result.innerHTML = `<p style="color:#b42318">${error.message}</p>`;
-        }
+        } catch (error) { result.innerHTML = `<p style="color:#b42318">${error.message}</p>`; }
     }
 
     function openDbEdit(path, currentValue) {
@@ -1017,8 +873,7 @@
         $("#db-edit-title").textContent = "Edit Node";
         $("#db-edit-path").textContent = `Path: /${path}`;
         $("#db-edit-value").value = JSON.stringify(currentValue, null, 2);
-        $("#db-edit-message").textContent = "";
-        $("#db-edit-message").style.color = "";
+        $("#db-edit-message").textContent = ""; $("#db-edit-message").style.color = "";
         state.dbEditingPath = path;
         card.hidden = false;
         card.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1028,33 +883,17 @@
         const valueEl = $("#db-edit-value");
         const msgEl = $("#db-edit-message");
         if (!state.dbEditingPath || !valueEl || !msgEl) return;
-
         let parsed;
+        try { parsed = JSON.parse(valueEl.value); }
+        catch (e) { msgEl.textContent = `Invalid JSON: ${e.message}`; msgEl.style.color = "#b42318"; return; }
+        if (!confirm(`Overwrite node "/${state.dbEditingPath}"?`)) return;
+        msgEl.textContent = "Saving…"; msgEl.style.color = "";
         try {
-            parsed = JSON.parse(valueEl.value);
-        } catch (e) {
-            msgEl.textContent = `Invalid JSON: ${e.message}`;
-            msgEl.style.color = "#b42318";
-            return;
-        }
-
-        if (!confirm(`Overwrite node "/${state.dbEditingPath}"? This replaces the current value completely.`)) return;
-
-        msgEl.textContent = "Saving…";
-        msgEl.style.color = "";
-        try {
-            await api("/admin/db", {
-                method: "PUT",
-                body: { path: state.dbEditingPath, value: parsed }
-            });
-            msgEl.textContent = "Saved.";
-            msgEl.style.color = "#067647";
+            await api("/admin/db", { method: "PUT", body: { path: state.dbEditingPath, value: parsed } });
+            msgEl.textContent = "Saved."; msgEl.style.color = "#067647";
             $("#db-edit-card").hidden = true;
             await loadDbPath(state.dbPath);
-        } catch (error) {
-            msgEl.textContent = error.message;
-            msgEl.style.color = "#b42318";
-        }
+        } catch (error) { msgEl.textContent = error.message; msgEl.style.color = "#b42318"; }
     }
 
     async function deleteDbNode(path) {
@@ -1068,8 +907,119 @@
             } else {
                 await loadDbPath(state.dbPath);
             }
+        } catch (error) { alert(error.message); }
+    }
+
+    /* ---------- Audit ---------- */
+
+    async function loadAudit(reset = false) {
+        if (reset) state.audit.offset = 0;
+        const params = new URLSearchParams({
+            limit: String(state.audit.limit),
+            offset: String(state.audit.offset)
+        });
+        if (state.audit.action) params.set("action", state.audit.action);
+        if (state.audit.target) params.set("target", state.audit.target);
+
+        const body = $("#audit-body");
+        const empty = $("#audit-empty");
+        if (!body) return;
+        body.replaceChildren();
+
+        try {
+            const data = await api(`/admin/audit?${params}`);
+            state.audit.total = data.total;
+
+            if (!data.entries.length) {
+                if (empty) empty.hidden = false;
+            } else {
+                if (empty) empty.hidden = true;
+                data.entries.forEach((e) => {
+                    const tr = document.createElement("tr");
+                    const timeTd = document.createElement("td");
+                    timeTd.textContent = e.at ? new Date(e.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "medium" }) : "—";
+                    timeTd.style.whiteSpace = "nowrap";
+                    tr.appendChild(timeTd);
+
+                    const byTd = document.createElement("td");
+                    byTd.textContent = e.byEmail || e.by || "—";
+                    byTd.style.maxWidth = "180px"; byTd.style.overflow = "hidden";
+                    byTd.style.textOverflow = "ellipsis"; byTd.title = e.byEmail || e.by || "";
+                    tr.appendChild(byTd);
+
+                    const actionTd = document.createElement("td");
+                    actionTd.textContent = e.action || "—";
+                    actionTd.style.fontFamily = "monospace"; actionTd.style.fontSize = "11px";
+                    tr.appendChild(actionTd);
+
+                    const targetTd = document.createElement("td");
+                    targetTd.textContent = e.target || "—";
+                    targetTd.style.maxWidth = "240px"; targetTd.style.overflow = "hidden";
+                    targetTd.style.textOverflow = "ellipsis"; targetTd.title = e.target || "";
+                    targetTd.style.fontFamily = "monospace"; targetTd.style.fontSize = "11px";
+                    tr.appendChild(targetTd);
+
+                    const summaryTd = document.createElement("td");
+                    summaryTd.textContent = e.summary || "—";
+                    summaryTd.style.maxWidth = "300px"; summaryTd.style.overflow = "hidden";
+                    summaryTd.style.textOverflow = "ellipsis"; summaryTd.title = e.summary || "";
+                    tr.appendChild(summaryTd);
+
+                    const actionBtnTd = document.createElement("td");
+                    const btn = document.createElement("button");
+                    btn.type = "button"; btn.className = "admin-row-btn"; btn.textContent = "View";
+                    btn.addEventListener("click", () => openAuditDetail(e.id));
+                    actionBtnTd.appendChild(btn);
+                    tr.appendChild(actionBtnTd);
+
+                    body.appendChild(tr);
+                });
+            }
+
+            const pageNum = Math.floor(state.audit.offset / state.audit.limit) + 1;
+            const totalPages = Math.max(1, Math.ceil(state.audit.total / state.audit.limit));
+            $("#audit-page-info").textContent = `Page ${pageNum} of ${totalPages} — ${state.audit.total} entries`;
+            $("#audit-prev").disabled = state.audit.offset === 0;
+            $("#audit-next").disabled = state.audit.offset + state.audit.limit >= state.audit.total;
         } catch (error) {
-            alert(error.message);
+            console.error(`${LOG} Audit load:`, error);
+            if (empty) { empty.hidden = false; empty.textContent = error.message || "Failed to load audit."; }
+        }
+    }
+
+    async function openAuditDetail(id) {
+        state.audit.activeEntryId = id;
+        const card = $("#audit-detail-card");
+        if (!card) return;
+        try {
+            const { entry } = await api(`/admin/audit/${encodeURIComponent(id)}`);
+            $("#audit-detail-title").textContent = entry.action || "Audit Entry";
+            const meta = $("#audit-detail-meta");
+            meta.replaceChildren();
+            [
+                ["Time", entry.at ? new Date(entry.at).toLocaleString() : "—"],
+                ["By", entry.byEmail || entry.by || "—"],
+                ["Action", entry.action || "—"],
+                ["Target", entry.target || "—"],
+                ["Summary", entry.summary || "—"]
+            ].forEach(([k, v]) => {
+                const dt = document.createElement("dt"); dt.textContent = k;
+                const dd = document.createElement("dd"); dd.textContent = v;
+                meta.append(dt, dd);
+            });
+            const beforeEl = $("#audit-detail-before");
+            const afterEl = $("#audit-detail-after");
+            const formatVal = (v) => {
+                if (v === null || v === undefined) return "(empty)";
+                try { return JSON.stringify(v, null, 2); } catch { return String(v); }
+            };
+            beforeEl.textContent = formatVal(entry.before);
+            afterEl.textContent = formatVal(entry.after);
+            card.hidden = false;
+            card.scrollIntoView({ behavior: "smooth", block: "start" });
+        } catch (error) {
+            console.error(`${LOG} Audit detail:`, error);
+            alert(error.message || "Could not load audit entry.");
         }
     }
 
@@ -1088,16 +1038,13 @@
                 if (v === "organizations") await loadOrganizations();
                 if (v === "import") await populateImportTestDropdown();
                 if (v === "db") await loadDbPath(state.dbPath || "users");
+                if (v === "audit") await loadAudit(true);
                 document.body.classList.remove("sidebar-open");
             });
         });
 
-        $("#admin-logout").addEventListener("click", () => {
-            clearSession(); window.location.assign("login.html");
-        });
-        $("#unauth-logout").addEventListener("click", () => {
-            clearSession(); window.location.assign("login.html");
-        });
+        $("#admin-logout").addEventListener("click", () => { clearSession(); window.location.assign("login.html"); });
+        $("#unauth-logout").addEventListener("click", () => { clearSession(); window.location.assign("login.html"); });
 
         const backfillBtn = $("#admin-backfill");
         if (backfillBtn) backfillBtn.addEventListener("click", handleBackfill);
@@ -1125,19 +1072,13 @@
         $("#notif-form").addEventListener("submit", sendNotification);
 
         const cancelBtn = $("#request-cancel");
-        if (cancelBtn) cancelBtn.addEventListener("click", () => {
-            $("#request-review-card").hidden = true;
-            state.activeRequest = null;
-        });
+        if (cancelBtn) cancelBtn.addEventListener("click", () => { $("#request-review-card").hidden = true; state.activeRequest = null; });
         const reviewForm = $("#request-review-form");
         if (reviewForm) reviewForm.addEventListener("submit", saveRequestReview);
 
-        const impSub = $("#import-subjects-submit");
-        if (impSub) impSub.addEventListener("click", importSubjects);
-        const impTest = $("#import-tests-submit");
-        if (impTest) impTest.addEventListener("click", importTests);
-        const impMcq = $("#import-mcqs-submit");
-        if (impMcq) impMcq.addEventListener("click", importMcqs);
+        const impSub = $("#import-subjects-submit"); if (impSub) impSub.addEventListener("click", importSubjects);
+        const impTest = $("#import-tests-submit"); if (impTest) impTest.addEventListener("click", importTests);
+        const impMcq = $("#import-mcqs-submit"); if (impMcq) impMcq.addEventListener("click", importMcqs);
 
         const dbLoad = $("#db-load");
         if (dbLoad) dbLoad.addEventListener("click", () => {
@@ -1152,13 +1093,10 @@
                 if (path) loadDbPath(path.replace(/^\/+|\/+$/g, ""));
             }
         });
-
         const dbUp = $("#db-up");
         if (dbUp) dbUp.addEventListener("click", () => {
             const segments = state.dbPath.split("/");
-            if (segments.length > 1) {
-                loadDbPath(segments.slice(0, -1).join("/"));
-            }
+            if (segments.length > 1) loadDbPath(segments.slice(0, -1).join("/"));
         });
         const dbRefresh = $("#db-refresh");
         if (dbRefresh) dbRefresh.addEventListener("click", () => loadDbPath(state.dbPath));
@@ -1171,13 +1109,36 @@
         });
         const dbDeleteRoot = $("#db-delete-root");
         if (dbDeleteRoot) dbDeleteRoot.addEventListener("click", () => deleteDbNode(state.dbPath));
-
         const dbEditCancel = $("#db-edit-cancel");
-        if (dbEditCancel) dbEditCancel.addEventListener("click", () => {
-            $("#db-edit-card").hidden = true;
-        });
+        if (dbEditCancel) dbEditCancel.addEventListener("click", () => { $("#db-edit-card").hidden = true; });
         const dbEditSave = $("#db-edit-save");
         if (dbEditSave) dbEditSave.addEventListener("click", saveDbEdit);
+
+        const auditRefresh = $("#audit-refresh");
+        if (auditRefresh) auditRefresh.addEventListener("click", () => loadAudit(true));
+        const auditActionFilter = $("#audit-action-filter");
+        if (auditActionFilter) auditActionFilter.addEventListener("input", (e) => {
+            state.audit.action = e.target.value.trim();
+        });
+        const auditTargetFilter = $("#audit-target-filter");
+        if (auditTargetFilter) auditTargetFilter.addEventListener("input", (e) => {
+            state.audit.target = e.target.value.trim();
+        });
+        const auditPrev = $("#audit-prev");
+        if (auditPrev) auditPrev.addEventListener("click", () => {
+            state.audit.offset = Math.max(0, state.audit.offset - state.audit.limit);
+            loadAudit();
+        });
+        const auditNext = $("#audit-next");
+        if (auditNext) auditNext.addEventListener("click", () => {
+            state.audit.offset += state.audit.limit;
+            loadAudit();
+        });
+        const auditClose = $("#audit-detail-close");
+        if (auditClose) auditClose.addEventListener("click", () => {
+            $("#audit-detail-card").hidden = true;
+            state.audit.activeEntryId = null;
+        });
 
         $("#admin-menu-btn").addEventListener("click", () => document.body.classList.toggle("sidebar-open"));
     }
