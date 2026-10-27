@@ -18,7 +18,7 @@
       host === "0.0.0.0" ||
       host === "" ||
       host.endsWith(".local");
-    return isLocal ? "http://localhost:8787/api" : "/api";
+    return isLocal ? "http://localhost:8787/api" : "https://preparekora-api.yadavsubba2003.workers.dev/api";
   })();
 
   async function apiFetch(path) {
