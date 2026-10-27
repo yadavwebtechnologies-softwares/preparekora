@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Subjects for Assam Exams | StudyKora</title>
-    <meta name="description" content="Explore subject-wise MCQ practice for Assam competitive exams on StudyKora. Practise English, Assamese, mathematics, reasoning, general knowledge and more.">
-    <meta name="keywords" content="StudyKora, Assam competitive exams, subject-wise MCQ, English practice, Assamese grammar, mathematics, reasoning, general knowledge, Assam exam preparation">
+    <title>Subjects for Assam Exams | preparekora.in</title>
+    <meta name="description" content="Explore subject-wise MCQ practice for Assam competitive exams on preparekora.in. Practise English, Assamese, mathematics, reasoning, general knowledge and more.">
+    <meta name="keywords" content="preparekora.in, Assam competitive exams, subject-wise MCQ, English practice, Assamese grammar, mathematics, reasoning, general knowledge, Assam exam preparation">
     <meta name="theme-color" content="#28734f">
     <meta name="robots" content="index, follow">
 
@@ -24,13 +24,9 @@
     <header class="site-header">
         <div class="header-inner">
 
-            <a href="index.html" class="brand" aria-label="StudyKora home">
-                <span class="brand-mark" aria-hidden="true">
-                    <span style="font-size:23px;font-weight:800;">s</span>
-                </span>
-
-                <span class="brand-text">
-                    <span class="brand-name" style="font-size:19px;"><span style="color:#111111;">study</span><span style="color:#777777;">kora</span></span>
+            <a href="index.html" class="brand" aria-label="preparekora.in home">
+                <span class="brand-name">
+                    <span class="brand-main">preparekora</span><span class="brand-domain">.in</span>
                 </span>
             </a>
 
@@ -44,7 +40,6 @@
 
             <div class="header-actions">
 
-                <!-- Logged-out account actions -->
                 <div class="account-guest" id="account-guest">
                     <a href="auth.html?mode=login"
                        class="btn btn-outline"
@@ -59,28 +54,16 @@
                     </a>
                 </div>
 
-                <!-- Logged-in account action -->
                 <div class="account-authenticated" id="account-authenticated" hidden>
                     <a href="profile.html"
                        class="account-profile-trigger"
                        id="account-profile-trigger"
                        aria-label="Open your profile">
-                        <svg id="account-profile-avatar"
-                             viewBox="0 0 24 24"
-                             fill="none"
-                             aria-hidden="true">
-                            <circle cx="12" cy="8" r="4"
-                                    stroke="currentColor"
-                                    stroke-width="1.7"/>
-                            <path d="M4 21c0-4.2 3.2-7 8-7s8 2.8 8 7"
-                                  stroke="currentColor"
-                                  stroke-width="1.7"
-                                  stroke-linecap="round"/>
-                        </svg>
+                        <span id="account-profile-avatar" class="account-profile-initial" aria-hidden="true">U</span>
+                        <span class="account-profile-label">Profile</span>
                     </a>
                 </div>
 
-                <!-- Mobile Navigation Toggle -->
                 <button type="button"
                         class="menu-toggle"
                         id="menu-toggle"
@@ -193,7 +176,6 @@
                     </div>
                 </div>
 
-                <!-- Search -->
                 <div class="panel subject-search-panel">
                     <div class="form-group">
                         <label class="form-label" for="subject-search">
@@ -210,7 +192,6 @@
                     </div>
                 </div>
 
-                <!-- Category Filters -->
                 <div class="filter-row"
                      id="subject-filters"
                      aria-label="Filter subjects">
@@ -258,178 +239,8 @@
                     Browse available subjects below.
                 </p>
 
-                <!-- Subject Cards -->
-                <div class="listing-grid mt-md" id="subject-grid">
-
-                    <a href="subject.html?subject=general-knowledge"
-                       class="listing-card"
-                       data-subject-card
-                       data-subject-id="general-knowledge"
-                       data-subject-category="general"
-                       data-subject-name="General Knowledge">
-                        <span class="card-icon" aria-hidden="true">GK</span>
-                        <span class="card-content">
-                            <span class="card-title">General Knowledge</span>
-                            <span class="card-description">Static GK and important facts</span>
-                        </span>
-                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
-                    </a>
-
-                    <a href="subject.html?subject=assamese"
-                       class="listing-card"
-                       data-subject-card
-                       data-subject-id="assamese"
-                       data-subject-category="language"
-                       data-subject-name="Assamese">
-                        <span class="card-icon" aria-hidden="true">অ</span>
-                        <span class="card-content">
-                            <span class="card-title">Assamese</span>
-                            <span class="card-description">Language and grammar</span>
-                        </span>
-                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
-                    </a>
-
-                    <a href="subject.html?subject=english"
-                       class="listing-card"
-                       data-subject-card
-                       data-subject-id="english"
-                       data-subject-category="language"
-                       data-subject-name="English">
-                        <span class="card-icon" aria-hidden="true">EN</span>
-                        <span class="card-content">
-                            <span class="card-title">English</span>
-                            <span class="card-description">Grammar and vocabulary</span>
-                        </span>
-                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
-                    </a>
-
-                    <a href="subject.html?subject=mathematics"
-                       class="listing-card"
-                       data-subject-card
-                       data-subject-id="mathematics"
-                       data-subject-category="aptitude"
-                       data-subject-name="Mathematics">
-                        <span class="card-icon" aria-hidden="true">M</span>
-                        <span class="card-content">
-                            <span class="card-title">Mathematics</span>
-                            <span class="card-description">Numerical ability and arithmetic</span>
-                        </span>
-                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
-                    </a>
-
-                    <a href="subject.html?subject=reasoning"
-                       class="listing-card"
-                       data-subject-card
-                       data-subject-id="reasoning"
-                       data-subject-category="aptitude"
-                       data-subject-name="Reasoning">
-                        <span class="card-icon" aria-hidden="true">R</span>
-                        <span class="card-content">
-                            <span class="card-title">Reasoning</span>
-                            <span class="card-description">Logical and analytical ability</span>
-                        </span>
-                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
-                    </a>
-
-                    <a href="subject.html?subject=computer"
-                       class="listing-card"
-                       data-subject-card
-                       data-subject-id="computer"
-                       data-subject-category="other"
-                       data-subject-name="Computer">
-                        <span class="card-icon" aria-hidden="true">IT</span>
-                        <span class="card-content">
-                            <span class="card-title">Computer</span>
-                            <span class="card-description">Computer fundamentals</span>
-                        </span>
-                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
-                    </a>
-
-                    <a href="subject.html?subject=geography"
-                       class="listing-card"
-                       data-subject-card
-                       data-subject-id="geography"
-                       data-subject-category="general"
-                       data-subject-name="Geography">
-                        <span class="card-icon" aria-hidden="true">G</span>
-                        <span class="card-content">
-                            <span class="card-title">Geography</span>
-                            <span class="card-description">Assam, India and world geography</span>
-                        </span>
-                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
-                    </a>
-
-                    <a href="subject.html?subject=polity"
-                       class="listing-card"
-                       data-subject-card
-                       data-subject-id="polity"
-                       data-subject-category="general"
-                       data-subject-name="Indian Polity">
-                        <span class="card-icon" aria-hidden="true">P</span>
-                        <span class="card-content">
-                            <span class="card-title">Indian Polity</span>
-                            <span class="card-description">Constitution and governance</span>
-                        </span>
-                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
-                    </a>
-
-                    <a href="subject.html?subject=history"
-                       class="listing-card"
-                       data-subject-card
-                       data-subject-id="history"
-                       data-subject-category="general"
-                       data-subject-name="History">
-                        <span class="card-icon" aria-hidden="true">H</span>
-                        <span class="card-content">
-                            <span class="card-title">History</span>
-                            <span class="card-description">Indian and Assam history</span>
-                        </span>
-                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
-                    </a>
-
-                    <a href="subject.html?subject=economics"
-                       class="listing-card"
-                       data-subject-card
-                       data-subject-id="economics"
-                       data-subject-category="general"
-                       data-subject-name="Economics">
-                        <span class="card-icon" aria-hidden="true">E</span>
-                        <span class="card-content">
-                            <span class="card-title">Economics</span>
-                            <span class="card-description">Economy and basic concepts</span>
-                        </span>
-                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
-                    </a>
-
-                    <a href="subject.html?subject=science"
-                       class="listing-card"
-                       data-subject-card
-                       data-subject-id="science"
-                       data-subject-category="other"
-                       data-subject-name="General Science">
-                        <span class="card-icon" aria-hidden="true">S</span>
-                        <span class="card-content">
-                            <span class="card-title">General Science</span>
-                            <span class="card-description">Basic scientific concepts</span>
-                        </span>
-                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
-                    </a>
-
-                    <a href="subject.html?subject=assam-culture"
-                       class="listing-card"
-                       data-subject-card
-                       data-subject-id="assam-culture"
-                       data-subject-category="general"
-                       data-subject-name="Assam Art and Culture">
-                        <span class="card-icon" aria-hidden="true">AC</span>
-                        <span class="card-content">
-                            <span class="card-title">Assam Art and Culture</span>
-                            <span class="card-description">Heritage, traditions and festivals</span>
-                        </span>
-                        <span class="card-arrow" aria-hidden="true">&rsaquo;</span>
-                    </a>
-
-                </div>
+                <!-- Subject Cards (rendered by js/subject.js from Firebase) -->
+                <div class="listing-grid mt-md" id="subject-grid"></div>
 
                 <div class="empty-state mt-md"
                      id="subject-empty-state"
@@ -553,13 +364,9 @@
         <div class="footer-main">
 
             <div class="footer-brand">
-                <a href="index.html" class="brand" aria-label="StudyKora home">
-                    <span class="brand-mark" aria-hidden="true">
-                        <span style="font-size:23px;font-weight:800;">s</span>
-                    </span>
-
-                    <span class="brand-text">
-                        <span class="brand-name" style="font-size:19px;"><span style="color:#111111;">study</span><span style="color:#777777;">kora</span></span>
+                <a href="index.html" class="brand" aria-label="preparekora.in home">
+                    <span class="brand-name">
+                        <span class="brand-main">preparekora</span><span class="brand-domain">.in</span>
                     </span>
                 </a>
 
@@ -600,7 +407,7 @@
 
         <div class="footer-bottom">
             <span>
-                &copy; <span data-current-year></span> StudyKora. All rights reserved.
+                &copy; <span data-current-year></span> preparekora.in. All rights reserved.
             </span>
 
             <span class="site-credit">
