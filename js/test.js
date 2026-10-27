@@ -6,7 +6,7 @@
 
 "use strict";
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     const $ = (id) => document.getElementById(id);
 
     const API_BASE =
@@ -524,19 +524,46 @@ document.addEventListener("DOMContentLoaded", () => {
         testName = requestedTopic.replace(/-/g, " ")
             .replace(/\b\w/g, (char) => char.toUpperCase());
     }
+    /* Try RTDB first — admin-created tests may exist under tests/{id} */
+    const rtdbLookupKey =
+        requestedTest || requestedSubject || requestedTopic || bankName;
+    let rtdbTest = null;
+    try {
+        const rtdbResponse = await fetch(
+            `${DB_BASE}/tests/${encodeURIComponent(rtdbLookupKey)}.json`
+        );
+        if (rtdbResponse.ok) {
+            rtdbTest = await rtdbResponse.json();
+        }
+    } catch (_) { /* silent fallback to hardcoded */ }
 
-    let questions = questionBanks[bankName];
+    let questions;
+    let marksPerQuestion = 1;
+    let durationSeconds = 10 * 60;
 
-    if (!questions) {
-        questions = questionBanks.general;
-        questionSourceIsFallback = true;
+    if (
+        rtdbTest &&
+        Array.isArray(rtdbTest.questions) &&
+        rtdbTest.questions.length > 0
+    ) {
+        questions = rtdbTest.questions;
+        if (rtdbTest.title) testName = rtdbTest.title;
+        if (Number(rtdbTest.duration) > 0) {
+            durationSeconds = Number(rtdbTest.duration);
+        }
+        if (Number(rtdbTest.marksPerQuestion) > 0) {
+            marksPerQuestion = Number(rtdbTest.marksPerQuestion);
+        }
+    } else {
+        questions = questionBanks[bankName];
+        if (!questions) {
+            questions = questionBanks.general;
+            questionSourceIsFallback = true;
+        }
     }
 
-    /* Each sample question carries one mark. */
     const totalQuestions = questions.length;
-    const marksPerQuestion = 1;
     const totalMarks = totalQuestions * marksPerQuestion;
-    const durationSeconds = 10 * 60;
 
     let currentIndex = 0;
     let remainingSeconds = durationSeconds;
