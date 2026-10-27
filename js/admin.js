@@ -1,28 +1,19 @@
 "use strict";
 
-/*
-  PrepareKora — Admin panel (self-contained).
-  Login via Worker /api/login (Worker proxies Firebase Auth).
-  No Firebase SDK, no API key in frontend.
-  Tokens auto-refresh before expiry.
-*/
-
 (function () {
 
-  /* ---------- API ---------- */
-
-const API_BASE = (function () {
-  const host = window.location.hostname;
-  const isLocal =
-    host === "localhost" ||
-    host === "127.0.0.1" ||
-    host === "0.0.0.0" ||
-    host === "" ||
-    host.endsWith(".local");
-  return isLocal
-    ? "http://localhost:8787/api"
-    : "https://preparekora-api.yadavsubba2003.workers.dev/api";
-})();
+  const API_BASE = (function () {
+    const host = window.location.hostname;
+    const isLocal =
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host === "0.0.0.0" ||
+      host === "" ||
+      host.endsWith(".local");
+    return isLocal
+      ? "http://localhost:8787/api"
+      : "https://preparekora-api.yadavsubba2003.workers.dev/api";
+  })();
 
   const TOKEN_KEY = "pk_admin_id_token";
   const REFRESH_KEY = "pk_admin_refresh_token";
@@ -33,26 +24,14 @@ const API_BASE = (function () {
       if (idToken) localStorage.setItem(TOKEN_KEY, idToken);
       if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
       if (expiresIn) {
-        const ms = Date.now() + Number(expiresIn) * 1000;
-        localStorage.setItem(EXPIRES_KEY, String(ms));
+        localStorage.setItem(EXPIRES_KEY, String(Date.now() + Number(expiresIn) * 1000));
       }
     } catch (e) { /* ignore */ }
   }
 
-  function getIdToken() {
-    try { return localStorage.getItem(TOKEN_KEY) || ""; }
-    catch (e) { return ""; }
-  }
-
-  function getRefreshToken() {
-    try { return localStorage.getItem(REFRESH_KEY) || ""; }
-    catch (e) { return ""; }
-  }
-
-  function getExpiresAt() {
-    try { return parseInt(localStorage.getItem(EXPIRES_KEY) || "0", 10) || 0; }
-    catch (e) { return 0; }
-  }
+  function getIdToken() { try { return localStorage.getItem(TOKEN_KEY) || ""; } catch (e) { return ""; } }
+  function getRefreshToken() { try { return localStorage.getItem(REFRESH_KEY) || ""; } catch (e) { return ""; } }
+  function getExpiresAt() { try { return parseInt(localStorage.getItem(EXPIRES_KEY) || "0", 10) || 0; } catch (e) { return 0; } }
 
   function clearTokens() {
     try {
@@ -66,57 +45,35 @@ const API_BASE = (function () {
 
   async function refreshTokens() {
     if (refreshingPromise) return refreshingPromise;
-
     refreshingPromise = (async function () {
       const rt = getRefreshToken();
       if (!rt) throw new Error("No refresh token");
-
       const res = await fetch(API_BASE + "/refresh", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refreshToken: rt })
       });
-
-      if (!res.ok) {
-        clearTokens();
-        throw new Error("Session expired");
-      }
-
+      if (!res.ok) { clearTokens(); throw new Error("Session expired"); }
       const data = await res.json();
       storeTokens(data.idToken, data.refreshToken, data.expiresIn);
       return data.idToken;
     })();
-
-    try {
-      return await refreshingPromise;
-    } finally {
-      refreshingPromise = null;
-    }
+    try { return await refreshingPromise; } finally { refreshingPromise = null; }
   }
 
   async function ensureFreshToken() {
     const token = getIdToken();
     const expiresAt = getExpiresAt();
-
-    /* Refresh if expiring within 60 seconds */
     if (token && expiresAt && expiresAt - Date.now() < 60000) {
-      try {
-        return await refreshTokens();
-      } catch (err) {
-        return token; /* let 401 handler deal with it */
-      }
+      try { return await refreshTokens(); } catch (e) { return token; }
     }
-
     return token;
   }
 
   async function request(path, opts) {
     opts = opts || {};
-
     const headers = Object.assign({}, opts.headers || {});
-    if (opts.body && !headers["Content-Type"]) {
-      headers["Content-Type"] = "application/json";
-    }
+    if (opts.body && !headers["Content-Type"]) headers["Content-Type"] = "application/json";
 
     if (!opts.noAuth) {
       const token = await ensureFreshToken();
@@ -130,27 +87,15 @@ const API_BASE = (function () {
         headers: headers,
         body: opts.body
       });
-    } catch (networkErr) {
+    } catch (err) {
       const e = new Error("Network error. Check your connection.");
       e.status = 0;
       throw e;
     }
 
-    /* On 401, try refresh once */
-    if (res.status === 401 && !opts.noAuth && !opts._retried) {
-      try {
-        await refreshTokens();
-      } catch (err) {
-        clearTokens();
-        showLogin();
-        const e = new Error("Session expired");
-        e.status = 401;
-        throw e;
-      }
-
-      const newToken = getIdToken();
-      headers["Authorization"] = "Bearer " + newToken;
-
+    if (res.status === 401 && !opts.noAuth) {
+      try { await refreshTokens(); } catch (e) { clearTokens(); showLogin(); throw new Error("Session expired"); }
+      headers["Authorization"] = "Bearer " + getIdToken();
       res = await fetch(API_BASE + path, {
         method: opts.method || "GET",
         headers: headers,
@@ -159,7 +104,7 @@ const API_BASE = (function () {
     }
 
     let data = null;
-    try { data = await res.json(); } catch (e) { /* non-JSON */ }
+    try { data = await res.json(); } catch (e) { /* ignore */ }
 
     if (!res.ok) {
       const e = new Error((data && data.error) || ("HTTP " + res.status));
@@ -173,64 +118,29 @@ const API_BASE = (function () {
   const api = {
     login: function (email, password) {
       return request("/login", {
-        method: "POST",
-        noAuth: true,
+        method: "POST", noAuth: true,
         body: JSON.stringify({ email: email, password: password })
       });
     },
     me: function () { return request("/me"); },
-    updateMe: function (displayName) {
-      return request("/me", {
-        method: "PUT",
-        body: JSON.stringify({ displayName: displayName })
-      });
+    updateMe: function (name) {
+      return request("/me", { method: "PUT", body: JSON.stringify({ displayName: name }) });
     },
     listOwn: function () { return request("/admin/tests"); },
-    getOwn: function (id) {
-      return request("/admin/tests/" + encodeURIComponent(id));
-    },
+    getOwn: function (id) { return request("/admin/tests/" + encodeURIComponent(id)); },
     createTest: function (payload) {
-      return request("/admin/tests", {
-        method: "POST",
-        body: JSON.stringify(payload)
-      });
+      return request("/admin/tests", { method: "POST", body: JSON.stringify(payload) });
     },
     updateTest: function (id, payload) {
-      return request("/admin/tests/" + encodeURIComponent(id), {
-        method: "PUT",
-        body: JSON.stringify(payload)
-      });
+      return request("/admin/tests/" + encodeURIComponent(id), { method: "PUT", body: JSON.stringify(payload) });
     },
-    deleteTest: function (id) {
-      return request("/admin/tests/" + encodeURIComponent(id), {
-        method: "DELETE"
-      });
-    },
-    publish: function (id) {
-      return request("/admin/tests/" + encodeURIComponent(id) + "/publish", {
-        method: "POST"
-      });
-    },
-    unpublish: function (id) {
-      return request("/admin/tests/" + encodeURIComponent(id) + "/unpublish", {
-        method: "POST"
-      });
-    }
+    deleteTest: function (id) { return request("/admin/tests/" + encodeURIComponent(id), { method: "DELETE" }); },
+    publish: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/publish", { method: "POST" }); },
+    unpublish: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/unpublish", { method: "POST" }); }
   };
 
-  /* ---------- Helpers ---------- */
-
-  function t(key, vars) {
-    return (window.PK && window.PK.t) ? window.PK.t(key, vars) : key;
-  }
-
-  function esc(value) {
-    return String(value).replace(/[&<>"']/g, function (c) {
-      const m = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
-      return m[c];
-    });
-  }
-
+  function t(key, vars) { return (window.PK && window.PK.t) ? window.PK.t(key, vars) : key; }
+  function esc(v) { return String(v).replace(/[&<>"']/g, function (c) { const m = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }; return m[c]; }); }
   function $id(id) { return document.getElementById(id); }
 
   function toast(message, kind) {
@@ -244,45 +154,21 @@ const API_BASE = (function () {
   }
 
   function copyText(text) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      return navigator.clipboard.writeText(text);
-    }
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
     return new Promise(function (resolve, reject) {
       const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand("copy");
-        resolve();
-      } catch (e) {
-        reject(e);
-      } finally {
-        document.body.removeChild(ta);
-      }
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); resolve(); } catch (e) { reject(e); } finally { document.body.removeChild(ta); }
     });
   }
 
   function publicTestUrl(id) {
-    const base =
-      window.location.origin +
-      window.location.pathname.replace(/admin\.html$/, "");
+    const base = window.location.origin + window.location.pathname.replace(/admin\.html$/, "");
     return base + "mock-test.html?test=" + encodeURIComponent(id);
   }
 
-  /* ---------- State ---------- */
-
-  const state = {
-    admin: null,
-    tests: [],
-    editing: null,
-    currentTab: "tests"
-  };
-
-  /* ---------- Screens ---------- */
-
+  const state = { admin: null, tests: [], editing: null, currentTab: "tests" };
   const screens = {
     loading: $id("adminLoading"),
     login: $id("loginScreen"),
@@ -291,45 +177,30 @@ const API_BASE = (function () {
   };
 
   function showScreen(name) {
-    Object.keys(screens).forEach(function (k) {
-      if (screens[k]) screens[k].hidden = (k !== name);
-    });
+    Object.keys(screens).forEach(function (k) { if (screens[k]) screens[k].hidden = (k !== name); });
     window.scrollTo({ top: 0, behavior: "auto" });
   }
 
   function showLogin() {
-    state.admin = null;
-    state.tests = [];
-    state.editing = null;
-    const u = $id("loginUser");
-    const p = $id("loginPass");
-    if (u) u.value = "";
-    if (p) p.value = "";
-    const errEl = $id("loginError");
-    if (errEl) errEl.hidden = true;
+    state.admin = null; state.tests = []; state.editing = null;
+    const u = $id("loginUser"), p = $id("loginPass"), e = $id("loginError");
+    if (u) u.value = ""; if (p) p.value = ""; if (e) e.hidden = true;
     showScreen("login");
   }
 
-  /* ---------- Login ---------- */
-
+  /* Login */
   const loginForm = $id("loginForm");
   if (loginForm) {
     loginForm.addEventListener("submit", async function (e) {
       e.preventDefault();
-
       const email = $id("loginUser").value.trim();
       const password = $id("loginPass").value;
       const errEl = $id("loginError");
       const btn = $id("loginSubmit");
-
       errEl.hidden = true;
-
       if (!email || !password) {
-        errEl.textContent = t("fillAllFields");
-        errEl.hidden = false;
-        return;
+        errEl.textContent = t("fillAllFields"); errEl.hidden = false; return;
       }
-
       btn.disabled = true;
       try {
         const res = await api.login(email, password);
@@ -342,111 +213,67 @@ const API_BASE = (function () {
           err.status === 403 ? (err.message || "Not authorized") :
           (err.message || "Error");
         errEl.hidden = false;
-      } finally {
-        btn.disabled = false;
-      }
+      } finally { btn.disabled = false; }
     });
   }
-
-  /* ---------- Sign out ---------- */
 
   const signOutBtn = $id("signOutBtn");
-  if (signOutBtn) {
-    signOutBtn.addEventListener("click", function () {
-      clearTokens();
-      showLogin();
-    });
-  }
+  if (signOutBtn) signOutBtn.addEventListener("click", function () { clearTokens(); showLogin(); });
 
-  /* ---------- Tabs ---------- */
-
-  const tabTests = $id("tabTests");
-  const tabSettings = $id("tabSettings");
-  const panelTests = $id("panelTests");
-  const panelSettings = $id("panelSettings");
+  /* Tabs */
+  const tabTests = $id("tabTests"), tabSettings = $id("tabSettings");
+  const panelTests = $id("panelTests"), panelSettings = $id("panelSettings");
 
   function setTab(tab) {
     state.currentTab = tab;
-
     if (tabTests) {
-      const active = tab === "tests";
-      tabTests.classList.toggle("is-active", active);
-      tabTests.setAttribute("aria-selected", String(active));
+      const a = tab === "tests"; tabTests.classList.toggle("is-active", a); tabTests.setAttribute("aria-selected", String(a));
     }
     if (tabSettings) {
-      const active = tab === "settings";
-      tabSettings.classList.toggle("is-active", active);
-      tabSettings.setAttribute("aria-selected", String(active));
+      const a = tab === "settings"; tabSettings.classList.toggle("is-active", a); tabSettings.setAttribute("aria-selected", String(a));
     }
     if (panelTests) panelTests.hidden = tab !== "tests";
     if (panelSettings) panelSettings.hidden = tab !== "settings";
-
     if (tab === "settings") loadSettings();
   }
 
   if (tabTests) tabTests.addEventListener("click", function () { setTab("tests"); });
   if (tabSettings) tabSettings.addEventListener("click", function () { setTab("settings"); });
 
-  /* ---------- Dashboard ---------- */
-
+  /* Dashboard */
   async function enterDashboard() {
     if (!state.admin) return;
-
     const nameEl = $id("adminDisplayName");
     if (nameEl) nameEl.textContent = state.admin.displayName || "";
-
     showScreen("dashboard");
     setTab("tests");
     await loadTests();
   }
 
-  /* ---------- Load own tests ---------- */
-
   async function loadTests() {
-    const loading = $id("testsLoading");
-    const empty = $id("testsEmpty");
-    const list = $id("testsList");
-
+    const loading = $id("testsLoading"), empty = $id("testsEmpty"), list = $id("testsList");
     if (!list) return;
-
     if (loading) loading.hidden = false;
     if (empty) empty.hidden = true;
-    list.hidden = true;
-    list.innerHTML = "";
+    list.hidden = true; list.innerHTML = "";
 
     try {
       const res = await api.listOwn();
       state.tests = Array.isArray(res.tests) ? res.tests : [];
       if (loading) loading.hidden = true;
-
-      if (state.tests.length === 0) {
-        if (empty) empty.hidden = false;
-        return;
-      }
-
+      if (state.tests.length === 0) { if (empty) empty.hidden = false; return; }
       list.hidden = false;
-      state.tests.forEach(function (test) {
-        list.appendChild(renderTestCard(test));
-      });
+      state.tests.forEach(function (test) { list.appendChild(renderTestCard(test)); });
     } catch (err) {
       if (loading) loading.hidden = true;
-      if (err.status === 401) {
-        showLogin();
-        return;
-      }
-      if (empty) {
-        empty.hidden = false;
-        empty.textContent = err.message || t("loadFailed");
-      }
+      if (err.status === 401) { showLogin(); return; }
+      if (empty) { empty.hidden = false; empty.textContent = err.message || t("loadFailed"); }
     }
   }
-
-  /* ---------- Test card ---------- */
 
   function renderTestCard(test) {
     const card = document.createElement("div");
     card.className = "admin-test-card";
-
     const isPublished = test.status === "published";
 
     card.innerHTML =
@@ -466,54 +293,40 @@ const API_BASE = (function () {
 
     if (isPublished) {
       const copyBtn = document.createElement("button");
-      copyBtn.type = "button";
-      copyBtn.className = "btn btn-sm";
-      copyBtn.textContent = t("copyUrl");
+      copyBtn.type = "button"; copyBtn.className = "btn btn-sm"; copyBtn.textContent = t("copyUrl");
       copyBtn.addEventListener("click", function () {
-        copyText(publicTestUrl(test.id))
-          .then(function () { toast(t("urlCopied"), "success"); })
+        copyText(publicTestUrl(test.id)).then(function () { toast(t("urlCopied"), "success"); })
           .catch(function () { toast("Copy failed", "error"); });
       });
       actions.appendChild(copyBtn);
     }
 
     const editBtn = document.createElement("button");
-    editBtn.type = "button";
-    editBtn.className = "btn btn-sm";
-    editBtn.textContent = t("edit");
-    editBtn.addEventListener("click", function () {
-      openEditor(test.id);
-    });
+    editBtn.type = "button"; editBtn.className = "btn btn-sm"; editBtn.textContent = t("edit");
+    editBtn.addEventListener("click", function () { openEditor(test.id); });
     actions.appendChild(editBtn);
 
-    const publishBtn = document.createElement("button");
-    publishBtn.type = "button";
-    publishBtn.className = "btn btn-sm" + (isPublished ? "" : " btn-primary");
-    publishBtn.textContent = isPublished ? t("unpublish") : t("publish");
-    publishBtn.addEventListener("click", async function () {
-      publishBtn.disabled = true;
+    const pubBtn = document.createElement("button");
+    pubBtn.type = "button";
+    pubBtn.className = "btn btn-sm" + (isPublished ? "" : " btn-primary");
+    pubBtn.textContent = isPublished ? t("unpublish") : t("publish");
+    pubBtn.addEventListener("click", async function () {
+      pubBtn.disabled = true;
       try {
-        if (isPublished) {
-          await api.unpublish(test.id);
-          toast(t("testUnpublished"));
-        } else {
-          await api.publish(test.id);
-          toast(t("testPublished"), "success");
-        }
+        if (isPublished) await api.unpublish(test.id);
+        else await api.publish(test.id);
+        toast(isPublished ? t("testUnpublished") : t("testPublished"), "success");
         await loadTests();
       } catch (err) {
         if (err.status === 401) return showLogin();
+        console.error("Publish/unpublish error:", err);
         toast(err.message || "Error", "error");
-      } finally {
-        publishBtn.disabled = false;
-      }
+      } finally { pubBtn.disabled = false; }
     });
-    actions.appendChild(publishBtn);
+    actions.appendChild(pubBtn);
 
     const delBtn = document.createElement("button");
-    delBtn.type = "button";
-    delBtn.className = "btn btn-sm";
-    delBtn.textContent = t("delete");
+    delBtn.type = "button"; delBtn.className = "btn btn-sm"; delBtn.textContent = t("delete");
     delBtn.addEventListener("click", async function () {
       if (!window.confirm(t("confirmDelete"))) return;
       delBtn.disabled = true;
@@ -524,57 +337,38 @@ const API_BASE = (function () {
       } catch (err) {
         if (err.status === 401) return showLogin();
         toast(err.message || "Error", "error");
-      } finally {
-        delBtn.disabled = false;
-      }
+      } finally { delBtn.disabled = false; }
     });
     actions.appendChild(delBtn);
 
     return card;
   }
 
-  /* ---------- Settings ---------- */
-
+  /* Settings */
   async function loadSettings() {
     const input = $id("displayNameInput");
     if (!input) return;
-
     try {
       const me = await api.me();
       state.admin = me;
       const nameEl = $id("adminDisplayName");
       if (nameEl) nameEl.textContent = me.displayName || "";
       input.value = me.displayName || "";
-      const errEl = $id("displayNameError");
-      if (errEl) errEl.hidden = true;
-    } catch (err) {
-      if (err.status === 401) showLogin();
-    }
+      const errEl = $id("displayNameError"); if (errEl) errEl.hidden = true;
+    } catch (err) { if (err.status === 401) showLogin(); }
   }
 
   const settingsForm = $id("settingsForm");
   if (settingsForm) {
     settingsForm.addEventListener("submit", async function (e) {
       e.preventDefault();
-
       const input = $id("displayNameInput");
       const errEl = $id("displayNameError");
       const btn = $id("saveNameBtn");
       const value = input.value.trim();
-
       errEl.hidden = true;
-
-      if (!value || value.length < 2) {
-        errEl.textContent = t("nameTooShort");
-        errEl.hidden = false;
-        return;
-      }
-      if (value.length > 60) {
-        errEl.textContent = t("nameTooLong");
-        errEl.hidden = false;
-        return;
-      }
-
+      if (!value || value.length < 2) { errEl.textContent = t("nameTooShort"); errEl.hidden = false; return; }
+      if (value.length > 60) { errEl.textContent = t("nameTooLong"); errEl.hidden = false; return; }
       btn.disabled = true;
       try {
         const res = await api.updateMe(value);
@@ -584,26 +378,16 @@ const API_BASE = (function () {
         toast(t("nameUpdated"), "success");
       } catch (err) {
         if (err.status === 401) return showLogin();
-        errEl.textContent = err.message || "Error";
-        errEl.hidden = false;
-      } finally {
-        btn.disabled = false;
-      }
+        errEl.textContent = err.message || "Error"; errEl.hidden = false;
+      } finally { btn.disabled = false; }
     });
   }
 
-  /* ---------- Editor ---------- */
-
+  /* Editor */
   const newTestBtn = $id("newTestBtn");
   if (newTestBtn) {
     newTestBtn.addEventListener("click", function () {
-      state.editing = {
-        id: null,
-        status: "draft",
-        title: "",
-        minutes: 10,
-        questions: [blankQuestion()]
-      };
+      state.editing = { id: null, status: "draft", title: "", minutes: 10, questions: [blankQuestion()] };
       renderEditor();
       showScreen("editor");
     });
@@ -622,21 +406,15 @@ const API_BASE = (function () {
     try {
       const res = await api.getOwn(id);
       if (!res || !res.test) throw new Error("Test not found");
-
       state.editing = {
         id: res.test.id,
         status: res.test.status,
         title: res.test.title,
         minutes: res.test.minutes,
         questions: (res.test.questions || []).map(function (q) {
-          return {
-            q: q.q,
-            options: q.options.slice(),
-            answer: q.answer
-          };
+          return { q: q.q, options: q.options.slice(), answer: q.answer };
         })
       };
-
       renderEditor();
       showScreen("editor");
     } catch (err) {
@@ -652,10 +430,25 @@ const API_BASE = (function () {
   function renderEditor() {
     if (!state.editing) return;
 
-    $id("editorHeading").textContent = state.editing.id ? t("edit") : t("newTest");
+    const isPublished = state.editing.status === "published";
+
+    $id("editorHeading").textContent =
+      state.editing.id ? (isPublished ? "Edit test" : "Edit draft") : "New test";
     $id("editorTitle").value = state.editing.title || "";
     $id("editorMinutes").value = state.editing.minutes || 10;
     $id("editorError").hidden = true;
+
+    const saveDraftBtn = $id("saveDraftBtn");
+    const publishBtn = $id("publishBtn");
+    if (saveDraftBtn) {
+      saveDraftBtn.removeAttribute("data-i18n");
+      saveDraftBtn.textContent = isPublished ? "Save changes" : t("saveDraft");
+    }
+    if (publishBtn) {
+      publishBtn.removeAttribute("data-i18n");
+      publishBtn.textContent = isPublished ? t("unpublish") : t("publishNow");
+      publishBtn.className = isPublished ? "btn btn-sm" : "btn btn-primary btn-sm";
+    }
 
     renderQuestionsList();
   }
@@ -663,66 +456,92 @@ const API_BASE = (function () {
   function renderQuestionsList() {
     const container = $id("questionsContainer");
     if (!container || !state.editing) return;
-
     container.innerHTML = "";
 
     state.editing.questions.forEach(function (question, qi) {
       const block = document.createElement("div");
       block.className = "editor-question";
 
+      // Header
       const head = document.createElement("div");
       head.className = "editor-question-head";
 
+      const numWrap = document.createElement("div");
+      numWrap.className = "editor-question-num-wrap";
+
       const num = document.createElement("span");
       num.className = "editor-question-number";
-      num.textContent = "Q" + (qi + 1);
+      num.textContent = String(qi + 1);
+
+      const label = document.createElement("span");
+      label.className = "editor-question-label";
+      label.textContent = "Question " + (qi + 1);
+
+      numWrap.appendChild(num);
+      numWrap.appendChild(label);
 
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";
-      removeBtn.className = "btn btn-sm";
-      removeBtn.textContent = t("removeQuestion");
+      removeBtn.className = "editor-remove-btn";
+      removeBtn.textContent = "Remove";
       removeBtn.addEventListener("click", function () {
         if (state.editing.questions.length <= 1) {
-          toast(t("atLeastOneQuestion"), "error");
-          return;
+          toast(t("atLeastOneQuestion"), "error"); return;
         }
         state.editing.questions.splice(qi, 1);
         renderQuestionsList();
       });
 
-      head.appendChild(num);
+      head.appendChild(numWrap);
       head.appendChild(removeBtn);
       block.appendChild(head);
 
-      /* Question text */
-
+      // Question text
       const qField = document.createElement("div");
       qField.className = "form-field";
 
       const qLabel = document.createElement("label");
       qLabel.className = "form-label";
-      qLabel.textContent = t("questionText");
+      qLabel.textContent = "Question";
 
       const qInput = document.createElement("textarea");
       qInput.className = "form-textarea";
       qInput.rows = 2;
       qInput.value = question.q;
-      qInput.addEventListener("input", function () {
-        question.q = qInput.value;
-      });
+      qInput.placeholder = "Type the question";
+      qInput.addEventListener("input", function () { question.q = qInput.value; });
 
       qField.appendChild(qLabel);
       qField.appendChild(qInput);
       block.appendChild(qField);
 
-      /* Options */
+      // Options label
+      const optLabel = document.createElement("div");
+      optLabel.className = "form-label";
+      optLabel.style.marginTop = "14px";
+      optLabel.textContent = "Options — click the circle to mark the correct answer";
+      block.appendChild(optLabel);
 
-      const optionsWrap = document.createElement("div");
-      optionsWrap.className = "editor-options";
+      // Options with radio
+      const optWrap = document.createElement("div");
+      optWrap.className = "editor-options";
 
       question.options.forEach(function (_, oi) {
         const row = document.createElement("div");
         row.className = "editor-option" + (question.answer === oi ? " is-answer" : "");
+
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = "answer-q" + qi;
+        radio.checked = question.answer === oi;
+        radio.className = "editor-option-radio";
+        radio.setAttribute("aria-label", "Mark option " + "ABCD".charAt(oi) + " as correct");
+        radio.addEventListener("change", function () {
+          question.answer = oi;
+          block.querySelectorAll(".editor-option").forEach(function (r, idx) {
+            r.classList.toggle("is-answer", idx === oi);
+          });
+        });
 
         const key = document.createElement("span");
         key.className = "editor-option-key";
@@ -730,28 +549,18 @@ const API_BASE = (function () {
 
         const input = document.createElement("input");
         input.type = "text";
-        input.placeholder = t("optionText") + " " + "ABCD".charAt(oi);
+        input.className = "editor-option-input";
+        input.placeholder = "Option " + "ABCD".charAt(oi);
         input.value = question.options[oi];
-        input.addEventListener("input", function () {
-          question.options[oi] = input.value;
-        });
+        input.addEventListener("input", function () { question.options[oi] = input.value; });
 
-        const answerBtn = document.createElement("button");
-        answerBtn.type = "button";
-        answerBtn.className = "editor-option-answer-btn";
-        answerBtn.textContent = t("correctAnswer");
-        answerBtn.addEventListener("click", function () {
-          question.answer = oi;
-          renderQuestionsList();
-        });
-
+        row.appendChild(radio);
         row.appendChild(key);
         row.appendChild(input);
-        row.appendChild(answerBtn);
-        optionsWrap.appendChild(row);
+        optWrap.appendChild(row);
       });
 
-      block.appendChild(optionsWrap);
+      block.appendChild(optWrap);
       container.appendChild(block);
     });
   }
@@ -759,20 +568,24 @@ const API_BASE = (function () {
   const addQuestionBtn = $id("addQuestionBtn");
   if (addQuestionBtn) {
     addQuestionBtn.addEventListener("click", function () {
+      if (!state.editing) return;
       state.editing.questions.push(blankQuestion());
       renderQuestionsList();
+      const container = $id("questionsContainer");
+      if (container && container.lastElementChild) {
+        container.lastElementChild.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
     });
   }
 
-  /* ---------- Collect + validate ---------- */
-
+  /* Validation */
   function collectEditor() {
     const title = $id("editorTitle").value.trim();
     const minutes = Number($id("editorMinutes").value);
 
-    if (!title) return { error: t("fillAllFields") };
+    if (!title) return { error: "Test title is required" };
     if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) {
-      return { error: t("fillAllFields") };
+      return { error: "Duration must be between 1 and 180 minutes" };
     }
 
     const questions = [];
@@ -785,27 +598,24 @@ const API_BASE = (function () {
         answer: raw.answer
       };
 
-      if (!cleaned.q) {
-        return { error: "Q" + (i + 1) + ": " + t("fillAllFields") };
-      }
+      if (!cleaned.q) return { error: "Question " + (i + 1) + ": text is required" };
       if (cleaned.options.some(function (o) { return !o; })) {
-        return { error: "Q" + (i + 1) + ": " + t("fillAllFields") };
+        return { error: "Question " + (i + 1) + ": all 4 options are required" };
       }
       if (typeof cleaned.answer !== "number" || cleaned.answer < 0 || cleaned.answer > 3) {
-        return { error: "Q" + (i + 1) + ": " + t("needAnswer") };
+        return { error: "Question " + (i + 1) + ": select the correct answer" };
       }
 
       questions.push(cleaned);
     }
 
-    if (questions.length === 0) {
-      return { error: t("atLeastOneQuestion") };
-    }
+    if (questions.length === 0) return { error: "Add at least one question" };
 
     return { payload: { title: title, minutes: minutes, questions: questions } };
   }
 
-  async function saveEditor(alsoPublish) {
+  async function saveEditor(action) {
+    // action: "save" | "publish" | "unpublish"
     const errEl = $id("editorError");
     errEl.hidden = true;
 
@@ -813,6 +623,7 @@ const API_BASE = (function () {
     if (collected.error) {
       errEl.textContent = collected.error;
       errEl.hidden = false;
+      errEl.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
 
@@ -823,28 +634,36 @@ const API_BASE = (function () {
     saveDraftBtn.disabled = true;
     publishBtn.disabled = true;
 
+    console.log("Saving test", { action: action, id: state.editing.id });
+
     try {
       if (state.editing.id) {
         await api.updateTest(state.editing.id, payload);
-        toast(t("testUpdated"));
       } else {
         const created = await api.createTest(payload);
         state.editing.id = created.test.id;
-        toast(t("testCreated"));
       }
 
-      if (alsoPublish) {
+      if (action === "publish") {
+        await new Promise(function (r) { setTimeout(r, 250); });
         await api.publish(state.editing.id);
         toast(t("testPublished"), "success");
+      } else if (action === "unpublish") {
+        await api.unpublish(state.editing.id);
+        toast(t("testUnpublished"));
+      } else {
+        toast(t("testUpdated"));
       }
 
       state.editing = null;
       showScreen("dashboard");
       await loadTests();
     } catch (err) {
+      console.error("Save error:", err);
       if (err.status === 401) return showLogin();
-      errEl.textContent = err.message || "Error";
+      errEl.textContent = err.message || "Save failed";
       errEl.hidden = false;
+      errEl.scrollIntoView({ behavior: "smooth", block: "center" });
     } finally {
       saveDraftBtn.disabled = false;
       publishBtn.disabled = false;
@@ -852,28 +671,26 @@ const API_BASE = (function () {
   }
 
   const saveDraftBtn = $id("saveDraftBtn");
-  if (saveDraftBtn) {
-    saveDraftBtn.addEventListener("click", function () { saveEditor(false); });
-  }
+  if (saveDraftBtn) saveDraftBtn.addEventListener("click", function () { saveEditor("save"); });
 
   const publishBtn = $id("publishBtn");
   if (publishBtn) {
     publishBtn.addEventListener("click", function () {
-      if (!window.confirm(t("confirmPublish"))) return;
-      saveEditor(true);
+      const isPublished = state.editing && state.editing.status === "published";
+      if (isPublished) {
+        if (!window.confirm("Unpublish this test? It will be hidden from the homepage.")) return;
+        saveEditor("unpublish");
+      } else {
+        if (!window.confirm(t("confirmPublish"))) return;
+        saveEditor("publish");
+      }
     });
   }
 
-  /* ---------- Mobile menu ---------- */
-
-  const menuToggle = $id("menuToggle");
-  const menuPanel = $id("menuPanel");
-  const menuIcon = $id("menuIcon");
-
-  const hamburgerSVG =
-    '<path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path>';
-  const closeSVG =
-    '<path d="m6 6 12 12"></path><path d="M18 6 6 18"></path>';
+  /* Mobile menu */
+  const menuToggle = $id("menuToggle"), menuPanel = $id("menuPanel"), menuIcon = $id("menuIcon");
+  const hamburgerSVG = '<path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path>';
+  const closeSVG = '<path d="m6 6 12 12"></path><path d="M18 6 6 18"></path>';
 
   function closeMenu() {
     if (!menuPanel || !menuToggle || !menuIcon) return;
@@ -885,71 +702,42 @@ const API_BASE = (function () {
   if (menuToggle && menuPanel && menuIcon) {
     menuToggle.addEventListener("click", function (e) {
       e.stopPropagation();
-      if (menuPanel.classList.contains("open")) {
-        closeMenu();
-      } else {
+      if (menuPanel.classList.contains("open")) closeMenu();
+      else {
         menuPanel.classList.add("open");
         menuToggle.setAttribute("aria-expanded", "true");
         menuIcon.innerHTML = closeSVG;
       }
     });
-
     document.addEventListener("click", function (e) {
-      if (
-        menuPanel.classList.contains("open") &&
-        !menuPanel.contains(e.target) &&
-        !menuToggle.contains(e.target)
-      ) {
-        closeMenu();
-      }
+      if (menuPanel.classList.contains("open") && !menuPanel.contains(e.target) && !menuToggle.contains(e.target)) closeMenu();
     });
-
-    menuPanel.querySelectorAll("a").forEach(function (link) {
-      link.addEventListener("click", closeMenu);
-    });
+    menuPanel.querySelectorAll("a").forEach(function (link) { link.addEventListener("click", closeMenu); });
   }
 
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") closeMenu();
-  });
-
-  /* ---------- Language change ---------- */
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeMenu(); });
 
   document.addEventListener("pk:langchange", function () {
     if (screens.dashboard && !screens.dashboard.hidden && state.tests.length) {
       const list = $id("testsList");
-      if (list) {
-        list.innerHTML = "";
-        state.tests.forEach(function (test) {
-          list.appendChild(renderTestCard(test));
-        });
-      }
+      if (list) { list.innerHTML = ""; state.tests.forEach(function (test) { list.appendChild(renderTestCard(test)); }); }
     }
-
-    if (state.editing && screens.editor && !screens.editor.hidden) {
-      renderEditor();
-    }
+    if (state.editing && screens.editor && !screens.editor.hidden) renderEditor();
   });
-
-  /* ---------- Init ---------- */
 
   const yearEl = $id("currentYear");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
   (async function init() {
     showScreen("loading");
-
     if (getIdToken() || getRefreshToken()) {
       try {
         const me = await api.me();
         state.admin = me;
         await enterDashboard();
         return;
-      } catch (err) {
-        clearTokens();
-      }
+      } catch (err) { clearTokens(); }
     }
-
     showLogin();
   })();
 
