@@ -524,6 +524,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         testName = requestedTopic.replace(/-/g, " ")
             .replace(/\b\w/g, (char) => char.toUpperCase());
     }
+
     /* Try RTDB first — admin-created tests may exist under tests/{id} */
     const rtdbLookupKey =
         requestedTest || requestedSubject || requestedTopic || bankName;
@@ -1177,8 +1178,92 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         return {
             saved: true,
-            attemptId: record.attemptId
+            attemptId: record.attemptId,
+            session
         };
+    }
+
+    /*
+     * After a successful attempt save, update this user's row in
+     * publicLeaderboard/{uid}. Public can then read publicLeaderboard.json
+     * and compute the leaderboard client-side. No backend, no secrets.
+     */
+    async function updateLeaderboardStats(session) {
+        if (!session || !session.uid || !session.idToken) return;
+
+        const userUrl =
+            `${DB_BASE}/users/${encodeURIComponent(session.uid)}.json` +
+            `?auth=${encodeURIComponent(session.idToken)}`;
+
+        let profile = null;
+        try {
+            const res = await fetch(userUrl);
+            if (res.ok) profile = await res.json();
+        } catch (_) { /* fall through */ }
+
+        if (!profile || typeof profile !== "object") return;
+
+        const attemptsMap =
+            profile.testAttempts && typeof profile.testAttempts === "object"
+                ? profile.testAttempts
+                : {};
+
+        const attempts = Object.values(attemptsMap)
+            .filter((a) => a && typeof a === "object" && a.completedAt);
+
+        if (!attempts.length) return;
+
+        attempts.sort((a, b) =>
+            String(b.completedAt).localeCompare(String(a.completedAt))
+        );
+
+        const recent = attempts.slice(0, 20);
+
+        const score = recent.reduce(
+            (sum, a) => sum + Number(a.correctAnswers || 0),
+            0
+        );
+
+        const totalPossible = recent.reduce(
+            (sum, a) => sum + Number(a.totalMarks || a.totalQuestions || 0),
+            0
+        );
+
+        const accuracy = recent.length
+            ? Math.round(
+                recent.reduce(
+                    (sum, a) => sum + Number(a.accuracy || 0),
+                    0
+                ) / recent.length
+            )
+            : 0;
+
+        const displayName = String(
+            profile.displayName ||
+            profile.name ||
+            (session.user && (session.user.displayName || session.user.name)) ||
+            (profile.email || "").split("@")[0] ||
+            "User"
+        ).trim().slice(0, 80);
+
+        const payload = {
+            displayName,
+            score,
+            totalPossible,
+            accuracy,
+            attempts: attempts.length,
+            lastAttemptAt: attempts[0].completedAt
+        };
+
+        const writeUrl =
+            `${DB_BASE}/publicLeaderboard/${encodeURIComponent(session.uid)}.json` +
+            `?auth=${encodeURIComponent(session.idToken)}`;
+
+        await fetch(writeUrl, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
     }
 
     async function saveAndReportResult(result) {
@@ -1220,6 +1305,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                         }
                     })
                 );
+
+                // NEW: update public leaderboard row for this user (pure client-side).
+                try {
+                    await updateLeaderboardStats(outcome.session);
+                } catch (leaderboardError) {
+                    console.warn(
+                        "[StudyKora] Leaderboard update failed:",
+                        leaderboardError && leaderboardError.message
+                    );
+                }
 
                 return;
             }
