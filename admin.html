@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="PrepareKora.in — Admin dashboard.">
+  <title>Admin — PrepareKora.in</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+
+      <a class="brand" href="index.html" aria-label="PrepareKora home">
+        <span class="brand-main">preparekora</span><span class="brand-in">.in</span>
+      </a>
+
+      <nav class="desktop-nav" aria-label="Desktop navigation">
+        <a href="about.html" data-i18n="navAbout">About</a>
+        <a href="find-us.html" data-i18n="navFindUs">Find Us</a>
+      </nav>
+
+      <div class="nav-actions">
+
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button class="lang-btn is-active" type="button" data-lang="en" aria-pressed="true">EN</button>
+          <button class="lang-btn" type="button" data-lang="as" aria-pressed="false">অসমীয়া</button>
+        </div>
+
+        <button
+          class="icon-button"
+          id="menuToggle"
+          type="button"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+          aria-controls="menuPanel"
+        >
+          <svg id="menuIcon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16"></path>
+            <path d="M4 12h16"></path>
+            <path d="M4 17h16"></path>
+          </svg>
+        </button>
+
+      </div>
+
+      <nav class="menu-panel" id="menuPanel" aria-label="Mobile navigation">
+        <a href="about.html" data-i18n="navAbout">About</a>
+        <a href="find-us.html" data-i18n="navFindUs">Find Us</a>
+
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button class="lang-btn is-active" type="button" data-lang="en" aria-pressed="true">EN</button>
+          <button class="lang-btn" type="button" data-lang="as" aria-pressed="false">অসমীয়া</button>
+        </div>
+      </nav>
+
+    </div>
+  </header>
+
+  <main class="page-container">
+
+    <!-- LOADING -->
+    <section id="adminLoading">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <span data-i18n="loading">Loading…</span>
+      </div>
+    </section>
+
+    <!-- LOGIN -->
+    <section id="loginScreen" hidden>
+      <div class="card login-card">
+
+        <p class="eyebrow" data-i18n="adminLogin">Admin login</p>
+        <h1 data-i18n="adminLoginSub">Sign in to manage your tests.</h1>
+
+        <form id="loginForm" novalidate style="margin-top: 20px;">
+
+          <div class="form-field">
+            <label for="loginUser" class="form-label" data-i18n="username">Username</label>
+            <input
+              id="loginUser"
+              type="text"
+              class="form-input"
+              autocomplete="username"
+              maxlength="100"
+            >
+          </div>
+
+          <div class="form-field">
+            <label for="loginPass" class="form-label" data-i18n="password">Password</label>
+            <input
+              id="loginPass"
+              type="password"
+              class="form-input"
+              autocomplete="current-password"
+              maxlength="200"
+            >
+            <p class="form-error" id="loginError" hidden></p>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" id="loginSubmit" type="submit" data-i18n="signIn">
+              Sign in
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="dashboardScreen" hidden>
+
+      <div class="admin-header">
+        <h1 data-i18n="dashboard">Dashboard</h1>
+
+        <div class="admin-header-actions">
+          <span class="admin-name-tag">
+            <strong id="adminDisplayName">—</strong>
+          </span>
+          <button class="btn btn-sm" id="signOutBtn" type="button" data-i18n="signOut">
+            Sign out
+          </button>
+        </div>
+      </div>
+
+      <div class="admin-tabs" role="tablist">
+        <button
+          class="admin-tab is-active"
+          id="tabTests"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          data-i18n="myTests"
+        >
+          My tests
+        </button>
+        <button
+          class="admin-tab"
+          id="tabSettings"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          data-i18n="settings"
+        >
+          Settings
+        </button>
+      </div>
+
+      <!-- TESTS PANEL -->
+      <div id="panelTests">
+
+        <div class="admin-header-actions" style="margin-bottom: 16px; justify-content: flex-end;">
+          <button class="btn btn-primary btn-sm" id="newTestBtn" type="button" data-i18n="newTest">
+            New test
+          </button>
+        </div>
+
+        <div id="testsLoading" class="loading-state">
+          <div class="spinner"></div>
+          <span data-i18n="loading">Loading…</span>
+        </div>
+
+        <div id="testsEmpty" class="empty-state" hidden data-i18n="noTests">
+          No tests yet. Create your first test.
+        </div>
+
+        <div class="admin-test-list" id="testsList" hidden></div>
+
+      </div>
+
+      <!-- SETTINGS PANEL -->
+      <div id="panelSettings" hidden>
+        <div class="card" style="max-width: 480px;">
+
+          <h2 style="margin: 0 0 16px; font-size: 15px; font-weight: 600;">
+            <span data-i18n="displayName">Display name</span>
+          </h2>
+
+          <form id="settingsForm" novalidate>
+
+            <div class="form-field">
+              <label for="displayNameInput" class="form-label" data-i18n="displayName">
+                Display name
+              </label>
+              <input
+                id="displayNameInput"
+                type="text"
+                class="form-input"
+                maxlength="60"
+              >
+              <p class="form-hint">
+                Prefix "Sir" is added automatically on test cards and result images.
+              </p>
+              <p class="form-error" id="displayNameError" hidden></p>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn-primary" id="saveNameBtn" type="submit" data-i18n="save">
+                Save
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+
+    </section>
+
+    <!-- EDITOR -->
+    <section id="editorScreen" hidden>
+
+      <div class="admin-header">
+        <h1 id="editorHeading">New test</h1>
+        <div class="admin-header-actions">
+          <button class="btn btn-sm" id="editorBackBtn" type="button" data-i18n="backToTests">
+            Back to tests
+          </button>
+        </div>
+      </div>
+
+      <div class="editor-layout">
+
+        <div class="editor-card">
+          <h2>Test details</h2>
+
+          <div class="editor-grid-2">
+            <div class="form-field">
+              <label for="editorTitle" class="form-label" data-i18n="testTitle">
+                Test title
+              </label>
+              <input
+                id="editorTitle"
+                type="text"
+                class="form-input"
+                maxlength="200"
+              >
+            </div>
+
+            <div class="form-field">
+              <label for="editorMinutes" class="form-label" data-i18n="durationMinutes">
+                Duration (minutes)
+              </label>
+              <input
+                id="editorMinutes"
+                type="number"
+                class="form-input"
+                min="1"
+                max="180"
+                step="1"
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="editor-card">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px;">
+            <h2 style="margin: 0;">Questions</h2>
+            <button class="btn btn-sm" id="addQuestionBtn" type="button" data-i18n="addQuestion">
+              Add question
+            </button>
+          </div>
+
+          <div id="questionsContainer"></div>
+
+          <p class="form-error" id="editorError" hidden></p>
+
+          <div class="editor-actions">
+            <button class="btn btn-sm" id="saveDraftBtn" type="button" data-i18n="saveDraft">
+              Save draft
+            </button>
+            <button class="btn btn-primary btn-sm" id="publishBtn" type="button" data-i18n="publishNow">
+              Publish now
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <a href="index.html" class="footer-brand">PrepareKora.in</a>
+
+      <div class="footer-copy">
+        © <span id="currentYear"></span> PrepareKora.in
+      </div>
+
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a href="about.html" data-i18n="navAbout">About</a>
+        <a href="find-us.html" data-i18n="navFindUs">Find Us</a>
+      </nav>
+    </div>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/translation.js"></script>
+  <script src="js/admin.js"></script>
+
+</body>
+</html>
