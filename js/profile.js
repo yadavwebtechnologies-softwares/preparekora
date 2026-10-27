@@ -18,7 +18,9 @@
         session: null,
         profile: null,
         activeTab: "edit",
-        historyLoaded: false
+        historyLoaded: false,
+        notificationsLoaded: false,
+        notifications: []
     };
 
     /* ---------- Session ---------- */
@@ -190,6 +192,46 @@
         return data && typeof data === "object" ? data : {};
     }
 
+    /* ---------- Notifications (RTDB) ---------- */
+
+    async function fetchNotifications(session) {
+        const url =
+            `${DB_BASE}/users/${encodeURIComponent(session.user.uid)}` +
+            `/notifications.json?auth=${encodeURIComponent(session.idToken)}`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error("Could not load notifications.");
+        }
+
+        const data = await response.json();
+        if (!data || typeof data !== "object") return [];
+
+        return Object.values(data)
+            .filter((n) => n && typeof n === "object" && n.id)
+            .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+    }
+
+    async function writeNotificationRead(session, notifId, read) {
+        const url =
+            `${DB_BASE}/users/${encodeURIComponent(session.user.uid)}` +
+            `/notifications/${encodeURIComponent(notifId)}/read.json` +
+            `?auth=${encodeURIComponent(session.idToken)}`;
+
+        const response = await fetch(url, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(Boolean(read))
+        });
+
+        if (!response.ok) {
+            throw new Error("Could not update notification.");
+        }
+
+        return response.json().catch(() => null);
+    }
+
     /* ---------- State switching ---------- */
 
     function showState(name) {
@@ -280,13 +322,16 @@
             button.setAttribute("aria-pressed", String(active));
         });
 
-        ["edit", "settings", "history", "purchase"].forEach((tab) => {
+        ["edit", "settings", "history", "notifications", "purchase"].forEach((tab) => {
             const panel = $(`#profile-panel-${tab}`);
             if (panel) panel.hidden = tab !== name;
         });
 
         if (name === "history" && !state.historyLoaded) {
             loadTestHistory();
+        }
+        if (name === "notifications" && !state.notificationsLoaded) {
+            loadNotifications();
         }
     }
 
@@ -382,6 +427,170 @@
             if (paragraph) paragraph.textContent = "Please try again in a moment.";
             const link = empty.querySelector("a");
             if (link) link.remove();
+        }
+    }
+
+    /* ---------- Notifications ---------- */
+
+    function updateNotifBadge() {
+        const badge = $("#profile-notif-badge");
+        const markAll = $("#profile-notif-mark-all");
+        if (!badge) return;
+
+        const unread = state.notifications.filter((n) => !n.read).length;
+
+        if (unread > 0) {
+            badge.textContent = String(unread);
+            badge.style.display = "inline-flex";
+            if (markAll) markAll.hidden = false;
+        } else {
+            badge.style.display = "none";
+            if (markAll) markAll.hidden = true;
+        }
+    }
+
+    function createNotifCard(n) {
+        const article = document.createElement("article");
+        article.className = "content-card";
+        article.dataset.notifId = n.id;
+        article.style.borderLeft = n.read ? "3px solid var(--border)" : "3px solid var(--primary)";
+        if (n.read) article.style.opacity = "0.85";
+
+        const meta = document.createElement("div");
+        meta.className = "question-meta";
+        meta.style.marginBottom = "8px";
+
+        const typeChip = document.createElement("span");
+        typeChip.className = "status-label chip-primary";
+        if (n.type === "warning") {
+            typeChip.classList.remove("chip-primary");
+            typeChip.classList.add("is-danger");
+            typeChip.textContent = "Warning";
+        } else if (n.type === "success") {
+            typeChip.textContent = "Success";
+        } else if (n.type === "info") {
+            typeChip.classList.remove("chip-primary");
+            typeChip.classList.add("is-muted");
+            typeChip.textContent = "Info";
+        } else {
+            typeChip.textContent = "Notice";
+        }
+
+        const dateSpan = document.createElement("span");
+        dateSpan.className = "text-muted";
+        dateSpan.style.fontSize = "12px";
+        dateSpan.textContent = n.createdAt
+            ? new Date(n.createdAt).toLocaleString("en-IN", {
+                dateStyle: "medium",
+                timeStyle: "short"
+            })
+            : "";
+
+        meta.append(typeChip, dateSpan);
+
+        const title = document.createElement("h3");
+        title.className = "panel-title";
+        title.style.marginBottom = "6px";
+        title.textContent = n.title || "Notification";
+
+        const message = document.createElement("p");
+        message.className = "panel-description";
+        message.style.margin = "0 0 10px";
+        message.style.whiteSpace = "pre-line";
+        message.textContent = n.message || "";
+
+        article.append(meta, title, message);
+
+        if (!n.read) {
+            const markBtn = document.createElement("button");
+            markBtn.type = "button";
+            markBtn.className = "btn btn-outline";
+            markBtn.textContent = "Mark as read";
+            markBtn.addEventListener("click", () => markNotificationRead(n.id));
+            article.appendChild(markBtn);
+        } else {
+            const readLabel = document.createElement("span");
+            readLabel.className = "text-muted";
+            readLabel.style.fontSize = "12px";
+            readLabel.textContent = "Read";
+            article.appendChild(readLabel);
+        }
+
+        return article;
+    }
+
+    function renderNotifications() {
+        const list = $("#profile-notif-list");
+        const empty = $("#profile-notif-empty");
+        const loading = $("#profile-notif-loading");
+        if (!list || !empty || !loading) return;
+
+        loading.hidden = true;
+        list.replaceChildren();
+
+        if (!state.notifications.length) {
+            empty.hidden = false;
+            updateNotifBadge();
+            return;
+        }
+
+        empty.hidden = true;
+        state.notifications.forEach((n) => {
+            list.appendChild(createNotifCard(n));
+        });
+        updateNotifBadge();
+    }
+
+    async function loadNotifications() {
+        const loading = $("#profile-notif-loading");
+        const empty = $("#profile-notif-empty");
+        const list = $("#profile-notif-list");
+        if (!loading || !empty || !list) return;
+
+        loading.hidden = false;
+        empty.hidden = true;
+        list.replaceChildren();
+
+        try {
+            state.notifications = await fetchNotifications(state.session);
+            state.notificationsLoaded = true;
+            renderNotifications();
+        } catch (error) {
+            console.error(`${LOG} Notifications load failed.`, error);
+            loading.hidden = true;
+            empty.hidden = false;
+
+            const strong = empty.querySelector("strong");
+            const paragraph = empty.querySelector("p");
+            if (strong) strong.textContent = "Could not load notifications";
+            if (paragraph) paragraph.textContent = "Please try again in a moment.";
+        }
+    }
+
+    async function markNotificationRead(notifId) {
+        try {
+            await writeNotificationRead(state.session, notifId, true);
+            state.notifications = state.notifications.map((n) =>
+                n.id === notifId ? { ...n, read: true } : n
+            );
+            renderNotifications();
+        } catch (error) {
+            console.error(`${LOG} Could not mark notification read.`, error);
+        }
+    }
+
+    async function markAllNotificationsRead() {
+        const unread = state.notifications.filter((n) => !n.read);
+        if (!unread.length) return;
+
+        try {
+            await Promise.all(
+                unread.map((n) => writeNotificationRead(state.session, n.id, true))
+            );
+            state.notifications = state.notifications.map((n) => ({ ...n, read: true }));
+            renderNotifications();
+        } catch (error) {
+            console.error(`${LOG} Could not mark all read.`, error);
         }
     }
 
@@ -671,6 +880,12 @@
             renderIdentity(state.profile);
             setTab("edit");
             showState("ready");
+
+            // Fetch notifications in the background so the tab badge shows even before
+            // the user opens the Notifications tab.
+            loadNotifications().catch((error) => {
+                console.warn(`${LOG} Background notifications load failed.`, error);
+            });
         } catch (error) {
             console.error(`${LOG} Init failed.`, error);
 
@@ -717,6 +932,11 @@
                 state.historyLoaded = false;
                 loadTestHistory();
             });
+        }
+
+        const notifMarkAll = $("#profile-notif-mark-all");
+        if (notifMarkAll) {
+            notifMarkAll.addEventListener("click", markAllNotificationsRead);
         }
 
         const retry = $("#profile-retry");
