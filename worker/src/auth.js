@@ -1,152 +1,63 @@
 // ============================================================
-// PrepareKora Worker — Authentication
-// Two pre-authorized admins, no public registration.
-// Credentials live in Cloudflare env secrets only.
-// Display name change propagates to all owned tests.
+// PrepareKora Worker — Admin authentication
+//
+// Frontend authenticates via Firebase Web SDK (email + password).
+// Frontend sends the Firebase ID token in "Authorization: Bearer <token>".
+//
+// Worker verifies the token (see firebase.js) and matches the UID
+// against ADMIN1_UID / ADMIN2_UID env secrets.
+//
+// No passwords, no custom JWT. All credentials live in Firebase
+// and Cloudflare env secrets. Nothing here is secret.
 // ============================================================
 
-import {
-  json,
-  error,
-  safeEqual,
-  signJWT,
-  requireAuth,
-  readJSON,
-  now
-} from "./utils.js";
+import { json, error, requireAuth } from "./utils.js";
+import { readJSON } from "./utils.js";
+import { dbGet, dbPut, dbPatch } from "./firebase.js";
 
-/* ---------- Fixed admin registry ---------- */
+/* ---------- Admin UID whitelist ---------- */
 
-const ADMIN_REGISTRY = {
-  admin1: {
-    userEnv: "ADMIN1_USER",
-    passEnv: "ADMIN1_PASS",
-    defaultName: "Rohit Biswas"
-  },
-  admin2: {
-    userEnv: "ADMIN2_USER",
-    passEnv: "ADMIN2_PASS",
-    defaultName: "Yadav Subba"
-  }
-};
+function getAdminUids(env) {
+  const list = [];
+  if (env.ADMIN1_UID) list.push(env.ADMIN1_UID.trim());
+  if (env.ADMIN2_UID) list.push(env.ADMIN2_UID.trim());
+  return list.filter(Boolean);
+}
 
-const DISPLAY_NAME_KEY = function (adminId) {
-  return "admin:" + adminId + ":displayName";
-};
-const MAX_NAME_LENGTH = 60;
+function isWhitelistedAdmin(env, uid) {
+  return getAdminUids(env).indexOf(uid) !== -1;
+}
+
+/* ---------- Display name ---------- */
+
 const MIN_NAME_LENGTH = 2;
+const MAX_NAME_LENGTH = 60;
 
-/* ---------- Helpers ---------- */
-
-async function getDisplayName(env, adminId) {
-  const override = await env.KV.get(DISPLAY_NAME_KEY(adminId));
-  if (override && override.trim()) return override.trim();
-
-  const meta = ADMIN_REGISTRY[adminId];
-  return meta ? meta.defaultName : adminId;
+function namePath(uid) {
+  return "adminDisplayNames/" + uid;
 }
 
-async function findAdminByCredentials(env, username, password) {
-  for (const entry of Object.entries(ADMIN_REGISTRY)) {
-    const adminId = entry[0];
-    const meta = entry[1];
-
-    const envUser = env[meta.userEnv];
-    const envPass = env[meta.passEnv];
-
-    if (!envUser || !envPass) continue;
-
-    const userMatch = safeEqual(username, envUser);
-    const passMatch = safeEqual(password, envPass);
-
-    if (userMatch && passMatch) return adminId;
-  }
-  return null;
-}
-
-/* Update publisherName on every test owned by this admin */
-async function propagateNameToTests(env, adminId, newPublisherName) {
+async function getDisplayName(env, uid) {
   try {
-    const list = await env.KV.list({ prefix: "test:" });
+    const val = await dbGet(env, namePath(uid));
+    if (typeof val === "string" && val.trim()) return val.trim();
+  } catch (err) { /* ignore */ }
 
-    for (const key of list.keys) {
-      const meta = key.metadata;
-      if (!meta || meta.publisherId !== adminId) continue;
-
-      const test = await env.KV.get(key.name, { type: "json" });
-      if (!test || test.publisherId !== adminId) continue;
-
-      if (test.publisherName === newPublisherName) continue;
-
-      const updated = Object.assign({}, test, {
-        publisherName: newPublisherName,
-        updatedAt: now()
-      });
-
-      await env.KV.put(key.name, JSON.stringify(updated), {
-        metadata: {
-          id: updated.id,
-          title: updated.title,
-          publisherId: updated.publisherId,
-          publisherName: updated.publisherName,
-          minutes: updated.minutes,
-          questionCount: updated.questions.length,
-          status: updated.status,
-          createdAt: updated.createdAt,
-          updatedAt: updated.updatedAt
-        }
-      });
-    }
-  } catch (err) {
-    /* Name change on the admin account must succeed even if
-       test propagation fails — next publish will correct it. */
-  }
+  /* Fallback: derive from email prefix (removed domain, capitalized) */
+  return "Admin";
 }
 
-/* ---------- POST /api/login ---------- */
-
-export async function handleLogin(request, env) {
-  const body = await readJSON(request);
-  if (!body) return error("Invalid request body", 400);
-
-  const username = String(body.username || "").trim();
-  const password = String(body.password || "");
-
-  if (!username || !password) {
-    return error("Username and password are required", 400);
-  }
-  if (username.length > 100 || password.length > 200) {
-    return error("Invalid credentials", 401);
-  }
-
-  const adminId = await findAdminByCredentials(env, username, password);
-
-  if (!adminId) {
-    await new Promise(function (resolve) { setTimeout(resolve, 300); });
-    return error("Invalid username or password", 401);
-  }
-
-  if (!env.JWT_SECRET) {
-    return error("Server configuration error", 500);
-  }
-
-  const token = await signJWT({ sub: adminId }, env.JWT_SECRET, 86400);
-  const displayName = await getDisplayName(env, adminId);
-
-  return json({
-    token: token,
-    admin: {
-      id: adminId,
-      displayName: displayName
-    }
-  });
-}
-
-/* ---------- GET /api/me ---------- */
+/* ============================================================
+   GET /api/me
+   ============================================================ */
 
 export async function handleMe(request, env) {
   const session = await requireAuth(request, env);
   if (!session) return error("Unauthorized", 401);
+
+  if (!isWhitelistedAdmin(env, session.sub)) {
+    return error("Forbidden", 403);
+  }
 
   const displayName = await getDisplayName(env, session.sub);
 
@@ -156,11 +67,18 @@ export async function handleMe(request, env) {
   });
 }
 
-/* ---------- PUT /api/me ---------- */
+/* ============================================================
+   PUT /api/me
+   Body: { displayName: "Rohit Biswas" }
+   ============================================================ */
 
 export async function handleUpdateMe(request, env) {
   const session = await requireAuth(request, env);
   if (!session) return error("Unauthorized", 401);
+
+  if (!isWhitelistedAdmin(env, session.sub)) {
+    return error("Forbidden", 403);
+  }
 
   const body = await readJSON(request);
   if (!body) return error("Invalid request body", 400);
@@ -175,11 +93,12 @@ export async function handleUpdateMe(request, env) {
     return error("Display name is too long", 400);
   }
 
-  await env.KV.put(DISPLAY_NAME_KEY(session.sub), rawName);
+  /* Save display name */
+  await dbPut(env, namePath(session.sub), rawName);
 
-  /* Propagate new publisher name to all owned tests */
+  /* Propagate publisherName to all owned tests */
   const newPublisherName = "Sir " + rawName;
-  await propagateNameToTests(env, session.sub, newPublisherName);
+  await propagatePublisherName(env, session.sub, newPublisherName);
 
   return json({
     id: session.sub,
@@ -187,13 +106,40 @@ export async function handleUpdateMe(request, env) {
   });
 }
 
-/* ---------- Publisher name for tests ---------- */
+/* ---------- Publisher name helper (used by tests.js) ---------- */
 
-export async function getPublisherName(env, adminId) {
-  const name = await getDisplayName(env, adminId);
+export async function getPublisherName(env, uid) {
+  const name = await getDisplayName(env, uid);
   return "Sir " + name;
 }
 
-/* ---------- Exports ---------- */
+/* ---------- Propagate name to owned tests ---------- */
 
-export { ADMIN_REGISTRY };
+async function propagatePublisherName(env, uid, newPublisherName) {
+  try {
+    /* Fetch all test metadata (only id + publisherId needed) */
+    const all = await dbGet(env, "tests");
+
+    if (!all || typeof all !== "object") return;
+
+    const updates = {};
+
+    Object.keys(all).forEach(function (testId) {
+      const test = all[testId];
+      if (!test || typeof test !== "object") return;
+      if (test.publisherId !== uid) return;
+
+      const currentName = test.publisherName || "";
+      if (currentName === newPublisherName) return;
+
+      updates[testId + "/publisherName"] = newPublisherName;
+      updates[testId + "/updatedAt"] = Date.now();
+    });
+
+    if (Object.keys(updates).length === 0) return;
+
+    await dbPatch(env, "tests", updates);
+  } catch (err) {
+    /* Non-fatal — the next publish will re-sync */
+  }
+}
