@@ -25,81 +25,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         resourcesEmpty: document.getElementById("organization-exams-empty")
     };
 
-    /*
-     * Verified organization and examination-process information.
-     * Official references are included to help users verify details.
-     * These remain hardcoded during the transition to admin-managed data.
-     */
-    const organizationData = {
-        "apsc": {
-            name: "Assam Public Service Commission (APSC)",
-            category: "State Public Service Commission",
-            filter: "administration",
-            description: "Assam's state public service commission responsible for recruitment and advisory functions within its prescribed scope.",
-            about: "The Assam Public Service Commission (APSC) performs functions under Article 320 of the Constitution of India and applicable rules. Its responsibilities include advertising and selecting candidates for posts within the Commission's purview and advising the Government of Assam on matters such as service rules, appointment principles, promotions and disciplinary matters affecting state civil services. The exact scope depends on the applicable rules and the particular recruitment notice.",
-            resources: [
-                { title: "APSC Official Website", description: "Visit the Commission's official website for recruitment advertisements, examination notices, eligibility requirements, schedules and results.", url: "http://apsc.nic.in/", label: "Visit APSC" },
-                { title: "APSC Functions — Government of Assam", description: "Read the Assam Government Personnel Department's explanation of the Commission's constitutional functions and responsibilities.", url: "https://personnel.assam.gov.in/about-us/our-divisions-field-offices", label: "Read Official Information" }
-            ]
-        },
-        "adre": {
-            name: "Assam Direct Recruitment Examination (ADRE)",
-            category: "State Recruitment Process",
-            filter: "recruitment",
-            description: "A state-level recruitment examination process for specified Assam Government posts, including Grade III and Grade IV recruitment.",
-            about: "ADRE means Assam Direct Recruitment Examination. It is a recruitment examination process, not a separate permanent regulatory authority. For state-wide Grade III and Grade IV recruitment, the relevant State Level Recruitment Commissions publish notices and examination-related information for their respective post categories. Candidates should follow the specific recruitment advertisement to confirm the responsible commission, eligibility, selection stages, deadlines and application portal.",
-            resources: [
-                { title: "State Level Recruitment Commission — Class III", description: "Official portal associated with Class III recruitment. Check the latest notices and confirm that a link applies to your recruitment cycle.", url: "https://slrcg3.sebaonline.org/", label: "Open Class III Portal" },
-                { title: "State Level Recruitment Commission — Class IV", description: "Official portal associated with Class IV recruitment. Consult the relevant advertisement for current instructions and candidate updates.", url: "https://slrcg4.sebaonline.org/", label: "Open Class IV Portal" },
-                { title: "Government of Assam — SLRC Recruitment Information", description: "Government department information concerning Grade III and Grade IV recruitment through the State Level Recruitment Commissions.", url: "https://directoradulteducation.assam.gov.in/latest/recruitment-of-grade-iii-and-grade-iv-through-slrc", label: "View Government Information" }
-            ]
-        },
-        "assam-police": {
-            name: "Assam Police",
-            category: "State Police Force",
-            filter: "police",
-            description: "The state police force responsible for law enforcement, public order and crime prevention and detection in Assam.",
-            about: "Assam Police works to maintain law and order, prevent and detect crime, enforce the law impartially and protect the rights of citizens. Recruitment is a separate process from these policing responsibilities. For posts advertised through the State Level Police Recruitment Board (SLPRB), candidates should consult the relevant recruitment notification and official application portal to confirm post-specific eligibility, selection stages and dates.",
-            resources: [
-                { title: "Assam Police — Mission Statement", description: "Official Government of Assam information explaining the police force's responsibilities, including maintaining order and preventing and detecting crime.", url: "https://police.assam.gov.in/about-us/detail/mission-statement", label: "Read Police Responsibilities" },
-                { title: "State Level Police Recruitment Board (SLPRB)", description: "Recruitment portal referenced in Assam Government recruitment notices. Check the latest official advertisement before applying.", url: "http://slprbassam.in/", label: "Open Recruitment Portal" }
-            ]
-        },
-        "ssuhs": {
-            name: "Srimanta Sankaradeva University of Health Sciences (SSUHS)",
-            category: "State Health Sciences University",
-            filter: "health",
-            description: "An Assam state university established for health sciences education and academic development.",
-            about: "Srimanta Sankaradeva University of Health Sciences was established under the Srimanta Sankaradeva University of Health Sciences Act, 2007, and began in 2009. Its jurisdiction extends across Assam. The University aims to support health sciences education, promote academic development and collaboration, and help maintain uniform standards across health sciences faculties. It also publishes information concerning entrance examinations and admissions for programmes under its responsibility.",
-            resources: [
-                { title: "SSUHS Official Website", description: "Visit the University website for official announcements, academic information, admission notices and examination updates.", url: "https://ssuhs.ac.in/", label: "Visit SSUHS" },
-                { title: "SSUHS — Government of Assam Information", description: "Government of Assam information about the University's establishment, jurisdiction, mission and academic objectives.", url: "https://gmch.assam.gov.in/about-us/affiliated-university-ssuhs", label: "Read University Information" }
-            ]
-        },
-        "assam-tet": {
-            name: "Assam Teacher Eligibility Test (TET)",
-            category: "Teacher Eligibility Examination",
-            filter: "education",
-            description: "An eligibility test used in the teacher qualification process under applicable national and state rules.",
-            about: "The Teacher Eligibility Test (TET) is an examination, not a government authority or recruiting organisation. It assesses eligibility for specified teaching levels under the applicable rules. Passing TET does not by itself guarantee a teaching appointment: candidates must also meet the required academic and professional qualifications and participate in the relevant recruitment process. The responsible department, examination arrangements and eligible language mediums depend on the specific TET notification.",
-            resources: [
-                { title: "SCERT Assam — TET Notification", description: "Official State Council of Educational Research and Training information and notifications concerning Assam TET examinations.", url: "https://scert.assam.gov.in/latest/notification-regarding-special-tet-2026-for-up-and-lp-level", label: "Read SCERT Notification" },
-                { title: "Special Assam TET Examination Portal", description: "Official examination portal associated with the Special Assam TET 2026 notification. Check whether the notice applies to your category and medium.", url: "https://sebamis.sebaonline.org/spltet2026/", label: "Open Examination Portal" }
-            ]
-        },
-        "ssc": {
-            name: "Staff Selection Commission (SSC)",
-            category: "Central Government Recruitment Commission",
-            filter: "recruitment",
-            description: "A central recruitment commission responsible for selecting candidates for specified posts in Government of India organisations.",
-            about: "The Staff Selection Commission (SSC) conducts recruitment examinations for specified posts in ministries, departments and other organisations of the Government of India. Its responsibilities include recruitment to covered Group B (non-gazetted) and Group C (non-technical) posts, subject to the applicable rules and exemptions. Different examinations cover different qualifications and post categories, so applicants must check the relevant official notification for eligibility, examination scheme, vacancies and deadlines.",
-            resources: [
-                { title: "SSC Official Website", description: "Official portal for recruitment advertisements, examination calendars, syllabi, candidate instructions, answer keys and results.", url: "https://ssc.gov.in/", label: "Visit SSC" },
-                { title: "SSC — Proactive Disclosures", description: "Official information about the Commission's organisation, functions, responsibilities and public disclosures.", url: "https://ssc.gov.in/rti/proactive-disclosure", label: "Read Official Disclosure" }
-            ]
-        }
-    };
-
     const rtdbOrganizations = {};
 
     function createElement(tag, className, text) {
@@ -191,9 +116,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function renderOrganization(orgId) {
-        const organization =
-            rtdbOrganizations[orgId] || organizationData[orgId];
-
+        const organization = rtdbOrganizations[orgId];
         if (!organization) return false;
 
         if (el.directoryHero) el.directoryHero.hidden = true;
@@ -252,8 +175,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         return true;
     }
 
-    /* ---------- RTDB integration ---------- */
-
     function createRemoteOrgCard(id, org) {
         const link = createElement("a", "listing-card");
         link.href = `organization.html?org=${encodeURIComponent(id)}`;
@@ -298,12 +219,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 return;
             }
 
-            const existingIds = new Set(
-                Array.from(el.grid.querySelectorAll("[data-org-card]"))
-                    .map((c) => c.dataset.orgId)
-                    .filter(Boolean)
-            );
-
             Object.entries(orgs).forEach(([id, org]) => {
                 if (!org || typeof org !== "object") return;
                 if (org.published === false) return;
@@ -317,14 +232,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                     resources: Array.isArray(org.resources) ? org.resources : []
                 };
 
-                if (!existingIds.has(id)) {
-                    el.grid.appendChild(createRemoteOrgCard(id, rtdbOrganizations[id]));
-                }
+                el.grid.appendChild(createRemoteOrgCard(id, rtdbOrganizations[id]));
             });
 
             updateDirectory();
         } catch (error) {
-            console.warn("[PrepareKora Organization] Could not load remote organizations.", error);
+            console.warn("[PrepareKora Organization] Could not load organizations.", error);
             updateDirectory();
         }
     }
@@ -334,10 +247,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await loadRemoteOrganizations();
 
-    if (
-        requestedOrg &&
-        (rtdbOrganizations[requestedOrg] || organizationData[requestedOrg])
-    ) {
+    if (requestedOrg && rtdbOrganizations[requestedOrg]) {
         renderOrganization(requestedOrg);
     } else {
         updateDirectory();
