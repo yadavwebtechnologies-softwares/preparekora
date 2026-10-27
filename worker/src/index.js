@@ -1,12 +1,12 @@
 // ============================================================
 // PrepareKora Worker — Main router
 // Routes only. All logic lives in sibling modules.
+// Auth via Firebase ID token (verified in firebase.js).
 // ============================================================
 
 import { json, error, preflight } from "./utils.js";
 
 import {
-  handleLogin,
   handleMe,
   handleUpdateMe
 } from "./auth.js";
@@ -50,11 +50,7 @@ export default {
         return await handleTranslate(request, env);
       }
 
-      /* ---------- Auth ---------- */
-
-      if (path === "/api/login" && method === "POST") {
-        return await handleLogin(request, env);
-      }
+      /* ---------- Auth (Firebase) ---------- */
 
       if (path === "/api/me" && method === "GET") {
         return await handleMe(request, env);
@@ -70,13 +66,11 @@ export default {
         return await handleListPublic(env);
       }
 
-      /* Public: get one test (no answers) */
       let match = path.match(/^\/api\/tests\/([^/]+)$/);
       if (match && method === "GET") {
         return await handleGetPublic(env, decodeURIComponent(match[1]));
       }
 
-      /* Public: submit answers → server-side scoring */
       match = path.match(/^\/api\/tests\/([^/]+)\/submit$/);
       if (match && method === "POST") {
         return await handleSubmit(request, env, decodeURIComponent(match[1]));
@@ -110,12 +104,7 @@ export default {
         return await handleUnpublish(request, env, decodeURIComponent(match[1]));
       }
 
-      /* ---------- Not found ---------- */
-
-      return json(
-        { error: "Not found", path: path, method: method },
-        404
-      );
+      return json({ error: "Not found", path: path, method: method }, 404);
     } catch (err) {
       return json({ error: "Internal server error" }, 500);
     }
