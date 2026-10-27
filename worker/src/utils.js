@@ -1,10 +1,8 @@
 // ============================================================
 // PrepareKora Worker — Shared utilities
-// JSON responses, CORS, JWT (HS256), safe compare, id generation
+// JSON responses, CORS, id generation, safe compare, body parsing.
+// Auth is handled via Firebase ID tokens (see firebase.js).
 // ============================================================
-
-const encoder = new TextEncoder();
-const decoder = new TextDecoder();
 
 /* ---------- CORS ---------- */
 
@@ -50,7 +48,7 @@ export function now() {
 
 /**
  * Constant-time string compare.
- * Prevents timing attacks on password / token checks.
+ * Used for the small number of hard-coded comparisons in the worker.
  */
 export function safeEqual(a, b) {
   if (typeof a !== "string" || typeof b !== "string") return false;
@@ -61,113 +59,6 @@ export function safeEqual(a, b) {
     diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
   }
   return diff === 0;
-}
-
-/* ---------- Base64URL ---------- */
-
-function b64urlEncode(bytes) {
-  let bin = "";
-  for (let i = 0; i < bytes.length; i++) {
-    bin += String.fromCharCode(bytes[i]);
-  }
-  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-function b64urlDecode(str) {
-  str = str.replace(/-/g, "+").replace(/_/g, "/");
-  while (str.length % 4) str += "=";
-  const bin = atob(str);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) {
-    bytes[i] = bin.charCodeAt(i);
-  }
-  return bytes;
-}
-
-/* ---------- JWT (HS256) ---------- */
-
-async function hmacKey(secret) {
-  return crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign", "verify"]
-  );
-}
-
-/**
- * Sign a JWT. Payload should include { sub: adminId }.
- * Default TTL: 24 hours.
- */
-export async function signJWT(payload, secret, ttlSeconds = 86400) {
-  const header = { alg: "HS256", typ: "JWT" };
-  const iat = Math.floor(Date.now() / 1000);
-  const body = { ...payload, iat, exp: iat + ttlSeconds };
-
-  const encodedHeader = b64urlEncode(encoder.encode(JSON.stringify(header)));
-  const encodedBody = b64urlEncode(encoder.encode(JSON.stringify(body)));
-  const data = `${encodedHeader}.${encodedBody}`;
-
-  const key = await hmacKey(secret);
-  const sigBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(data));
-  const encodedSig = b64urlEncode(new Uint8Array(sigBuffer));
-
-  return `${data}.${encodedSig}`;
-}
-
-/**
- * Verify a JWT. Returns payload on success, null on any failure.
- */
-export async function verifyJWT(token, secret) {
-  try {
-    if (typeof token !== "string") return null;
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-
-    const [encodedHeader, encodedBody, encodedSig] = parts;
-    const data = `${encodedHeader}.${encodedBody}`;
-
-    const key = await hmacKey(secret);
-    const sig = b64urlDecode(encodedSig);
-
-    const ok = await crypto.subtle.verify(
-      "HMAC",
-      key,
-      sig,
-      encoder.encode(data)
-    );
-    if (!ok) return null;
-
-    const payload = JSON.parse(decoder.decode(b64urlDecode(encodedBody)));
-    if (!payload || typeof payload !== "object") return null;
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
-
-    return payload;
-  } catch {
-    return null;
-  }
-}
-
-/* ---------- Auth guard for protected routes ---------- */
-
-/**
- * Extract Bearer token from request, verify it, return payload.
- * Returns null if not authenticated.
- */
-export async function requireAuth(request, env) {
-  const header = request.headers.get("Authorization") || "";
-  if (!header.startsWith("Bearer ")) return null;
-
-  const token = header.slice(7).trim();
-  if (!token) return null;
-
-  if (!env.JWT_SECRET) return null;
-
-  const payload = await verifyJWT(token, env.JWT_SECRET);
-  if (!payload || !payload.sub) return null;
-
-  return payload;
 }
 
 /* ---------- Safe body parse ---------- */
