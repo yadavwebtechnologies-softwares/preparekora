@@ -11,16 +11,18 @@
 
   /* ---------- API ---------- */
 
-  const API_BASE = (function () {
-    const host = window.location.hostname;
-    const isLocal =
-      host === "localhost" ||
-      host === "127.0.0.1" ||
-      host === "0.0.0.0" ||
-      host === "" ||
-      host.endsWith(".local");
-    return isLocal ? "http://localhost:8787/api" : "/api";
-  })();
+const API_BASE = (function () {
+  const host = window.location.hostname;
+  const isLocal =
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "0.0.0.0" ||
+    host === "" ||
+    host.endsWith(".local");
+  return isLocal
+    ? "http://localhost:8787/api"
+    : "https://preparekora-api.yadavsubba2003.workers.dev/api";
+})();
 
   const TOKEN_KEY = "pk_admin_id_token";
   const REFRESH_KEY = "pk_admin_refresh_token";
