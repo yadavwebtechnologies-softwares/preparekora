@@ -1,7 +1,8 @@
 // ============================================================
-// PrepareKora Worker — Test CRUD + publish
+// PrepareKora Worker — Test CRUD + publish + submit
 // Ownership enforced server-side.
 // Correct answers never leave the server on public endpoints.
+// Scoring happens server-side on submit.
 // ============================================================
 
 import { json, error, requireAuth, uid, now, readJSON } from "./utils.js";
@@ -95,11 +96,13 @@ function buildTestMeta(test) {
 }
 
 function normalizeQuestions(rawList) {
-  return rawList.map((q) => ({
-    q: q.q.trim(),
-    options: q.options.map((o) => o.trim()),
-    answer: q.answer
-  }));
+  return rawList.map(function (q) {
+    return {
+      q: q.q.trim(),
+      options: q.options.map(function (o) { return o.trim(); }),
+      answer: q.answer
+    };
+  });
 }
 
 /* ============================================================
@@ -127,7 +130,7 @@ export async function handleListPublic(env) {
     }
   }
 
-  published.sort((a, b) => b.createdAt - a.createdAt);
+  published.sort(function (a, b) { return b.createdAt - a.createdAt; });
 
   return json({ tests: published });
 }
@@ -141,10 +144,12 @@ export async function handleGetPublic(env, id) {
     return error("Test not found", 404);
   }
 
-  const safeQuestions = test.questions.map((q) => ({
-    q: q.q,
-    options: q.options.slice()
-  }));
+  const safeQuestions = test.questions.map(function (q) {
+    return {
+      q: q.q,
+      options: q.options.slice()
+    };
+  });
 
   return json({
     id: test.id,
@@ -152,6 +157,137 @@ export async function handleGetPublic(env, id) {
     publisherName: test.publisherName,
     minutes: test.minutes,
     questions: safeQuestions
+  });
+}
+
+/* ============================================================
+   PUBLIC — SUBMIT (server-side scoring)
+   ============================================================ */
+
+/**
+ * POST /api/tests/:id/submit
+ *
+ * Request body:
+ *   {
+ *     answers: { "0": 2, "1": 0, ... },   // index -> chosen option (0-3)
+ *     userName: "optional display name"   // stored with submission for admin
+ *   }
+ *
+ * Response:
+ *   {
+ *     correct: number,
+ *     wrong: number,
+ *     unattempted: number,
+ *     total: number,
+ *     percent: number,
+ *     correctAnswers: { "0": 2, "1": 1, ... }   // question index -> correct option
+ *   }
+ *
+ * Answers and correctAnswers are only returned after submit — cannot be
+ * fetched beforehand. Client cannot fake a higher score.
+ */
+
+export async function handleSubmit(request, env, id) {
+  const test = await env.KV.get(`test:${id}`, { type: "json" });
+
+  if (!test || test.status !== "published") {
+    return error("Test not found", 404);
+  }
+
+  const body = await readJSON(request);
+  if (!body || typeof body !== "object") {
+    return error("Invalid request body", 400);
+  }
+
+  const answers = body.answers;
+  if (!answers || typeof answers !== "object" || Array.isArray(answers)) {
+    return error("answers object is required", 400);
+  }
+
+  const userName = typeof body.userName === "string"
+    ? body.userName.trim().slice(0, 60)
+    : "";
+
+  const total = test.questions.length;
+  let correct = 0;
+  let wrong = 0;
+  let unattempted = 0;
+
+  const correctAnswers = {};
+
+  for (let i = 0; i < total; i++) {
+    const question = test.questions[i];
+    correctAnswers[String(i)] = question.answer;
+
+    const raw = answers[String(i)];
+
+    /* Unanswered */
+    if (raw === undefined || raw === null) {
+      unattempted += 1;
+      continue;
+    }
+
+    /* Malformed answer — treat as unanswered rather than exploit */
+    if (typeof raw !== "number" || !Number.isInteger(raw) || raw < 0 || raw >= OPTIONS_PER_QUESTION) {
+      unattempted += 1;
+      continue;
+    }
+
+    if (raw === question.answer) correct += 1;
+    else wrong += 1;
+  }
+
+  const percent = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+  /* Optional: append a lightweight submission record for the admin.
+     Only summary — no per-question choices — to keep KV writes small. */
+  try {
+    const subId = `${now()}-${uid(6)}`;
+    const submission = {
+      id: subId,
+      testId: test.id,
+      testTitle: test.title,
+      userName: userName,
+      correct: correct,
+      wrong: wrong,
+      unattempted: unattempted,
+      total: total,
+      percent: percent,
+      submittedAt: now()
+    };
+
+    /* Keep last 500 submissions per test (simple cap).
+       Keys sort lexicographically by timestamp prefix. */
+    const prefix = `submission:${test.id}:`;
+    const list = await env.KV.list({ prefix: prefix, limit: 1000 });
+
+    if (list.keys.length >= 500) {
+      /* Delete oldest entries to stay under cap */
+      const toDelete = list.keys
+        .sort(function (a, b) { return a.name.localeCompare(b.name); })
+        .slice(0, list.keys.length - 499);
+      for (const k of toDelete) {
+        await env.KV.delete(k.name);
+      }
+    }
+
+    await env.KV.put(
+      `${prefix}${subId}`,
+      JSON.stringify(submission),
+      { metadata: { testId: test.id, at: submission.submittedAt } }
+    );
+  } catch (err) {
+    /* Submission logging must never block a result.
+       If KV write fails, still return the score. */
+  }
+
+  return json({
+    correct: correct,
+    wrong: wrong,
+    unattempted: unattempted,
+    total: total,
+    percent: percent,
+    correctAnswers: correctAnswers
   });
 }
 
@@ -175,7 +311,7 @@ export async function handleListOwn(request, env) {
     }
   }
 
-  own.sort((a, b) => b.updatedAt - a.updatedAt);
+  own.sort(function (a, b) { return b.updatedAt - a.updatedAt; });
 
   return json({ tests: own });
 }
@@ -210,10 +346,10 @@ export async function handleCreate(request, env) {
   const ts = now();
 
   const test = {
-    id,
+    id: id,
     title: body.title.trim(),
     publisherId: session.sub,
-    publisherName,
+    publisherName: publisherName,
     minutes: Number(body.minutes),
     status: "draft",
     createdAt: ts,
@@ -225,7 +361,7 @@ export async function handleCreate(request, env) {
     metadata: buildTestMeta(test)
   });
 
-  return json({ test });
+  return json({ test: test });
 }
 
 /* PUT /api/admin/tests/:id — update own test */
@@ -244,17 +380,16 @@ export async function handleUpdate(request, env, id) {
   const validationError = validateTestPayload(body);
   if (validationError) return error(validationError, 400);
 
-  // Publisher name is re-resolved at edit time but publisherId stays immutable.
+  /* Publisher identity stays immutable — resolved fresh in case display name changed */
   const publisherName = await getPublisherName(env, existing.publisherId);
 
-  const updated = {
-    ...existing,
+  const updated = Object.assign({}, existing, {
     title: body.title.trim(),
     minutes: Number(body.minutes),
     questions: normalizeQuestions(body.questions),
-    publisherName,
+    publisherName: publisherName,
     updatedAt: now()
-  };
+  });
 
   await env.KV.put(`test:${id}`, JSON.stringify(updated), {
     metadata: buildTestMeta(updated)
@@ -298,15 +433,14 @@ async function setPublishStatus(request, env, id, targetStatus) {
   if (!existing) return error("Test not found", 404);
   if (existing.publisherId !== session.sub) return error("Forbidden", 403);
 
-  // Snapshot publisher name at publish time. Immutable afterward.
+  /* Snapshot publisher name at publish time. Immutable afterward. */
   const publisherName = await getPublisherName(env, existing.publisherId);
 
-  const updated = {
-    ...existing,
+  const updated = Object.assign({}, existing, {
     status: targetStatus,
-    publisherName,
+    publisherName: publisherName,
     updatedAt: now()
-  };
+  });
 
   await env.KV.put(`test:${id}`, JSON.stringify(updated), {
     metadata: buildTestMeta(updated)
