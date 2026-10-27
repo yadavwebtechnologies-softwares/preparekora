@@ -22,6 +22,7 @@
         <button type="button" class="admin-nav-link" data-view="users">Users</button>
         <button type="button" class="admin-nav-link" data-view="requests">Account Requests</button>
         <button type="button" class="admin-nav-link" data-view="notifications">Notifications</button>
+        <button type="button" class="admin-nav-link" data-view="import">Import</button>
     </nav>
     <div class="admin-sidebar-footer">
         <span id="admin-email" class="admin-email"></span>
@@ -350,6 +351,104 @@
                 </div>
                 <p class="admin-muted" id="notif-message-out"></p>
             </form>
+        </div>
+    </section>
+        <!-- Import -->
+    <section class="admin-view" id="view-import" hidden>
+        <div class="admin-card">
+            <h2 class="admin-card-title">Import Subjects</h2>
+            <p class="admin-muted">Paste a JSON array of subject objects. Each item requires <code>id</code> and <code>name</code>.</p>
+            <details style="margin: 12px 0;">
+                <summary class="admin-muted" style="cursor: pointer; font-size: 12px;">Schema example</summary>
+                <pre class="admin-muted" style="background: var(--bg-soft); padding: 10px; border-radius: 6px; font-size: 11px; overflow-x: auto;">[
+  {
+    "id": "general-knowledge",
+    "name": "General Knowledge",
+    "description": "Static GK and important facts",
+    "category": "General Studies",
+    "about": "Longer description...",
+    "tags": ["General Studies", "MCQ Practice"],
+    "topics": ["Static GK", "Important Days"],
+    "published": true
+  }
+]</pre>
+            </details>
+            <label class="admin-label">JSON
+                <textarea class="admin-input" id="import-subjects-json" rows="10" placeholder='[ { "id": "...", "name": "..." } ]'></textarea>
+            </label>
+            <label class="admin-muted" style="display: block; margin: 8px 0;">
+                <input type="checkbox" id="import-subjects-overwrite"> Overwrite existing IDs
+            </label>
+            <div class="admin-form-actions">
+                <button type="button" class="admin-btn admin-btn-primary" id="import-subjects-submit">Import Subjects</button>
+            </div>
+            <div id="import-subjects-result" class="admin-muted" style="margin-top: 10px;"></div>
+        </div>
+
+        <div class="admin-card">
+            <h2 class="admin-card-title">Import Tests</h2>
+            <p class="admin-muted">Paste a JSON array of full test objects. Each test requires <code>id</code>, <code>title</code>, <code>subjectId</code> (must exist), and <code>questions</code> (non-empty).</p>
+            <details style="margin: 12px 0;">
+                <summary class="admin-muted" style="cursor: pointer; font-size: 12px;">Schema example</summary>
+                <pre class="admin-muted" style="background: var(--bg-soft); padding: 10px; border-radius: 6px; font-size: 11px; overflow-x: auto;">[
+  {
+    "id": "assam-vfa",
+    "title": "Assam VFA Exam",
+    "subjectId": "general-knowledge",
+    "description": "Village Field Assistant practice",
+    "category": "recruitment",
+    "duration": 600,
+    "marksPerQuestion": 1,
+    "published": true,
+    "questions": [
+      {
+        "question": "Which city is the capital of Assam?",
+        "options": ["Guwahati", "Silchar", "Dispur", "Jorhat"],
+        "answer": 2,
+        "explanation": "Dispur is the capital of Assam."
+      }
+    ]
+  }
+]</pre>
+            </details>
+            <label class="admin-label">JSON
+                <textarea class="admin-input" id="import-tests-json" rows="12" placeholder='[ { "id": "...", "title": "...", "subjectId": "...", "questions": [...] } ]'></textarea>
+            </label>
+            <label class="admin-muted" style="display: block; margin: 8px 0;">
+                <input type="checkbox" id="import-tests-overwrite"> Overwrite existing IDs
+            </label>
+            <div class="admin-form-actions">
+                <button type="button" class="admin-btn admin-btn-primary" id="import-tests-submit">Import Tests</button>
+            </div>
+            <div id="import-tests-result" class="admin-muted" style="margin-top: 10px;"></div>
+        </div>
+
+        <div class="admin-card">
+            <h2 class="admin-card-title">Import MCQs (append to existing test)</h2>
+            <p class="admin-muted">Paste a JSON array of question objects. They will be appended to the selected test.</p>
+            <details style="margin: 12px 0;">
+                <summary class="admin-muted" style="cursor: pointer; font-size: 12px;">Schema example</summary>
+                <pre class="admin-muted" style="background: var(--bg-soft); padding: 10px; border-radius: 6px; font-size: 11px; overflow-x: auto;">[
+  {
+    "question": "What is 2 + 2?",
+    "options": ["3", "4", "5", "6"],
+    "answer": 1,
+    "explanation": "2 + 2 = 4."
+  }
+]</pre>
+            </details>
+            <label class="admin-label">Target Test
+                <select class="admin-input" id="import-mcqs-test">
+                    <option value="">-- Load tests --</option>
+                </select>
+            </label>
+            <label class="admin-label">JSON Questions
+                <textarea class="admin-input" id="import-mcqs-json" rows="10" placeholder='[ { "question": "...", "options": [...], "answer": 0, "explanation": "..." } ]'></textarea>
+            </label>
+            <div class="admin-form-actions">
+                <button type="button" class="admin-btn admin-btn-primary" id="import-mcqs-submit">Import MCQs</button>
+            </div>
+            <div id="import-mcqs-result" class="admin-muted" style="margin-top: 10px;"></div>
         </div>
     </section>
 
