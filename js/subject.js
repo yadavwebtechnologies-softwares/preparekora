@@ -26,11 +26,6 @@ document.addEventListener("DOMContentLoaded", () => {
         practiceButton: document.getElementById("subject-practice-button")
     };
 
-    const subjectData = {
-        "general-knowledge": { /* unchanged — copy the whole original subjectData object here */ },
-        /* ... keep all 12 subjects from the original file exactly as-is ... */
-    };
-
     const rtdbSubjects = {};
 
     function createElement(tag, className, text) {
@@ -61,10 +56,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (c.includes("aptitude")) return "aptitude";
         if (c.includes("general")) return "general";
         return "other";
-    }
-
-    function getCombinedSubject(id) {
-        return rtdbSubjects[id] || subjectData[id] || null;
     }
 
     function updateSubjectDirectory() {
@@ -144,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderSubject(subjectId) {
-        const subject = getCombinedSubject(subjectId);
+        const subject = rtdbSubjects[subjectId];
         if (!subject) return false;
 
         if (el.directoryHero) {
@@ -225,8 +216,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return true;
     }
 
-    /* ---------- RTDB integration (Phase 2) ---------- */
-
     function createRemoteSubjectCard(id, subject) {
         const link = createElement("a", "listing-card");
         link.href = `subject.html?subject=${encodeURIComponent(id)}`;
@@ -267,13 +256,10 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const subjects = await response.json();
-            if (!subjects || typeof subjects !== "object") return;
-
-            const existingIds = new Set(
-                Array.from(el.grid.querySelectorAll("[data-subject-card]"))
-                    .map((c) => c.dataset.subjectId)
-                    .filter(Boolean)
-            );
+            if (!subjects || typeof subjects !== "object") {
+                updateSubjectDirectory();
+                return;
+            }
 
             Object.entries(subjects).forEach(([id, subject]) => {
                 if (!subject || typeof subject !== "object") return;
@@ -289,13 +275,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     topics: Array.isArray(subject.topics) ? subject.topics : []
                 };
 
-                if (!existingIds.has(id)) {
-                    const card = createRemoteSubjectCard(
-                        id,
-                        rtdbSubjects[id]
-                    );
-                    el.grid.appendChild(card);
-                }
+                const card = createRemoteSubjectCard(
+                    id,
+                    rtdbSubjects[id]
+                );
+                el.grid.appendChild(card);
             });
 
             updateSubjectDirectory();
@@ -304,6 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 "[StudyKora Subject] Could not load remote subjects.",
                 error
             );
+            updateSubjectDirectory();
         }
     }
 
@@ -312,19 +297,11 @@ document.addEventListener("DOMContentLoaded", () => {
         params.get("subject") || ""
     ).trim().toLowerCase();
 
-    if (requestedSubject && subjectData[requestedSubject]) {
-        renderSubject(requestedSubject);
-        loadRemoteSubjects();
-    } else {
-        updateSubjectDirectory();
-        loadRemoteSubjects().then(() => {
-            if (
-                requestedSubject &&
-                rtdbSubjects[requestedSubject] &&
-                !subjectData[requestedSubject]
-            ) {
-                renderSubject(requestedSubject);
-            }
-        });
-    }
+    loadRemoteSubjects().then(() => {
+        if (requestedSubject && rtdbSubjects[requestedSubject]) {
+            renderSubject(requestedSubject);
+        } else {
+            updateSubjectDirectory();
+        }
+    });
 });
