@@ -276,28 +276,51 @@
             <p class="admin-muted" id="user-detail-attempts-empty" hidden>No test attempts.</p>
         </div>
     </section>
-
     <!-- Requests -->
     <section class="admin-view" id="view-requests" hidden>
         <div class="admin-card">
             <h2 class="admin-card-title">Deletion Requests</h2>
             <div class="admin-table-wrap">
                 <table class="admin-table">
-                    <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Requested</th></tr></thead>
+                    <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Requested</th><th>Response</th><th></th></tr></thead>
                     <tbody id="requests-deletion-body"></tbody>
                 </table>
             </div>
-            <p class="admin-muted" id="requests-deletion-empty" hidden>No pending deletion requests.</p>
+            <p class="admin-muted" id="requests-deletion-empty" hidden>No deletion requests.</p>
         </div>
         <div class="admin-card">
             <h2 class="admin-card-title">Email Change Requests</h2>
             <div class="admin-table-wrap">
                 <table class="admin-table">
-                    <thead><tr><th>Name</th><th>Current Email</th><th>New Email</th><th>Status</th><th>Requested</th></tr></thead>
+                    <thead><tr><th>Name</th><th>Current Email</th><th>New Email</th><th>Status</th><th>Requested</th><th>Response</th><th></th></tr></thead>
                     <tbody id="requests-email-body"></tbody>
                 </table>
             </div>
             <p class="admin-muted" id="requests-email-empty" hidden>No email change requests.</p>
+        </div>
+
+        <div class="admin-card" id="request-review-card" hidden>
+            <h2 class="admin-card-title" id="request-review-title">Review Request</h2>
+            <p class="admin-muted" id="request-review-subtitle"></p>
+            <form id="request-review-form">
+                <label class="admin-label">Status
+                    <select class="admin-input" id="request-status">
+                        <option value="pending">Pending</option>
+                        <option value="under_review">Under Review</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </label>
+                <label class="admin-label">Response to user (sent as notification)
+                    <textarea class="admin-input" id="request-response" rows="3" maxlength="1000" placeholder="e.g. Your email address cannot be updated through this process. Please create a new account."></textarea>
+                </label>
+                <div class="admin-form-actions">
+                    <button type="button" class="admin-btn admin-btn-ghost" id="request-cancel">Cancel</button>
+                    <button type="submit" class="admin-btn admin-btn-primary">Save & Notify</button>
+                </div>
+                <p class="admin-muted" id="request-review-message"></p>
+            </form>
         </div>
     </section>
 
