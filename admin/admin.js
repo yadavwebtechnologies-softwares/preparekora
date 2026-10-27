@@ -3,7 +3,7 @@
 
 (() => {
     const API = "https://studykora-api.yadavsubba2003.workers.dev";
-    const SESSION_KEY = "studyKoraSession";
+    const SESSION_KEY = "preparekoraAdminSession";
     const LOG = "[PrepareKora Admin]";
 
     const $ = (s, r = document) => r.querySelector(s);
@@ -82,7 +82,7 @@
             await loadOverview();
         } catch (error) {
             if (error.status === 403) { setView("unauthorized"); return; }
-            if (error.status === 401) { clearSession(); setView("gate"); return; }
+            if (error.status === 401) { clearSession(); window.location.assign("login.html"); return; }
             console.error(`${LOG} Gate error:`, error);
             setView("gate");
             $("#gate-message").textContent = error.message || "Could not verify access.";
@@ -581,10 +581,10 @@
         });
 
         $("#admin-logout").addEventListener("click", () => {
-            clearSession(); window.location.assign("../index.html");
+            clearSession(); window.location.assign("login.html");
         });
         $("#unauth-logout").addEventListener("click", () => {
-            clearSession(); window.location.assign("../auth.html?mode=login");
+            clearSession(); window.location.assign("login.html");
         });
 
         $("#users-search").addEventListener("input", (e) => { state.users.search = e.target.value.trim(); });
