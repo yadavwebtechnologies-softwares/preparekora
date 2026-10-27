@@ -15,7 +15,6 @@
 
 <body class="profile-page">
 
-    <!-- Shared Header -->
     <header class="site-header">
         <div class="header-inner">
 
@@ -81,7 +80,6 @@
 
     <main class="page-content">
 
-        <!-- Page Hero -->
         <section class="page-hero" id="profile-hero">
             <div class="page-hero-inner">
                 <span class="page-hero-icon" aria-hidden="true">
@@ -101,13 +99,11 @@
             </div>
         </section>
 
-        <!-- Profile Content -->
         <section class="content-section">
             <div class="container">
 
                 <div id="profile-root">
 
-                    <!-- Loading -->
                     <div id="profile-loading" class="sk-profile-loading">
                         <div class="sk-profile-identity" aria-hidden="true">
                             <div class="sk-profile-avatar">
@@ -124,21 +120,18 @@
                         </div>
                     </div>
 
-                    <!-- Unauthenticated -->
                     <div id="profile-unauth" class="empty-state" hidden>
                         <h3>Please log in</h3>
                         <p>You need to be logged in to view your profile.</p>
                         <a href="auth.html?mode=login" class="btn btn-primary mt-sm">Login</a>
                     </div>
 
-                    <!-- Error -->
                     <div id="profile-error" class="empty-state" hidden>
                         <h3>Could not load profile</h3>
                         <p id="profile-error-message">Please try again.</p>
                         <button type="button" class="btn btn-outline mt-sm" id="profile-retry">Try again</button>
                     </div>
 
-                    <!-- Ready -->
                     <div id="profile-content" hidden>
 
                         <div class="sk-profile-identity">
@@ -158,7 +151,6 @@
                             <button type="button" class="filter-button" data-profile-tab="purchase" aria-pressed="false">Purchase</button>
                         </div>
 
-                        <!-- Edit Profile -->
                         <div class="panel" id="profile-panel-edit">
                             <h2 class="panel-title">Edit Profile</h2>
                             <p class="panel-description">Update your account details. Changes are saved immediately.</p>
@@ -198,7 +190,6 @@
                             </form>
                         </div>
 
-                        <!-- Settings -->
                         <div class="panel" id="profile-panel-settings" hidden>
                             <h2 class="panel-title">Settings</h2>
                             <p class="panel-description">Manage account security and preferences.</p>
@@ -223,18 +214,19 @@
                                 <label class="form-label">Preferences</label>
                                 <p class="form-hint">No preferences available yet.</p>
                             </div>
+
                             <div class="form-group">
-    <label class="form-label">Logout</label>
-    <p class="form-hint">
-        Sign out of your preparekora.in account on this device.
-        You can log back in at any time.
-    </p>
-    <button type="button"
-            class="btn btn-outline"
-            id="profile-logout">
-        Logout
-    </button>
-</div>
+                                <label class="form-label">Logout</label>
+                                <p class="form-hint">
+                                    Sign out of your preparekora.in account on this device.
+                                    You can log back in at any time.
+                                </p>
+                                <button type="button"
+                                        class="btn btn-outline"
+                                        id="profile-logout">
+                                    Logout
+                                </button>
+                            </div>
 
                             <div class="form-group">
                                 <label class="form-label">Delete Account</label>
@@ -280,7 +272,6 @@
                             </div>
                         </div>
 
-                        <!-- Test History -->
                         <div class="panel" id="profile-panel-history" hidden>
                             <div class="sk-test-history">
                                 <div class="sk-history-heading">
@@ -322,7 +313,6 @@
                             </div>
                         </div>
 
-                        <!-- Purchase -->
                         <div class="panel" id="profile-panel-purchase" hidden>
                             <h2 class="panel-title">Purchase</h2>
                             <p class="panel-description">Premium practice packs will be available here in a future update.</p>
@@ -340,7 +330,6 @@
 
     </main>
 
-    <!-- Shared Footer -->
     <footer class="site-footer">
         <div class="footer-main">
 
@@ -397,7 +386,8 @@
             </span>
         </div>
     </footer>
-        <script src="script.js" defer></script>
+    
+    <script src="script.js" defer></script>
     <script src="js/shared-header.js" defer></script>
     <script src="js/profile.js" defer></script>
 </body>
