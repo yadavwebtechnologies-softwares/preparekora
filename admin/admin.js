@@ -1,4 +1,4 @@
-/* PrepareKora — Admin Panel (Phase A+B+C + request review + bulk import) */
+/* PrepareKora — Admin Panel */
 "use strict";
 
 (() => {
@@ -19,7 +19,9 @@
         editingTest: null,
         editingSubject: null,
         editingOrg: null,
-        activeRequest: null
+        activeRequest: null,
+        dbPath: "users",
+        dbEditingPath: null
     };
 
     function readSession() {
@@ -59,7 +61,7 @@
 
     function setView(name) {
         state.view = name;
-        ["gate","loading","unauthorized","overview","tests","subjects","organizations","users","user-detail","requests","notifications","import"]
+        ["gate","loading","unauthorized","overview","tests","subjects","organizations","users","user-detail","requests","notifications","import","db"]
             .forEach((v) => {
                 const el = $(`#view-${v}`);
                 if (el) el.hidden = v !== name;
@@ -68,7 +70,7 @@
         const titles = {
             overview: "Overview", tests: "Tests", subjects: "Subjects", organizations: "Organizations",
             users: "Users", "user-detail": "User Detail", requests: "Account Requests", notifications: "Notifications",
-            import: "Bulk Import"
+            import: "Bulk Import", db: "Database Manager"
         };
         $("#admin-page-title").textContent = titles[name] || "Admin";
     }
@@ -233,14 +235,11 @@
         span.style.fontWeight = "600";
         span.textContent = status || "pending";
         if (status === "approved" || status === "completed") {
-            span.style.color = "#067647";
-            span.style.borderColor = "#c9e3d0";
+            span.style.color = "#067647"; span.style.borderColor = "#c9e3d0";
         } else if (status === "rejected") {
-            span.style.color = "#b42318";
-            span.style.borderColor = "#f5d5d2";
+            span.style.color = "#b42318"; span.style.borderColor = "#f5d5d2";
         } else if (status === "under_review") {
-            span.style.color = "#b54708";
-            span.style.borderColor = "#fce6c9";
+            span.style.color = "#b54708"; span.style.borderColor = "#fce6c9";
         }
         return span;
     }
@@ -253,10 +252,7 @@
             td.style.overflow = "hidden";
             td.style.textOverflow = "ellipsis";
             td.title = text;
-        } else {
-            td.textContent = "—";
-            td.className = "admin-muted";
-        }
+        } else { td.textContent = "—"; td.className = "admin-muted"; }
         return td;
     }
 
@@ -280,8 +276,7 @@
                     const btn = document.createElement("button");
                     btn.type = "button"; btn.className = "admin-row-btn"; btn.textContent = "Review";
                     btn.addEventListener("click", () => openRequestReview(r, "deletion"));
-                    actionTd.appendChild(btn);
-                    tr.appendChild(actionTd);
+                    actionTd.appendChild(btn); tr.appendChild(actionTd);
                     delBody.appendChild(tr);
                 });
             }
@@ -303,8 +298,7 @@
                     const btn = document.createElement("button");
                     btn.type = "button"; btn.className = "admin-row-btn"; btn.textContent = "Review";
                     btn.addEventListener("click", () => openRequestReview(r, "email"));
-                    actionTd.appendChild(btn);
-                    tr.appendChild(actionTd);
+                    actionTd.appendChild(btn); tr.appendChild(actionTd);
                     emBody.appendChild(tr);
                 });
             }
@@ -344,9 +338,7 @@
             $("#request-review-card").hidden = true;
             state.activeRequest = null;
             await loadRequests();
-        } catch (error) {
-            msg.textContent = error.message || "Could not save.";
-        }
+        } catch (error) { msg.textContent = error.message || "Could not save."; }
     }
 
     /* ---------- Tests ---------- */
@@ -783,21 +775,15 @@
         try {
             items = JSON.parse(json);
             if (!Array.isArray(items)) throw new Error("JSON must be an array.");
-        } catch (e) {
-            out.textContent = `Invalid JSON: ${e.message}`;
-            return;
-        }
+        } catch (e) { out.textContent = `Invalid JSON: ${e.message}`; return; }
         if (!items.length) { out.textContent = "Array is empty."; return; }
         if (!confirm(`Import ${items.length} subject(s)${overwrite ? " (overwrite existing)" : ""}?`)) return;
-
         out.textContent = "Importing…";
         try {
             const res = await api("/admin/import/subjects", { method: "POST", body: { items, overwrite } });
             formatImportReport(out, res);
             await loadSubjects();
-        } catch (error) {
-            showImportError(out, error);
-        }
+        } catch (error) { showImportError(out, error); }
     }
 
     async function importTests() {
@@ -809,21 +795,15 @@
         try {
             items = JSON.parse(json);
             if (!Array.isArray(items)) throw new Error("JSON must be an array.");
-        } catch (e) {
-            out.textContent = `Invalid JSON: ${e.message}`;
-            return;
-        }
+        } catch (e) { out.textContent = `Invalid JSON: ${e.message}`; return; }
         if (!items.length) { out.textContent = "Array is empty."; return; }
         if (!confirm(`Import ${items.length} test(s)${overwrite ? " (overwrite existing)" : ""}?`)) return;
-
         out.textContent = "Importing…";
         try {
             const res = await api("/admin/import/tests", { method: "POST", body: { items, overwrite } });
             formatImportReport(out, res);
             await loadTests();
-        } catch (error) {
-            showImportError(out, error);
-        }
+        } catch (error) { showImportError(out, error); }
     }
 
     async function importMcqs() {
@@ -836,21 +816,15 @@
         try {
             questions = JSON.parse(json);
             if (!Array.isArray(questions)) throw new Error("JSON must be an array.");
-        } catch (e) {
-            out.textContent = `Invalid JSON: ${e.message}`;
-            return;
-        }
+        } catch (e) { out.textContent = `Invalid JSON: ${e.message}`; return; }
         if (!questions.length) { out.textContent = "Array is empty."; return; }
         if (!confirm(`Append ${questions.length} question(s) to "${testId}"?`)) return;
-
         out.textContent = "Importing…";
         try {
             const res = await api("/admin/import/mcqs", { method: "POST", body: { testId, questions } });
             formatImportReport(out, res);
             await populateImportTestDropdown();
-        } catch (error) {
-            showImportError(out, error);
-        }
+        } catch (error) { showImportError(out, error); }
     }
 
     async function populateImportTestDropdown() {
@@ -877,6 +851,228 @@
         }
     }
 
+    /* ---------- Database Manager ---------- */
+
+    function describeValue(val) {
+        if (val === null) return "null";
+        if (Array.isArray(val)) return `[${val.length} items]`;
+        if (typeof val === "object") {
+            const keys = Object.keys(val);
+            return `{${keys.slice(0, 3).join(", ")}${keys.length > 3 ? ", …" : ""}}`;
+        }
+        if (typeof val === "string") return val.length > 80 ? val.slice(0, 80) + "…" : val;
+        return String(val);
+    }
+
+    function updateDbBreadcrumb(path) {
+        const crumb = $("#db-breadcrumb");
+        if (crumb) crumb.textContent = `Path: /${path}`;
+        const segments = path.split("/");
+
+        const up = $("#db-up");
+        if (up) {
+            up.hidden = segments.length <= 1;
+        }
+        const editRoot = $("#db-edit-root");
+        if (editRoot) {
+            editRoot.hidden = false;
+        }
+        const delRoot = $("#db-delete-root");
+        if (delRoot) {
+            delRoot.hidden = segments.length <= 1;
+        }
+    }
+
+    function renderDbObject(container, path, obj) {
+        const keys = Object.keys(obj).sort();
+        if (!keys.length) {
+            const p = document.createElement("p");
+            p.className = "admin-muted";
+            p.textContent = "(Empty object)";
+            container.appendChild(p);
+            return;
+        }
+        const table = document.createElement("table");
+        table.className = "admin-table";
+        table.innerHTML = "<thead><tr><th>Key</th><th>Type</th><th>Preview</th><th>Actions</th></tr></thead>";
+        const tbody = document.createElement("tbody");
+        keys.forEach((key) => {
+            const val = obj[key];
+            const type = Array.isArray(val) ? "array" : val === null ? "null" : typeof val;
+            const preview = describeValue(val);
+            const tr = document.createElement("tr");
+
+            const keyTd = document.createElement("td");
+            const keyBtn = document.createElement("button");
+            keyBtn.type = "button";
+            keyBtn.className = "admin-row-btn";
+            keyBtn.textContent = key;
+            keyBtn.addEventListener("click", () => loadDbPath(`${path}/${key}`));
+            keyTd.appendChild(keyBtn);
+
+            const typeTd = document.createElement("td");
+            typeTd.textContent = type;
+
+            const previewTd = document.createElement("td");
+            previewTd.textContent = preview;
+            previewTd.style.maxWidth = "300px";
+            previewTd.style.overflow = "hidden";
+            previewTd.style.textOverflow = "ellipsis";
+            previewTd.style.whiteSpace = "nowrap";
+
+            const actionsTd = document.createElement("td");
+            actionsTd.className = "admin-row-actions";
+
+            const editBtn = document.createElement("button");
+            editBtn.type = "button";
+            editBtn.className = "admin-row-btn";
+            editBtn.textContent = "Edit";
+            editBtn.addEventListener("click", () => openDbEdit(`${path}/${key}`, val));
+
+            const delBtn = document.createElement("button");
+            delBtn.type = "button";
+            delBtn.className = "admin-row-btn admin-row-btn-danger";
+            delBtn.textContent = "Delete";
+            delBtn.addEventListener("click", () => deleteDbNode(`${path}/${key}`));
+
+            actionsTd.append(editBtn, delBtn);
+            tr.append(keyTd, typeTd, previewTd, actionsTd);
+            tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        container.appendChild(table);
+    }
+
+    function renderDbScalar(container, path, value) {
+        const wrap = document.createElement("div");
+        wrap.style.padding = "14px";
+        wrap.style.background = "var(--bg-soft)";
+        wrap.style.borderRadius = "6px";
+
+        const typeP = document.createElement("p");
+        typeP.className = "admin-muted";
+        typeP.style.margin = "0 0 8px";
+        typeP.textContent = `Type: ${value === null ? "null" : typeof value}`;
+
+        const valP = document.createElement("p");
+        valP.style.fontFamily = "monospace";
+        valP.style.fontSize = "13px";
+        valP.style.whiteSpace = "pre-wrap";
+        valP.style.margin = "0 0 10px";
+        valP.textContent = String(value);
+
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "admin-row-btn";
+        editBtn.textContent = "Edit value";
+        editBtn.addEventListener("click", () => openDbEdit(path, value));
+
+        wrap.append(typeP, valP, editBtn);
+        container.appendChild(wrap);
+    }
+
+    function renderDbNode(path, response) {
+        const result = $("#db-result");
+        result.replaceChildren();
+
+        if (!response.exists || response.data === null) {
+            const empty = document.createElement("p");
+            empty.className = "admin-muted";
+            empty.textContent = "(Node does not exist — you can write a value by clicking 'Edit this node')";
+            result.appendChild(empty);
+            updateDbBreadcrumb(path);
+            return;
+        }
+
+        const data = response.data;
+        if (Array.isArray(data)) {
+            const obj = {};
+            data.forEach((v, i) => { obj[i] = v; });
+            renderDbObject(result, path, obj);
+        } else if (data && typeof data === "object") {
+            renderDbObject(result, path, data);
+        } else {
+            renderDbScalar(result, path, data);
+        }
+        updateDbBreadcrumb(path);
+    }
+
+    async function loadDbPath(path) {
+        const result = $("#db-result");
+        if (!result) return;
+        state.dbPath = path;
+        $("#db-path").value = path;
+        result.innerHTML = '<p class="admin-muted">Loading…</p>';
+        try {
+            const data = await api(`/admin/db?path=${encodeURIComponent(path)}`);
+            renderDbNode(path, data);
+        } catch (error) {
+            result.innerHTML = `<p style="color:#b42318">${error.message}</p>`;
+        }
+    }
+
+    function openDbEdit(path, currentValue) {
+        const card = $("#db-edit-card");
+        if (!card) return;
+        $("#db-edit-title").textContent = "Edit Node";
+        $("#db-edit-path").textContent = `Path: /${path}`;
+        $("#db-edit-value").value = JSON.stringify(currentValue, null, 2);
+        $("#db-edit-message").textContent = "";
+        $("#db-edit-message").style.color = "";
+        state.dbEditingPath = path;
+        card.hidden = false;
+        card.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    async function saveDbEdit() {
+        const valueEl = $("#db-edit-value");
+        const msgEl = $("#db-edit-message");
+        if (!state.dbEditingPath || !valueEl || !msgEl) return;
+
+        let parsed;
+        try {
+            parsed = JSON.parse(valueEl.value);
+        } catch (e) {
+            msgEl.textContent = `Invalid JSON: ${e.message}`;
+            msgEl.style.color = "#b42318";
+            return;
+        }
+
+        if (!confirm(`Overwrite node "/${state.dbEditingPath}"? This replaces the current value completely.`)) return;
+
+        msgEl.textContent = "Saving…";
+        msgEl.style.color = "";
+        try {
+            await api("/admin/db", {
+                method: "PUT",
+                body: { path: state.dbEditingPath, value: parsed }
+            });
+            msgEl.textContent = "Saved.";
+            msgEl.style.color = "#067647";
+            $("#db-edit-card").hidden = true;
+            await loadDbPath(state.dbPath);
+        } catch (error) {
+            msgEl.textContent = error.message;
+            msgEl.style.color = "#b42318";
+        }
+    }
+
+    async function deleteDbNode(path) {
+        if (!confirm(`Delete node "/${path}"? This cannot be undone.`)) return;
+        try {
+            await api(`/admin/db?path=${encodeURIComponent(path)}`, { method: "DELETE" });
+            const segments = path.split("/");
+            if (state.dbPath && (state.dbPath === path || state.dbPath.startsWith(path + "/"))) {
+                const parent = segments.length > 1 ? segments.slice(0, -1).join("/") : segments[0];
+                await loadDbPath(parent);
+            } else {
+                await loadDbPath(state.dbPath);
+            }
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
     /* ---------- Wiring ---------- */
 
     function wire() {
@@ -891,6 +1087,7 @@
                 if (v === "subjects") await loadSubjects();
                 if (v === "organizations") await loadOrganizations();
                 if (v === "import") await populateImportTestDropdown();
+                if (v === "db") await loadDbPath(state.dbPath || "users");
                 document.body.classList.remove("sidebar-open");
             });
         });
@@ -941,6 +1138,46 @@
         if (impTest) impTest.addEventListener("click", importTests);
         const impMcq = $("#import-mcqs-submit");
         if (impMcq) impMcq.addEventListener("click", importMcqs);
+
+        const dbLoad = $("#db-load");
+        if (dbLoad) dbLoad.addEventListener("click", () => {
+            const path = $("#db-path").value.trim();
+            if (path) loadDbPath(path.replace(/^\/+|\/+$/g, ""));
+        });
+        const dbPathInput = $("#db-path");
+        if (dbPathInput) dbPathInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                const path = $("#db-path").value.trim();
+                if (path) loadDbPath(path.replace(/^\/+|\/+$/g, ""));
+            }
+        });
+
+        const dbUp = $("#db-up");
+        if (dbUp) dbUp.addEventListener("click", () => {
+            const segments = state.dbPath.split("/");
+            if (segments.length > 1) {
+                loadDbPath(segments.slice(0, -1).join("/"));
+            }
+        });
+        const dbRefresh = $("#db-refresh");
+        if (dbRefresh) dbRefresh.addEventListener("click", () => loadDbPath(state.dbPath));
+        const dbEditRoot = $("#db-edit-root");
+        if (dbEditRoot) dbEditRoot.addEventListener("click", async () => {
+            try {
+                const data = await api(`/admin/db?path=${encodeURIComponent(state.dbPath)}`);
+                openDbEdit(state.dbPath, data.data);
+            } catch (error) { alert(error.message); }
+        });
+        const dbDeleteRoot = $("#db-delete-root");
+        if (dbDeleteRoot) dbDeleteRoot.addEventListener("click", () => deleteDbNode(state.dbPath));
+
+        const dbEditCancel = $("#db-edit-cancel");
+        if (dbEditCancel) dbEditCancel.addEventListener("click", () => {
+            $("#db-edit-card").hidden = true;
+        });
+        const dbEditSave = $("#db-edit-save");
+        if (dbEditSave) dbEditSave.addEventListener("click", saveDbEdit);
 
         $("#admin-menu-btn").addEventListener("click", () => document.body.classList.toggle("sidebar-open"));
     }
