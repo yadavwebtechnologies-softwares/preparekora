@@ -4,14 +4,63 @@
   PrepareKora — Mock Test page.
 
   Flow:
-    1. Read ?test=<id> from URL
-    2. Fetch test from Worker (no answers)
-    3. Show start screen → name form (required) → test → result
-    4. Score locally by fetching answers from Worker at submit time
-    5. Translate question content via API when language is Assamese
+    GET /api/tests/:id                  → public test (no answers)
+    POST /api/tests/:id/submit          → server scores, returns result
+    Result PNG                           → user name, title, score, date, publisher
+
+  Uses window.PK_API when present (loaded via api.js);
+  otherwise uses an inline fetch helper with auto-detected base URL.
 */
 
 (function () {
+
+  /* ---------- API fallback ---------- */
+
+  const API_BASE = (function () {
+    const host = window.location.hostname;
+    const isLocal =
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host === "0.0.0.0" ||
+      host === "" ||
+      host.endsWith(".local");
+    return isLocal ? "http://localhost:8787/api" : "/api";
+  })();
+
+  async function apiGet(path) {
+    if (window.PK_API && window.PK_API.getPublishedTest) {
+      return window.PK_API.getPublishedTest(decodeURIComponent(path.replace("/tests/", "")));
+    }
+    const res = await fetch(API_BASE + path, { headers: { Accept: "application/json" } });
+    if (!res.ok) { const e = new Error("HTTP " + res.status); e.status = res.status; throw e; }
+    return res.json();
+  }
+
+  async function apiSubmit(id, payload) {
+    const url = API_BASE + "/tests/" + encodeURIComponent(id) + "/submit";
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(function () { return null; });
+      const e = new Error((data && data.error) || ("HTTP " + res.status));
+      e.status = res.status;
+      throw e;
+    }
+    return res.json();
+  }
+
+  async function apiTranslate(text, target) {
+    if (window.PK && window.PK.translate) return window.PK.translate(text, target);
+    return text;
+  }
+
+  async function apiTranslateMany(items, target) {
+    if (window.PK && window.PK.translateMany) return window.PK.translateMany(items, target);
+    return items;
+  }
 
   /* ---------- DOM ---------- */
 
@@ -24,89 +73,88 @@
     result:   document.getElementById("resultScreen")
   };
 
-  const startTitle       = document.getElementById("startTitle");
-  const startPublisher   = document.getElementById("startPublisher");
-  const startQuestions   = document.getElementById("startQuestions");
-  const startMinutes     = document.getElementById("startMinutes");
-  const startMarks       = document.getElementById("startMarks");
-  const startBtn         = document.getElementById("startBtn");
-  const startLoading     = document.getElementById("startLoading");
+  const startTitle      = document.getElementById("startTitle");
+  const startPublisher  = document.getElementById("startPublisher");
+  const startQuestions  = document.getElementById("startQuestions");
+  const startMinutes    = document.getElementById("startMinutes");
+  const startMarks      = document.getElementById("startMarks");
+  const startBtn        = document.getElementById("startBtn");
 
-  const nameForm         = document.getElementById("nameForm");
-  const nameTestInfo     = document.getElementById("nameTestInfo");
-  const userNameInput    = document.getElementById("userName");
-  const userWhatsAppInput= document.getElementById("userWhatsApp");
-  const nameError        = document.getElementById("nameError");
-  const waError          = document.getElementById("waError");
-  const backToStartBtn   = document.getElementById("backToStartBtn");
+  const nameForm        = document.getElementById("nameForm");
+  const nameTestInfo    = document.getElementById("nameTestInfo");
+  const userNameInput   = document.getElementById("userName");
+  const userWhatsAppInput = document.getElementById("userWhatsApp");
+  const nameError       = document.getElementById("nameError");
+  const waError         = document.getElementById("waError");
+  const backToStartBtn  = document.getElementById("backToStartBtn");
 
-  const examTitle        = document.getElementById("examTitle");
-  const examSub          = document.getElementById("examSub");
-  const timerEl          = document.getElementById("timer");
-  const timerText        = document.getElementById("timerText");
-  const submitBtn        = document.getElementById("submitBtn");
-  const paletteToggle    = document.getElementById("paletteToggle");
+  const examTitle       = document.getElementById("examTitle");
+  const examSub         = document.getElementById("examSub");
+  const timerEl         = document.getElementById("timer");
+  const timerText       = document.getElementById("timerText");
+  const submitBtn       = document.getElementById("submitBtn");
+  const paletteToggle   = document.getElementById("paletteToggle");
 
-  const qNumber          = document.getElementById("qNumber");
-  const qStatus          = document.getElementById("qStatus");
-  const qText            = document.getElementById("qText");
-  const optionsFieldset  = document.getElementById("optionsFieldset");
-  const optionsLegend    = document.getElementById("optionsLegend");
+  const qNumber         = document.getElementById("qNumber");
+  const qStatus         = document.getElementById("qStatus");
+  const qText           = document.getElementById("qText");
+  const optionsFieldset = document.getElementById("optionsFieldset");
+  const optionsLegend   = document.getElementById("optionsLegend");
 
-  const markBtn          = document.getElementById("markBtn");
-  const clearBtn         = document.getElementById("clearBtn");
-  const prevBtn          = document.getElementById("prevBtn");
-  const nextBtn          = document.getElementById("nextBtn");
+  const markBtn         = document.getElementById("markBtn");
+  const clearBtn        = document.getElementById("clearBtn");
+  const prevBtn         = document.getElementById("prevBtn");
+  const nextBtn         = document.getElementById("nextBtn");
 
-  const palettePanel     = document.getElementById("palettePanel");
-  const paletteGrid      = document.getElementById("paletteGrid");
-  const paletteClose     = document.getElementById("paletteClose");
-  const paletteBackdrop  = document.getElementById("paletteBackdrop");
+  const palettePanel    = document.getElementById("palettePanel");
+  const paletteGrid     = document.getElementById("paletteGrid");
+  const paletteClose    = document.getElementById("paletteClose");
+  const paletteBackdrop = document.getElementById("paletteBackdrop");
 
-  const confirmOverlay   = document.getElementById("confirmOverlay");
-  const confirmAnswered  = document.getElementById("confirmAnswered");
-  const confirmUnanswered= document.getElementById("confirmUnanswered");
-  const confirmMarked    = document.getElementById("confirmMarked");
-  const confirmCancel    = document.getElementById("confirmCancel");
-  const confirmSubmit    = document.getElementById("confirmSubmit");
+  const confirmOverlay  = document.getElementById("confirmOverlay");
+  const confirmAnswered = document.getElementById("confirmAnswered");
+  const confirmUnanswered = document.getElementById("confirmUnanswered");
+  const confirmMarked   = document.getElementById("confirmMarked");
+  const confirmCancel   = document.getElementById("confirmCancel");
+  const confirmSubmit   = document.getElementById("confirmSubmit");
 
-  const resultTitle      = document.getElementById("resultTitle");
-  const resultPublisher  = document.getElementById("resultPublisher");
-  const scoreValue       = document.getElementById("scoreValue");
-  const scoreTotal       = document.getElementById("scoreTotal");
-  const scorePercent     = document.getElementById("scorePercent");
-  const progressFill     = document.getElementById("progressFill");
-  const statCorrect      = document.getElementById("statCorrect");
-  const statWrong        = document.getElementById("statWrong");
-  const statUnattempted  = document.getElementById("statUnattempted");
-  const statTime         = document.getElementById("statTime");
-  const downloadBtn      = document.getElementById("downloadBtn");
-  const retakeBtn        = document.getElementById("retakeBtn");
+  const resultTitle     = document.getElementById("resultTitle");
+  const resultPublisher = document.getElementById("resultPublisher");
+  const scoreValue      = document.getElementById("scoreValue");
+  const scoreTotal      = document.getElementById("scoreTotal");
+  const scorePercent    = document.getElementById("scorePercent");
+  const progressFill    = document.getElementById("progressFill");
+  const statCorrect     = document.getElementById("statCorrect");
+  const statWrong       = document.getElementById("statWrong");
+  const statUnattempted = document.getElementById("statUnattempted");
+  const statTime        = document.getElementById("statTime");
+  const downloadBtn     = document.getElementById("downloadBtn");
+  const retakeBtn       = document.getElementById("retakeBtn");
 
-  const srStatus         = document.getElementById("srStatus");
+  const srStatus        = document.getElementById("srStatus");
 
-  const menuToggle       = document.getElementById("menuToggle");
-  const menuPanel        = document.getElementById("menuPanel");
-  const menuIcon         = document.getElementById("menuIcon");
+  const menuToggle      = document.getElementById("menuToggle");
+  const menuPanel       = document.getElementById("menuPanel");
+  const menuIcon        = document.getElementById("menuIcon");
 
   /* ---------- State ---------- */
 
   const state = {
-    test: null,               // full test (with answers) — fetched at submit
-    publicTest: null,         // test without answers (for rendering)
-    answers: {},              // { [questionIndex]: optionIndex }
+    publicTest: null,        // { id, title, publisherName, minutes, questions: [{q, options}] }
+    answers: {},             // index -> option index (0-3)
     marked: new Set(),
     visited: new Set(),
     index: 0,
     started: false,
     finished: false,
+    submitting: false,
     remaining: 0,
     endAt: 0,
     startedAt: 0,
     elapsed: 0,
     timerId: null,
     warnedOneMinute: false,
-    result: null,
+    result: null,            // { correct, wrong, unattempted, total, percent }
     userName: "",
     userWhatsApp: "",
     translatedTitle: "",
@@ -116,11 +164,15 @@
   /* ---------- Utils ---------- */
 
   function t(key, vars) {
-    return window.PK ? window.PK.t(key, vars) : key;
+    return (window.PK && window.PK.t) ? window.PK.t(key, vars) : key;
+  }
+
+  function locale() {
+    return (window.PK && window.PK.locale) ? window.PK.locale() : "en-IN";
   }
 
   function escapeHTML(v) {
-    return String(v).replace(/[&<>"']/g, (ch) => {
+    return String(v).replace(/[&<>"']/g, function (ch) {
       const m = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
       return m[ch];
     });
@@ -136,11 +188,11 @@
   function announce(msg) {
     if (!srStatus) return;
     srStatus.textContent = "";
-    setTimeout(() => { srStatus.textContent = msg; }, 60);
+    setTimeout(function () { srStatus.textContent = msg; }, 60);
   }
 
   function showScreen(name) {
-    Object.keys(screens).forEach((k) => {
+    Object.keys(screens).forEach(function (k) {
       if (screens[k]) screens[k].hidden = (k !== name);
     });
     window.scrollTo({ top: 0, behavior: "auto" });
@@ -161,7 +213,7 @@
     return t("byLine", { name: name || "—" });
   }
 
-  /* ---------- Test fetch ---------- */
+  /* ---------- Load test ---------- */
 
   const params = new URLSearchParams(window.location.search);
   const testId = params.get("test") || "";
@@ -173,13 +225,13 @@
     }
 
     try {
-      const res = await window.PK_API.getPublishedTest(testId);
+      const res = await apiGet("/tests/" + encodeURIComponent(testId));
       state.publicTest = res;
       state.translatedTitle = res.title;
       state.translatedPublisher = res.publisherName;
       renderStart();
       showScreen("start");
-      maybeTranslateStart();
+      translateStartIfNeeded();
     } catch (err) {
       showScreen("notFound");
     }
@@ -191,43 +243,40 @@
     const pt = state.publicTest;
     if (!pt) return;
 
-    startTitle.textContent = pt.title;
-    startPublisher.textContent = publisherLine(pt.publisherName);
+    startTitle.textContent = state.translatedTitle || pt.title;
+    startPublisher.textContent = publisherLine(state.translatedPublisher || pt.publisherName);
     startQuestions.textContent = String(pt.questions.length);
     startMinutes.textContent = String(pt.minutes);
     startMarks.textContent = String(pt.questions.length);
 
     nameTestInfo.textContent =
-      pt.title + " — " + publisherLine(pt.publisherName);
+      (state.translatedTitle || pt.title) + " — " +
+      publisherLine(state.translatedPublisher || pt.publisherName);
   }
 
-  async function maybeTranslateStart() {
+  async function translateStartIfNeeded() {
     if (!window.PK || PK.lang !== "as" || !state.publicTest) return;
 
     try {
-      const [tt, tp] = await Promise.all([
-        PK.translate(state.publicTest.title, "as"),
-        PK.translate(state.publicTest.publisherName, "as")
+      const results = await Promise.all([
+        apiTranslate(state.publicTest.title, "as"),
+        apiTranslate(state.publicTest.publisherName, "as")
       ]);
-      state.translatedTitle = tt;
-      state.translatedPublisher = tp;
-
-      startTitle.textContent = tt;
-      startPublisher.textContent = t("byLine", { name: tp });
-
-      nameTestInfo.textContent = tt + " — " + t("byLine", { name: tp });
+      state.translatedTitle = results[0] || state.publicTest.title;
+      state.translatedPublisher = results[1] || state.publicTest.publisherName;
+      renderStart();
     } catch (err) { /* silent */ }
   }
 
   if (startBtn) {
-    startBtn.addEventListener("click", () => {
+    startBtn.addEventListener("click", function () {
       showScreen("name");
-      setTimeout(() => { if (userNameInput) userNameInput.focus(); }, 60);
+      setTimeout(function () { if (userNameInput) userNameInput.focus(); }, 60);
     });
   }
 
   if (backToStartBtn) {
-    backToStartBtn.addEventListener("click", () => showScreen("start"));
+    backToStartBtn.addEventListener("click", function () { showScreen("start"); });
   }
 
   /* ---------- Name form ---------- */
@@ -276,19 +325,19 @@
   }
 
   if (userNameInput) {
-    userNameInput.addEventListener("input", () => {
+    userNameInput.addEventListener("input", function () {
       if (userNameInput.classList.contains("is-invalid")) validateName();
     });
   }
 
   if (userWhatsAppInput) {
-    userWhatsAppInput.addEventListener("input", () => {
+    userWhatsAppInput.addEventListener("input", function () {
       if (userWhatsAppInput.classList.contains("is-invalid")) validateWhatsApp();
     });
   }
 
   if (nameForm) {
-    nameForm.addEventListener("submit", (e) => {
+    nameForm.addEventListener("submit", function (e) {
       e.preventDefault();
 
       const name = validateName();
@@ -312,10 +361,11 @@
     state.marked.clear();
     state.visited.clear();
     state.finished = false;
+    state.submitting = false;
 
     showScreen("test");
 
-    examTitle.textContent = state.publicTest.title;
+    examTitle.textContent = state.translatedTitle || state.publicTest.title;
     renderQuestion(true);
     renderPalette();
     updateNavSummary();
@@ -346,8 +396,8 @@
 
     const selected = hasAnswer(index) ? state.answers[index] : null;
 
-    const buildOptions = (optionTexts) => {
-      optionTexts.forEach((optText, optionIndex) => {
+    const buildOptions = function (optionTexts) {
+      optionTexts.forEach(function (optText, optionIndex) {
         const label = document.createElement("label");
         label.className = "option";
         label.dataset.value = String(optionIndex);
@@ -358,7 +408,7 @@
         input.name = "q-option";
         input.value = String(optionIndex);
         input.checked = selected === optionIndex;
-        input.addEventListener("change", () => selectOption(optionIndex));
+        input.addEventListener("change", function () { selectOption(optionIndex); });
 
         const key = document.createElement("span");
         key.className = "option-key";
@@ -386,8 +436,8 @@
 
     if (window.PK && PK.lang === "as") {
       try {
-        const translated = await PK.translateMany(
-          [question.q, ...question.options],
+        const translated = await apiTranslateMany(
+          [question.q].concat(question.options),
           "as"
         );
         if (translated && translated.length === question.options.length + 1) {
@@ -406,7 +456,7 @@
   function selectOption(optionIndex) {
     state.answers[state.index] = optionIndex;
 
-    optionsFieldset.querySelectorAll(".option").forEach((label) => {
+    optionsFieldset.querySelectorAll(".option").forEach(function (label) {
       label.classList.toggle("is-selected", label.dataset.value === String(optionIndex));
     });
 
@@ -419,10 +469,10 @@
     if (!hasAnswer(state.index)) return;
     delete state.answers[state.index];
 
-    optionsFieldset.querySelectorAll(".option").forEach((label) => {
+    optionsFieldset.querySelectorAll(".option").forEach(function (label) {
       label.classList.remove("is-selected");
     });
-    optionsFieldset.querySelectorAll("input[type='radio']").forEach((input) => {
+    optionsFieldset.querySelectorAll("input[type='radio']").forEach(function (input) {
       input.checked = false;
     });
 
@@ -434,7 +484,7 @@
   function updateNavSummary() {
     const answered = Object.keys(state.answers).length;
     const total = state.publicTest ? state.publicTest.questions.length : 0;
-    examSub.textContent = answered + " / " + total;
+    if (examSub) examSub.textContent = answered + " / " + total;
   }
 
   function updateMarkButton() {
@@ -467,7 +517,7 @@
 
     paletteGrid.replaceChildren();
 
-    pt.questions.forEach((_, index) => {
+    pt.questions.forEach(function (_, index) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "palette-btn";
@@ -482,7 +532,7 @@
       }
 
       btn.setAttribute("aria-label", (index + 1) + ". " + statusFor(index));
-      btn.addEventListener("click", () => goTo(index));
+      btn.addEventListener("click", function () { goTo(index); });
       paletteGrid.appendChild(btn);
     });
   }
@@ -503,7 +553,7 @@
   }
 
   if (paletteToggle) {
-    paletteToggle.addEventListener("click", () => {
+    paletteToggle.addEventListener("click", function () {
       if (palettePanel.classList.contains("open")) closePalette();
       else openPalette();
     });
@@ -534,7 +584,7 @@
 
     if (state.timerId) window.clearInterval(state.timerId);
 
-    state.timerId = window.setInterval(() => {
+    state.timerId = window.setInterval(function () {
       const remaining = Math.max(0, Math.round((state.endAt - Date.now()) / 1000));
       state.remaining = remaining;
       updateTimer();
@@ -543,7 +593,7 @@
         window.clearInterval(state.timerId);
         state.timerId = null;
         announce(t("timeUp"));
-        submitTest(true);
+        submitTest();
       }
     }, 250);
   }
@@ -551,7 +601,8 @@
   /* ---------- Submit + score ---------- */
 
   async function submitTest() {
-    if (state.finished) return;
+    if (state.finished || state.submitting) return;
+    state.submitting = true;
     state.finished = true;
 
     if (state.timerId) {
@@ -564,37 +615,47 @@
 
     state.elapsed = Math.round((Date.now() - state.startedAt) / 1000);
 
-    /* Fetch full test (with answers) for scoring */
-    try {
-      const res = await window.PK_API.getPublishedTest(testId);
-      state.test = res;
-    } catch (err) {
-      state.test = state.publicTest;
-    }
-
-    /* Score locally */
-    let correct = 0, wrong = 0, unattempted = 0;
-    const qs = state.publicTest.questions;
-
-    qs.forEach((_, i) => {
-      if (!hasAnswer(i)) unattempted += 1;
+    /* Build answer payload — only answered indices */
+    const payloadAnswers = {};
+    Object.keys(state.answers).forEach(function (i) {
+      const v = state.answers[i];
+      if (typeof v === "number" && v >= 0 && v <= 3) {
+        payloadAnswers[String(i)] = v;
+      }
     });
 
+    let scored = null;
+    try {
+      scored = await apiSubmit(testId, {
+        answers: payloadAnswers,
+        userName: state.userName
+      });
+    } catch (err) {
+      /* Fallback: count unanswered only; correct/wrong unavailable */
+      scored = {
+        correct: 0,
+        wrong: 0,
+        unattempted: state.publicTest.questions.length,
+        total: state.publicTest.questions.length,
+        percent: 0
+      };
+    }
+
     state.result = {
-      correct,
-      wrong,
-      unattempted,
-      total: qs.length,
-      percent: 0
+      correct: Number(scored.correct) || 0,
+      wrong: Number(scored.wrong) || 0,
+      unattempted: Number(scored.unattempted) || 0,
+      total: Number(scored.total) || state.publicTest.questions.length,
+      percent: Number(scored.percent) || 0
     };
 
-    /* If Worker exposes answers, score properly; otherwise all unattempted.
-       Note: public endpoint strips answers — so we cannot score client-side.
-       Fallback: attempt local score only when answers are present (never). */
-
-    state.result.percent = 0;
     showScreen("result");
     renderResult();
+
+    announce(
+      t("resultEyebrow") + ". " +
+      t("scoreOf", { a: state.result.correct, b: state.result.total })
+    );
   }
 
   function renderResult() {
@@ -618,7 +679,7 @@
     statTime.textContent = formatClock(state.elapsed);
   }
 
-  /* ---------- Submit confirm modal ---------- */
+  /* ---------- Submit confirmation modal ---------- */
 
   let lastFocused = null;
 
@@ -634,7 +695,7 @@
 
     confirmOverlay.classList.add("open");
     confirmOverlay.setAttribute("aria-hidden", "false");
-    setTimeout(() => { if (confirmSubmit) confirmSubmit.focus(); }, 40);
+    setTimeout(function () { if (confirmSubmit) confirmSubmit.focus(); }, 40);
   }
 
   function closeConfirm() {
@@ -650,7 +711,7 @@
     );
     const list = Array.prototype.filter.call(
       focusables,
-      (el) => !el.disabled && el.offsetParent !== null
+      function (el) { return !el.disabled && el.offsetParent !== null; }
     );
     if (!list.length) return;
 
@@ -658,11 +719,9 @@
     const last = list[list.length - 1];
 
     if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
+      event.preventDefault(); last.focus();
     } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
+      event.preventDefault(); first.focus();
     }
   }
 
@@ -682,7 +741,7 @@
     const words = String(text).split(/\s+/);
     const lines = [];
     let line = "";
-    words.forEach((word) => {
+    words.forEach(function (word) {
       const cand = line ? line + " " + word : word;
       if (ctx.measureText(cand).width > maxWidth && line) {
         lines.push(line);
@@ -743,7 +802,7 @@
     ctx.fillStyle = "#111111";
     const title = state.translatedTitle || (state.publicTest ? state.publicTest.title : "—");
     const titleLines = wrapText(ctx, title, W - pad * 2).slice(0, 2);
-    titleLines.forEach((line) => {
+    titleLines.forEach(function (line) {
       ctx.fillText(line, pad, y);
       y += 38;
     });
@@ -773,7 +832,7 @@
     const safeName = state.userName || "—";
     const nameLines = wrapText(ctx, safeName, W - pad * 2 - 320).slice(0, 2);
     let nameY = y + 22;
-    nameLines.forEach((line) => {
+    nameLines.forEach(function (line) {
       ctx.fillText(line, pad, nameY);
       nameY += 36;
     });
@@ -807,7 +866,7 @@
     ];
 
     let boxX = pad;
-    stats.forEach((item) => {
+    stats.forEach(function (item) {
       roundRect(ctx, boxX, y, boxW, boxH, 12);
       ctx.strokeStyle = "#e7e7e7";
       ctx.lineWidth = 1.5;
@@ -839,10 +898,9 @@
     ctx.textAlign = "right";
     ctx.fillText(
       t("resultPngDate") + ": " +
-      new Date().toLocaleDateString(
-        window.PK ? PK.locale() : "en-IN",
-        { day: "numeric", month: "short", year: "numeric" }
-      ),
+      new Date().toLocaleDateString(locale(), {
+        day: "numeric", month: "short", year: "numeric"
+      }),
       W - pad, footerY
     );
     ctx.textAlign = "left";
@@ -866,11 +924,11 @@
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      if (revoke) setTimeout(() => URL.revokeObjectURL(url), 1500);
+      if (revoke) setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
     }
 
     if (canvas.toBlob) {
-      canvas.toBlob((blob) => {
+      canvas.toBlob(function (blob) {
         if (!blob) return trigger(canvas.toDataURL("image/png"), false);
         trigger(URL.createObjectURL(blob), true);
       }, "image/png");
@@ -881,12 +939,12 @@
 
   /* ---------- Event wiring ---------- */
 
-  if (prevBtn) prevBtn.addEventListener("click", () => goTo(state.index - 1));
-  if (nextBtn) nextBtn.addEventListener("click", () => goTo(state.index + 1));
+  if (prevBtn) prevBtn.addEventListener("click", function () { goTo(state.index - 1); });
+  if (nextBtn) nextBtn.addEventListener("click", function () { goTo(state.index + 1); });
   if (clearBtn) clearBtn.addEventListener("click", clearResponse);
 
   if (markBtn) {
-    markBtn.addEventListener("click", () => {
+    markBtn.addEventListener("click", function () {
       if (state.marked.has(state.index)) state.marked.delete(state.index);
       else state.marked.add(state.index);
       updateMarkButton();
@@ -896,25 +954,25 @@
   }
 
   if (submitBtn) {
-    submitBtn.addEventListener("click", () => {
+    submitBtn.addEventListener("click", function () {
       if (state.finished) return;
       openConfirm();
     });
   }
 
   if (confirmCancel) confirmCancel.addEventListener("click", closeConfirm);
-  if (confirmSubmit) confirmSubmit.addEventListener("click", () => submitTest());
+  if (confirmSubmit) confirmSubmit.addEventListener("click", function () { submitTest(); });
 
   if (confirmOverlay) {
-    confirmOverlay.addEventListener("click", (e) => {
+    confirmOverlay.addEventListener("click", function (e) {
       if (e.target === confirmOverlay) closeConfirm();
     });
   }
 
   if (downloadBtn) downloadBtn.addEventListener("click", downloadResult);
-  if (retakeBtn) retakeBtn.addEventListener("click", () => window.location.reload());
+  if (retakeBtn) retakeBtn.addEventListener("click", function () { window.location.reload(); });
 
-  document.addEventListener("keydown", (e) => {
+  document.addEventListener("keydown", function (e) {
     if (confirmOverlay && confirmOverlay.classList.contains("open")) {
       if (e.key === "Escape") { e.preventDefault(); closeConfirm(); return; }
       if (e.key === "Tab") { trapFocus(e); return; }
@@ -925,7 +983,7 @@
     }
   });
 
-  window.addEventListener("resize", () => {
+  window.addEventListener("resize", function () {
     if (window.innerWidth > 860) closePalette();
   });
 
@@ -936,27 +994,27 @@
   const closeSVG = '<path d="m6 6 12 12"></path><path d="M18 6 6 18"></path>';
 
   function closeMenu() {
-    if (!menuPanel) return;
+    if (!menuPanel || !menuToggle || !menuIcon) return;
     menuPanel.classList.remove("open");
     menuToggle.setAttribute("aria-expanded", "false");
     menuIcon.innerHTML = hamburgerSVG;
   }
 
   function openMenu() {
-    if (!menuPanel) return;
+    if (!menuPanel || !menuToggle || !menuIcon) return;
     menuPanel.classList.add("open");
     menuToggle.setAttribute("aria-expanded", "true");
     menuIcon.innerHTML = closeSVG;
   }
 
-  if (menuToggle && menuPanel) {
-    menuToggle.addEventListener("click", (e) => {
+  if (menuToggle && menuPanel && menuIcon) {
+    menuToggle.addEventListener("click", function (e) {
       e.stopPropagation();
       if (menuPanel.classList.contains("open")) closeMenu();
       else openMenu();
     });
 
-    document.addEventListener("click", (e) => {
+    document.addEventListener("click", function (e) {
       if (
         menuPanel.classList.contains("open") &&
         !menuPanel.contains(e.target) &&
@@ -964,37 +1022,24 @@
       ) closeMenu();
     });
 
-    menuPanel.querySelectorAll("a").forEach((link) => {
+    menuPanel.querySelectorAll("a").forEach(function (link) {
       link.addEventListener("click", closeMenu);
     });
   }
 
   /* ---------- Language change ---------- */
 
-  document.addEventListener("pk:langchange", async () => {
+  document.addEventListener("pk:langchange", async function () {
     if (!state.publicTest) return;
-    document.title = state.publicTest.title + " — PrepareKora.in";
 
     if (state.finished) {
-      if (window.PK && PK.lang === "as") {
-        try {
-          const [tt, tp] = await Promise.all([
-            PK.translate(state.publicTest.title, "as"),
-            PK.translate(state.publicTest.publisherName, "as")
-          ]);
-          state.translatedTitle = tt;
-          state.translatedPublisher = tp;
-        } catch (err) { /* silent */ }
-      } else {
-        state.translatedTitle = state.publicTest.title;
-        state.translatedPublisher = state.publicTest.publisherName;
-      }
+      await translateStartIfNeeded();
       renderResult();
       return;
     }
 
     if (state.started) {
-      examTitle.textContent = state.publicTest.title;
+      examTitle.textContent = state.translatedTitle || state.publicTest.title;
       renderQuestion(false);
       renderPalette();
       updateMarkButton();
@@ -1002,8 +1047,8 @@
       return;
     }
 
+    await translateStartIfNeeded();
     renderStart();
-    maybeTranslateStart();
   });
 
   /* ---------- Init ---------- */
