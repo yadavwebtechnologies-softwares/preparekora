@@ -3,7 +3,7 @@
 // Routes only. All logic lives in sibling modules.
 // ============================================================
 
-import { json, error, preflight, CORS_HEADERS } from "./utils.js";
+import { json, error, preflight } from "./utils.js";
 
 import {
   handleLogin,
@@ -14,6 +14,7 @@ import {
 import {
   handleListPublic,
   handleGetPublic,
+  handleSubmit,
   handleListOwn,
   handleGetOwn,
   handleCreate,
@@ -69,9 +70,16 @@ export default {
         return await handleListPublic(env);
       }
 
+      /* Public: get one test (no answers) */
       let match = path.match(/^\/api\/tests\/([^/]+)$/);
       if (match && method === "GET") {
         return await handleGetPublic(env, decodeURIComponent(match[1]));
+      }
+
+      /* Public: submit answers → server-side scoring */
+      match = path.match(/^\/api\/tests\/([^/]+)\/submit$/);
+      if (match && method === "POST") {
+        return await handleSubmit(request, env, decodeURIComponent(match[1]));
       }
 
       /* ---------- Admin: own tests ---------- */
@@ -105,15 +113,11 @@ export default {
       /* ---------- Not found ---------- */
 
       return json(
-        { error: "Not found", path, method },
+        { error: "Not found", path: path, method: method },
         404
       );
     } catch (err) {
-      /* Never leak internals */
-      return json(
-        { error: "Internal server error" },
-        500
-      );
+      return json({ error: "Internal server error" }, 500);
     }
   }
 };
