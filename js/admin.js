@@ -188,7 +188,8 @@
     showScreen("login");
   }
 
-  /* Login */
+  /* ---------- LOGIN ---------- */
+
   const loginForm = $id("loginForm");
   if (loginForm) {
     loginForm.addEventListener("submit", async function (e) {
@@ -220,7 +221,8 @@
   const signOutBtn = $id("signOutBtn");
   if (signOutBtn) signOutBtn.addEventListener("click", function () { clearTokens(); showLogin(); });
 
-  /* Tabs */
+  /* ---------- TABS ---------- */
+
   const tabTests = $id("tabTests"), tabSettings = $id("tabSettings");
   const panelTests = $id("panelTests"), panelSettings = $id("panelSettings");
 
@@ -240,7 +242,8 @@
   if (tabTests) tabTests.addEventListener("click", function () { setTab("tests"); });
   if (tabSettings) tabSettings.addEventListener("click", function () { setTab("settings"); });
 
-  /* Dashboard */
+  /* ---------- DASHBOARD ---------- */
+
   async function enterDashboard() {
     if (!state.admin) return;
     const nameEl = $id("adminDisplayName");
@@ -344,7 +347,8 @@
     return card;
   }
 
-  /* Settings */
+  /* ---------- SETTINGS ---------- */
+
   async function loadSettings() {
     const input = $id("displayNameInput");
     if (!input) return;
@@ -383,7 +387,8 @@
     });
   }
 
-  /* Editor */
+  /* ---------- EDITOR ---------- */
+
   const newTestBtn = $id("newTestBtn");
   if (newTestBtn) {
     newTestBtn.addEventListener("click", function () {
@@ -462,7 +467,6 @@
       const block = document.createElement("div");
       block.className = "editor-question";
 
-      // Header
       const head = document.createElement("div");
       head.className = "editor-question-head";
 
@@ -496,7 +500,6 @@
       head.appendChild(removeBtn);
       block.appendChild(head);
 
-      // Question text
       const qField = document.createElement("div");
       qField.className = "form-field";
 
@@ -515,14 +518,12 @@
       qField.appendChild(qInput);
       block.appendChild(qField);
 
-      // Options label
       const optLabel = document.createElement("div");
       optLabel.className = "form-label";
       optLabel.style.marginTop = "14px";
       optLabel.textContent = "Options — click the circle to mark the correct answer";
       block.appendChild(optLabel);
 
-      // Options with radio
       const optWrap = document.createElement("div");
       optWrap.className = "editor-options";
 
@@ -576,9 +577,176 @@
         container.lastElementChild.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     });
+
+    /* Inject Import JSON button next to Add question */
+    if (!$id("importJsonBtn")) {
+      const importBtn = document.createElement("button");
+      importBtn.id = "importJsonBtn";
+      importBtn.type = "button";
+      importBtn.className = "btn btn-sm";
+      importBtn.textContent = "Import JSON";
+      importBtn.addEventListener("click", openImportModal);
+      addQuestionBtn.parentNode.insertBefore(importBtn, addQuestionBtn);
+    }
   }
 
-  /* Validation */
+  /* ---------- JSON IMPORT ---------- */
+
+  function ensureImportModal() {
+    let overlay = $id("importModalOverlay");
+    if (overlay) return overlay;
+
+    overlay = document.createElement("div");
+    overlay.id = "importModalOverlay";
+    overlay.className = "import-modal-overlay";
+    overlay.hidden = true;
+    overlay.innerHTML =
+      '<div class="import-modal" role="dialog" aria-modal="true" aria-labelledby="importTitle">' +
+        '<h2 id="importTitle">Import questions from JSON</h2>' +
+        '<p class="import-hint">Paste a JSON <strong>array of questions</strong>, or an <strong>object</strong> with <code>title</code>, <code>minutes</code>, and <code>questions</code>.</p>' +
+        '<details class="import-example">' +
+          '<summary>Show example</summary>' +
+          '<pre>{\n  "title": "Assam GK Mock Test",\n  "minutes": 20,\n  "questions": [\n    {\n      "q": "What is the capital of Assam?",\n      "options": ["Guwahati", "Dispur", "Jorhat", "Tezpur"],\n      "answer": 1\n    }\n  ]\n}</pre>' +
+        '</details>' +
+        '<textarea id="importTextarea" class="import-textarea" placeholder="Paste JSON here..."></textarea>' +
+        '<p class="form-error" id="importError" hidden></p>' +
+        '<div class="import-modal-actions">' +
+          '<button type="button" class="btn" id="importCancelBtn">Cancel</button>' +
+          '<button type="button" class="btn btn-primary" id="importConfirmBtn">Import</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    const cancel = overlay.querySelector("#importCancelBtn");
+    const confirm = overlay.querySelector("#importConfirmBtn");
+    const ta = overlay.querySelector("#importTextarea");
+    const errEl = overlay.querySelector("#importError");
+
+    function close() { overlay.hidden = true; }
+
+    cancel.addEventListener("click", close);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !overlay.hidden) close();
+    });
+
+    confirm.addEventListener("click", function () {
+      errEl.hidden = true;
+      const raw = ta.value.trim();
+      if (!raw) { errEl.textContent = "Paste JSON first"; errEl.hidden = false; return; }
+
+      let parsed;
+      try { parsed = JSON.parse(raw); }
+      catch (e) {
+        errEl.textContent = "Invalid JSON: " + e.message;
+        errEl.hidden = false;
+        return;
+      }
+
+      let rawQuestions = null;
+      let title = null;
+      let minutes = null;
+
+      if (Array.isArray(parsed)) {
+        rawQuestions = parsed;
+      } else if (parsed && typeof parsed === "object") {
+        rawQuestions = parsed.questions;
+        if (typeof parsed.title === "string") title = parsed.title;
+        if (typeof parsed.minutes === "number") minutes = parsed.minutes;
+      }
+
+      if (!Array.isArray(rawQuestions) || rawQuestions.length === 0) {
+        errEl.textContent = "JSON must contain a non-empty questions array";
+        errEl.hidden = false;
+        return;
+      }
+
+      const cleaned = [];
+      for (let i = 0; i < rawQuestions.length; i++) {
+        const raw = rawQuestions[i];
+        const n = i + 1;
+
+        if (!raw || typeof raw !== "object") {
+          errEl.textContent = "Question " + n + ": invalid entry";
+          errEl.hidden = false; return;
+        }
+        if (typeof raw.q !== "string" || !raw.q.trim()) {
+          errEl.textContent = "Question " + n + ": missing \"q\"";
+          errEl.hidden = false; return;
+        }
+        if (!Array.isArray(raw.options) || raw.options.length !== 4) {
+          errEl.textContent = "Question " + n + ": exactly 4 options required";
+          errEl.hidden = false; return;
+        }
+        for (let j = 0; j < 4; j++) {
+          if (typeof raw.options[j] !== "string" || !raw.options[j].trim()) {
+            errEl.textContent = "Question " + n + ": option " + (j + 1) + " is empty";
+            errEl.hidden = false; return;
+          }
+        }
+        if (typeof raw.answer !== "number" || !Number.isInteger(raw.answer) || raw.answer < 0 || raw.answer > 3) {
+          errEl.textContent = "Question " + n + ": \"answer\" must be 0, 1, 2, or 3";
+          errEl.hidden = false; return;
+        }
+
+        cleaned.push({
+          q: raw.q.trim(),
+          options: raw.options.map(function (o) { return o.trim(); }),
+          answer: raw.answer
+        });
+      }
+
+      if (!state.editing) { close(); return; }
+
+      const hasExisting =
+        state.editing.questions.length > 0 &&
+        !(state.editing.questions.length === 1 && !state.editing.questions[0].q.trim());
+
+      if (hasExisting) {
+        const ok = window.confirm(
+          "Import " + cleaned.length + " question(s)?\n\n" +
+          "OK = Append to current questions\n" +
+          "Cancel = Replace all questions"
+        );
+        if (ok) {
+          state.editing.questions = state.editing.questions.concat(cleaned);
+        } else {
+          state.editing.questions = cleaned.slice();
+        }
+      } else {
+        state.editing.questions = cleaned.slice();
+      }
+
+      if (title && !$id("editorTitle").value.trim()) {
+        $id("editorTitle").value = title.trim().slice(0, 200);
+      }
+      if (minutes && Number.isInteger(minutes) && minutes >= 1 && minutes <= 180) {
+        $id("editorMinutes").value = minutes;
+      }
+
+      state.editing.title = $id("editorTitle").value;
+      state.editing.minutes = Number($id("editorMinutes").value) || state.editing.minutes;
+
+      renderQuestionsList();
+      close();
+      ta.value = "";
+      toast("Imported " + cleaned.length + " question(s)", "success");
+    });
+
+    return overlay;
+  }
+
+  function openImportModal() {
+    if (!state.editing) return;
+    const overlay = ensureImportModal();
+    overlay.hidden = false;
+    const ta = overlay.querySelector("#importTextarea");
+    setTimeout(function () { if (ta) ta.focus(); }, 50);
+  }
+
+  /* ---------- VALIDATION + SAVE ---------- */
+
   function collectEditor() {
     const title = $id("editorTitle").value.trim();
     const minutes = Number($id("editorMinutes").value);
@@ -615,7 +783,6 @@
   }
 
   async function saveEditor(action) {
-    // action: "save" | "publish" | "unpublish"
     const errEl = $id("editorError");
     errEl.hidden = true;
 
@@ -633,8 +800,6 @@
 
     saveDraftBtn.disabled = true;
     publishBtn.disabled = true;
-
-    console.log("Saving test", { action: action, id: state.editing.id });
 
     try {
       if (state.editing.id) {
@@ -687,7 +852,8 @@
     });
   }
 
-  /* Mobile menu */
+  /* ---------- MOBILE MENU ---------- */
+
   const menuToggle = $id("menuToggle"), menuPanel = $id("menuPanel"), menuIcon = $id("menuIcon");
   const hamburgerSVG = '<path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path>';
   const closeSVG = '<path d="m6 6 12 12"></path><path d="M18 6 6 18"></path>';
