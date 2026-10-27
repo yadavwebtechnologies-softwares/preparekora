@@ -2,7 +2,9 @@
 
 /*
   PrepareKora — Admin panel (self-contained).
-  Inlines API client so only translation.js is required in admin.html.
+  Login via Worker /api/login (Worker proxies Firebase Auth).
+  No Firebase SDK, no API key in frontend.
+  Tokens auto-refresh before expiry.
 */
 
 (function () {
@@ -20,30 +22,102 @@
     return isLocal ? "http://localhost:8787/api" : "/api";
   })();
 
-  const TOKEN_KEY = "pk_admin_token";
+  const TOKEN_KEY = "pk_admin_id_token";
+  const REFRESH_KEY = "pk_admin_refresh_token";
+  const EXPIRES_KEY = "pk_admin_expires_at";
 
-  function getToken() {
+  function storeTokens(idToken, refreshToken, expiresIn) {
+    try {
+      if (idToken) localStorage.setItem(TOKEN_KEY, idToken);
+      if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
+      if (expiresIn) {
+        const ms = Date.now() + Number(expiresIn) * 1000;
+        localStorage.setItem(EXPIRES_KEY, String(ms));
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  function getIdToken() {
     try { return localStorage.getItem(TOKEN_KEY) || ""; }
     catch (e) { return ""; }
   }
 
-  function setToken(token) {
+  function getRefreshToken() {
+    try { return localStorage.getItem(REFRESH_KEY) || ""; }
+    catch (e) { return ""; }
+  }
+
+  function getExpiresAt() {
+    try { return parseInt(localStorage.getItem(EXPIRES_KEY) || "0", 10) || 0; }
+    catch (e) { return 0; }
+  }
+
+  function clearTokens() {
     try {
-      if (token) localStorage.setItem(TOKEN_KEY, token);
-      else localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(REFRESH_KEY);
+      localStorage.removeItem(EXPIRES_KEY);
     } catch (e) { /* ignore */ }
+  }
+
+  let refreshingPromise = null;
+
+  async function refreshTokens() {
+    if (refreshingPromise) return refreshingPromise;
+
+    refreshingPromise = (async function () {
+      const rt = getRefreshToken();
+      if (!rt) throw new Error("No refresh token");
+
+      const res = await fetch(API_BASE + "/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken: rt })
+      });
+
+      if (!res.ok) {
+        clearTokens();
+        throw new Error("Session expired");
+      }
+
+      const data = await res.json();
+      storeTokens(data.idToken, data.refreshToken, data.expiresIn);
+      return data.idToken;
+    })();
+
+    try {
+      return await refreshingPromise;
+    } finally {
+      refreshingPromise = null;
+    }
+  }
+
+  async function ensureFreshToken() {
+    const token = getIdToken();
+    const expiresAt = getExpiresAt();
+
+    /* Refresh if expiring within 60 seconds */
+    if (token && expiresAt && expiresAt - Date.now() < 60000) {
+      try {
+        return await refreshTokens();
+      } catch (err) {
+        return token; /* let 401 handler deal with it */
+      }
+    }
+
+    return token;
   }
 
   async function request(path, opts) {
     opts = opts || {};
-    const headers = Object.assign({}, opts.headers || {});
 
+    const headers = Object.assign({}, opts.headers || {});
     if (opts.body && !headers["Content-Type"]) {
       headers["Content-Type"] = "application/json";
     }
 
     if (!opts.noAuth) {
-      const token = getToken();
+      const token = await ensureFreshToken();
       if (token) headers["Authorization"] = "Bearer " + token;
     }
 
@@ -55,37 +129,58 @@
         body: opts.body
       });
     } catch (networkErr) {
-      const err = new Error("Network error. Check your connection.");
-      err.status = 0;
-      throw err;
+      const e = new Error("Network error. Check your connection.");
+      e.status = 0;
+      throw e;
+    }
+
+    /* On 401, try refresh once */
+    if (res.status === 401 && !opts.noAuth && !opts._retried) {
+      try {
+        await refreshTokens();
+      } catch (err) {
+        clearTokens();
+        showLogin();
+        const e = new Error("Session expired");
+        e.status = 401;
+        throw e;
+      }
+
+      const newToken = getIdToken();
+      headers["Authorization"] = "Bearer " + newToken;
+
+      res = await fetch(API_BASE + path, {
+        method: opts.method || "GET",
+        headers: headers,
+        body: opts.body
+      });
     }
 
     let data = null;
     try { data = await res.json(); } catch (e) { /* non-JSON */ }
 
     if (!res.ok) {
-      if (res.status === 401) setToken("");
-      const err = new Error((data && data.error) || ("HTTP " + res.status));
-      err.status = res.status;
-      throw err;
+      const e = new Error((data && data.error) || ("HTTP " + res.status));
+      e.status = res.status;
+      throw e;
     }
 
     return data;
   }
 
   const api = {
-    login: function (u, p) {
+    login: function (email, password) {
       return request("/login", {
         method: "POST",
         noAuth: true,
-        body: JSON.stringify({ username: u, password: p })
+        body: JSON.stringify({ email: email, password: password })
       });
     },
     me: function () { return request("/me"); },
-    updateMe: function (name) {
+    updateMe: function (displayName) {
       return request("/me", {
         method: "PUT",
-        body: JSON.stringify({ displayName: name })
+        body: JSON.stringify({ displayName: displayName })
       });
     },
     listOwn: function () { return request("/admin/tests"); },
@@ -200,6 +295,19 @@
     window.scrollTo({ top: 0, behavior: "auto" });
   }
 
+  function showLogin() {
+    state.admin = null;
+    state.tests = [];
+    state.editing = null;
+    const u = $id("loginUser");
+    const p = $id("loginPass");
+    if (u) u.value = "";
+    if (p) p.value = "";
+    const errEl = $id("loginError");
+    if (errEl) errEl.hidden = true;
+    showScreen("login");
+  }
+
   /* ---------- Login ---------- */
 
   const loginForm = $id("loginForm");
@@ -207,14 +315,14 @@
     loginForm.addEventListener("submit", async function (e) {
       e.preventDefault();
 
-      const user = $id("loginUser").value.trim();
-      const pass = $id("loginPass").value;
+      const email = $id("loginUser").value.trim();
+      const password = $id("loginPass").value;
       const errEl = $id("loginError");
       const btn = $id("loginSubmit");
 
       errEl.hidden = true;
 
-      if (!user || !pass) {
+      if (!email || !password) {
         errEl.textContent = t("fillAllFields");
         errEl.hidden = false;
         return;
@@ -222,13 +330,15 @@
 
       btn.disabled = true;
       try {
-        const res = await api.login(user, pass);
-        setToken(res.token);
+        const res = await api.login(email, password);
+        storeTokens(res.idToken, res.refreshToken, res.expiresIn);
         state.admin = res.admin;
         await enterDashboard();
       } catch (err) {
         errEl.textContent =
-          err.status === 401 ? t("invalidLogin") : (err.message || "Error");
+          err.status === 401 ? t("invalidLogin") :
+          err.status === 403 ? (err.message || "Not authorized") :
+          (err.message || "Error");
         errEl.hidden = false;
       } finally {
         btn.disabled = false;
@@ -241,13 +351,8 @@
   const signOutBtn = $id("signOutBtn");
   if (signOutBtn) {
     signOutBtn.addEventListener("click", function () {
-      setToken("");
-      state.admin = null;
-      state.tests = [];
-      state.editing = null;
-      $id("loginUser").value = "";
-      $id("loginPass").value = "";
-      showScreen("login");
+      clearTokens();
+      showLogin();
     });
   }
 
@@ -280,7 +385,7 @@
   if (tabTests) tabTests.addEventListener("click", function () { setTab("tests"); });
   if (tabSettings) tabSettings.addEventListener("click", function () { setTab("settings"); });
 
-  /* ---------- Enter dashboard ---------- */
+  /* ---------- Dashboard ---------- */
 
   async function enterDashboard() {
     if (!state.admin) return;
@@ -324,8 +429,7 @@
     } catch (err) {
       if (loading) loading.hidden = true;
       if (err.status === 401) {
-        setToken("");
-        showScreen("login");
+        showLogin();
         return;
       }
       if (empty) {
@@ -396,6 +500,7 @@
         }
         await loadTests();
       } catch (err) {
+        if (err.status === 401) return showLogin();
         toast(err.message || "Error", "error");
       } finally {
         publishBtn.disabled = false;
@@ -415,6 +520,7 @@
         toast(t("testDeleted"));
         await loadTests();
       } catch (err) {
+        if (err.status === 401) return showLogin();
         toast(err.message || "Error", "error");
       } finally {
         delBtn.disabled = false;
@@ -440,10 +546,7 @@
       const errEl = $id("displayNameError");
       if (errEl) errEl.hidden = true;
     } catch (err) {
-      if (err.status === 401) {
-        setToken("");
-        showScreen("login");
-      }
+      if (err.status === 401) showLogin();
     }
   }
 
@@ -478,6 +581,7 @@
         if (nameEl) nameEl.textContent = res.displayName;
         toast(t("nameUpdated"), "success");
       } catch (err) {
+        if (err.status === 401) return showLogin();
         errEl.textContent = err.message || "Error";
         errEl.hidden = false;
       } finally {
@@ -522,7 +626,7 @@
         status: res.test.status,
         title: res.test.title,
         minutes: res.test.minutes,
-        questions: res.test.questions.map(function (q) {
+        questions: (res.test.questions || []).map(function (q) {
           return {
             q: q.q,
             options: q.options.slice(),
@@ -534,6 +638,7 @@
       renderEditor();
       showScreen("editor");
     } catch (err) {
+      if (err.status === 401) return showLogin();
       toast(err.message || "Error", "error");
     }
   }
@@ -657,15 +762,13 @@
     });
   }
 
-  /* ---------- Collect + validate editor ---------- */
+  /* ---------- Collect + validate ---------- */
 
   function collectEditor() {
     const title = $id("editorTitle").value.trim();
     const minutes = Number($id("editorMinutes").value);
 
-    if (!title) {
-      return { error: t("fillAllFields") };
-    }
+    if (!title) return { error: t("fillAllFields") };
     if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) {
       return { error: t("fillAllFields") };
     }
@@ -737,6 +840,7 @@
       showScreen("dashboard");
       await loadTests();
     } catch (err) {
+      if (err.status === 401) return showLogin();
       errEl.textContent = err.message || "Error";
       errEl.hidden = false;
     } finally {
@@ -747,9 +851,7 @@
 
   const saveDraftBtn = $id("saveDraftBtn");
   if (saveDraftBtn) {
-    saveDraftBtn.addEventListener("click", function () {
-      saveEditor(false);
-    });
+    saveDraftBtn.addEventListener("click", function () { saveEditor(false); });
   }
 
   const publishBtn = $id("publishBtn");
@@ -835,18 +937,18 @@
   (async function init() {
     showScreen("loading");
 
-    if (getToken()) {
+    if (getIdToken() || getRefreshToken()) {
       try {
         const me = await api.me();
         state.admin = me;
         await enterDashboard();
         return;
       } catch (err) {
-        setToken("");
+        clearTokens();
       }
     }
 
-    showScreen("login");
+    showLogin();
   })();
 
 })();
