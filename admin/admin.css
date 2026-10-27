@@ -361,3 +361,107 @@ a { color: var(--text); text-decoration: underline; }
     .admin-dl { grid-template-columns: 1fr; gap: 2px 0; }
     .admin-dl dt { margin-top: 8px; }
 }
+/* ---------- Phase C additions ---------- */
+
+.admin-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
+.admin-label > .admin-input,
+.admin-label > textarea.admin-input {
+    margin-top: 4px;
+    display: block;
+    width: 100%;
+    max-width: none;
+    color: var(--text);
+    font-weight: 400;
+    font-size: 13px;
+    padding: 8px 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: inherit;
+}
+.admin-label > textarea.admin-input { resize: vertical; min-height: 40px; }
+
+.admin-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 14px;
+    margin-bottom: 10px;
+}
+
+.admin-form-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 14px;
+}
+
+.admin-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 16px 0 10px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+
+.no-margin { margin: 0; }
+
+.admin-q-block {
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 10px;
+    background: var(--bg-soft);
+}
+.admin-q-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+.admin-q-options {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 6px 8px;
+    align-items: center;
+    margin-bottom: 6px;
+}
+.admin-q-options label {
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--text-muted);
+}
+.admin-q-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.admin-row-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.admin-table .admin-row-btn.admin-row-btn-danger {
+    color: var(--danger);
+    border-color: #f5d5d2;
+}
+.admin-table .admin-row-btn.admin-row-btn-danger:hover {
+    background: #fff5f4;
+}
+
+@media (max-width: 700px) {
+    .admin-form-grid { grid-template-columns: 1fr; }
+    .admin-q-row { grid-template-columns: 1fr; }
+}
