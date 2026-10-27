@@ -11,6 +11,9 @@
 
     <link rel="stylesheet" href="style.css">
 
+    <script src="script.js" defer></script>
+    <script src="js/shared-header.js" defer></script>
+    <script src="js/profile.js" defer></script>
 </head>
 
 <body class="profile-page">
@@ -148,6 +151,9 @@
                             <button type="button" class="filter-button is-active" data-profile-tab="edit" aria-pressed="true">Edit Profile</button>
                             <button type="button" class="filter-button" data-profile-tab="settings" aria-pressed="false">Settings</button>
                             <button type="button" class="filter-button" data-profile-tab="history" aria-pressed="false">Test History</button>
+                            <button type="button" class="filter-button" data-profile-tab="notifications" aria-pressed="false">
+                                Notifications <span id="profile-notif-badge" class="status-label is-danger" style="display: none; margin-left: 6px;"></span>
+                            </button>
                             <button type="button" class="filter-button" data-profile-tab="purchase" aria-pressed="false">Purchase</button>
                         </div>
 
@@ -313,6 +319,29 @@
                             </div>
                         </div>
 
+                        <div class="panel" id="profile-panel-notifications" hidden>
+                            <div class="sk-history-heading">
+                                <div>
+                                    <h2 class="panel-title no-margin">Notifications</h2>
+                                    <p class="panel-description">Messages and updates from preparekora.in.</p>
+                                </div>
+                                <button type="button" class="btn btn-outline" id="profile-notif-mark-all" hidden>
+                                    Mark all as read
+                                </button>
+                            </div>
+                            <div class="sk-history-body" style="margin-top: 12px;">
+                                <div class="sk-history-loading" id="profile-notif-loading" hidden>
+                                    <span class="sk-profile-spinner"></span>
+                                    <span>Loading notifications…</span>
+                                </div>
+                                <div class="sk-history-empty" id="profile-notif-empty" hidden>
+                                    <strong>No notifications yet</strong>
+                                    <p>Account updates and messages from preparekora.in will appear here.</p>
+                                </div>
+                                <div id="profile-notif-list" style="display: grid; gap: 10px;"></div>
+                            </div>
+                        </div>
+
                         <div class="panel" id="profile-panel-purchase" hidden>
                             <h2 class="panel-title">Purchase</h2>
                             <p class="panel-description">Premium practice packs will be available here in a future update.</p>
@@ -386,9 +415,6 @@
             </span>
         </div>
     </footer>
-    
-    <script src="script.js" defer></script>
-    <script src="js/shared-header.js" defer></script>
-    <script src="js/profile.js" defer></script>
+
 </body>
 </html>
