@@ -1,12 +1,13 @@
 // ============================================================
 // PrepareKora Worker — Main router
-// Routes only. All logic lives in sibling modules.
-// Auth via Firebase ID token (verified in firebase.js).
+// Auth via Firebase (proxied by Worker — no key in frontend).
 // ============================================================
 
 import { json, error, preflight } from "./utils.js";
 
 import {
+  handleLogin,
+  handleRefresh,
   handleMe,
   handleUpdateMe
 } from "./auth.js";
@@ -50,7 +51,15 @@ export default {
         return await handleTranslate(request, env);
       }
 
-      /* ---------- Auth (Firebase) ---------- */
+      /* ---------- Auth (Firebase via Worker proxy) ---------- */
+
+      if (path === "/api/login" && method === "POST") {
+        return await handleLogin(request, env);
+      }
+
+      if (path === "/api/refresh" && method === "POST") {
+        return await handleRefresh(request, env);
+      }
 
       if (path === "/api/me" && method === "GET") {
         return await handleMe(request, env);
