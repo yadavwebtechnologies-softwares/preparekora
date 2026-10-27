@@ -1,4 +1,4 @@
-/* PrepareKora — Admin Panel (Phase A+B+C) */
+/* PrepareKora — Admin Panel (Phase A+B+C + subject-first) */
 "use strict";
 
 (() => {
@@ -120,6 +120,24 @@
                 body.appendChild(tr);
             });
         } catch (error) { console.error(`${LOG} Overview:`, error); }
+    }
+
+    async function handleBackfill() {
+        const btn = $("#admin-backfill");
+        const msg = $("#admin-backfill-message");
+        if (!btn || !msg) return;
+        btn.disabled = true;
+        btn.textContent = "Backfilling…";
+        msg.textContent = "";
+        try {
+            const res = await api("/admin/backfill-tests", { method: "POST" });
+            msg.textContent = res.message || "Done.";
+        } catch (error) {
+            msg.textContent = error.message || "Backfill failed.";
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Backfill Tests → Subjects";
+        }
     }
 
     /* ---------- Users ---------- */
@@ -246,6 +264,29 @@
 
     /* ---------- Tests ---------- */
 
+    async function populateSubjectDropdown(selectedId = "") {
+        const select = $("#test-subject");
+        if (!select) return;
+        select.innerHTML = '<option value="">-- Select a subject --</option>';
+        try {
+            const data = await api("/admin/subjects");
+            if (!data.items.length) {
+                select.innerHTML = '<option value="">No subjects yet — create a subject first</option>';
+                return;
+            }
+            data.items.forEach((s) => {
+                const opt = document.createElement("option");
+                opt.value = s.id;
+                opt.textContent = `${s.name} (${s.id})`;
+                if (s.id === selectedId) opt.selected = true;
+                select.appendChild(opt);
+            });
+        } catch (error) {
+            console.error(`${LOG} Populate subjects:`, error);
+            select.innerHTML = '<option value="">Error loading subjects</option>';
+        }
+    }
+
     async function loadTests() {
         try {
             const data = await api("/admin/tests");
@@ -255,13 +296,13 @@
             if (!data.items.length) {
                 const tr = document.createElement("tr");
                 const td = document.createElement("td");
-                td.colSpan = 6; td.className = "admin-muted"; td.textContent = "No tests yet.";
+                td.colSpan = 7; td.className = "admin-muted"; td.textContent = "No tests yet.";
                 tr.appendChild(td); body.appendChild(tr);
                 return;
             }
             data.items.forEach((t) => {
                 const tr = document.createElement("tr");
-                [t.id, t.title, t.category || "—",
+                [t.id, t.title, t.subjectId || "—", t.category || "—",
                  String(t.questions?.length || 0),
                  t.published === false ? "No" : "Yes"].forEach((txt) => {
                     const td = document.createElement("td");
@@ -282,7 +323,7 @@
         } catch (error) { console.error(`${LOG} Tests:`, error); }
     }
 
-    function openTestForm(test) {
+    async function openTestForm(test) {
         state.editingTest = test || null;
         $("#tests-form-title").textContent = test ? "Edit Test" : "New Test";
         $("#test-id").value = test?.id || "";
@@ -297,6 +338,7 @@
         (test?.questions || []).forEach(addQuestionBlock);
         $("#test-form-message").textContent = "";
         $("#tests-form-card").hidden = false;
+        await populateSubjectDropdown(test?.subjectId || "");
         $("#tests-form-card").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
@@ -363,9 +405,15 @@
         e.preventDefault();
         const msg = $("#test-form-message");
         msg.textContent = "";
+        const subjectId = $("#test-subject").value;
+        if (!subjectId) {
+            msg.textContent = "Select a subject first. Create one under Subjects if none exist.";
+            return;
+        }
         const payload = {
             id: $("#test-id").value.trim().toLowerCase(),
             title: $("#test-title").value.trim(),
+            subjectId,
             category: $("#test-category").value.trim(),
             duration: Number($("#test-duration").value),
             marksPerQuestion: Number($("#test-marks").value),
@@ -403,13 +451,15 @@
             if (!data.items.length) {
                 const tr = document.createElement("tr");
                 const td = document.createElement("td");
-                td.colSpan = 4; td.className = "admin-muted"; td.textContent = "No subjects yet.";
+                td.colSpan = 6; td.className = "admin-muted"; td.textContent = "No subjects yet.";
                 tr.appendChild(td); body.appendChild(tr);
                 return;
             }
             data.items.forEach((s) => {
                 const tr = document.createElement("tr");
-                [s.id, s.name, s.published === false ? "No" : "Yes"].forEach((t) => {
+                const topicCount = Array.isArray(s.topics) ? s.topics.length : 0;
+                [s.id, s.name, s.category || "—", String(topicCount),
+                 s.published === false ? "No" : "Yes"].forEach((t) => {
                     const td = document.createElement("td");
                     td.textContent = t || "—"; tr.appendChild(td);
                 });
@@ -434,8 +484,12 @@
         $("#subject-id").value = s?.id || "";
         $("#subject-id").disabled = !!s;
         $("#subject-name").value = s?.name || "";
+        $("#subject-category").value = s?.category || "";
         $("#subject-published").value = s?.published === false ? "false" : "true";
         $("#subject-description").value = s?.description || "";
+        $("#subject-about").value = s?.about || "";
+        $("#subject-tags").value = Array.isArray(s?.tags) ? s.tags.join(", ") : "";
+        $("#subject-topics").value = Array.isArray(s?.topics) ? s.topics.join(", ") : "";
         $("#subject-form-message").textContent = "";
         $("#subjects-form-card").hidden = false;
         $("#subjects-form-card").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -444,11 +498,16 @@
     async function saveSubject(e) {
         e.preventDefault();
         const msg = $("#subject-form-message");
+        const splitCsv = (val) => (val || "").split(",").map((x) => x.trim()).filter(Boolean);
         const payload = {
             id: $("#subject-id").value.trim().toLowerCase(),
             name: $("#subject-name").value.trim(),
+            category: $("#subject-category").value.trim(),
             published: $("#subject-published").value === "true",
-            description: $("#subject-description").value.trim()
+            description: $("#subject-description").value.trim(),
+            about: $("#subject-about").value.trim(),
+            tags: splitCsv($("#subject-tags").value),
+            topics: splitCsv($("#subject-topics").value)
         };
         try {
             if (state.editingSubject) {
@@ -587,33 +646,31 @@
             clearSession(); window.location.assign("login.html");
         });
 
+        const backfillBtn = $("#admin-backfill");
+        if (backfillBtn) backfillBtn.addEventListener("click", handleBackfill);
+
         $("#users-search").addEventListener("input", (e) => { state.users.search = e.target.value.trim(); });
         $("#users-refresh").addEventListener("click", () => loadUsers(true));
         $("#users-prev").addEventListener("click", () => { state.users.offset = Math.max(0, state.users.offset - state.users.limit); loadUsers(); });
         $("#users-next").addEventListener("click", () => { state.users.offset += state.users.limit; loadUsers(); });
         $("#user-detail-back").addEventListener("click", () => { setView("users"); loadUsers(); });
 
-        /* Tests */
         $("#tests-new").addEventListener("click", () => openTestForm(null));
         $("#tests-refresh").addEventListener("click", () => loadTests());
         $("#test-add-question").addEventListener("click", () => addQuestionBlock());
         $("#test-cancel").addEventListener("click", () => { $("#tests-form-card").hidden = true; });
         $("#tests-form").addEventListener("submit", saveTest);
 
-        /* Subjects */
         $("#subjects-new").addEventListener("click", () => openSubjectForm(null));
         $("#subject-cancel").addEventListener("click", () => { $("#subjects-form-card").hidden = true; });
         $("#subjects-form").addEventListener("submit", saveSubject);
 
-        /* Organizations */
         $("#orgs-new").addEventListener("click", () => openOrgForm(null));
         $("#org-cancel").addEventListener("click", () => { $("#orgs-form-card").hidden = true; });
         $("#orgs-form").addEventListener("submit", saveOrg);
 
-        /* Notifications */
         $("#notif-form").addEventListener("submit", sendNotification);
 
-        /* Mobile menu */
         $("#admin-menu-btn").addEventListener("click", () => document.body.classList.toggle("sidebar-open"));
     }
 
