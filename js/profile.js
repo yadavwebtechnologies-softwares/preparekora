@@ -621,6 +621,17 @@
         }
     }
 
+    /* ---------- Logout ---------- */
+
+    function handleLogout() {
+        try {
+            sessionStorage.removeItem(SESSION_KEY);
+        } catch (error) {
+            console.warn(`${LOG} Could not clear session.`, error);
+        }
+        window.location.assign("index.html");
+    }
+
     /* ---------- Initialise ---------- */
 
     async function init() {
@@ -696,6 +707,9 @@
 
         const deleteSubmit = $("#profile-delete-submit");
         if (deleteSubmit) deleteSubmit.addEventListener("click", handleDeleteSubmit);
+
+        const logoutBtn = $("#profile-logout");
+        if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
 
         const historyRefresh = $("#profile-history-refresh");
         if (historyRefresh) {
