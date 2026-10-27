@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="About PrepareKora.in — Mentors, teachers and the team behind the platform.">
+  <title>About — PrepareKora.in</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+
+      <a class="brand" href="index.html" aria-label="PrepareKora home">
+        <span class="brand-main">preparekora</span><span class="brand-in">.in</span>
+      </a>
+
+      <nav class="desktop-nav" aria-label="Desktop navigation">
+        <a href="about.html" data-i18n="navAbout">About</a>
+        <a href="find-us.html" data-i18n="navFindUs">Find Us</a>
+      </nav>
+
+      <div class="nav-actions">
+
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button class="lang-btn is-active" type="button" data-lang="en" aria-pressed="true">EN</button>
+          <button class="lang-btn" type="button" data-lang="as" aria-pressed="false">অসমীয়া</button>
+        </div>
+
+        <button
+          class="icon-button"
+          id="menuToggle"
+          type="button"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+          aria-controls="menuPanel"
+        >
+          <svg id="menuIcon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16"></path>
+            <path d="M4 12h16"></path>
+            <path d="M4 17h16"></path>
+          </svg>
+        </button>
+
+      </div>
+
+      <nav class="menu-panel" id="menuPanel" aria-label="Mobile navigation">
+        <a href="about.html" data-i18n="navAbout">About</a>
+        <a href="find-us.html" data-i18n="navFindUs">Find Us</a>
+
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button class="lang-btn is-active" type="button" data-lang="en" aria-pressed="true">EN</button>
+          <button class="lang-btn" type="button" data-lang="as" aria-pressed="false">অসমীয়া</button>
+        </div>
+      </nav>
+
+    </div>
+  </header>
+
+  <main class="page-container">
+
+    <section class="page-heading">
+      <h1>About</h1>
+      <p>PrepareKora.in — free mock tests for competitive exam preparation.</p>
+    </section>
+
+    <article class="card" style="max-width: 720px;">
+
+      <p class="muted-text" style="margin-bottom: 16px;">
+        PrepareKora.in is a simple, free platform where students can
+        practice mock tests for competitive exams. Every test is created
+        by an experienced teacher and published directly by them.
+      </p>
+
+      <p class="muted-text" style="margin-bottom: 16px;">
+        Each test includes a timer, question navigation, mark-for-review
+        and a downloadable result card so you can track your progress
+        over time.
+      </p>
+
+      <p class="muted-text" style="margin-bottom: 24px;">
+        The site is available in English and Assamese. Content created in
+        English is translated automatically, so Assamese-medium students
+        can prepare in their own language.
+      </p>
+
+      <h2 style="margin: 0 0 12px; font-size: 15px; font-weight: 600; letter-spacing: -0.2px;">
+        Mentors and Teachers
+      </h2>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;">
+
+        <div style="padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: #ffffff;">
+          <p style="margin: 0 0 2px; font-size: 14px; font-weight: 600;">Sir Yadav Subba</p>
+          <p class="muted-text" style="margin: 0;">Mentor &amp; Teacher</p>
+        </div>
+
+        <div style="padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: #ffffff;">
+          <p style="margin: 0 0 2px; font-size: 14px; font-weight: 600;">Sir Rohit Biswas</p>
+          <p class="muted-text" style="margin: 0;">Mentor &amp; Teacher</p>
+        </div>
+
+      </div>
+
+      <h2 style="margin: 0 0 12px; font-size: 15px; font-weight: 600; letter-spacing: -0.2px;">
+        Developed by
+      </h2>
+
+      <div style="padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); margin-bottom: 24px;">
+        <p style="margin: 0 0 4px; font-size: 14px; font-weight: 600;">
+          Yadav Web Technologies
+        </p>
+        <p class="muted-text" style="margin: 0;">
+          Website designed and developed by Yadav Web Technologies,
+          founded by Sir Yadav Subba.
+        </p>
+      </div>
+
+      <p class="muted-text">
+        If you have any questions or feedback, please reach us via the
+        <a href="find-us.html" style="text-decoration: underline;">Find Us</a>
+        page.
+      </p>
+
+    </article>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <a href="index.html" class="footer-brand">PrepareKora.in</a>
+
+      <div class="footer-copy">
+        © <span id="currentYear"></span> PrepareKora.in
+      </div>
+
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a href="about.html" data-i18n="navAbout">About</a>
+        <a href="find-us.html" data-i18n="navFindUs">Find Us</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/translation.js"></script>
+  <script src="js/main.js"></script>
+
+</body>
+</html>
