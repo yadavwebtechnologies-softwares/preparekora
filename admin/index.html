@@ -55,6 +55,7 @@
         </div>
     </section>
 
+    <!-- Overview -->
     <section class="admin-view" id="view-overview" hidden>
         <div class="admin-stats" id="overview-stats">
             <div class="admin-stat"><span class="admin-stat-label">Total Users</span><span class="admin-stat-value" id="stat-users">—</span></div>
@@ -70,6 +71,12 @@
                     <tbody id="overview-recent-body"></tbody>
                 </table>
             </div>
+        </div>
+        <div class="admin-card">
+            <h2 class="admin-card-title">Maintenance</h2>
+            <p class="admin-muted">One-time: assign existing tests to the "general" subject if they don't already have one.</p>
+            <button type="button" class="admin-btn admin-btn-primary" id="admin-backfill">Backfill Tests → Subjects</button>
+            <p class="admin-muted" id="admin-backfill-message"></p>
         </div>
     </section>
 
@@ -90,7 +97,12 @@
                     <label class="admin-label">Title
                         <input class="admin-input" id="test-title" required maxlength="120">
                     </label>
-                    <label class="admin-label">Category
+                    <label class="admin-label">Subject (required — create subjects first if empty)
+                        <select class="admin-input" id="test-subject" required>
+                            <option value="">-- Select a subject --</option>
+                        </select>
+                    </label>
+                    <label class="admin-label">Category (free text within subject)
                         <input class="admin-input" id="test-category" maxlength="40" placeholder="general">
                     </label>
                     <label class="admin-label">Duration (seconds)
@@ -127,7 +139,7 @@
         <div class="admin-card">
             <div class="admin-table-wrap">
                 <table class="admin-table">
-                    <thead><tr><th>ID</th><th>Title</th><th>Category</th><th>Questions</th><th>Published</th><th></th></tr></thead>
+                    <thead><tr><th>ID</th><th>Title</th><th>Subject</th><th>Category</th><th>Questions</th><th>Published</th><th></th></tr></thead>
                     <tbody id="tests-body"></tbody>
                 </table>
             </div>
@@ -143,16 +155,32 @@
             <h2 class="admin-card-title" id="subjects-form-title">New Subject</h2>
             <form id="subjects-form">
                 <div class="admin-form-grid">
-                    <label class="admin-label">ID <input class="admin-input" id="subject-id" required maxlength="64"></label>
-                    <label class="admin-label">Name <input class="admin-input" id="subject-name" required maxlength="80"></label>
+                    <label class="admin-label">ID (slug)
+                        <input class="admin-input" id="subject-id" required maxlength="64" placeholder="general-knowledge">
+                    </label>
+                    <label class="admin-label">Name
+                        <input class="admin-input" id="subject-name" required maxlength="80">
+                    </label>
+                    <label class="admin-label">Category
+                        <input class="admin-input" id="subject-category" maxlength="80" placeholder="General Studies / Languages / Aptitude">
+                    </label>
                     <label class="admin-label">Published
                         <select class="admin-input" id="subject-published">
                             <option value="true">Yes</option><option value="false">No</option>
                         </select>
                     </label>
                 </div>
-                <label class="admin-label">Description
+                <label class="admin-label">Short description
                     <textarea class="admin-input" id="subject-description" rows="2" maxlength="300"></textarea>
+                </label>
+                <label class="admin-label">About (long description)
+                    <textarea class="admin-input" id="subject-about" rows="3" maxlength="1000"></textarea>
+                </label>
+                <label class="admin-label">Tags (comma-separated)
+                    <input class="admin-input" id="subject-tags" placeholder="General Studies, MCQ Practice">
+                </label>
+                <label class="admin-label">Topics (comma-separated)
+                    <input class="admin-input" id="subject-topics" placeholder="Static GK, Important Days, Books and Authors">
                 </label>
                 <div class="admin-form-actions">
                     <button type="button" class="admin-btn admin-btn-ghost" id="subject-cancel">Cancel</button>
@@ -164,7 +192,7 @@
         <div class="admin-card">
             <div class="admin-table-wrap">
                 <table class="admin-table">
-                    <thead><tr><th>ID</th><th>Name</th><th>Published</th><th></th></tr></thead>
+                    <thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Topics</th><th>Published</th><th></th></tr></thead>
                     <tbody id="subjects-body"></tbody>
                 </table>
             </div>
