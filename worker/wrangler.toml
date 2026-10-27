@@ -1,0 +1,39 @@
+name = "preparekora-api"
+main = "src/index.js"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# ============================================================
+# Cloudflare Workers AI — translation binding
+# Used for English → Assamese translation (IndicTrans2)
+# ============================================================
+[ai]
+binding = "AI"
+
+# ============================================================
+# Cloudflare KV — stores tests + admin display names
+# Replace the two ids below with your own KV namespace IDs
+# Run: npx wrangler kv:namespace create KV
+#      npx wrangler kv:namespace create KV --preview
+# These ids are PUBLIC — safe to commit
+# ============================================================
+[[kv_namespaces]]
+binding = "KV"
+id = "REPLACE_WITH_KV_ID"
+preview_id = "REPLACE_WITH_KV_PREVIEW_ID"
+
+# ============================================================
+# Local dev environment
+# ============================================================
+[env.dev]
+name = "preparekora-api-dev"
+
+# ============================================================
+# NOTE: Never put secrets here.
+# Set secrets via CLI (they live encrypted in Cloudflare):
+#   npx wrangler secret put ADMIN1_USER
+#   npx wrangler secret put ADMIN1_PASS
+#   npx wrangler secret put ADMIN2_USER
+#   npx wrangler secret put ADMIN2_PASS
+#   npx wrangler secret put JWT_SECRET
+# ============================================================
