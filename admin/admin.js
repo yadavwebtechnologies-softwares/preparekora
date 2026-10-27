@@ -1,4 +1,4 @@
-/* PrepareKora — Admin Panel (Phase A+B+C + request review) */
+/* PrepareKora — Admin Panel (Phase A+B+C + request review + bulk import) */
 "use strict";
 
 (() => {
@@ -50,6 +50,8 @@
         if (!response.ok) {
             const err = new Error(data.error || data.message || `HTTP ${response.status}`);
             err.status = response.status;
+            err.details = data.details || null;
+            err.conflicts = data.conflicts || null;
             throw err;
         }
         return data;
@@ -57,7 +59,7 @@
 
     function setView(name) {
         state.view = name;
-        ["gate","loading","unauthorized","overview","tests","subjects","organizations","users","user-detail","requests","notifications"]
+        ["gate","loading","unauthorized","overview","tests","subjects","organizations","users","user-detail","requests","notifications","import"]
             .forEach((v) => {
                 const el = $(`#view-${v}`);
                 if (el) el.hidden = v !== name;
@@ -65,7 +67,8 @@
         $$(".admin-nav-link").forEach((b) => b.classList.toggle("is-active", b.dataset.view === name));
         const titles = {
             overview: "Overview", tests: "Tests", subjects: "Subjects", organizations: "Organizations",
-            users: "Users", "user-detail": "User Detail", requests: "Account Requests", notifications: "Notifications"
+            users: "Users", "user-detail": "User Detail", requests: "Account Requests", notifications: "Notifications",
+            import: "Bulk Import"
         };
         $("#admin-page-title").textContent = titles[name] || "Admin";
     }
@@ -706,6 +709,174 @@
         } catch (error) { out.textContent = error.message; }
     }
 
+    /* ---------- Import ---------- */
+
+    function formatImportReport(out, data) {
+        out.replaceChildren();
+        const lines = [];
+        if (data.created && data.created.length) {
+            lines.push(`Created: ${data.created.length}` + (data.created.length <= 10 ? ` (${data.created.join(", ")})` : ""));
+        }
+        if (data.updated && data.updated.length) {
+            lines.push(`Updated: ${data.updated.length}` + (data.updated.length <= 10 ? ` (${data.updated.join(", ")})` : ""));
+        }
+        if (data.added) lines.push(`Questions added: ${data.added}`);
+        if (data.totalQuestions) lines.push(`Total questions now: ${data.totalQuestions}`);
+        if (data.failed && data.failed.length) lines.push(`Failed: ${data.failed.length}`);
+        lines.forEach((line) => {
+            const div = document.createElement("div");
+            div.textContent = line;
+            if (line.startsWith("Failed")) div.style.color = "#b42318";
+            out.appendChild(div);
+        });
+        if (data.failed && data.failed.length) {
+            const details = document.createElement("ul");
+            data.failed.forEach((f) => {
+                const li = document.createElement("li");
+                li.textContent = `${f.id}: ${f.error}`;
+                li.style.color = "#b42318";
+                li.style.fontSize = "12px";
+                details.appendChild(li);
+            });
+            out.appendChild(details);
+        }
+    }
+
+    function showImportError(out, error) {
+        out.replaceChildren();
+        const head = document.createElement("div");
+        head.style.color = "#b42318";
+        head.style.fontWeight = "600";
+        head.textContent = error.message || "Import failed.";
+        out.appendChild(head);
+        if (Array.isArray(error.details) && error.details.length) {
+            const list = document.createElement("ul");
+            error.details.slice(0, 20).forEach((d) => {
+                const li = document.createElement("li");
+                li.textContent = `Item ${typeof d.index === "number" ? d.index + 1 : "?"}${d.id ? ` (${d.id})` : ""}: ${d.error}`;
+                li.style.color = "#b42318";
+                li.style.fontSize = "12px";
+                list.appendChild(li);
+            });
+            if (error.details.length > 20) {
+                const li = document.createElement("li");
+                li.textContent = `…and ${error.details.length - 20} more`;
+                li.style.fontSize = "12px";
+                list.appendChild(li);
+            }
+            out.appendChild(list);
+        }
+        if (Array.isArray(error.conflicts) && error.conflicts.length) {
+            const p = document.createElement("p");
+            p.style.fontSize = "12px";
+            p.textContent = `Existing IDs: ${error.conflicts.join(", ")}`;
+            out.appendChild(p);
+        }
+    }
+
+    async function importSubjects() {
+        const out = $("#import-subjects-result");
+        const json = ($("#import-subjects-json").value || "").trim();
+        const overwrite = $("#import-subjects-overwrite").checked;
+        if (!json) { out.textContent = "Paste JSON first."; return; }
+        let items;
+        try {
+            items = JSON.parse(json);
+            if (!Array.isArray(items)) throw new Error("JSON must be an array.");
+        } catch (e) {
+            out.textContent = `Invalid JSON: ${e.message}`;
+            return;
+        }
+        if (!items.length) { out.textContent = "Array is empty."; return; }
+        if (!confirm(`Import ${items.length} subject(s)${overwrite ? " (overwrite existing)" : ""}?`)) return;
+
+        out.textContent = "Importing…";
+        try {
+            const res = await api("/admin/import/subjects", { method: "POST", body: { items, overwrite } });
+            formatImportReport(out, res);
+            await loadSubjects();
+        } catch (error) {
+            showImportError(out, error);
+        }
+    }
+
+    async function importTests() {
+        const out = $("#import-tests-result");
+        const json = ($("#import-tests-json").value || "").trim();
+        const overwrite = $("#import-tests-overwrite").checked;
+        if (!json) { out.textContent = "Paste JSON first."; return; }
+        let items;
+        try {
+            items = JSON.parse(json);
+            if (!Array.isArray(items)) throw new Error("JSON must be an array.");
+        } catch (e) {
+            out.textContent = `Invalid JSON: ${e.message}`;
+            return;
+        }
+        if (!items.length) { out.textContent = "Array is empty."; return; }
+        if (!confirm(`Import ${items.length} test(s)${overwrite ? " (overwrite existing)" : ""}?`)) return;
+
+        out.textContent = "Importing…";
+        try {
+            const res = await api("/admin/import/tests", { method: "POST", body: { items, overwrite } });
+            formatImportReport(out, res);
+            await loadTests();
+        } catch (error) {
+            showImportError(out, error);
+        }
+    }
+
+    async function importMcqs() {
+        const out = $("#import-mcqs-result");
+        const testId = $("#import-mcqs-test").value;
+        const json = ($("#import-mcqs-json").value || "").trim();
+        if (!testId) { out.textContent = "Select a target test."; return; }
+        if (!json) { out.textContent = "Paste JSON first."; return; }
+        let questions;
+        try {
+            questions = JSON.parse(json);
+            if (!Array.isArray(questions)) throw new Error("JSON must be an array.");
+        } catch (e) {
+            out.textContent = `Invalid JSON: ${e.message}`;
+            return;
+        }
+        if (!questions.length) { out.textContent = "Array is empty."; return; }
+        if (!confirm(`Append ${questions.length} question(s) to "${testId}"?`)) return;
+
+        out.textContent = "Importing…";
+        try {
+            const res = await api("/admin/import/mcqs", { method: "POST", body: { testId, questions } });
+            formatImportReport(out, res);
+            await populateImportTestDropdown();
+        } catch (error) {
+            showImportError(out, error);
+        }
+    }
+
+    async function populateImportTestDropdown() {
+        const select = $("#import-mcqs-test");
+        if (!select) return;
+        const current = select.value;
+        select.innerHTML = '<option value="">-- Select a test --</option>';
+        try {
+            const data = await api("/admin/tests");
+            if (!data.items.length) {
+                select.innerHTML = '<option value="">No tests yet — import or create a test first</option>';
+                return;
+            }
+            data.items.forEach((t) => {
+                const opt = document.createElement("option");
+                opt.value = t.id;
+                opt.textContent = `${t.title || t.id} (${t.id})`;
+                if (t.id === current) opt.selected = true;
+                select.appendChild(opt);
+            });
+        } catch (error) {
+            console.error(`${LOG} Populate import tests:`, error);
+            select.innerHTML = '<option value="">Error loading tests</option>';
+        }
+    }
+
     /* ---------- Wiring ---------- */
 
     function wire() {
@@ -719,6 +890,7 @@
                 if (v === "tests") await loadTests();
                 if (v === "subjects") await loadSubjects();
                 if (v === "organizations") await loadOrganizations();
+                if (v === "import") await populateImportTestDropdown();
                 document.body.classList.remove("sidebar-open");
             });
         });
@@ -762,6 +934,13 @@
         });
         const reviewForm = $("#request-review-form");
         if (reviewForm) reviewForm.addEventListener("submit", saveRequestReview);
+
+        const impSub = $("#import-subjects-submit");
+        if (impSub) impSub.addEventListener("click", importSubjects);
+        const impTest = $("#import-tests-submit");
+        if (impTest) impTest.addEventListener("click", importTests);
+        const impMcq = $("#import-mcqs-submit");
+        if (impMcq) impMcq.addEventListener("click", importMcqs);
 
         $("#admin-menu-btn").addEventListener("click", () => document.body.classList.toggle("sidebar-open"));
     }
