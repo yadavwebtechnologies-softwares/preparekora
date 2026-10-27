@@ -1,4 +1,4 @@
-/* PrepareKora — Admin Panel (Phase A+B+C + subject-first) */
+/* PrepareKora — Admin Panel (Phase A+B+C + request review) */
 "use strict";
 
 (() => {
@@ -18,7 +18,8 @@
         organizations: [],
         editingTest: null,
         editingSubject: null,
-        editingOrg: null
+        editingOrg: null,
+        activeRequest: null
     };
 
     function readSession() {
@@ -222,6 +223,40 @@
 
     /* ---------- Requests ---------- */
 
+    function renderStatusBadge(status) {
+        const span = document.createElement("span");
+        span.className = "admin-row-btn";
+        span.style.cursor = "default";
+        span.style.fontWeight = "600";
+        span.textContent = status || "pending";
+        if (status === "approved" || status === "completed") {
+            span.style.color = "#067647";
+            span.style.borderColor = "#c9e3d0";
+        } else if (status === "rejected") {
+            span.style.color = "#b42318";
+            span.style.borderColor = "#f5d5d2";
+        } else if (status === "under_review") {
+            span.style.color = "#b54708";
+            span.style.borderColor = "#fce6c9";
+        }
+        return span;
+    }
+
+    function renderResponseCell(text) {
+        const td = document.createElement("td");
+        if (text) {
+            td.textContent = text;
+            td.style.maxWidth = "220px";
+            td.style.overflow = "hidden";
+            td.style.textOverflow = "ellipsis";
+            td.title = text;
+        } else {
+            td.textContent = "—";
+            td.className = "admin-muted";
+        }
+        return td;
+    }
+
     async function loadRequests() {
         try {
             const data = await api("/admin/requests");
@@ -233,12 +268,17 @@
                 delEmpty.hidden = true;
                 data.deletion.forEach((r) => {
                     const tr = document.createElement("tr");
-                    [r.displayName, r.email, r.status,
-                     r.requestedAt ? new Date(r.requestedAt).toLocaleString() : "—"]
-                        .forEach((t) => {
-                            const td = document.createElement("td");
-                            td.textContent = t || "—"; tr.appendChild(td);
-                        });
+                    const nameTd = document.createElement("td"); nameTd.textContent = r.displayName || "—"; tr.appendChild(nameTd);
+                    const emailTd = document.createElement("td"); emailTd.textContent = r.email || "—"; tr.appendChild(emailTd);
+                    const statusTd = document.createElement("td"); statusTd.appendChild(renderStatusBadge(r.status)); tr.appendChild(statusTd);
+                    const dateTd = document.createElement("td"); dateTd.textContent = r.requestedAt ? new Date(r.requestedAt).toLocaleString() : "—"; tr.appendChild(dateTd);
+                    tr.appendChild(renderResponseCell(r.response));
+                    const actionTd = document.createElement("td");
+                    const btn = document.createElement("button");
+                    btn.type = "button"; btn.className = "admin-row-btn"; btn.textContent = "Review";
+                    btn.addEventListener("click", () => openRequestReview(r, "deletion"));
+                    actionTd.appendChild(btn);
+                    tr.appendChild(actionTd);
                     delBody.appendChild(tr);
                 });
             }
@@ -250,16 +290,60 @@
                 emEmpty.hidden = true;
                 data.emailChange.forEach((r) => {
                     const tr = document.createElement("tr");
-                    [r.displayName, r.email, r.newEmail, r.status,
-                     r.requestedAt ? new Date(r.requestedAt).toLocaleString() : "—"]
-                        .forEach((t) => {
-                            const td = document.createElement("td");
-                            td.textContent = t || "—"; tr.appendChild(td);
-                        });
+                    const nameTd = document.createElement("td"); nameTd.textContent = r.displayName || "—"; tr.appendChild(nameTd);
+                    const emailTd = document.createElement("td"); emailTd.textContent = r.email || "—"; tr.appendChild(emailTd);
+                    const newEmailTd = document.createElement("td"); newEmailTd.textContent = r.newEmail || "—"; tr.appendChild(newEmailTd);
+                    const statusTd = document.createElement("td"); statusTd.appendChild(renderStatusBadge(r.status)); tr.appendChild(statusTd);
+                    const dateTd = document.createElement("td"); dateTd.textContent = r.requestedAt ? new Date(r.requestedAt).toLocaleString() : "—"; tr.appendChild(dateTd);
+                    tr.appendChild(renderResponseCell(r.response));
+                    const actionTd = document.createElement("td");
+                    const btn = document.createElement("button");
+                    btn.type = "button"; btn.className = "admin-row-btn"; btn.textContent = "Review";
+                    btn.addEventListener("click", () => openRequestReview(r, "email"));
+                    actionTd.appendChild(btn);
+                    tr.appendChild(actionTd);
                     emBody.appendChild(tr);
                 });
             }
         } catch (error) { console.error(`${LOG} Requests:`, error); }
+    }
+
+    function openRequestReview(req, type) {
+        state.activeRequest = { uid: req.uid, type };
+        const card = $("#request-review-card");
+        if (!card) return;
+        $("#request-review-title").textContent = type === "deletion" ? "Review Deletion Request" : "Review Email Change Request";
+        $("#request-review-subtitle").textContent = `${req.displayName || "User"} — ${req.email || ""}`;
+        $("#request-status").value = req.status || "pending";
+        $("#request-response").value = req.response || "";
+        $("#request-review-message").textContent = "";
+        card.hidden = false;
+        card.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    async function saveRequestReview(e) {
+        e.preventDefault();
+        if (!state.activeRequest) return;
+        const msg = $("#request-review-message");
+        msg.textContent = "";
+        const payload = {
+            status: $("#request-status").value,
+            response: $("#request-response").value.trim()
+        };
+        try {
+            const res = await api(
+                `/admin/requests/${encodeURIComponent(state.activeRequest.uid)}/${state.activeRequest.type}`,
+                { method: "PATCH", body: payload }
+            );
+            msg.textContent = res.notificationCreated
+                ? "Saved. Notification sent to user."
+                : "Saved (no response text, so no notification sent).";
+            $("#request-review-card").hidden = true;
+            state.activeRequest = null;
+            await loadRequests();
+        } catch (error) {
+            msg.textContent = error.message || "Could not save.";
+        }
     }
 
     /* ---------- Tests ---------- */
@@ -670,6 +754,14 @@
         $("#orgs-form").addEventListener("submit", saveOrg);
 
         $("#notif-form").addEventListener("submit", sendNotification);
+
+        const cancelBtn = $("#request-cancel");
+        if (cancelBtn) cancelBtn.addEventListener("click", () => {
+            $("#request-review-card").hidden = true;
+            state.activeRequest = null;
+        });
+        const reviewForm = $("#request-review-form");
+        if (reviewForm) reviewForm.addEventListener("submit", saveRequestReview);
 
         $("#admin-menu-btn").addEventListener("click", () => document.body.classList.toggle("sidebar-open"));
     }
