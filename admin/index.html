@@ -16,8 +16,12 @@
     </div>
     <nav class="admin-nav" id="admin-nav" aria-label="Admin navigation">
         <button type="button" class="admin-nav-link is-active" data-view="overview">Overview</button>
+        <button type="button" class="admin-nav-link" data-view="tests">Tests</button>
+        <button type="button" class="admin-nav-link" data-view="subjects">Subjects</button>
+        <button type="button" class="admin-nav-link" data-view="organizations">Organizations</button>
         <button type="button" class="admin-nav-link" data-view="users">Users</button>
         <button type="button" class="admin-nav-link" data-view="requests">Account Requests</button>
+        <button type="button" class="admin-nav-link" data-view="notifications">Notifications</button>
     </nav>
     <div class="admin-sidebar-footer">
         <span id="admin-email" class="admin-email"></span>
@@ -31,7 +35,6 @@
         <h1 class="admin-page-title" id="admin-page-title">Overview</h1>
     </header>
 
-    <!-- Auth gate -->
     <section class="admin-view" id="view-gate">
         <div class="admin-empty">
             <h2>Administrator access required</h2>
@@ -41,9 +44,7 @@
     </section>
 
     <section class="admin-view" id="view-loading" hidden>
-        <div class="admin-empty">
-            <p>Verifying administrator access…</p>
-        </div>
+        <div class="admin-empty"><p>Verifying administrator access…</p></div>
     </section>
 
     <section class="admin-view" id="view-unauthorized" hidden>
@@ -54,34 +55,155 @@
         </div>
     </section>
 
-    <!-- Overview -->
     <section class="admin-view" id="view-overview" hidden>
         <div class="admin-stats" id="overview-stats">
-            <div class="admin-stat">
-                <span class="admin-stat-label">Total Users</span>
-                <span class="admin-stat-value" id="stat-users">—</span>
-            </div>
-            <div class="admin-stat">
-                <span class="admin-stat-label">Total Test Attempts</span>
-                <span class="admin-stat-value" id="stat-attempts">—</span>
-            </div>
-            <div class="admin-stat">
-                <span class="admin-stat-label">Pending Deletion</span>
-                <span class="admin-stat-value" id="stat-deletions">—</span>
-            </div>
-            <div class="admin-stat">
-                <span class="admin-stat-label">Email Change Requests</span>
-                <span class="admin-stat-value" id="stat-emails">—</span>
-            </div>
+            <div class="admin-stat"><span class="admin-stat-label">Total Users</span><span class="admin-stat-value" id="stat-users">—</span></div>
+            <div class="admin-stat"><span class="admin-stat-label">Total Test Attempts</span><span class="admin-stat-value" id="stat-attempts">—</span></div>
+            <div class="admin-stat"><span class="admin-stat-label">Pending Deletion</span><span class="admin-stat-value" id="stat-deletions">—</span></div>
+            <div class="admin-stat"><span class="admin-stat-label">Email Change Requests</span><span class="admin-stat-value" id="stat-emails">—</span></div>
         </div>
         <div class="admin-card">
             <h2 class="admin-card-title">Recent Users</h2>
             <div class="admin-table-wrap">
                 <table class="admin-table">
-                    <thead>
-                        <tr><th>Name</th><th>Email</th><th>Created</th><th>Attempts</th></tr>
-                    </thead>
+                    <thead><tr><th>Name</th><th>Email</th><th>Created</th><th>Attempts</th></tr></thead>
                     <tbody id="overview-recent-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tests -->
+    <section class="admin-view" id="view-tests" hidden>
+        <div class="admin-toolbar">
+            <button type="button" class="admin-btn admin-btn-primary" id="tests-new">+ New Test</button>
+            <button type="button" class="admin-btn admin-btn-ghost" id="tests-refresh">Refresh</button>
+        </div>
+
+        <div class="admin-card" id="tests-form-card" hidden>
+            <h2 class="admin-card-title" id="tests-form-title">New Test</h2>
+            <form id="tests-form" novalidate>
+                <div class="admin-form-grid">
+                    <label class="admin-label">ID (slug: lowercase, digits, dashes)
+                        <input class="admin-input" id="test-id" required maxlength="64" placeholder="assam-vfa">
+                    </label>
+                    <label class="admin-label">Title
+                        <input class="admin-input" id="test-title" required maxlength="120">
+                    </label>
+                    <label class="admin-label">Category
+                        <input class="admin-input" id="test-category" maxlength="40" placeholder="general">
+                    </label>
+                    <label class="admin-label">Duration (seconds)
+                        <input class="admin-input" id="test-duration" type="number" min="60" max="7200" value="600">
+                    </label>
+                    <label class="admin-label">Marks per question
+                        <input class="admin-input" id="test-marks" type="number" min="1" max="10" value="1">
+                    </label>
+                    <label class="admin-label">Published
+                        <select class="admin-input" id="test-published">
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </label>
+                </div>
+                <label class="admin-label">Description
+                    <textarea class="admin-input" id="test-description" rows="2" maxlength="500"></textarea>
+                </label>
+
+                <div class="admin-section-head">
+                    <h3 class="admin-card-title no-margin">Questions</h3>
+                    <button type="button" class="admin-btn admin-btn-ghost" id="test-add-question">+ Add Question</button>
+                </div>
+                <div id="test-questions"></div>
+
+                <div class="admin-form-actions">
+                    <button type="button" class="admin-btn admin-btn-ghost" id="test-cancel">Cancel</button>
+                    <button type="submit" class="admin-btn admin-btn-primary" id="test-submit">Save Test</button>
+                </div>
+                <p class="admin-muted" id="test-form-message"></p>
+            </form>
+        </div>
+
+        <div class="admin-card">
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead><tr><th>ID</th><th>Title</th><th>Category</th><th>Questions</th><th>Published</th><th></th></tr></thead>
+                    <tbody id="tests-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Subjects -->
+    <section class="admin-view" id="view-subjects" hidden>
+        <div class="admin-toolbar">
+            <button type="button" class="admin-btn admin-btn-primary" id="subjects-new">+ New Subject</button>
+        </div>
+        <div class="admin-card" id="subjects-form-card" hidden>
+            <h2 class="admin-card-title" id="subjects-form-title">New Subject</h2>
+            <form id="subjects-form">
+                <div class="admin-form-grid">
+                    <label class="admin-label">ID <input class="admin-input" id="subject-id" required maxlength="64"></label>
+                    <label class="admin-label">Name <input class="admin-input" id="subject-name" required maxlength="80"></label>
+                    <label class="admin-label">Published
+                        <select class="admin-input" id="subject-published">
+                            <option value="true">Yes</option><option value="false">No</option>
+                        </select>
+                    </label>
+                </div>
+                <label class="admin-label">Description
+                    <textarea class="admin-input" id="subject-description" rows="2" maxlength="300"></textarea>
+                </label>
+                <div class="admin-form-actions">
+                    <button type="button" class="admin-btn admin-btn-ghost" id="subject-cancel">Cancel</button>
+                    <button type="submit" class="admin-btn admin-btn-primary">Save Subject</button>
+                </div>
+                <p class="admin-muted" id="subject-form-message"></p>
+            </form>
+        </div>
+        <div class="admin-card">
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead><tr><th>ID</th><th>Name</th><th>Published</th><th></th></tr></thead>
+                    <tbody id="subjects-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Organizations -->
+    <section class="admin-view" id="view-organizations" hidden>
+        <div class="admin-toolbar">
+            <button type="button" class="admin-btn admin-btn-primary" id="orgs-new">+ New Organization</button>
+        </div>
+        <div class="admin-card" id="orgs-form-card" hidden>
+            <h2 class="admin-card-title" id="orgs-form-title">New Organization</h2>
+            <form id="orgs-form">
+                <div class="admin-form-grid">
+                    <label class="admin-label">ID <input class="admin-input" id="org-id" required maxlength="64"></label>
+                    <label class="admin-label">Name <input class="admin-input" id="org-name" required maxlength="120"></label>
+                    <label class="admin-label">Category <input class="admin-input" id="org-category" required maxlength="80" placeholder="State Examinations"></label>
+                    <label class="admin-label">Published
+                        <select class="admin-input" id="org-published">
+                            <option value="true">Yes</option><option value="false">No</option>
+                        </select>
+                    </label>
+                </div>
+                <label class="admin-label">Description
+                    <textarea class="admin-input" id="org-description" rows="2" maxlength="300"></textarea>
+                </label>
+                <div class="admin-form-actions">
+                    <button type="button" class="admin-btn admin-btn-ghost" id="org-cancel">Cancel</button>
+                    <button type="submit" class="admin-btn admin-btn-primary">Save Organization</button>
+                </div>
+                <p class="admin-muted" id="org-form-message"></p>
+            </form>
+        </div>
+        <div class="admin-card">
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Published</th><th></th></tr></thead>
+                    <tbody id="orgs-body"></tbody>
                 </table>
             </div>
         </div>
@@ -90,18 +212,13 @@
     <!-- Users -->
     <section class="admin-view" id="view-users" hidden>
         <div class="admin-toolbar">
-            <input type="search" id="users-search" class="admin-input"
-                   placeholder="Search by email, name or UID…">
-            <button type="button" class="admin-btn admin-btn-primary" id="users-refresh">
-                Search
-            </button>
+            <input type="search" id="users-search" class="admin-input" placeholder="Search by email, name or UID…">
+            <button type="button" class="admin-btn admin-btn-primary" id="users-refresh">Search</button>
         </div>
         <div class="admin-card">
             <div class="admin-table-wrap">
                 <table class="admin-table">
-                    <thead>
-                        <tr><th>Name</th><th>Email</th><th>WhatsApp</th><th>Created</th><th>Attempts</th><th></th></tr>
-                    </thead>
+                    <thead><tr><th>Name</th><th>Email</th><th>WhatsApp</th><th>Created</th><th>Attempts</th><th></th></tr></thead>
                     <tbody id="users-body"></tbody>
                 </table>
             </div>
@@ -113,7 +230,6 @@
         </div>
     </section>
 
-    <!-- User detail -->
     <section class="admin-view" id="view-user-detail" hidden>
         <button type="button" class="admin-btn admin-btn-ghost" id="user-detail-back">← Back to users</button>
         <div class="admin-card">
@@ -125,9 +241,7 @@
             <h2 class="admin-card-title">Test Attempts</h2>
             <div class="admin-table-wrap">
                 <table class="admin-table">
-                    <thead>
-                        <tr><th>Date</th><th>Test</th><th>Score</th><th>Accuracy</th><th>Time</th></tr>
-                    </thead>
+                    <thead><tr><th>Date</th><th>Test</th><th>Score</th><th>Accuracy</th><th>Time</th></tr></thead>
                     <tbody id="user-detail-attempts"></tbody>
                 </table>
             </div>
@@ -141,9 +255,7 @@
             <h2 class="admin-card-title">Deletion Requests</h2>
             <div class="admin-table-wrap">
                 <table class="admin-table">
-                    <thead>
-                        <tr><th>Name</th><th>Email</th><th>Status</th><th>Requested</th></tr>
-                    </thead>
+                    <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Requested</th></tr></thead>
                     <tbody id="requests-deletion-body"></tbody>
                 </table>
             </div>
@@ -153,13 +265,40 @@
             <h2 class="admin-card-title">Email Change Requests</h2>
             <div class="admin-table-wrap">
                 <table class="admin-table">
-                    <thead>
-                        <tr><th>Name</th><th>Current Email</th><th>New Email</th><th>Status</th><th>Requested</th></tr>
-                    </thead>
+                    <thead><tr><th>Name</th><th>Current Email</th><th>New Email</th><th>Status</th><th>Requested</th></tr></thead>
                     <tbody id="requests-email-body"></tbody>
                 </table>
             </div>
             <p class="admin-muted" id="requests-email-empty" hidden>No email change requests.</p>
+        </div>
+    </section>
+
+    <!-- Notifications -->
+    <section class="admin-view" id="view-notifications" hidden>
+        <div class="admin-card">
+            <h2 class="admin-card-title">Send Notification</h2>
+            <form id="notif-form">
+                <label class="admin-label">Recipient UID
+                    <input class="admin-input" id="notif-uid" required maxlength="128" placeholder="paste user UID">
+                </label>
+                <label class="admin-label">Title
+                    <input class="admin-input" id="notif-title" required maxlength="120">
+                </label>
+                <label class="admin-label">Message
+                    <textarea class="admin-input" id="notif-message" rows="3" required maxlength="1000"></textarea>
+                </label>
+                <label class="admin-label">Type
+                    <select class="admin-input" id="notif-type">
+                        <option value="info">Info</option>
+                        <option value="success">Success</option>
+                        <option value="warning">Warning</option>
+                    </select>
+                </label>
+                <div class="admin-form-actions">
+                    <button type="submit" class="admin-btn admin-btn-primary">Send</button>
+                </div>
+                <p class="admin-muted" id="notif-message-out"></p>
+            </form>
         </div>
     </section>
 
