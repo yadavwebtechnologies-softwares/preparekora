@@ -2,19 +2,11 @@
 
 /*
   PrepareKora — Mock Test page.
-
-  Flow:
-    GET /api/tests/:id                  → public test (no answers)
-    POST /api/tests/:id/submit          → server scores, returns result
-    Result PNG                           → user name, title, score, date, publisher
-
-  Uses window.PK_API when present (loaded via api.js);
-  otherwise uses an inline fetch helper with auto-detected base URL.
 */
 
 (function () {
 
-  /* ---------- API fallback ---------- */
+  /* ---------- API ---------- */
 
   const API_BASE = (function () {
     const host = window.location.hostname;
@@ -24,7 +16,9 @@
       host === "0.0.0.0" ||
       host === "" ||
       host.endsWith(".local");
-    return isLocal ? "http://localhost:8787/api" : "/api";
+    return isLocal
+      ? "http://localhost:8787/api"
+      : "https://preparekora-api.yadavsubba2003.workers.dev/api";
   })();
 
   async function apiGet(path) {
@@ -118,6 +112,11 @@
   const confirmCancel   = document.getElementById("confirmCancel");
   const confirmSubmit   = document.getElementById("confirmSubmit");
 
+  const interruptOverlay  = document.getElementById("interruptOverlay");
+  const interruptWarnCount= document.getElementById("interruptWarnCount");
+  const resumeBtn         = document.getElementById("resumeBtn");
+  const terminateOverlay  = document.getElementById("terminateOverlay");
+
   const resultTitle     = document.getElementById("resultTitle");
   const resultPublisher = document.getElementById("resultPublisher");
   const scoreValue      = document.getElementById("scoreValue");
@@ -140,8 +139,8 @@
   /* ---------- State ---------- */
 
   const state = {
-    publicTest: null,        // { id, title, publisherName, minutes, questions: [{q, options}] }
-    answers: {},             // index -> option index (0-3)
+    publicTest: null,
+    answers: {},
     marked: new Set(),
     visited: new Set(),
     index: 0,
@@ -154,12 +153,44 @@
     elapsed: 0,
     timerId: null,
     warnedOneMinute: false,
-    result: null,            // { correct, wrong, unattempted, total, percent }
+    result: null,
     userName: "",
     userWhatsApp: "",
     translatedTitle: "",
     translatedPublisher: ""
   };
+
+  /* ---------- Interruption tracking ---------- */
+
+  const MAX_INTERRUPTIONS = 5;
+  let awayActive = false;
+
+  function interruptKey() {
+    return "pk_interrupt_" + (state.publicTest ? state.publicTest.id : "unknown");
+  }
+
+  function terminateKey() {
+    return "pk_terminated_" + (state.publicTest ? state.publicTest.id : "unknown");
+  }
+
+  function getInterruptCount() {
+    try {
+      const n = parseInt(sessionStorage.getItem(interruptKey()) || "0", 10);
+      return isNaN(n) ? 0 : n;
+    } catch (e) { return 0; }
+  }
+
+  function setInterruptCount(n) {
+    try { sessionStorage.setItem(interruptKey(), String(n)); } catch (e) { /* ignore */ }
+  }
+
+  function isSessionTerminated() {
+    try { return sessionStorage.getItem(terminateKey()) === "1"; } catch (e) { return false; }
+  }
+
+  function markSessionTerminated() {
+    try { sessionStorage.setItem(terminateKey(), "1"); } catch (e) { /* ignore */ }
+  }
 
   /* ---------- Utils ---------- */
 
@@ -229,6 +260,14 @@
       state.publicTest = res;
       state.translatedTitle = res.title;
       state.translatedPublisher = res.publisherName;
+
+      if (isSessionTerminated()) {
+        renderStart();
+        showScreen("test");
+        showTerminateModal();
+        return;
+      }
+
       renderStart();
       showScreen("start");
       translateStartIfNeeded();
@@ -355,6 +394,12 @@
   /* ---------- Begin test ---------- */
 
   function beginTest() {
+    if (isSessionTerminated()) {
+      showScreen("test");
+      showTerminateModal();
+      return;
+    }
+
     state.started = true;
     state.index = 0;
     state.answers = {};
@@ -615,7 +660,6 @@
 
     state.elapsed = Math.round((Date.now() - state.startedAt) / 1000);
 
-    /* Build answer payload — only answered indices */
     const payloadAnswers = {};
     Object.keys(state.answers).forEach(function (i) {
       const v = state.answers[i];
@@ -631,7 +675,6 @@
         userName: state.userName
       });
     } catch (err) {
-      /* Fallback: count unanswered only; correct/wrong unavailable */
       scored = {
         correct: 0,
         wrong: 0,
@@ -679,7 +722,7 @@
     statTime.textContent = formatClock(state.elapsed);
   }
 
-  /* ---------- Submit confirmation modal ---------- */
+  /* ---------- Submit confirm modal ---------- */
 
   let lastFocused = null;
 
@@ -724,6 +767,115 @@
       event.preventDefault(); first.focus();
     }
   }
+
+  /* ---------- Interruption detection ---------- */
+
+  function showInterruptModal(count) {
+    if (!interruptOverlay) return;
+    if (interruptWarnCount) {
+      interruptWarnCount.textContent = t("interruptWarn", {
+        n: count,
+        total: MAX_INTERRUPTIONS
+      });
+    }
+    interruptOverlay.classList.add("open");
+    interruptOverlay.setAttribute("aria-hidden", "false");
+    setTimeout(function () { if (resumeBtn) resumeBtn.focus(); }, 40);
+  }
+
+  function hideInterruptModal() {
+    if (!interruptOverlay) return;
+    interruptOverlay.classList.remove("open");
+    interruptOverlay.setAttribute("aria-hidden", "true");
+  }
+
+  function showTerminateModal() {
+    if (!terminateOverlay) return;
+    terminateOverlay.classList.add("open");
+    terminateOverlay.setAttribute("aria-hidden", "false");
+  }
+
+  function terminateTest() {
+    if (state.finished) return;
+    state.finished = true;
+    state.submitting = true;
+
+    if (state.timerId) {
+      window.clearInterval(state.timerId);
+      state.timerId = null;
+    }
+
+    hideInterruptModal();
+    closePalette();
+    closeConfirm();
+    markSessionTerminated();
+    showTerminateModal();
+  }
+
+  function registerInterruption() {
+    if (!state.started || state.finished) return;
+
+    const newCount = getInterruptCount() + 1;
+    setInterruptCount(newCount);
+
+    if (newCount >= MAX_INTERRUPTIONS) {
+      terminateTest();
+    } else {
+      showInterruptModal(newCount);
+    }
+  }
+
+  function handleStartAway() {
+    if (!state.started || state.finished) return;
+    if (awayActive) return;
+    awayActive = true;
+  }
+
+  function handleEndAway() {
+    if (!awayActive) return;
+    awayActive = false;
+    if (!state.started || state.finished) return;
+    registerInterruption();
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") {
+      handleStartAway();
+    } else {
+      handleEndAway();
+    }
+  });
+
+  window.addEventListener("blur", function () {
+    if (document.visibilityState === "hidden") return;
+    handleStartAway();
+  });
+
+  window.addEventListener("focus", function () {
+    handleEndAway();
+  });
+
+  if (resumeBtn) {
+    resumeBtn.addEventListener("click", function () {
+      hideInterruptModal();
+    });
+  }
+
+  if (interruptOverlay) {
+    interruptOverlay.addEventListener("click", function (event) {
+      if (event.target === interruptOverlay) hideInterruptModal();
+    });
+  }
+
+  document.addEventListener("keydown", function (event) {
+    if (
+      event.key === "Escape" &&
+      interruptOverlay &&
+      interruptOverlay.classList.contains("open")
+    ) {
+      hideInterruptModal();
+    }
+  });
 
   /* ---------- Result PNG ---------- */
 
