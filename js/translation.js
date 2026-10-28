@@ -77,7 +77,20 @@
       fillAllFields: "Please fill all required fields.",
       atLeastOneQuestion: "Add at least one question.",
       needAnswer: "Mark the correct answer for every question.",
-      nameUpdated: "Display name updated", saving: "Saving…", required: "Required"
+      nameUpdated: "Display name updated", saving: "Saving…", required: "Required",
+
+      interruptTitle: "Test Interrupted",
+      interruptBody: "You left the test screen. Please stay on the test page.",
+      resumeTest: "Resume test",
+      terminatedTitle: "Test Terminated",
+      terminatedBody: "You have exceeded the allowed limit for leaving the test screen. You cannot restart this test in this session.",
+      interruptWarn: "Warning {n} of {total}",
+
+      adminInterruption: "Interruption warnings",
+      adminInterruptionEnable: "Enable interruption warnings",
+      adminInterruptionEnableHint: "When enabled, switching tabs during a test counts as a violation.",
+      adminInterruptionDuration: "Termination cooldown (minutes)",
+      adminInterruptionDurationHint: "After 5 violations, the student is blocked from retaking for this many minutes."
     },
 
     as: {
@@ -154,7 +167,20 @@
       fillAllFields: "সকলো প্ৰয়োজনীয় ক্ষেত্ৰ পূৰণ কৰক।",
       atLeastOneQuestion: "কমেও এটা প্ৰশ্ন যোগ কৰক।",
       needAnswer: "প্ৰতিটো প্ৰশ্নৰ বাবে শুদ্ধ উত্তৰ চিহ্নিত কৰক।",
-      nameUpdated: "প্ৰদৰ্শন নাম আপডেট হ'ল", saving: "চেছ হৈ আছে…", required: "আৱশ্যক"
+      nameUpdated: "প্ৰদৰ্শন নাম আপডেট হ'ল", saving: "চেছ হৈ আছে…", required: "আৱশ্যক",
+
+      interruptTitle: "পৰীক্ষা বাধাগ্ৰস্ত",
+      interruptBody: "আপুনি পৰীক্ষাৰ পৃষ্ঠা এৰি গৈছে। অনুগ্ৰহ কৰি পৰীক্ষাৰ পৃষ্ঠাত থাকক।",
+      resumeTest: "পৰীক্ষা পুনৰ আৰম্ভ কৰক",
+      terminatedTitle: "পৰীক্ষা বন্ধ কৰা হ'ল",
+      terminatedBody: "আপুনি পৰীক্ষাৰ পৃষ্ঠা এৰি যোৱাৰ অনুমোদিত সীমা অতিক্ৰম কৰিছে। এই ছেছনত আপুনি এই পৰীক্ষা পুনৰ আৰম্ভ কৰিব নোৱাৰিব।",
+      interruptWarn: "সতৰ্কবাণী {n} / {total}",
+
+      adminInterruption: "পৰীক্ষা বাধাৰ সতৰ্কবাণী",
+      adminInterruptionEnable: "বাধাৰ সতৰ্কবাণী সক্ৰিয় কৰক",
+      adminInterruptionEnableHint: "সক্ৰিয় থাকিলে, পৰীক্ষাৰ সময়ত টেব সলনি কৰিলে বাধা হিচাপে গণনা কৰা হ'ব।",
+      adminInterruptionDuration: "বন্ধৰ সময় (মিনিট)",
+      adminInterruptionDurationHint: "৫ বাৰ বাধাৰ পিছত, ছাত্ৰ-ছাত্ৰীক ইমান মিনিটলৈ পুনৰ পৰীক্ষা দিবলৈ অনুমতি নাথাকিব।"
     }
   };
 
