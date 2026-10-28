@@ -1949,3 +1949,136 @@ input:focus-visible {
     height: 22px;
   }
 }
+/* =========================================================
+   === SUBMISSIONS VIEWER ===
+   ========================================================= */
+
+.submissions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.submissions-header h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  overflow-wrap: anywhere;
+}
+
+.submissions-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.submissions-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.submission-stat {
+  padding: 14px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-align: center;
+}
+
+.submission-stat strong {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.submission-stat span {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.submissions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.submission-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #ffffff;
+}
+
+.submission-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.submission-score {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.submission-score strong {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.submission-score span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.submission-percent {
+  min-width: 52px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.submission-time {
+  min-width: 90px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+@media (max-width: 560px) {
+  .submissions-stats { grid-template-columns: 1fr; }
+
+  .submission-row {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .submission-name { flex: 1 1 100%; }
+  .submission-time { min-width: auto; text-align: left; flex: 1; }
+}
