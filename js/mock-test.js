@@ -165,6 +165,7 @@
 
   const MAX_INTERRUPTIONS = 5;
   let awayActive = false;
+  let terminateCountdownId = null;
 
   function interruptKey() {
     return "pk_interrupt_" + (state.publicTest ? state.publicTest.id : "unknown");
@@ -716,18 +717,37 @@
     return m + "m " + String(s).padStart(2, "0") + "s";
   }
 
-  function showTerminateModal() {
-    if (!terminateOverlay) return;
-    if (terminateRemaining) {
+  function startTerminateCountdown() {
+    if (terminateCountdownId) {
+      window.clearInterval(terminateCountdownId);
+      terminateCountdownId = null;
+    }
+
+    function tick() {
       const remaining = getRemainingCooldown();
+      if (!terminateRemaining) return;
+
       if (remaining > 0) {
         terminateRemaining.textContent = "Please wait " + formatRemaining(remaining);
       } else {
-        terminateRemaining.textContent = "";
+        terminateRemaining.textContent = "You can retake this test now.";
+        if (terminateCountdownId) {
+          window.clearInterval(terminateCountdownId);
+          terminateCountdownId = null;
+        }
+        setTimeout(function () { window.location.reload(); }, 1500);
       }
     }
+
+    tick();
+    terminateCountdownId = window.setInterval(tick, 1000);
+  }
+
+  function showTerminateModal() {
+    if (!terminateOverlay) return;
     terminateOverlay.classList.add("open");
     terminateOverlay.setAttribute("aria-hidden", "false");
+    startTerminateCountdown();
   }
 
   function terminateTest() {
