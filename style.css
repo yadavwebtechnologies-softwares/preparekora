@@ -1858,3 +1858,94 @@ input:focus-visible {
   .import-modal-actions { flex-direction: column-reverse; }
   .import-modal-actions .btn { width: 100%; }
 }
+/* =========================================================
+   === INTERRUPTION MODALS ===
+   ========================================================= */
+
+.modal.interrupt-modal {
+  width: 100%;
+  max-width: 400px;
+  padding: 32px 28px 24px;
+  text-align: center;
+  border-radius: 10px;
+}
+
+.interrupt-modal .modal-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 20px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.interrupt-modal .modal-icon img {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+.interrupt-modal .modal-icon-danger {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.interrupt-modal h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.interrupt-modal .muted-text {
+  margin: 0 0 4px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+  text-align: center;
+}
+
+.interrupt-modal .modal-warn-count {
+  margin: 12px 0 20px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.interrupt-modal .modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+}
+
+.interrupt-modal .modal-actions .btn {
+  min-width: 160px;
+}
+
+@media (max-width: 480px) {
+  .modal.interrupt-modal {
+    padding: 26px 20px 20px;
+  }
+
+  .interrupt-modal .modal-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+  }
+
+  .interrupt-modal .modal-icon img {
+    width: 22px;
+    height: 22px;
+  }
+}
