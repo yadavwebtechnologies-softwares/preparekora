@@ -333,6 +333,47 @@
       </div>
 
     </section>
+        <!-- SUBMISSIONS VIEWER -->
+    <section id="submissionsScreen" hidden>
+
+      <div class="submissions-header">
+        <h1 id="submissionsTitle">—</h1>
+        <div class="submissions-header-actions">
+          <button class="btn btn-sm" id="submissionsBackBtn" type="button" data-i18n="backToTests">
+            Back to tests
+          </button>
+        </div>
+      </div>
+
+      <div id="submissionsLoading" class="loading-state">
+        <div class="spinner"></div>
+        <span data-i18n="loading">Loading…</span>
+      </div>
+
+      <div id="submissionsEmpty" class="empty-state" hidden>
+        No submissions yet.
+      </div>
+
+      <div id="submissionsBody" hidden>
+        <div class="submissions-stats">
+          <div class="submission-stat">
+            <strong id="submissionsTotal">0</strong>
+            <span>Submissions</span>
+          </div>
+          <div class="submission-stat">
+            <strong id="submissionsAvg">0%</strong>
+            <span>Average score</span>
+          </div>
+          <div class="submission-stat">
+            <strong id="submissionsTop">0%</strong>
+            <span>Top score</span>
+          </div>
+        </div>
+
+        <div class="submissions-list" id="submissionsList"></div>
+      </div>
+
+    </section>
 
   </main>
 
