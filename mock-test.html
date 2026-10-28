@@ -389,6 +389,76 @@
     </div>
   </div>
 
+    <!-- INTERRUPTION MODAL -->
+  <div
+    class="modal-overlay"
+    id="interruptOverlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="interruptTitle"
+    aria-hidden="true"
+  >
+    <div class="modal interrupt-modal">
+
+      <div class="modal-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 9v4"></path>
+          <path d="M12 17h.01"></path>
+          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        </svg>
+      </div>
+
+      <h2 id="interruptTitle" data-i18n="interruptTitle">Test Interrupted</h2>
+
+      <p class="muted-text" data-i18n="interruptBody">
+        You left the test screen. Please stay on the test page.
+      </p>
+
+      <p class="modal-warn-count" id="interruptWarnCount"></p>
+
+      <div class="modal-actions">
+        <button
+          class="btn btn-primary"
+          id="resumeBtn"
+          type="button"
+          data-i18n="resumeTest"
+        >
+          Resume test
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TERMINATION MODAL -->
+  <div
+    class="modal-overlay"
+    id="terminateOverlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="terminateTitle"
+    aria-hidden="true"
+  >
+    <div class="modal interrupt-modal">
+
+      <div class="modal-icon modal-icon-danger" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="m15 9-6 6"></path>
+          <path d="m9 9 6 6"></path>
+        </svg>
+      </div>
+
+      <h2 id="terminateTitle" data-i18n="terminatedTitle">Test Terminated</h2>
+
+      <p class="muted-text" data-i18n="terminatedBody">
+        You have exceeded the allowed limit for leaving the test screen.
+        You cannot restart this test in this session.
+      </p>
+
+    </div>
+  </div>
+
   <div class="sr-only" id="srStatus" role="status" aria-live="polite"></div>
 
   <script src="js/config.js"></script>
