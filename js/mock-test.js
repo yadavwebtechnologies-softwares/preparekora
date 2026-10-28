@@ -1,21 +1,12 @@
 "use strict";
 
-/*
-  PrepareKora — Mock Test page.
-*/
-
 (function () {
-
-  /* ---------- API ---------- */
 
   const API_BASE = (function () {
     const host = window.location.hostname;
     const isLocal =
-      host === "localhost" ||
-      host === "127.0.0.1" ||
-      host === "0.0.0.0" ||
-      host === "" ||
-      host.endsWith(".local");
+      host === "localhost" || host === "127.0.0.1" ||
+      host === "0.0.0.0" || host === "" || host.endsWith(".local");
     return isLocal
       ? "http://localhost:8787/api"
       : "https://preparekora-api.yadavsubba2003.workers.dev/api";
@@ -44,6 +35,14 @@
       throw e;
     }
     return res.json();
+  }
+
+  async function apiGetSettings() {
+    try {
+      const res = await fetch(API_BASE + "/settings", { headers: { Accept: "application/json" } });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) { return null; }
   }
 
   async function apiTranslate(text, target) {
@@ -116,6 +115,7 @@
   const interruptWarnCount= document.getElementById("interruptWarnCount");
   const resumeBtn         = document.getElementById("resumeBtn");
   const terminateOverlay  = document.getElementById("terminateOverlay");
+  const terminateRemaining= document.getElementById("terminateRemaining");
 
   const resultTitle     = document.getElementById("resultTitle");
   const resultPublisher = document.getElementById("resultPublisher");
@@ -157,10 +157,11 @@
     userName: "",
     userWhatsApp: "",
     translatedTitle: "",
-    translatedPublisher: ""
+    translatedPublisher: "",
+    settings: { enabled: true, duration: 5 }
   };
 
-  /* ---------- Interruption tracking ---------- */
+  /* ---------- Interruption ---------- */
 
   const MAX_INTERRUPTIONS = 5;
   let awayActive = false;
@@ -175,21 +176,44 @@
 
   function getInterruptCount() {
     try {
-      const n = parseInt(sessionStorage.getItem(interruptKey()) || "0", 10);
+      const n = parseInt(localStorage.getItem(interruptKey()) || "0", 10);
       return isNaN(n) ? 0 : n;
     } catch (e) { return 0; }
   }
 
   function setInterruptCount(n) {
-    try { sessionStorage.setItem(interruptKey(), String(n)); } catch (e) { /* ignore */ }
+    try { localStorage.setItem(interruptKey(), String(n)); } catch (e) {}
+  }
+
+  function clearInterruptState() {
+    try {
+      localStorage.removeItem(interruptKey());
+      localStorage.removeItem(terminateKey());
+    } catch (e) {}
+  }
+
+  function getRemainingCooldown() {
+    try {
+      const raw = localStorage.getItem(terminateKey());
+      if (!raw) return 0;
+      const at = parseInt(raw, 10);
+      if (isNaN(at)) return 0;
+      const durationMs = state.settings.duration * 60 * 1000;
+      const elapsed = Date.now() - at;
+      if (elapsed >= durationMs) {
+        clearInterruptState();
+        return 0;
+      }
+      return Math.ceil((durationMs - elapsed) / 1000);
+    } catch (e) { return 0; }
   }
 
   function isSessionTerminated() {
-    try { return sessionStorage.getItem(terminateKey()) === "1"; } catch (e) { return false; }
+    return getRemainingCooldown() > 0;
   }
 
-  function markSessionTerminated() {
-    try { sessionStorage.setItem(terminateKey(), "1"); } catch (e) { /* ignore */ }
+  function markTerminated() {
+    try { localStorage.setItem(terminateKey(), String(Date.now())); } catch (e) {}
   }
 
   /* ---------- Utils ---------- */
@@ -200,13 +224,6 @@
 
   function locale() {
     return (window.PK && window.PK.locale) ? window.PK.locale() : "en-IN";
-  }
-
-  function escapeHTML(v) {
-    return String(v).replace(/[&<>"']/g, function (ch) {
-      const m = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
-      return m[ch];
-    });
   }
 
   function formatClock(seconds) {
@@ -250,10 +267,17 @@
   const testId = params.get("test") || "";
 
   async function loadTest() {
-    if (!testId) {
-      showScreen("notFound");
-      return;
-    }
+    if (!testId) { showScreen("notFound"); return; }
+
+    try {
+      const settingsRes = await apiGetSettings();
+      if (settingsRes) {
+        state.settings = {
+          enabled: settingsRes.interruptionEnabled !== false,
+          duration: Number(settingsRes.interruptionDuration) || 5
+        };
+      }
+    } catch (e) { /* use defaults */ }
 
     try {
       const res = await apiGet("/tests/" + encodeURIComponent(testId));
@@ -268,6 +292,7 @@
         return;
       }
 
+      clearInterruptState();
       renderStart();
       showScreen("start");
       translateStartIfNeeded();
@@ -295,7 +320,6 @@
 
   async function translateStartIfNeeded() {
     if (!window.PK || PK.lang !== "as" || !state.publicTest) return;
-
     try {
       const results = await Promise.all([
         apiTranslate(state.publicTest.title, "as"),
@@ -304,7 +328,7 @@
       state.translatedTitle = results[0] || state.publicTest.title;
       state.translatedPublisher = results[1] || state.publicTest.publisherName;
       renderStart();
-    } catch (err) { /* silent */ }
+    } catch (err) {}
   }
 
   if (startBtn) {
@@ -322,45 +346,17 @@
 
   function validateName() {
     const raw = userNameInput.value.trim();
-    if (!raw) {
-      nameError.textContent = t("requiredField");
-      nameError.hidden = false;
-      userNameInput.classList.add("is-invalid");
-      return null;
-    }
-    if (raw.length < 2) {
-      nameError.textContent = t("nameTooShort");
-      nameError.hidden = false;
-      userNameInput.classList.add("is-invalid");
-      return null;
-    }
-    if (raw.length > 60) {
-      nameError.textContent = t("nameTooLong");
-      nameError.hidden = false;
-      userNameInput.classList.add("is-invalid");
-      return null;
-    }
-    nameError.hidden = true;
-    userNameInput.classList.remove("is-invalid");
-    return raw;
+    if (!raw) { nameError.textContent = t("requiredField"); nameError.hidden = false; userNameInput.classList.add("is-invalid"); return null; }
+    if (raw.length < 2) { nameError.textContent = t("nameTooShort"); nameError.hidden = false; userNameInput.classList.add("is-invalid"); return null; }
+    if (raw.length > 60) { nameError.textContent = t("nameTooLong"); nameError.hidden = false; userNameInput.classList.add("is-invalid"); return null; }
+    nameError.hidden = true; userNameInput.classList.remove("is-invalid"); return raw;
   }
 
   function validateWhatsApp() {
     const raw = userWhatsAppInput.value.trim().replace(/[\s-]/g, "");
-    if (!raw) {
-      waError.hidden = true;
-      userWhatsAppInput.classList.remove("is-invalid");
-      return "";
-    }
-    if (!/^[0-9]{10,15}$/.test(raw)) {
-      waError.textContent = t("invalidWhatsApp");
-      waError.hidden = false;
-      userWhatsAppInput.classList.add("is-invalid");
-      return null;
-    }
-    waError.hidden = true;
-    userWhatsAppInput.classList.remove("is-invalid");
-    return raw;
+    if (!raw) { waError.hidden = true; userWhatsAppInput.classList.remove("is-invalid"); return ""; }
+    if (!/^[0-9]{10,15}$/.test(raw)) { waError.textContent = t("invalidWhatsApp"); waError.hidden = false; userWhatsAppInput.classList.add("is-invalid"); return null; }
+    waError.hidden = true; userWhatsAppInput.classList.remove("is-invalid"); return raw;
   }
 
   if (userNameInput) {
@@ -378,13 +374,10 @@
   if (nameForm) {
     nameForm.addEventListener("submit", function (e) {
       e.preventDefault();
-
       const name = validateName();
       const wa = validateWhatsApp();
-
       if (name === null) { userNameInput.focus(); return; }
       if (wa === null) { userWhatsAppInput.focus(); return; }
-
       state.userName = name;
       state.userWhatsApp = wa;
       beginTest();
@@ -408,8 +401,9 @@
     state.finished = false;
     state.submitting = false;
 
-    showScreen("test");
+    clearInterruptState();
 
+    showScreen("test");
     examTitle.textContent = state.translatedTitle || state.publicTest.title;
     renderQuestion(true);
     renderPalette();
@@ -425,7 +419,6 @@
   async function renderQuestion(markVisited) {
     const pt = state.publicTest;
     if (!pt) return;
-
     const index = state.index;
     const question = pt.questions[index];
     if (!question) return;
@@ -434,9 +427,7 @@
 
     qNumber.textContent = t("questionOf", { n: index + 1, total: pt.questions.length });
     qStatus.textContent = statusFor(index);
-
     qText.textContent = question.q;
-
     optionsFieldset.replaceChildren();
 
     const selected = hasAnswer(index) ? state.answers[index] : null;
@@ -472,19 +463,14 @@
     };
 
     buildOptions(question.options);
-
     prevBtn.disabled = index === 0;
     nextBtn.disabled = index === pt.questions.length - 1;
-
     updateMarkButton();
     updateNavSummary();
 
     if (window.PK && PK.lang === "as") {
       try {
-        const translated = await apiTranslateMany(
-          [question.q].concat(question.options),
-          "as"
-        );
+        const translated = await apiTranslateMany([question.q].concat(question.options), "as");
         if (translated && translated.length === question.options.length + 1) {
           qText.textContent = translated[0];
           optionsFieldset.replaceChildren();
@@ -494,17 +480,15 @@
           updateMarkButton();
           updateNavSummary();
         }
-      } catch (err) { /* silent */ }
+      } catch (err) {}
     }
   }
 
   function selectOption(optionIndex) {
     state.answers[state.index] = optionIndex;
-
     optionsFieldset.querySelectorAll(".option").forEach(function (label) {
       label.classList.toggle("is-selected", label.dataset.value === String(optionIndex));
     });
-
     qStatus.textContent = statusFor(state.index);
     renderPalette();
     updateNavSummary();
@@ -513,14 +497,8 @@
   function clearResponse() {
     if (!hasAnswer(state.index)) return;
     delete state.answers[state.index];
-
-    optionsFieldset.querySelectorAll(".option").forEach(function (label) {
-      label.classList.remove("is-selected");
-    });
-    optionsFieldset.querySelectorAll("input[type='radio']").forEach(function (input) {
-      input.checked = false;
-    });
-
+    optionsFieldset.querySelectorAll(".option").forEach(function (label) { label.classList.remove("is-selected"); });
+    optionsFieldset.querySelectorAll("input[type='radio']").forEach(function (input) { input.checked = false; });
     qStatus.textContent = statusFor(state.index);
     renderPalette();
     updateNavSummary();
@@ -544,45 +522,31 @@
     if (!pt) return;
     if (index < 0 || index >= pt.questions.length) return;
     if (index === state.index) { closePalette(); return; }
-
     state.index = index;
     renderQuestion(true);
     renderPalette();
     closePalette();
-    announce(
-      t("questionOf", { n: index + 1, total: pt.questions.length }) + ". " + statusFor(index)
-    );
+    announce(t("questionOf", { n: index + 1, total: pt.questions.length }) + ". " + statusFor(index));
   }
-
-  /* ---------- Palette ---------- */
 
   function renderPalette() {
     const pt = state.publicTest;
     if (!pt || !paletteGrid) return;
-
     paletteGrid.replaceChildren();
-
     pt.questions.forEach(function (_, index) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "palette-btn";
       btn.textContent = String(index + 1);
-
       if (state.visited.has(index)) btn.classList.add("is-visited");
       if (hasAnswer(index)) btn.classList.add("is-answered");
       if (state.marked.has(index)) btn.classList.add("is-marked");
-      if (index === state.index) {
-        btn.classList.add("is-current");
-        btn.setAttribute("aria-current", "true");
-      }
-
+      if (index === state.index) { btn.classList.add("is-current"); btn.setAttribute("aria-current", "true"); }
       btn.setAttribute("aria-label", (index + 1) + ". " + statusFor(index));
       btn.addEventListener("click", function () { goTo(index); });
       paletteGrid.appendChild(btn);
     });
   }
-
-  /* ---------- Palette drawer ---------- */
 
   function openPalette() {
     if (!palettePanel) return;
@@ -603,7 +567,6 @@
       else openPalette();
     });
   }
-
   if (paletteClose) paletteClose.addEventListener("click", closePalette);
   if (paletteBackdrop) paletteBackdrop.addEventListener("click", closePalette);
 
@@ -612,7 +575,6 @@
   function updateTimer() {
     timerText.textContent = formatClock(state.remaining);
     timerEl.classList.toggle("is-warning", state.remaining <= 60);
-
     if (!state.warnedOneMinute && state.remaining <= 60 && state.remaining > 0) {
       state.warnedOneMinute = true;
       announce(t("oneMinuteLeft"));
@@ -626,14 +588,11 @@
     state.remaining = minutes * 60;
     state.warnedOneMinute = false;
     updateTimer();
-
     if (state.timerId) window.clearInterval(state.timerId);
-
     state.timerId = window.setInterval(function () {
       const remaining = Math.max(0, Math.round((state.endAt - Date.now()) / 1000));
       state.remaining = remaining;
       updateTimer();
-
       if (remaining <= 0) {
         window.clearInterval(state.timerId);
         state.timerId = null;
@@ -643,18 +602,14 @@
     }, 250);
   }
 
-  /* ---------- Submit + score ---------- */
+  /* ---------- Submit ---------- */
 
   async function submitTest() {
     if (state.finished || state.submitting) return;
     state.submitting = true;
     state.finished = true;
 
-    if (state.timerId) {
-      window.clearInterval(state.timerId);
-      state.timerId = null;
-    }
-
+    if (state.timerId) { window.clearInterval(state.timerId); state.timerId = null; }
     closePalette();
     closeConfirm();
 
@@ -663,25 +618,14 @@
     const payloadAnswers = {};
     Object.keys(state.answers).forEach(function (i) {
       const v = state.answers[i];
-      if (typeof v === "number" && v >= 0 && v <= 3) {
-        payloadAnswers[String(i)] = v;
-      }
+      if (typeof v === "number" && v >= 0 && v <= 3) payloadAnswers[String(i)] = v;
     });
 
     let scored = null;
     try {
-      scored = await apiSubmit(testId, {
-        answers: payloadAnswers,
-        userName: state.userName
-      });
+      scored = await apiSubmit(testId, { answers: payloadAnswers, userName: state.userName });
     } catch (err) {
-      scored = {
-        correct: 0,
-        wrong: 0,
-        unattempted: state.publicTest.questions.length,
-        total: state.publicTest.questions.length,
-        percent: 0
-      };
+      scored = { correct: 0, wrong: 0, unattempted: state.publicTest.questions.length, total: state.publicTest.questions.length, percent: 0 };
     }
 
     state.result = {
@@ -694,48 +638,37 @@
 
     showScreen("result");
     renderResult();
-
-    announce(
-      t("resultEyebrow") + ". " +
-      t("scoreOf", { a: state.result.correct, b: state.result.total })
-    );
+    announce(t("resultEyebrow") + ". " + t("scoreOf", { a: state.result.correct, b: state.result.total }));
   }
 
   function renderResult() {
     const r = state.result;
     if (!r) return;
-
     const title = state.translatedTitle || (state.publicTest ? state.publicTest.title : "");
     const pub = state.translatedPublisher || (state.publicTest ? state.publicTest.publisherName : "");
-
     resultTitle.textContent = title;
     resultPublisher.textContent = publisherLine(pub);
-
     scoreValue.textContent = String(r.correct);
     scoreTotal.textContent = "/ " + r.total;
     scorePercent.textContent = r.percent + "%";
     progressFill.style.width = r.percent + "%";
-
     statCorrect.textContent = String(r.correct);
     statWrong.textContent = String(r.wrong);
     statUnattempted.textContent = String(r.unattempted);
     statTime.textContent = formatClock(state.elapsed);
   }
 
-  /* ---------- Submit confirm modal ---------- */
+  /* ---------- Confirm modal ---------- */
 
   let lastFocused = null;
 
   function openConfirm() {
     const total = state.publicTest ? state.publicTest.questions.length : 0;
     const answered = Object.keys(state.answers).length;
-
     confirmAnswered.textContent = String(answered);
     confirmUnanswered.textContent = String(total - answered);
     confirmMarked.textContent = String(state.marked.size);
-
     lastFocused = document.activeElement;
-
     confirmOverlay.classList.add("open");
     confirmOverlay.setAttribute("aria-hidden", "false");
     setTimeout(function () { if (confirmSubmit) confirmSubmit.focus(); }, 40);
@@ -749,34 +682,21 @@
   }
 
   function trapFocus(event) {
-    const focusables = confirmOverlay.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    const list = Array.prototype.filter.call(
-      focusables,
-      function (el) { return !el.disabled && el.offsetParent !== null; }
-    );
+    const focusables = confirmOverlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    const list = Array.prototype.filter.call(focusables, function (el) { return !el.disabled && el.offsetParent !== null; });
     if (!list.length) return;
-
     const first = list[0];
     const last = list[list.length - 1];
-
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault(); last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault(); first.focus();
-    }
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
   }
 
-  /* ---------- Interruption detection ---------- */
+  /* ---------- Interruption logic ---------- */
 
   function showInterruptModal(count) {
     if (!interruptOverlay) return;
     if (interruptWarnCount) {
-      interruptWarnCount.textContent = t("interruptWarn", {
-        n: count,
-        total: MAX_INTERRUPTIONS
-      });
+      interruptWarnCount.textContent = t("interruptWarn", { n: count, total: MAX_INTERRUPTIONS });
     }
     interruptOverlay.classList.add("open");
     interruptOverlay.setAttribute("aria-hidden", "false");
@@ -789,8 +709,23 @@
     interruptOverlay.setAttribute("aria-hidden", "true");
   }
 
+  function formatRemaining(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    if (m <= 0) return s + "s";
+    return m + "m " + String(s).padStart(2, "0") + "s";
+  }
+
   function showTerminateModal() {
     if (!terminateOverlay) return;
+    if (terminateRemaining) {
+      const remaining = getRemainingCooldown();
+      if (remaining > 0) {
+        terminateRemaining.textContent = "Please wait " + formatRemaining(remaining);
+      } else {
+        terminateRemaining.textContent = "";
+      }
+    }
     terminateOverlay.classList.add("open");
     terminateOverlay.setAttribute("aria-hidden", "false");
   }
@@ -799,21 +734,17 @@
     if (state.finished) return;
     state.finished = true;
     state.submitting = true;
-
-    if (state.timerId) {
-      window.clearInterval(state.timerId);
-      state.timerId = null;
-    }
-
+    if (state.timerId) { window.clearInterval(state.timerId); state.timerId = null; }
     hideInterruptModal();
     closePalette();
     closeConfirm();
-    markSessionTerminated();
+    markTerminated();
     showTerminateModal();
   }
 
   function registerInterruption() {
     if (!state.started || state.finished) return;
+    if (!state.settings.enabled) return;
 
     const newCount = getInterruptCount() + 1;
     setInterruptCount(newCount);
@@ -839,11 +770,8 @@
   }
 
   document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState === "hidden") {
-      handleStartAway();
-    } else {
-      handleEndAway();
-    }
+    if (document.visibilityState === "hidden") handleStartAway();
+    else handleEndAway();
   });
 
   window.addEventListener("blur", function () {
@@ -851,15 +779,9 @@
     handleStartAway();
   });
 
-  window.addEventListener("focus", function () {
-    handleEndAway();
-  });
+  window.addEventListener("focus", function () { handleEndAway(); });
 
-  if (resumeBtn) {
-    resumeBtn.addEventListener("click", function () {
-      hideInterruptModal();
-    });
-  }
+  if (resumeBtn) resumeBtn.addEventListener("click", hideInterruptModal);
 
   if (interruptOverlay) {
     interruptOverlay.addEventListener("click", function (event) {
@@ -868,16 +790,12 @@
   }
 
   document.addEventListener("keydown", function (event) {
-    if (
-      event.key === "Escape" &&
-      interruptOverlay &&
-      interruptOverlay.classList.contains("open")
-    ) {
+    if (event.key === "Escape" && interruptOverlay && interruptOverlay.classList.contains("open")) {
       hideInterruptModal();
     }
   });
 
-  /* ---------- Result PNG ---------- */
+  /* ---------- Result PNG (unchanged) ---------- */
 
   function roundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
@@ -895,12 +813,8 @@
     let line = "";
     words.forEach(function (word) {
       const cand = line ? line + " " + word : word;
-      if (ctx.measureText(cand).width > maxWidth && line) {
-        lines.push(line);
-        line = word;
-      } else {
-        line = cand;
-      }
+      if (ctx.measureText(cand).width > maxWidth && line) { lines.push(line); line = word; }
+      else line = cand;
     });
     if (line) lines.push(line);
     return lines;
@@ -909,132 +823,97 @@
   function buildResultCanvas() {
     const r = state.result;
     if (!r) return null;
-
-    const scale = 2;
-    const W = 1000;
-    const H = 760;
-
+    const scale = 2, W = 1000, H = 760;
     const canvas = document.createElement("canvas");
     canvas.width = W * scale;
     canvas.height = H * scale;
-
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
-
     ctx.scale(scale, scale);
     ctx.textBaseline = "alphabetic";
-
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, W, H);
-
     ctx.strokeStyle = "#e7e7e7";
     ctx.lineWidth = 2;
     roundRect(ctx, 1, 1, W - 2, H - 2, 20);
     ctx.stroke();
-
     const pad = 56;
     let y = 86;
-
     ctx.font = "600 26px Arial, Helvetica, sans-serif";
     ctx.fillStyle = "#111111";
     ctx.fillText("preparekora", pad, y);
     const brandW = ctx.measureText("preparekora").width;
-
     ctx.font = "400 26px Arial, Helvetica, sans-serif";
     ctx.fillStyle = "#858585";
     ctx.fillText(".in", pad + brandW, y);
-
     y += 46;
     ctx.font = "600 12px Arial, Helvetica, sans-serif";
     ctx.fillStyle = "#737373";
     ctx.fillText(t("resultPngTitle"), pad, y);
-
     y += 48;
     ctx.font = "700 30px Arial, Helvetica, sans-serif";
     ctx.fillStyle = "#111111";
     const title = state.translatedTitle || (state.publicTest ? state.publicTest.title : "—");
     const titleLines = wrapText(ctx, title, W - pad * 2).slice(0, 2);
-    titleLines.forEach(function (line) {
-      ctx.fillText(line, pad, y);
-      y += 38;
-    });
-
+    titleLines.forEach(function (line) { ctx.fillText(line, pad, y); y += 38; });
     y += 6;
     ctx.font = "400 15px Arial, Helvetica, sans-serif";
     ctx.fillStyle = "#737373";
     const pub = state.translatedPublisher || (state.publicTest ? state.publicTest.publisherName : "");
     ctx.fillText(publisherLine(pub), pad, y);
     y += 18;
-
     ctx.strokeStyle = "#e7e7e7";
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(pad, y);
     ctx.lineTo(W - pad, y);
     ctx.stroke();
-
     y += 60;
-
     ctx.font = "400 14px Arial, Helvetica, sans-serif";
     ctx.fillStyle = "#737373";
     ctx.fillText(t("resultPngName"), pad, y - 12);
-
     ctx.font = "600 30px Arial, Helvetica, sans-serif";
     ctx.fillStyle = "#111111";
     const safeName = state.userName || "—";
     const nameLines = wrapText(ctx, safeName, W - pad * 2 - 320).slice(0, 2);
     let nameY = y + 22;
-    nameLines.forEach(function (line) {
-      ctx.fillText(line, pad, nameY);
-      nameY += 36;
-    });
-
+    nameLines.forEach(function (line) { ctx.fillText(line, pad, nameY); nameY += 36; });
     ctx.textAlign = "right";
     ctx.font = "700 56px Arial, Helvetica, sans-serif";
     ctx.fillStyle = "#111111";
     ctx.fillText(String(r.correct), W - pad, y + 30);
     const scoreRightW = ctx.measureText(String(r.correct)).width;
-
     ctx.font = "400 22px Arial, Helvetica, sans-serif";
     ctx.fillStyle = "#737373";
     ctx.fillText("/ " + r.total, W - pad - scoreRightW - 12, y + 30);
-
     ctx.font = "600 16px Arial, Helvetica, sans-serif";
     ctx.fillStyle = "#737373";
     ctx.fillText(r.percent + "%", W - pad, y + 52);
     ctx.textAlign = "left";
-
     y = Math.max(nameY, y + 70) + 30;
-
     const gap = 16;
     const boxW = (W - pad * 2 - gap * 3) / 4;
     const boxH = 96;
-
     const stats = [
       { label: t("correct"), value: r.correct },
       { label: t("wrong"), value: r.wrong },
       { label: t("unattempted"), value: r.unattempted },
       { label: t("timeTaken"), value: formatClock(state.elapsed) }
     ];
-
     let boxX = pad;
     stats.forEach(function (item) {
       roundRect(ctx, boxX, y, boxW, boxH, 12);
       ctx.strokeStyle = "#e7e7e7";
       ctx.lineWidth = 1.5;
       ctx.stroke();
-
       ctx.fillStyle = "#737373";
       ctx.font = "400 13px Arial, Helvetica, sans-serif";
       ctx.fillText(item.label, boxX + 18, y + 36);
-
       ctx.fillStyle = "#111111";
       ctx.font = "700 24px Arial, Helvetica, sans-serif";
       ctx.fillText(String(item.value), boxX + 18, y + 70);
-
       boxX += boxW + gap;
     });
-
     const footerY = H - 44;
     ctx.strokeStyle = "#e7e7e7";
     ctx.lineWidth = 1;
@@ -1042,33 +921,22 @@
     ctx.moveTo(pad, footerY - 26);
     ctx.lineTo(W - pad, footerY - 26);
     ctx.stroke();
-
     ctx.font = "400 13px Arial, Helvetica, sans-serif";
     ctx.fillStyle = "#737373";
     ctx.fillText("preparekora.in", pad, footerY);
-
     ctx.textAlign = "right";
     ctx.fillText(
-      t("resultPngDate") + ": " +
-      new Date().toLocaleDateString(locale(), {
-        day: "numeric", month: "short", year: "numeric"
-      }),
+      t("resultPngDate") + ": " + new Date().toLocaleDateString(locale(), { day: "numeric", month: "short", year: "numeric" }),
       W - pad, footerY
     );
     ctx.textAlign = "left";
-
     return canvas;
   }
 
   function downloadResult() {
     const canvas = buildResultCanvas();
     if (!canvas) return;
-
-    const filename =
-      "preparekora-result-" +
-      (state.publicTest ? state.publicTest.id : "test") + "-" +
-      new Date().toISOString().slice(0, 10) + ".png";
-
+    const filename = "preparekora-result-" + (state.publicTest ? state.publicTest.id : "test") + "-" + new Date().toISOString().slice(0, 10) + ".png";
     function trigger(url, revoke) {
       const link = document.createElement("a");
       link.href = url;
@@ -1078,7 +946,6 @@
       document.body.removeChild(link);
       if (revoke) setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
     }
-
     if (canvas.toBlob) {
       canvas.toBlob(function (blob) {
         if (!blob) return trigger(canvas.toDataURL("image/png"), false);
@@ -1106,10 +973,7 @@
   }
 
   if (submitBtn) {
-    submitBtn.addEventListener("click", function () {
-      if (state.finished) return;
-      openConfirm();
-    });
+    submitBtn.addEventListener("click", function () { if (state.finished) return; openConfirm(); });
   }
 
   if (confirmCancel) confirmCancel.addEventListener("click", closeConfirm);
@@ -1129,20 +993,14 @@
       if (e.key === "Escape") { e.preventDefault(); closeConfirm(); return; }
       if (e.key === "Tab") { trapFocus(e); return; }
     }
-    if (e.key === "Escape") {
-      closeMenu();
-      closePalette();
-    }
+    if (e.key === "Escape") { closeMenu(); closePalette(); }
   });
 
-  window.addEventListener("resize", function () {
-    if (window.innerWidth > 860) closePalette();
-  });
+  window.addEventListener("resize", function () { if (window.innerWidth > 860) closePalette(); });
 
   /* ---------- Mobile menu ---------- */
 
-  const hamburgerSVG =
-    '<path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path>';
+  const hamburgerSVG = '<path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path>';
   const closeSVG = '<path d="m6 6 12 12"></path><path d="M18 6 6 18"></path>';
 
   function closeMenu() {
@@ -1165,31 +1023,17 @@
       if (menuPanel.classList.contains("open")) closeMenu();
       else openMenu();
     });
-
     document.addEventListener("click", function (e) {
-      if (
-        menuPanel.classList.contains("open") &&
-        !menuPanel.contains(e.target) &&
-        !menuToggle.contains(e.target)
-      ) closeMenu();
+      if (menuPanel.classList.contains("open") && !menuPanel.contains(e.target) && !menuToggle.contains(e.target)) closeMenu();
     });
-
-    menuPanel.querySelectorAll("a").forEach(function (link) {
-      link.addEventListener("click", closeMenu);
-    });
+    menuPanel.querySelectorAll("a").forEach(function (link) { link.addEventListener("click", closeMenu); });
   }
 
   /* ---------- Language change ---------- */
 
   document.addEventListener("pk:langchange", async function () {
     if (!state.publicTest) return;
-
-    if (state.finished) {
-      await translateStartIfNeeded();
-      renderResult();
-      return;
-    }
-
+    if (state.finished) { await translateStartIfNeeded(); renderResult(); return; }
     if (state.started) {
       examTitle.textContent = state.translatedTitle || state.publicTest.title;
       renderQuestion(false);
@@ -1198,7 +1042,6 @@
       updateNavSummary();
       return;
     }
-
     await translateStartIfNeeded();
     renderStart();
   });
