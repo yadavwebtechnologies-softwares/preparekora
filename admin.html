@@ -175,7 +175,7 @@
 
       </div>
 
-      <!-- SETTINGS PANEL -->
+         <!-- SETTINGS PANEL -->
       <div id="panelSettings" hidden>
         <div class="card" style="max-width: 480px;">
 
@@ -203,6 +203,54 @@
 
             <div class="form-actions">
               <button class="btn btn-primary" id="saveNameBtn" type="submit" data-i18n="save">
+                Save
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+
+        <div class="card" style="max-width: 480px; margin-top: 16px;">
+
+          <h2 style="margin: 0 0 16px; font-size: 15px; font-weight: 600;">
+            <span data-i18n="adminInterruption">Interruption warnings</span>
+          </h2>
+
+          <form id="interruptionForm" novalidate>
+
+            <div class="form-field">
+              <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 6px;">
+                <input type="checkbox" id="interruptionEnabled" style="width: 16px; height: 16px; margin: 0;">
+                <span data-i18n="adminInterruptionEnable" style="font-size: 13px; font-weight: 600;">
+                  Enable interruption warnings
+                </span>
+              </label>
+              <p class="form-hint" data-i18n="adminInterruptionEnableHint">
+                When enabled, switching tabs during a test counts as a violation.
+              </p>
+            </div>
+
+            <div class="form-field">
+              <label for="interruptionDuration" class="form-label" data-i18n="adminInterruptionDuration">
+                Termination cooldown (minutes)
+              </label>
+              <input
+                id="interruptionDuration"
+                type="number"
+                class="form-input"
+                min="1"
+                max="120"
+                step="1"
+              >
+              <p class="form-hint" data-i18n="adminInterruptionDurationHint">
+                After 5 violations, the student is blocked from retaking for this many minutes.
+              </p>
+              <p class="form-error" id="interruptionError" hidden></p>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn-primary" id="saveInterruptionBtn" type="submit" data-i18n="save">
                 Save
               </button>
             </div>
