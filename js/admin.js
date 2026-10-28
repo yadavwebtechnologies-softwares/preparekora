@@ -136,7 +136,13 @@
     },
     deleteTest: function (id) { return request("/admin/tests/" + encodeURIComponent(id), { method: "DELETE" }); },
     publish: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/publish", { method: "POST" }); },
-    unpublish: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/unpublish", { method: "POST" }); }
+    unpublish: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/unpublish", { method: "POST" }); },
+    getSettings: function () {
+      return request("/settings", { noAuth: true });
+    },
+    updateSettings: function (payload) {
+      return request("/settings", { method: "PUT", body: JSON.stringify(payload) });
+    }
   };
 
   function t(key, vars) { return (window.PK && window.PK.t) ? window.PK.t(key, vars) : key; }
@@ -236,7 +242,10 @@
     }
     if (panelTests) panelTests.hidden = tab !== "tests";
     if (panelSettings) panelSettings.hidden = tab !== "settings";
-    if (tab === "settings") loadSettings();
+    if (tab === "settings") {
+      loadSettings();
+      loadInterruptionSettings();
+    }
   }
 
   if (tabTests) tabTests.addEventListener("click", function () { setTab("tests"); });
@@ -347,7 +356,7 @@
     return card;
   }
 
-  /* ---------- SETTINGS ---------- */
+  /* ---------- SETTINGS (display name) ---------- */
 
   async function loadSettings() {
     const input = $id("displayNameInput");
@@ -384,6 +393,54 @@
         if (err.status === 401) return showLogin();
         errEl.textContent = err.message || "Error"; errEl.hidden = false;
       } finally { btn.disabled = false; }
+    });
+  }
+
+  /* ---------- SETTINGS (interruption) ---------- */
+
+  async function loadInterruptionSettings() {
+    try {
+      const res = await api.getSettings();
+      const cb = $id("interruptionEnabled");
+      const dur = $id("interruptionDuration");
+      if (cb) cb.checked = res.interruptionEnabled !== false;
+      if (dur) dur.value = res.interruptionDuration || 5;
+      const errEl = $id("interruptionError");
+      if (errEl) errEl.hidden = true;
+    } catch (err) { /* ignore */ }
+  }
+
+  const interruptionForm = $id("interruptionForm");
+  if (interruptionForm) {
+    interruptionForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const errEl = $id("interruptionError");
+      const btn = $id("saveInterruptionBtn");
+      errEl.hidden = true;
+
+      const enabled = $id("interruptionEnabled").checked;
+      const duration = Number($id("interruptionDuration").value);
+
+      if (!Number.isInteger(duration) || duration < 1 || duration > 120) {
+        errEl.textContent = "Duration must be between 1 and 120 minutes";
+        errEl.hidden = false;
+        return;
+      }
+
+      btn.disabled = true;
+      try {
+        await api.updateSettings({
+          interruptionEnabled: enabled,
+          interruptionDuration: duration
+        });
+        toast("Settings saved", "success");
+      } catch (err) {
+        if (err.status === 401) return showLogin();
+        errEl.textContent = err.message || "Save failed";
+        errEl.hidden = false;
+      } finally {
+        btn.disabled = false;
+      }
     });
   }
 
@@ -578,7 +635,6 @@
       }
     });
 
-    /* Inject Import JSON button next to Add question */
     if (!$id("importJsonBtn")) {
       const importBtn = document.createElement("button");
       importBtn.id = "importJsonBtn";
@@ -664,36 +720,36 @@
 
       const cleaned = [];
       for (let i = 0; i < rawQuestions.length; i++) {
-        const raw = rawQuestions[i];
+        const rawQ = rawQuestions[i];
         const n = i + 1;
 
-        if (!raw || typeof raw !== "object") {
+        if (!rawQ || typeof rawQ !== "object") {
           errEl.textContent = "Question " + n + ": invalid entry";
           errEl.hidden = false; return;
         }
-        if (typeof raw.q !== "string" || !raw.q.trim()) {
+        if (typeof rawQ.q !== "string" || !rawQ.q.trim()) {
           errEl.textContent = "Question " + n + ": missing \"q\"";
           errEl.hidden = false; return;
         }
-        if (!Array.isArray(raw.options) || raw.options.length !== 4) {
+        if (!Array.isArray(rawQ.options) || rawQ.options.length !== 4) {
           errEl.textContent = "Question " + n + ": exactly 4 options required";
           errEl.hidden = false; return;
         }
         for (let j = 0; j < 4; j++) {
-          if (typeof raw.options[j] !== "string" || !raw.options[j].trim()) {
+          if (typeof rawQ.options[j] !== "string" || !rawQ.options[j].trim()) {
             errEl.textContent = "Question " + n + ": option " + (j + 1) + " is empty";
             errEl.hidden = false; return;
           }
         }
-        if (typeof raw.answer !== "number" || !Number.isInteger(raw.answer) || raw.answer < 0 || raw.answer > 3) {
+        if (typeof rawQ.answer !== "number" || !Number.isInteger(rawQ.answer) || rawQ.answer < 0 || rawQ.answer > 3) {
           errEl.textContent = "Question " + n + ": \"answer\" must be 0, 1, 2, or 3";
           errEl.hidden = false; return;
         }
 
         cleaned.push({
-          q: raw.q.trim(),
-          options: raw.options.map(function (o) { return o.trim(); }),
-          answer: raw.answer
+          q: rawQ.q.trim(),
+          options: rawQ.options.map(function (o) { return o.trim(); }),
+          answer: rawQ.answer
         });
       }
 
