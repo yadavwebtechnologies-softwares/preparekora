@@ -137,9 +137,8 @@
     deleteTest: function (id) { return request("/admin/tests/" + encodeURIComponent(id), { method: "DELETE" }); },
     publish: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/publish", { method: "POST" }); },
     unpublish: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/unpublish", { method: "POST" }); },
-    getSettings: function () {
-      return request("/settings", { noAuth: true });
-    },
+    getSubmissions: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/submissions"); },
+    getSettings: function () { return request("/settings", { noAuth: true }); },
     updateSettings: function (payload) {
       return request("/settings", { method: "PUT", body: JSON.stringify(payload) });
     }
@@ -174,12 +173,13 @@
     return base + "mock-test.html?test=" + encodeURIComponent(id);
   }
 
-  const state = { admin: null, tests: [], editing: null, currentTab: "tests" };
+  const state = { admin: null, tests: [], editing: null, currentTab: "tests", submissionsTestId: null };
   const screens = {
     loading: $id("adminLoading"),
     login: $id("loginScreen"),
     dashboard: $id("dashboardScreen"),
-    editor: $id("editorScreen")
+    editor: $id("editorScreen"),
+    submissions: $id("submissionsScreen")
   };
 
   function showScreen(name) {
@@ -303,6 +303,13 @@
 
     const actions = card.querySelector(".admin-test-actions");
 
+    const subsBtn = document.createElement("button");
+    subsBtn.type = "button";
+    subsBtn.className = "btn btn-sm";
+    subsBtn.textContent = "Submissions";
+    subsBtn.addEventListener("click", function () { openSubmissions(test.id); });
+    actions.appendChild(subsBtn);
+
     if (isPublished) {
       const copyBtn = document.createElement("button");
       copyBtn.type = "button"; copyBtn.className = "btn btn-sm"; copyBtn.textContent = t("copyUrl");
@@ -354,6 +361,104 @@
     actions.appendChild(delBtn);
 
     return card;
+  }
+
+  /* ---------- SUBMISSIONS VIEWER ---------- */
+
+  async function openSubmissions(testId) {
+    state.submissionsTestId = testId;
+    showScreen("submissions");
+
+    const titleEl = $id("submissionsTitle");
+    const loadingEl = $id("submissionsLoading");
+    const emptyEl = $id("submissionsEmpty");
+    const bodyEl = $id("submissionsBody");
+    const listEl = $id("submissionsList");
+
+    if (titleEl) titleEl.textContent = "Loading…";
+    if (loadingEl) loadingEl.hidden = false;
+    if (emptyEl) emptyEl.hidden = true;
+    if (bodyEl) bodyEl.hidden = true;
+    if (listEl) listEl.innerHTML = "";
+
+    try {
+      const res = await api.getSubmissions(testId);
+
+      if (titleEl) titleEl.textContent = res.testTitle || "Submissions";
+      if (loadingEl) loadingEl.hidden = true;
+
+      const list = Array.isArray(res.submissions) ? res.submissions : [];
+
+      if (list.length === 0) {
+        if (emptyEl) emptyEl.hidden = false;
+        return;
+      }
+
+      let totalPercent = 0;
+      let topPercent = 0;
+      list.forEach(function (s) {
+        totalPercent += Number(s.percent) || 0;
+        if (Number(s.percent) > topPercent) topPercent = Number(s.percent);
+      });
+      const avgPercent = Math.round(totalPercent / list.length);
+
+      const totalEl = $id("submissionsTotal");
+      const avgEl = $id("submissionsAvg");
+      const topEl = $id("submissionsTop");
+      if (totalEl) totalEl.textContent = String(list.length);
+      if (avgEl) avgEl.textContent = avgPercent + "%";
+      if (topEl) topEl.textContent = topPercent + "%";
+
+      if (listEl) {
+        list.forEach(function (s) { listEl.appendChild(renderSubmissionRow(s)); });
+      }
+
+      if (bodyEl) bodyEl.hidden = false;
+    } catch (err) {
+      if (err.status === 401) return showLogin();
+      if (loadingEl) loadingEl.hidden = true;
+      if (emptyEl) {
+        emptyEl.hidden = false;
+        emptyEl.textContent = err.message || "Could not load submissions";
+      }
+    }
+  }
+
+  function renderSubmissionRow(s) {
+    const row = document.createElement("div");
+    row.className = "submission-row";
+
+    const name = esc(s.userName || "—");
+    const correct = Number(s.correct) || 0;
+    const total = Number(s.total) || 0;
+    const percent = Number(s.percent) || 0;
+
+    let timeText = "—";
+    if (s.submittedAt) {
+      const diff = Date.now() - Number(s.submittedAt);
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) timeText = "just now";
+      else if (mins < 60) timeText = mins + "m ago";
+      else if (mins < 1440) timeText = Math.floor(mins / 60) + "h ago";
+      else timeText = Math.floor(mins / 1440) + "d ago";
+    }
+
+    row.innerHTML =
+      '<div class="submission-name">' + name + '</div>' +
+      '<div class="submission-score"><strong>' + correct + '</strong><span>/ ' + total + '</span></div>' +
+      '<div class="submission-percent">' + percent + '%</div>' +
+      '<div class="submission-time">' + esc(timeText) + '</div>';
+
+    return row;
+  }
+
+  const submissionsBackBtn = $id("submissionsBackBtn");
+  if (submissionsBackBtn) {
+    submissionsBackBtn.addEventListener("click", function () {
+      state.submissionsTestId = null;
+      showScreen("dashboard");
+      loadTests();
+    });
   }
 
   /* ---------- SETTINGS (display name) ---------- */
@@ -429,10 +534,7 @@
 
       btn.disabled = true;
       try {
-        await api.updateSettings({
-          interruptionEnabled: enabled,
-          interruptionDuration: duration
-        });
+        await api.updateSettings({ interruptionEnabled: enabled, interruptionDuration: duration });
         toast("Settings saved", "success");
       } catch (err) {
         if (err.status === 401) return showLogin();
@@ -945,6 +1047,9 @@
       if (list) { list.innerHTML = ""; state.tests.forEach(function (test) { list.appendChild(renderTestCard(test)); }); }
     }
     if (state.editing && screens.editor && !screens.editor.hidden) renderEditor();
+    if (state.submissionsTestId && screens.submissions && !screens.submissions.hidden) {
+      openSubmissions(state.submissionsTestId);
+    }
   });
 
   const yearEl = $id("currentYear");
