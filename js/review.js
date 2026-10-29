@@ -1,13 +1,6 @@
 "use strict";
 
-/*
-  PrepareKora — Review module (post-result).
-  Read-only. Uses window.MockTestState and correctAnswers from the submit response.
-*/
-
 (function () {
-
-  /* ---------- CSS ---------- */
 
   if (!document.getElementById("review-module-styles")) {
     const style = document.createElement("style");
@@ -32,15 +25,14 @@
       ".review-opt-text{flex:1;}" +
       ".review-opt-mark{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;}" +
       ".review-opt-mark svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}" +
-      ".review-opt.is-correct{border-color:var(--accent);background:var(--surface);}" +
-      ".review-opt.is-correct .review-opt-key{background:var(--accent);border-color:var(--accent);color:#ffffff;}" +
-      ".review-opt.is-correct .review-opt-mark{color:var(--accent);}" +
+      ".review-opt.is-correct{border-color:#15803d;background:#f0fdf4;}" +
+      ".review-opt.is-correct .review-opt-key{background:#15803d;border-color:#15803d;color:#ffffff;}" +
+      ".review-opt.is-correct .review-opt-mark{color:#15803d;}" +
+      ".review-opt.is-correct .review-opt-text{color:#14532d;font-weight:500;}" +
       ".review-opt.is-chosen-wrong{border-color:#b91c1c;background:#fef2f2;}" +
       ".review-opt.is-chosen-wrong .review-opt-key{background:#b91c1c;border-color:#b91c1c;color:#ffffff;}" +
       ".review-opt.is-chosen-wrong .review-opt-mark{color:#b91c1c;}" +
       ".review-opt.is-chosen-wrong .review-opt-text{color:#7f1d1d;}" +
-      ".review-opt.is-chosen-only{border-color:var(--accent);background:var(--surface);}" +
-      ".review-opt.is-chosen-only .review-opt-key{background:var(--accent);border-color:var(--accent);color:#ffffff;}" +
       ".review-overlay{position:fixed;inset:0;z-index:180;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(0,0,0,0.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity 0.25s ease;pointer-events:none;}" +
       ".review-overlay.is-visible{opacity:1;pointer-events:auto;}" +
       ".review-overlay-label{color:#ffffff;font-size:13px;font-weight:500;letter-spacing:0.02em;text-shadow:0 1px 2px rgba(0,0,0,0.4);}" +
@@ -48,8 +40,6 @@
       "@media (max-width:560px){.review-card{padding:13px;}.review-card-q{font-size:13px;}.review-opt{font-size:12px;padding:7px 9px;}}";
     document.head.appendChild(style);
   }
-
-  /* ---------- Helpers ---------- */
 
   function esc(v) {
     return String(v).replace(/[&<>"']/g, function (c) {
@@ -86,8 +76,6 @@
     return null;
   }
 
-  /* ---------- Icons ---------- */
-
   const ICON_CHECK =
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>';
   const ICON_CROSS =
@@ -103,8 +91,6 @@
     if (status === "not-answered") return '<span class="review-card-status">' + ICON_EMPTY + "Not answered</span>";
     return '<span class="review-card-status">' + ICON_EMPTY + "Not visited</span>";
   }
-
-  /* ---------- Overlay ---------- */
 
   let overlayEl = null;
 
@@ -128,8 +114,6 @@
       overlayEl = null;
     }, 260);
   }
-
-  /* ---------- Build card ---------- */
 
   function buildCard(question, index) {
     const status = statusFor(index);
@@ -161,14 +145,8 @@
       const isChosen = chosen !== null && chosen === oi;
 
       let rowClass = "review-opt";
-
-      if (isCorrect) {
-        rowClass += " is-correct";
-      } else if (isChosen && !isCorrect) {
-        rowClass += " is-chosen-wrong";
-      } else if (isChosen) {
-        rowClass += " is-chosen-only";
-      }
+      if (isCorrect) rowClass += " is-correct";
+      else if (isChosen) rowClass += " is-chosen-wrong";
 
       const row = document.createElement("div");
       row.className = rowClass;
@@ -185,23 +163,19 @@
       mark.className = "review-opt-mark";
 
       if (isCorrect) mark.innerHTML = ICON_CHECK;
-      else if (isChosen && !isCorrect) mark.innerHTML = ICON_CROSS;
+      else if (isChosen) mark.innerHTML = ICON_CROSS;
 
       row.appendChild(key);
       row.appendChild(txt);
       row.appendChild(mark);
-
       opts.appendChild(row);
     });
 
     card.appendChild(head);
     card.appendChild(qText);
     card.appendChild(opts);
-
     return card;
   }
-
-  /* ---------- Build review block ---------- */
 
   function buildReviewBlock() {
     const state = window.MockTestState;
@@ -246,16 +220,12 @@
     return block;
   }
 
-  /* ---------- Load ---------- */
-
   let mounted = false;
 
   function load() {
     if (mounted) return;
-
     const container = document.getElementById("resultReview");
     if (!container) return;
-
     const state = window.MockTestState;
     if (!state || !state.publicTest) return;
 
@@ -278,8 +248,6 @@
     });
   }
 
-  /* ---------- Language change ---------- */
-
   document.addEventListener("pk:langchange", function () {
     if (!mounted) return;
     const container = document.getElementById("resultReview");
@@ -290,8 +258,6 @@
       container.appendChild(block);
     }
   });
-
-  /* ---------- Expose ---------- */
 
   window.ReviewModule = { load: load };
 
