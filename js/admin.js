@@ -491,7 +491,10 @@
 
     document.body.appendChild(overlay);
 
-    function close() { overlay.hidden = true; }
+    function close() {
+      overlay.hidden = true;
+      overlay.classList.remove("open");
+    }
     overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
     const closeBtn = overlay.querySelector("#submissionDetailClose");
     if (closeBtn) closeBtn.addEventListener("click", close);
@@ -546,6 +549,7 @@
       '</div>';
 
     overlay.hidden = false;
+    overlay.classList.add("open");
     const closeBtn = overlay.querySelector("#submissionDetailClose");
     if (closeBtn) setTimeout(function () { closeBtn.focus(); }, 40);
   }
@@ -846,7 +850,10 @@
     const ta = overlay.querySelector("#importTextarea");
     const errEl = overlay.querySelector("#importError");
 
-    function close() { overlay.hidden = true; }
+    function close() {
+      overlay.hidden = true;
+      overlay.classList.remove("open");
+    }
     cancel.addEventListener("click", close);
     overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !overlay.hidden) close(); });
