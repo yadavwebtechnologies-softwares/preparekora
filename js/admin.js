@@ -5,11 +5,8 @@
   const API_BASE = (function () {
     const host = window.location.hostname;
     const isLocal =
-      host === "localhost" ||
-      host === "127.0.0.1" ||
-      host === "0.0.0.0" ||
-      host === "" ||
-      host.endsWith(".local");
+      host === "localhost" || host === "127.0.0.1" ||
+      host === "0.0.0.0" || host === "" || host.endsWith(".local");
     return isLocal
       ? "http://localhost:8787/api"
       : "https://preparekora-api.yadavsubba2003.workers.dev/api";
@@ -19,13 +16,13 @@
   const REFRESH_KEY = "pk_admin_refresh_token";
   const EXPIRES_KEY = "pk_admin_expires_at";
 
+  const INACTIVITY_MS = 10 * 60 * 1000; // 10 minutes
+
   function storeTokens(idToken, refreshToken, expiresIn) {
     try {
       if (idToken) localStorage.setItem(TOKEN_KEY, idToken);
       if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
-      if (expiresIn) {
-        localStorage.setItem(EXPIRES_KEY, String(Date.now() + Number(expiresIn) * 1000));
-      }
+      if (expiresIn) localStorage.setItem(EXPIRES_KEY, String(Date.now() + Number(expiresIn) * 1000));
     } catch (e) {}
   }
 
@@ -117,10 +114,7 @@
 
   const api = {
     login: function (email, password) {
-      return request("/login", {
-        method: "POST", noAuth: true,
-        body: JSON.stringify({ email: email, password: password })
-      });
+      return request("/login", { method: "POST", noAuth: true, body: JSON.stringify({ email: email, password: password }) });
     },
     me: function () { return request("/me"); },
     updateMe: function (name) {
@@ -207,10 +201,170 @@
   }
 
   function showLogin() {
+    stopInactivityTimer();
     state.admin = null; state.tests = []; state.editing = null;
     const u = $id("loginUser"), p = $id("loginPass"), e = $id("loginError");
     if (u) u.value = ""; if (p) p.value = ""; if (e) e.hidden = true;
     showScreen("login");
+  }
+
+  /* ---------- INACTIVITY TIMER ---------- */
+
+  let inactivityTimerId = null;
+
+  function resetInactivityTimer() {
+    if (inactivityTimerId) {
+      clearTimeout(inactivityTimerId);
+    }
+    if (!getIdToken() && !getRefreshToken()) return;
+    inactivityTimerId = setTimeout(handleInactivityTimeout, INACTIVITY_MS);
+  }
+
+  function startInactivityTimer() {
+    resetInactivityTimer();
+  }
+
+  function stopInactivityTimer() {
+    if (inactivityTimerId) {
+      clearTimeout(inactivityTimerId);
+      inactivityTimerId = null;
+    }
+  }
+
+  const activityEvents = ["click", "keydown", "scroll", "touchstart"];
+
+  function onUserActivity() {
+    resetInactivityTimer();
+  }
+
+  activityEvents.forEach(function (ev) {
+    document.addEventListener(ev, onUserActivity, { passive: true });
+  });
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible") {
+      resetInactivityTimer();
+    }
+  });
+
+  function handleInactivityTimeout() {
+    stopInactivityTimer();
+    clearTokens();
+    state.admin = null;
+    state.tests = [];
+    state.editing = null;
+    openSessionTimeoutModal();
+  }
+
+  /* ---------- SESSION TIMEOUT MODAL ---------- */
+
+  let sessionTimeoutModalEl = null;
+
+  function ensureSessionTimeoutModal() {
+    if (sessionTimeoutModalEl) return sessionTimeoutModalEl;
+
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.id = "sessionTimeoutOverlay";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-labelledby", "sessionTimeoutTitle");
+    overlay.hidden = true;
+    overlay.innerHTML =
+      '<div class="modal">' +
+        '<h2 id="sessionTimeoutTitle">Session timed out</h2>' +
+        '<p class="muted-text" style="margin-bottom: 20px;">' +
+          'Your session has expired due to inactivity. Please log in again to continue.' +
+        '</p>' +
+        '<div class="modal-actions">' +
+          '<button type="button" class="btn btn-primary" id="sessionTimeoutLoginBtn">Go to login</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    const loginBtn = overlay.querySelector("#sessionTimeoutLoginBtn");
+    loginBtn.addEventListener("click", function () {
+      overlay.hidden = true;
+      overlay.classList.remove("open");
+      showLogin();
+    });
+
+    sessionTimeoutModalEl = overlay;
+    return overlay;
+  }
+
+  function openSessionTimeoutModal() {
+    const overlay = ensureSessionTimeoutModal();
+    overlay.hidden = false;
+    overlay.classList.add("open");
+    setTimeout(function () {
+      const btn = overlay.querySelector("#sessionTimeoutLoginBtn");
+      if (btn) btn.focus();
+    }, 40);
+  }
+
+  /* ---------- LOGOUT CONFIRM MODAL ---------- */
+
+  let logoutModalEl = null;
+
+  function ensureLogoutModal() {
+    if (logoutModalEl) return logoutModalEl;
+
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.id = "logoutOverlay";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-labelledby", "logoutTitle");
+    overlay.hidden = true;
+    overlay.innerHTML =
+      '<div class="modal">' +
+        '<h2 id="logoutTitle">Sign out?</h2>' +
+        '<p class="muted-text" style="margin-bottom: 20px;">' +
+          'You will need to sign in again to manage your tests.' +
+        '</p>' +
+        '<div class="modal-actions">' +
+          '<button type="button" class="btn" id="logoutCancelBtn">Stay signed in</button>' +
+          '<button type="button" class="btn btn-primary" id="logoutConfirmBtn">Sign out</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    const cancelBtn = overlay.querySelector("#logoutCancelBtn");
+    const confirmBtn = overlay.querySelector("#logoutConfirmBtn");
+
+    function close() {
+      overlay.hidden = true;
+      overlay.classList.remove("open");
+    }
+
+    cancelBtn.addEventListener("click", close);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !overlay.hidden) close();
+    });
+
+    confirmBtn.addEventListener("click", function () {
+      close();
+      clearTokens();
+      stopInactivityTimer();
+      showLogin();
+    });
+
+    logoutModalEl = overlay;
+    return overlay;
+  }
+
+  function openLogoutModal() {
+    const overlay = ensureLogoutModal();
+    overlay.hidden = false;
+    overlay.classList.add("open");
+    setTimeout(function () {
+      const btn = overlay.querySelector("#logoutCancelBtn");
+      if (btn) btn.focus();
+    }, 40);
   }
 
   /* ---------- LOGIN ---------- */
@@ -231,6 +385,7 @@
         storeTokens(res.idToken, res.refreshToken, res.expiresIn);
         state.admin = res.admin;
         await enterDashboard();
+        startInactivityTimer();
       } catch (err) {
         errEl.textContent =
           err.status === 401 ? t("invalidLogin") :
@@ -242,7 +397,7 @@
   }
 
   const signOutBtn = $id("signOutBtn");
-  if (signOutBtn) signOutBtn.addEventListener("click", function () { clearTokens(); showLogin(); });
+  if (signOutBtn) signOutBtn.addEventListener("click", function () { openLogoutModal(); });
 
   /* ---------- TABS ---------- */
 
@@ -314,9 +469,7 @@
     const actions = card.querySelector(".admin-test-actions");
 
     const subsBtn = document.createElement("button");
-    subsBtn.type = "button";
-    subsBtn.className = "btn btn-sm";
-    subsBtn.textContent = "Submissions";
+    subsBtn.type = "button"; subsBtn.className = "btn btn-sm"; subsBtn.textContent = "Submissions";
     subsBtn.addEventListener("click", function () { openSubmissions(test.id); });
     actions.appendChild(subsBtn);
 
@@ -392,7 +545,6 @@
 
     try {
       const res = await api.getSubmissions(testId);
-
       if (titleEl) titleEl.textContent = res.testTitle || "Submissions";
       if (loadingEl) loadingEl.hidden = true;
 
@@ -401,8 +553,7 @@
 
       if (list.length === 0) { if (emptyEl) emptyEl.hidden = false; return; }
 
-      let totalPercent = 0;
-      let topPercent = 0;
+      let totalPercent = 0, topPercent = 0;
       list.forEach(function (s) {
         totalPercent += Number(s.percent) || 0;
         if (Number(s.percent) > topPercent) topPercent = Number(s.percent);
@@ -417,19 +568,13 @@
       if (topEl) topEl.textContent = topPercent + "%";
 
       if (listEl) {
-        list.forEach(function (s, idx) {
-          listEl.appendChild(renderSubmissionRow(s, idx));
-        });
+        list.forEach(function (s, idx) { listEl.appendChild(renderSubmissionRow(s, idx)); });
       }
-
       if (bodyEl) bodyEl.hidden = false;
     } catch (err) {
       if (err.status === 401) return showLogin();
       if (loadingEl) loadingEl.hidden = true;
-      if (emptyEl) {
-        emptyEl.hidden = false;
-        emptyEl.textContent = err.message || "Could not load submissions";
-      }
+      if (emptyEl) { emptyEl.hidden = false; emptyEl.textContent = err.message || "Could not load submissions"; }
     }
   }
 
@@ -459,7 +604,6 @@
       '<div class="submission-time">' + esc(timeText) + '</div>';
 
     row.addEventListener("click", function () { openSubmissionDetail(idx); });
-
     return row;
   }
 
@@ -495,6 +639,7 @@
       overlay.hidden = true;
       overlay.classList.remove("open");
     }
+
     overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
     const closeBtn = overlay.querySelector("#submissionDetailClose");
     if (closeBtn) closeBtn.addEventListener("click", close);
@@ -523,7 +668,8 @@
     const accuracy = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
 
     nameEl.textContent = s.userName || "—";
-    testEl.textContent = state.tests.find(function (x) { return x.id === state.submissionsTestId; })?.title || "Test";
+    const currentTest = state.tests.find(function (x) { return x.id === state.submissionsTestId; });
+    testEl.textContent = currentTest ? currentTest.title : "Test";
 
     const timeTakenText = s.timeTaken > 0 ? formatDuration(s.timeTaken) : "Not recorded";
     const waText = s.userWhatsApp && s.userWhatsApp.trim() ? esc(s.userWhatsApp) : "Not provided";
@@ -534,14 +680,12 @@
         '<div class="submission-metric"><strong>' + percent + '%</strong><span>Percent</span></div>' +
         '<div class="submission-metric"><strong>' + accuracy + '%</strong><span>Accuracy</span></div>' +
       '</div>' +
-
       '<div class="submission-breakdown">' +
         '<div class="submission-breakdown-item correct"><strong>' + correct + '</strong><span>Correct</span></div>' +
         '<div class="submission-breakdown-item wrong"><strong>' + wrong + '</strong><span>Wrong</span></div>' +
         '<div class="submission-breakdown-item"><strong>' + unattempted + '</strong><span>Unattempted</span></div>' +
         '<div class="submission-breakdown-item"><strong>' + attempted + '</strong><span>Attempted</span></div>' +
       '</div>' +
-
       '<div class="submission-meta-list">' +
         '<div class="submission-meta-row"><span class="label">Time taken</span><span class="value' + (s.timeTaken > 0 ? "" : " muted") + '">' + esc(timeTakenText) + '</span></div>' +
         '<div class="submission-meta-row"><span class="label">Submitted</span><span class="value">' + esc(formatDateTime(s.submittedAt)) + '</span></div>' +
@@ -850,10 +994,7 @@
     const ta = overlay.querySelector("#importTextarea");
     const errEl = overlay.querySelector("#importError");
 
-    function close() {
-      overlay.hidden = true;
-      overlay.classList.remove("open");
-    }
+    function close() { overlay.hidden = true; }
     cancel.addEventListener("click", close);
     overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !overlay.hidden) close(); });
@@ -1037,6 +1178,7 @@
         const me = await api.me();
         state.admin = me;
         await enterDashboard();
+        startInactivityTimer();
         return;
       } catch (err) { clearTokens(); }
     }
