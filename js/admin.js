@@ -26,7 +26,7 @@
       if (expiresIn) {
         localStorage.setItem(EXPIRES_KEY, String(Date.now() + Number(expiresIn) * 1000));
       }
-    } catch (e) { /* ignore */ }
+    } catch (e) {}
   }
 
   function getIdToken() { try { return localStorage.getItem(TOKEN_KEY) || ""; } catch (e) { return ""; } }
@@ -38,7 +38,7 @@
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(REFRESH_KEY);
       localStorage.removeItem(EXPIRES_KEY);
-    } catch (e) { /* ignore */ }
+    } catch (e) {}
   }
 
   let refreshingPromise = null;
@@ -104,7 +104,7 @@
     }
 
     let data = null;
-    try { data = await res.json(); } catch (e) { /* ignore */ }
+    try { data = await res.json(); } catch (e) {}
 
     if (!res.ok) {
       const e = new Error((data && data.error) || ("HTTP " + res.status));
@@ -173,7 +173,26 @@
     return base + "mock-test.html?test=" + encodeURIComponent(id);
   }
 
-  const state = { admin: null, tests: [], editing: null, currentTab: "tests", submissionsTestId: null };
+  function formatDuration(seconds) {
+    const s = Number(seconds) || 0;
+    if (s <= 0) return "—";
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    if (m === 0) return r + "s";
+    return m + "m " + String(r).padStart(2, "0") + "s";
+  }
+
+  function formatDateTime(ts) {
+    if (!ts) return "—";
+    const d = new Date(Number(ts));
+    if (isNaN(d.getTime())) return "—";
+    return d.toLocaleString("en-IN", {
+      day: "numeric", month: "short", year: "numeric",
+      hour: "numeric", minute: "2-digit", hour12: true
+    });
+  }
+
+  const state = { admin: null, tests: [], editing: null, currentTab: "tests", submissionsTestId: null, submissionsCache: [] };
   const screens = {
     loading: $id("adminLoading"),
     login: $id("loginScreen"),
@@ -205,9 +224,7 @@
       const errEl = $id("loginError");
       const btn = $id("loginSubmit");
       errEl.hidden = true;
-      if (!email || !password) {
-        errEl.textContent = t("fillAllFields"); errEl.hidden = false; return;
-      }
+      if (!email || !password) { errEl.textContent = t("fillAllFields"); errEl.hidden = false; return; }
       btn.disabled = true;
       try {
         const res = await api.login(email, password);
@@ -234,18 +251,11 @@
 
   function setTab(tab) {
     state.currentTab = tab;
-    if (tabTests) {
-      const a = tab === "tests"; tabTests.classList.toggle("is-active", a); tabTests.setAttribute("aria-selected", String(a));
-    }
-    if (tabSettings) {
-      const a = tab === "settings"; tabSettings.classList.toggle("is-active", a); tabSettings.setAttribute("aria-selected", String(a));
-    }
+    if (tabTests) { const a = tab === "tests"; tabTests.classList.toggle("is-active", a); tabTests.setAttribute("aria-selected", String(a)); }
+    if (tabSettings) { const a = tab === "settings"; tabSettings.classList.toggle("is-active", a); tabSettings.setAttribute("aria-selected", String(a)); }
     if (panelTests) panelTests.hidden = tab !== "tests";
     if (panelSettings) panelSettings.hidden = tab !== "settings";
-    if (tab === "settings") {
-      loadSettings();
-      loadInterruptionSettings();
-    }
+    if (tab === "settings") { loadSettings(); loadInterruptionSettings(); }
   }
 
   if (tabTests) tabTests.addEventListener("click", function () { setTab("tests"); });
@@ -338,7 +348,6 @@
         await loadTests();
       } catch (err) {
         if (err.status === 401) return showLogin();
-        console.error("Publish/unpublish error:", err);
         toast(err.message || "Error", "error");
       } finally { pubBtn.disabled = false; }
     });
@@ -388,11 +397,9 @@
       if (loadingEl) loadingEl.hidden = true;
 
       const list = Array.isArray(res.submissions) ? res.submissions : [];
+      state.submissionsCache = list;
 
-      if (list.length === 0) {
-        if (emptyEl) emptyEl.hidden = false;
-        return;
-      }
+      if (list.length === 0) { if (emptyEl) emptyEl.hidden = false; return; }
 
       let totalPercent = 0;
       let topPercent = 0;
@@ -410,7 +417,9 @@
       if (topEl) topEl.textContent = topPercent + "%";
 
       if (listEl) {
-        list.forEach(function (s) { listEl.appendChild(renderSubmissionRow(s)); });
+        list.forEach(function (s, idx) {
+          listEl.appendChild(renderSubmissionRow(s, idx));
+        });
       }
 
       if (bodyEl) bodyEl.hidden = false;
@@ -424,7 +433,7 @@
     }
   }
 
-  function renderSubmissionRow(s) {
+  function renderSubmissionRow(s, idx) {
     const row = document.createElement("div");
     row.className = "submission-row";
 
@@ -449,19 +458,109 @@
       '<div class="submission-percent">' + percent + '%</div>' +
       '<div class="submission-time">' + esc(timeText) + '</div>';
 
+    row.addEventListener("click", function () { openSubmissionDetail(idx); });
+
     return row;
+  }
+
+  /* ---------- SUBMISSION DETAIL MODAL ---------- */
+
+  function ensureSubmissionModal() {
+    let overlay = $id("submissionDetailOverlay");
+    if (overlay) return overlay;
+
+    overlay = document.createElement("div");
+    overlay.id = "submissionDetailOverlay";
+    overlay.className = "modal-overlay";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.hidden = true;
+    overlay.innerHTML =
+      '<div class="submission-detail-modal">' +
+        '<div class="submission-detail-head">' +
+          '<div>' +
+            '<h2 id="submissionDetailName">—</h2>' +
+            '<p id="submissionDetailTest">—</p>' +
+          '</div>' +
+          '<button type="button" class="submission-detail-close" id="submissionDetailClose" aria-label="Close">' +
+            '<svg viewBox="0 0 24 24"><path d="m6 6 12 12"></path><path d="M18 6 6 18"></path></svg>' +
+          '</button>' +
+        '</div>' +
+        '<div class="submission-detail-body" id="submissionDetailBody"></div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    function close() { overlay.hidden = true; }
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
+    const closeBtn = overlay.querySelector("#submissionDetailClose");
+    if (closeBtn) closeBtn.addEventListener("click", close);
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !overlay.hidden) close();
+    });
+
+    return overlay;
+  }
+
+  function openSubmissionDetail(idx) {
+    const s = state.submissionsCache[idx];
+    if (!s) return;
+
+    const overlay = ensureSubmissionModal();
+    const nameEl = overlay.querySelector("#submissionDetailName");
+    const testEl = overlay.querySelector("#submissionDetailTest");
+    const bodyEl = overlay.querySelector("#submissionDetailBody");
+
+    const correct = Number(s.correct) || 0;
+    const wrong = Number(s.wrong) || 0;
+    const unattempted = Number(s.unattempted) || 0;
+    const total = Number(s.total) || 0;
+    const percent = Number(s.percent) || 0;
+    const attempted = correct + wrong;
+    const accuracy = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
+
+    nameEl.textContent = s.userName || "—";
+    testEl.textContent = state.tests.find(function (x) { return x.id === state.submissionsTestId; })?.title || "Test";
+
+    const timeTakenText = s.timeTaken > 0 ? formatDuration(s.timeTaken) : "Not recorded";
+    const waText = s.userWhatsApp && s.userWhatsApp.trim() ? esc(s.userWhatsApp) : "Not provided";
+
+    bodyEl.innerHTML =
+      '<div class="submission-metrics">' +
+        '<div class="submission-metric"><strong>' + correct + " / " + total + '</strong><span>Score</span></div>' +
+        '<div class="submission-metric"><strong>' + percent + '%</strong><span>Percent</span></div>' +
+        '<div class="submission-metric"><strong>' + accuracy + '%</strong><span>Accuracy</span></div>' +
+      '</div>' +
+
+      '<div class="submission-breakdown">' +
+        '<div class="submission-breakdown-item correct"><strong>' + correct + '</strong><span>Correct</span></div>' +
+        '<div class="submission-breakdown-item wrong"><strong>' + wrong + '</strong><span>Wrong</span></div>' +
+        '<div class="submission-breakdown-item"><strong>' + unattempted + '</strong><span>Unattempted</span></div>' +
+        '<div class="submission-breakdown-item"><strong>' + attempted + '</strong><span>Attempted</span></div>' +
+      '</div>' +
+
+      '<div class="submission-meta-list">' +
+        '<div class="submission-meta-row"><span class="label">Time taken</span><span class="value' + (s.timeTaken > 0 ? "" : " muted") + '">' + esc(timeTakenText) + '</span></div>' +
+        '<div class="submission-meta-row"><span class="label">Submitted</span><span class="value">' + esc(formatDateTime(s.submittedAt)) + '</span></div>' +
+        '<div class="submission-meta-row"><span class="label">WhatsApp</span><span class="value' + (s.userWhatsApp && s.userWhatsApp.trim() ? "" : " muted") + '">' + waText + '</span></div>' +
+      '</div>';
+
+    overlay.hidden = false;
+    const closeBtn = overlay.querySelector("#submissionDetailClose");
+    if (closeBtn) setTimeout(function () { closeBtn.focus(); }, 40);
   }
 
   const submissionsBackBtn = $id("submissionsBackBtn");
   if (submissionsBackBtn) {
     submissionsBackBtn.addEventListener("click", function () {
       state.submissionsTestId = null;
+      state.submissionsCache = [];
       showScreen("dashboard");
       loadTests();
     });
   }
 
-  /* ---------- SETTINGS (display name) ---------- */
+  /* ---------- SETTINGS ---------- */
 
   async function loadSettings() {
     const input = $id("displayNameInput");
@@ -501,8 +600,6 @@
     });
   }
 
-  /* ---------- SETTINGS (interruption) ---------- */
-
   async function loadInterruptionSettings() {
     try {
       const res = await api.getSettings();
@@ -512,7 +609,7 @@
       if (dur) dur.value = res.interruptionDuration || 5;
       const errEl = $id("interruptionError");
       if (errEl) errEl.hidden = true;
-    } catch (err) { /* ignore */ }
+    } catch (err) {}
   }
 
   const interruptionForm = $id("interruptionForm");
@@ -522,16 +619,12 @@
       const errEl = $id("interruptionError");
       const btn = $id("saveInterruptionBtn");
       errEl.hidden = true;
-
       const enabled = $id("interruptionEnabled").checked;
       const duration = Number($id("interruptionDuration").value);
-
       if (!Number.isInteger(duration) || duration < 1 || duration > 120) {
         errEl.textContent = "Duration must be between 1 and 120 minutes";
-        errEl.hidden = false;
-        return;
+        errEl.hidden = false; return;
       }
-
       btn.disabled = true;
       try {
         await api.updateSettings({ interruptionEnabled: enabled, interruptionDuration: duration });
@@ -540,9 +633,7 @@
         if (err.status === 401) return showLogin();
         errEl.textContent = err.message || "Save failed";
         errEl.hidden = false;
-      } finally {
-        btn.disabled = false;
-      }
+      } finally { btn.disabled = false; }
     });
   }
 
@@ -587,33 +678,19 @@
     }
   }
 
-  function blankQuestion() {
-    return { q: "", options: ["", "", "", ""], answer: 0 };
-  }
+  function blankQuestion() { return { q: "", options: ["", "", "", ""], answer: 0 }; }
 
   function renderEditor() {
     if (!state.editing) return;
-
     const isPublished = state.editing.status === "published";
-
-    $id("editorHeading").textContent =
-      state.editing.id ? (isPublished ? "Edit test" : "Edit draft") : "New test";
+    $id("editorHeading").textContent = state.editing.id ? (isPublished ? "Edit test" : "Edit draft") : "New test";
     $id("editorTitle").value = state.editing.title || "";
     $id("editorMinutes").value = state.editing.minutes || 10;
     $id("editorError").hidden = true;
-
     const saveDraftBtn = $id("saveDraftBtn");
     const publishBtn = $id("publishBtn");
-    if (saveDraftBtn) {
-      saveDraftBtn.removeAttribute("data-i18n");
-      saveDraftBtn.textContent = isPublished ? "Save changes" : t("saveDraft");
-    }
-    if (publishBtn) {
-      publishBtn.removeAttribute("data-i18n");
-      publishBtn.textContent = isPublished ? t("unpublish") : t("publishNow");
-      publishBtn.className = isPublished ? "btn btn-sm" : "btn btn-primary btn-sm";
-    }
-
+    if (saveDraftBtn) { saveDraftBtn.removeAttribute("data-i18n"); saveDraftBtn.textContent = isPublished ? "Save changes" : t("saveDraft"); }
+    if (publishBtn) { publishBtn.removeAttribute("data-i18n"); publishBtn.textContent = isPublished ? t("unpublish") : t("publishNow"); publishBtn.className = isPublished ? "btn btn-sm" : "btn btn-primary btn-sm"; }
     renderQuestionsList();
   }
 
@@ -648,9 +725,7 @@
       removeBtn.className = "editor-remove-btn";
       removeBtn.textContent = "Remove";
       removeBtn.addEventListener("click", function () {
-        if (state.editing.questions.length <= 1) {
-          toast(t("atLeastOneQuestion"), "error"); return;
-        }
+        if (state.editing.questions.length <= 1) { toast(t("atLeastOneQuestion"), "error"); return; }
         state.editing.questions.splice(qi, 1);
         renderQuestionsList();
       });
@@ -661,18 +736,15 @@
 
       const qField = document.createElement("div");
       qField.className = "form-field";
-
       const qLabel = document.createElement("label");
       qLabel.className = "form-label";
       qLabel.textContent = "Question";
-
       const qInput = document.createElement("textarea");
       qInput.className = "form-textarea";
       qInput.rows = 2;
       qInput.value = question.q;
       qInput.placeholder = "Type the question";
       qInput.addEventListener("input", function () { question.q = qInput.value; });
-
       qField.appendChild(qLabel);
       qField.appendChild(qInput);
       block.appendChild(qField);
@@ -698,9 +770,7 @@
         radio.setAttribute("aria-label", "Mark option " + "ABCD".charAt(oi) + " as correct");
         radio.addEventListener("change", function () {
           question.answer = oi;
-          block.querySelectorAll(".editor-option").forEach(function (r, idx) {
-            r.classList.toggle("is-answer", idx === oi);
-          });
+          block.querySelectorAll(".editor-option").forEach(function (r, idx) { r.classList.toggle("is-answer", idx === oi); });
         });
 
         const key = document.createElement("span");
@@ -732,9 +802,7 @@
       state.editing.questions.push(blankQuestion());
       renderQuestionsList();
       const container = $id("questionsContainer");
-      if (container && container.lastElementChild) {
-        container.lastElementChild.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
+      if (container && container.lastElementChild) container.lastElementChild.scrollIntoView({ behavior: "smooth", block: "center" });
     });
 
     if (!$id("importJsonBtn")) {
@@ -748,8 +816,6 @@
     }
   }
 
-  /* ---------- JSON IMPORT ---------- */
-
   function ensureImportModal() {
     let overlay = $id("importModalOverlay");
     if (overlay) return overlay;
@@ -762,8 +828,7 @@
       '<div class="import-modal" role="dialog" aria-modal="true" aria-labelledby="importTitle">' +
         '<h2 id="importTitle">Import questions from JSON</h2>' +
         '<p class="import-hint">Paste a JSON <strong>array of questions</strong>, or an <strong>object</strong> with <code>title</code>, <code>minutes</code>, and <code>questions</code>.</p>' +
-        '<details class="import-example">' +
-          '<summary>Show example</summary>' +
+        '<details class="import-example"><summary>Show example</summary>' +
           '<pre>{\n  "title": "Assam GK Mock Test",\n  "minutes": 20,\n  "questions": [\n    {\n      "q": "What is the capital of Assam?",\n      "options": ["Guwahati", "Dispur", "Jorhat", "Tezpur"],\n      "answer": 1\n    }\n  ]\n}</pre>' +
         '</details>' +
         '<textarea id="importTextarea" class="import-textarea" placeholder="Paste JSON here..."></textarea>' +
@@ -782,12 +847,9 @@
     const errEl = overlay.querySelector("#importError");
 
     function close() { overlay.hidden = true; }
-
     cancel.addEventListener("click", close);
     overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && !overlay.hidden) close();
-    });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !overlay.hidden) close(); });
 
     confirm.addEventListener("click", function () {
       errEl.hidden = true;
@@ -796,92 +858,41 @@
 
       let parsed;
       try { parsed = JSON.parse(raw); }
-      catch (e) {
-        errEl.textContent = "Invalid JSON: " + e.message;
-        errEl.hidden = false;
-        return;
-      }
+      catch (e) { errEl.textContent = "Invalid JSON: " + e.message; errEl.hidden = false; return; }
 
-      let rawQuestions = null;
-      let title = null;
-      let minutes = null;
-
-      if (Array.isArray(parsed)) {
-        rawQuestions = parsed;
-      } else if (parsed && typeof parsed === "object") {
+      let rawQuestions = null, title = null, minutes = null;
+      if (Array.isArray(parsed)) rawQuestions = parsed;
+      else if (parsed && typeof parsed === "object") {
         rawQuestions = parsed.questions;
         if (typeof parsed.title === "string") title = parsed.title;
         if (typeof parsed.minutes === "number") minutes = parsed.minutes;
       }
 
-      if (!Array.isArray(rawQuestions) || rawQuestions.length === 0) {
-        errEl.textContent = "JSON must contain a non-empty questions array";
-        errEl.hidden = false;
-        return;
-      }
+      if (!Array.isArray(rawQuestions) || rawQuestions.length === 0) { errEl.textContent = "JSON must contain a non-empty questions array"; errEl.hidden = false; return; }
 
       const cleaned = [];
       for (let i = 0; i < rawQuestions.length; i++) {
         const rawQ = rawQuestions[i];
         const n = i + 1;
-
-        if (!rawQ || typeof rawQ !== "object") {
-          errEl.textContent = "Question " + n + ": invalid entry";
-          errEl.hidden = false; return;
-        }
-        if (typeof rawQ.q !== "string" || !rawQ.q.trim()) {
-          errEl.textContent = "Question " + n + ": missing \"q\"";
-          errEl.hidden = false; return;
-        }
-        if (!Array.isArray(rawQ.options) || rawQ.options.length !== 4) {
-          errEl.textContent = "Question " + n + ": exactly 4 options required";
-          errEl.hidden = false; return;
-        }
-        for (let j = 0; j < 4; j++) {
-          if (typeof rawQ.options[j] !== "string" || !rawQ.options[j].trim()) {
-            errEl.textContent = "Question " + n + ": option " + (j + 1) + " is empty";
-            errEl.hidden = false; return;
-          }
-        }
-        if (typeof rawQ.answer !== "number" || !Number.isInteger(rawQ.answer) || rawQ.answer < 0 || rawQ.answer > 3) {
-          errEl.textContent = "Question " + n + ": \"answer\" must be 0, 1, 2, or 3";
-          errEl.hidden = false; return;
-        }
-
-        cleaned.push({
-          q: rawQ.q.trim(),
-          options: rawQ.options.map(function (o) { return o.trim(); }),
-          answer: rawQ.answer
-        });
+        if (!rawQ || typeof rawQ !== "object") { errEl.textContent = "Question " + n + ": invalid entry"; errEl.hidden = false; return; }
+        if (typeof rawQ.q !== "string" || !rawQ.q.trim()) { errEl.textContent = "Question " + n + ": missing q"; errEl.hidden = false; return; }
+        if (!Array.isArray(rawQ.options) || rawQ.options.length !== 4) { errEl.textContent = "Question " + n + ": exactly 4 options required"; errEl.hidden = false; return; }
+        for (let j = 0; j < 4; j++) { if (typeof rawQ.options[j] !== "string" || !rawQ.options[j].trim()) { errEl.textContent = "Question " + n + ": option " + (j + 1) + " is empty"; errEl.hidden = false; return; } }
+        if (typeof rawQ.answer !== "number" || !Number.isInteger(rawQ.answer) || rawQ.answer < 0 || rawQ.answer > 3) { errEl.textContent = "Question " + n + ": answer must be 0, 1, 2, or 3"; errEl.hidden = false; return; }
+        cleaned.push({ q: rawQ.q.trim(), options: rawQ.options.map(function (o) { return o.trim(); }), answer: rawQ.answer });
       }
 
       if (!state.editing) { close(); return; }
 
-      const hasExisting =
-        state.editing.questions.length > 0 &&
-        !(state.editing.questions.length === 1 && !state.editing.questions[0].q.trim());
-
+      const hasExisting = state.editing.questions.length > 0 && !(state.editing.questions.length === 1 && !state.editing.questions[0].q.trim());
       if (hasExisting) {
-        const ok = window.confirm(
-          "Import " + cleaned.length + " question(s)?\n\n" +
-          "OK = Append to current questions\n" +
-          "Cancel = Replace all questions"
-        );
-        if (ok) {
-          state.editing.questions = state.editing.questions.concat(cleaned);
-        } else {
-          state.editing.questions = cleaned.slice();
-        }
-      } else {
-        state.editing.questions = cleaned.slice();
-      }
+        const ok = window.confirm("Import " + cleaned.length + " question(s)?\n\nOK = Append\nCancel = Replace");
+        if (ok) state.editing.questions = state.editing.questions.concat(cleaned);
+        else state.editing.questions = cleaned.slice();
+      } else state.editing.questions = cleaned.slice();
 
-      if (title && !$id("editorTitle").value.trim()) {
-        $id("editorTitle").value = title.trim().slice(0, 200);
-      }
-      if (minutes && Number.isInteger(minutes) && minutes >= 1 && minutes <= 180) {
-        $id("editorMinutes").value = minutes;
-      }
+      if (title && !$id("editorTitle").value.trim()) $id("editorTitle").value = title.trim().slice(0, 200);
+      if (minutes && Number.isInteger(minutes) && minutes >= 1 && minutes <= 180) $id("editorMinutes").value = minutes;
 
       state.editing.title = $id("editorTitle").value;
       state.editing.minutes = Number($id("editorMinutes").value) || state.editing.minutes;
@@ -903,69 +914,40 @@
     setTimeout(function () { if (ta) ta.focus(); }, 50);
   }
 
-  /* ---------- VALIDATION + SAVE ---------- */
-
   function collectEditor() {
     const title = $id("editorTitle").value.trim();
     const minutes = Number($id("editorMinutes").value);
-
     if (!title) return { error: "Test title is required" };
-    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) {
-      return { error: "Duration must be between 1 and 180 minutes" };
-    }
+    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) return { error: "Duration must be between 1 and 180 minutes" };
 
     const questions = [];
-
     for (let i = 0; i < state.editing.questions.length; i++) {
       const raw = state.editing.questions[i];
-      const cleaned = {
-        q: raw.q.trim(),
-        options: raw.options.map(function (o) { return o.trim(); }),
-        answer: raw.answer
-      };
-
+      const cleaned = { q: raw.q.trim(), options: raw.options.map(function (o) { return o.trim(); }), answer: raw.answer };
       if (!cleaned.q) return { error: "Question " + (i + 1) + ": text is required" };
-      if (cleaned.options.some(function (o) { return !o; })) {
-        return { error: "Question " + (i + 1) + ": all 4 options are required" };
-      }
-      if (typeof cleaned.answer !== "number" || cleaned.answer < 0 || cleaned.answer > 3) {
-        return { error: "Question " + (i + 1) + ": select the correct answer" };
-      }
-
+      if (cleaned.options.some(function (o) { return !o; })) return { error: "Question " + (i + 1) + ": all 4 options are required" };
+      if (typeof cleaned.answer !== "number" || cleaned.answer < 0 || cleaned.answer > 3) return { error: "Question " + (i + 1) + ": select the correct answer" };
       questions.push(cleaned);
     }
-
     if (questions.length === 0) return { error: "Add at least one question" };
-
     return { payload: { title: title, minutes: minutes, questions: questions } };
   }
 
   async function saveEditor(action) {
     const errEl = $id("editorError");
     errEl.hidden = true;
-
     const collected = collectEditor();
-    if (collected.error) {
-      errEl.textContent = collected.error;
-      errEl.hidden = false;
-      errEl.scrollIntoView({ behavior: "smooth", block: "center" });
-      return;
-    }
+    if (collected.error) { errEl.textContent = collected.error; errEl.hidden = false; errEl.scrollIntoView({ behavior: "smooth", block: "center" }); return; }
 
     const payload = collected.payload;
     const saveDraftBtn = $id("saveDraftBtn");
     const publishBtn = $id("publishBtn");
-
     saveDraftBtn.disabled = true;
     publishBtn.disabled = true;
 
     try {
-      if (state.editing.id) {
-        await api.updateTest(state.editing.id, payload);
-      } else {
-        const created = await api.createTest(payload);
-        state.editing.id = created.test.id;
-      }
+      if (state.editing.id) await api.updateTest(state.editing.id, payload);
+      else { const created = await api.createTest(payload); state.editing.id = created.test.id; }
 
       if (action === "publish") {
         await new Promise(function (r) { setTimeout(r, 250); });
@@ -987,10 +969,7 @@
       errEl.textContent = err.message || "Save failed";
       errEl.hidden = false;
       errEl.scrollIntoView({ behavior: "smooth", block: "center" });
-    } finally {
-      saveDraftBtn.disabled = false;
-      publishBtn.disabled = false;
-    }
+    } finally { saveDraftBtn.disabled = false; publishBtn.disabled = false; }
   }
 
   const saveDraftBtn = $id("saveDraftBtn");
@@ -1000,13 +979,8 @@
   if (publishBtn) {
     publishBtn.addEventListener("click", function () {
       const isPublished = state.editing && state.editing.status === "published";
-      if (isPublished) {
-        if (!window.confirm("Unpublish this test? It will be hidden from the homepage.")) return;
-        saveEditor("unpublish");
-      } else {
-        if (!window.confirm(t("confirmPublish"))) return;
-        saveEditor("publish");
-      }
+      if (isPublished) { if (!window.confirm("Unpublish this test?")) return; saveEditor("unpublish"); }
+      else { if (!window.confirm(t("confirmPublish"))) return; saveEditor("publish"); }
     });
   }
 
@@ -1027,11 +1001,7 @@
     menuToggle.addEventListener("click", function (e) {
       e.stopPropagation();
       if (menuPanel.classList.contains("open")) closeMenu();
-      else {
-        menuPanel.classList.add("open");
-        menuToggle.setAttribute("aria-expanded", "true");
-        menuIcon.innerHTML = closeSVG;
-      }
+      else { menuPanel.classList.add("open"); menuToggle.setAttribute("aria-expanded", "true"); menuIcon.innerHTML = closeSVG; }
     });
     document.addEventListener("click", function (e) {
       if (menuPanel.classList.contains("open") && !menuPanel.contains(e.target) && !menuToggle.contains(e.target)) closeMenu();
@@ -1047,9 +1017,7 @@
       if (list) { list.innerHTML = ""; state.tests.forEach(function (test) { list.appendChild(renderTestCard(test)); }); }
     }
     if (state.editing && screens.editor && !screens.editor.hidden) renderEditor();
-    if (state.submissionsTestId && screens.submissions && !screens.submissions.hidden) {
-      openSubmissions(state.submissionsTestId);
-    }
+    if (state.submissionsTestId && screens.submissions && !screens.submissions.hidden) openSubmissions(state.submissionsTestId);
   });
 
   const yearEl = $id("currentYear");
