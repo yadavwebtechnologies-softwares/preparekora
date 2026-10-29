@@ -89,7 +89,7 @@
     if (status === "answered") return '<span class="review-card-status is-answered">' + ICON_CHECK + "Answered</span>";
     if (status === "marked") return '<span class="review-card-status is-marked">' + ICON_DOT + "Marked</span>";
     if (status === "not-answered") return '<span class="review-card-status">' + ICON_EMPTY + "Not answered</span>";
-    return '<span class="review-card-status">' + ICON_EMPTY + "Not visited</span>";
+    return '<span class="review-card-status">' + ICON_EMPTY + "Unanswered</span>";
   }
 
   let overlayEl = null;
