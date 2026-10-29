@@ -2,12 +2,7 @@
 
 /*
   PrepareKora — Review module (post-result).
-
-  Loads after result screen renders. Injects review section below the
-  result card. Shows blur+spinner overlay while preparing content.
-
-  Read-only — never modifies test state or answers.
-  Uses only existing CSS classes + 5 new review-specific classes.
+  Read-only. Uses window.MockTestState and correctAnswers from the submit response.
 */
 
 (function () {
@@ -32,10 +27,20 @@
       ".review-card-status svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}" +
       ".review-card-q{margin:0 0 10px;font-size:14px;font-weight:600;line-height:1.5;overflow-wrap:anywhere;color:var(--text);}" +
       ".review-opts{display:flex;flex-direction:column;gap:6px;}" +
-      ".review-opt{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:#ffffff;font-size:13px;line-height:1.45;overflow-wrap:anywhere;}" +
+      ".review-opt{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:#ffffff;font-size:13px;line-height:1.45;overflow-wrap:anywhere;}" +
       ".review-opt-key{display:grid;place-items:center;width:20px;height:20px;flex-shrink:0;border:1px solid var(--border);border-radius:50%;background:#ffffff;color:var(--muted);font-size:10px;font-weight:600;}" +
-      ".review-opt.is-selected{border-color:var(--accent);background:var(--surface);}" +
-      ".review-opt.is-selected .review-opt-key{background:var(--accent);border-color:var(--accent);color:#ffffff;}" +
+      ".review-opt-text{flex:1;}" +
+      ".review-opt-mark{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;}" +
+      ".review-opt-mark svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}" +
+      ".review-opt.is-correct{border-color:var(--accent);background:var(--surface);}" +
+      ".review-opt.is-correct .review-opt-key{background:var(--accent);border-color:var(--accent);color:#ffffff;}" +
+      ".review-opt.is-correct .review-opt-mark{color:var(--accent);}" +
+      ".review-opt.is-chosen-wrong{border-color:#b91c1c;background:#fef2f2;}" +
+      ".review-opt.is-chosen-wrong .review-opt-key{background:#b91c1c;border-color:#b91c1c;color:#ffffff;}" +
+      ".review-opt.is-chosen-wrong .review-opt-mark{color:#b91c1c;}" +
+      ".review-opt.is-chosen-wrong .review-opt-text{color:#7f1d1d;}" +
+      ".review-opt.is-chosen-only{border-color:var(--accent);background:var(--surface);}" +
+      ".review-opt.is-chosen-only .review-opt-key{background:var(--accent);border-color:var(--accent);color:#ffffff;}" +
       ".review-overlay{position:fixed;inset:0;z-index:180;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(0,0,0,0.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity 0.25s ease;pointer-events:none;}" +
       ".review-overlay.is-visible{opacity:1;pointer-events:auto;}" +
       ".review-overlay-label{color:#ffffff;font-size:13px;font-weight:500;letter-spacing:0.02em;text-shadow:0 1px 2px rgba(0,0,0,0.4);}" +
@@ -56,11 +61,9 @@
   function statusFor(index) {
     const state = window.MockTestState;
     if (!state || !state.publicTest) return "not-visited";
-
     const marked = state.marked.has(index);
     const answered = Object.prototype.hasOwnProperty.call(state.answers, index);
     const visited = state.visited.has(index);
-
     if (marked) return "marked";
     if (answered) return "answered";
     if (visited) return "not-answered";
@@ -74,25 +77,30 @@
     return state.answers[index];
   }
 
-  /* ---------- SVG icons ---------- */
+  function correctAnswerFor(index) {
+    const state = window.MockTestState;
+    if (!state || !state.result || !state.result.correctAnswers) return null;
+    const ca = state.result.correctAnswers;
+    if (typeof ca[String(index)] === "number") return ca[String(index)];
+    if (typeof ca[index] === "number") return ca[index];
+    return null;
+  }
+
+  /* ---------- Icons ---------- */
 
   const ICON_CHECK =
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>';
+  const ICON_CROSS =
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>';
   const ICON_DOT =
     '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"></circle></svg>';
   const ICON_EMPTY =
     '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle></svg>';
 
   function statusBadge(status) {
-    if (status === "answered") {
-      return '<span class="review-card-status is-answered">' + ICON_CHECK + "Answered</span>";
-    }
-    if (status === "marked") {
-      return '<span class="review-card-status is-marked">' + ICON_DOT + "Marked</span>";
-    }
-    if (status === "not-answered") {
-      return '<span class="review-card-status">' + ICON_EMPTY + "Not answered</span>";
-    }
+    if (status === "answered") return '<span class="review-card-status is-answered">' + ICON_CHECK + "Answered</span>";
+    if (status === "marked") return '<span class="review-card-status is-marked">' + ICON_DOT + "Marked</span>";
+    if (status === "not-answered") return '<span class="review-card-status">' + ICON_EMPTY + "Not answered</span>";
     return '<span class="review-card-status">' + ICON_EMPTY + "Not visited</span>";
   }
 
@@ -106,11 +114,8 @@
     overlayEl.className = "review-overlay";
     overlayEl.setAttribute("role", "status");
     overlayEl.setAttribute("aria-live", "polite");
-    overlayEl.innerHTML =
-      '<div class="spinner" aria-hidden="true"></div>' +
-      '<div class="review-overlay-label">Loading review…</div>';
+    overlayEl.innerHTML = '<div class="spinner" aria-hidden="true"></div><div class="review-overlay-label">Loading review…</div>';
     document.body.appendChild(overlayEl);
-    /* trigger transition */
     void overlayEl.offsetWidth;
     overlayEl.classList.add("is-visible");
   }
@@ -119,18 +124,17 @@
     if (!overlayEl) return;
     overlayEl.classList.remove("is-visible");
     setTimeout(function () {
-      if (overlayEl && overlayEl.parentNode) {
-        overlayEl.parentNode.removeChild(overlayEl);
-      }
+      if (overlayEl && overlayEl.parentNode) overlayEl.parentNode.removeChild(overlayEl);
       overlayEl = null;
     }, 260);
   }
 
-  /* ---------- Build review card ---------- */
+  /* ---------- Build card ---------- */
 
   function buildCard(question, index) {
     const status = statusFor(index);
-    const selected = answerFor(index);
+    const chosen = answerFor(index);
+    const correct = correctAnswerFor(index);
 
     const card = document.createElement("div");
     card.className = "review-card";
@@ -153,18 +157,40 @@
     opts.className = "review-opts";
 
     (question.options || []).forEach(function (optText, oi) {
+      const isCorrect = correct !== null && oi === correct;
+      const isChosen = chosen !== null && chosen === oi;
+
+      let rowClass = "review-opt";
+
+      if (isCorrect) {
+        rowClass += " is-correct";
+      } else if (isChosen && !isCorrect) {
+        rowClass += " is-chosen-wrong";
+      } else if (isChosen) {
+        rowClass += " is-chosen-only";
+      }
+
       const row = document.createElement("div");
-      row.className = "review-opt" + (selected === oi ? " is-selected" : "");
+      row.className = rowClass;
 
       const key = document.createElement("span");
       key.className = "review-opt-key";
       key.textContent = "ABCD".charAt(oi);
 
       const txt = document.createElement("span");
+      txt.className = "review-opt-text";
       txt.textContent = optText;
+
+      const mark = document.createElement("span");
+      mark.className = "review-opt-mark";
+
+      if (isCorrect) mark.innerHTML = ICON_CHECK;
+      else if (isChosen && !isCorrect) mark.innerHTML = ICON_CROSS;
 
       row.appendChild(key);
       row.appendChild(txt);
+      row.appendChild(mark);
+
       opts.appendChild(row);
     });
 
@@ -175,7 +201,7 @@
     return card;
   }
 
-  /* ---------- Render ---------- */
+  /* ---------- Build review block ---------- */
 
   function buildReviewBlock() {
     const state = window.MockTestState;
@@ -220,7 +246,7 @@
     return block;
   }
 
-  /* ---------- Public load ---------- */
+  /* ---------- Load ---------- */
 
   let mounted = false;
 
@@ -234,17 +260,13 @@
     if (!state || !state.publicTest) return;
 
     mounted = true;
-
     showOverlay();
     const startedAt = Date.now();
 
-    /* Build in next frame so overlay paints first */
     requestAnimationFrame(function () {
       const block = buildReviewBlock();
-
       const elapsed = Date.now() - startedAt;
-      const MIN_MS = 400;
-      const remaining = Math.max(0, MIN_MS - elapsed);
+      const remaining = Math.max(0, 400 - elapsed);
 
       setTimeout(function () {
         if (block) {
@@ -271,8 +293,6 @@
 
   /* ---------- Expose ---------- */
 
-  window.ReviewModule = {
-    load: load
-  };
+  window.ReviewModule = { load: load };
 
 })();
