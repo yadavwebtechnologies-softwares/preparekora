@@ -640,7 +640,8 @@
       wrong: Number(scored.wrong) || 0,
       unattempted: Number(scored.unattempted) || 0,
       total: Number(scored.total) || state.publicTest.questions.length,
-      percent: Number(scored.percent) || 0
+      percent: Number(scored.percent) || 0,
+      correctAnswers: (scored && scored.correctAnswers) ? scored.correctAnswers : null
     };
 
     showScreen("result");
