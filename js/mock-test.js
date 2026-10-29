@@ -624,7 +624,12 @@
 
     let scored = null;
     try {
-      scored = await apiSubmit(testId, { answers: payloadAnswers, userName: state.userName });
+      scored = await apiSubmit(testId, {
+        answers: payloadAnswers,
+        userName: state.userName,
+        userWhatsApp: state.userWhatsApp || "",
+        timeTaken: state.elapsed || 0
+      });
     } catch (err) {
       scored = { correct: 0, wrong: 0, unattempted: state.publicTest.questions.length, total: state.publicTest.questions.length, percent: 0 };
     }
