@@ -160,6 +160,7 @@
     translatedPublisher: "",
     settings: { enabled: true, duration: 5 }
   };
+    window.MockTestState = state;
 
   /* ---------- Interruption ---------- */
 
@@ -650,18 +651,26 @@
   function renderResult() {
     const r = state.result;
     if (!r) return;
+
     const title = state.translatedTitle || (state.publicTest ? state.publicTest.title : "");
     const pub = state.translatedPublisher || (state.publicTest ? state.publicTest.publisherName : "");
+
     resultTitle.textContent = title;
     resultPublisher.textContent = publisherLine(pub);
+
     scoreValue.textContent = String(r.correct);
     scoreTotal.textContent = "/ " + r.total;
     scorePercent.textContent = r.percent + "%";
     progressFill.style.width = r.percent + "%";
+
     statCorrect.textContent = String(r.correct);
     statWrong.textContent = String(r.wrong);
     statUnattempted.textContent = String(r.unattempted);
     statTime.textContent = formatClock(state.elapsed);
+
+    if (window.ReviewModule && typeof window.ReviewModule.load === "function") {
+      setTimeout(function () { window.ReviewModule.load(); }, 100);
+    }
   }
 
   /* ---------- Confirm modal ---------- */
