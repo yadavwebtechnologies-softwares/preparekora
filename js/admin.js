@@ -22,6 +22,16 @@
   if (!document.getElementById("analysis-styles")) {
     const style = document.createElement("style");
     style.id = "analysis-styles";
+      if (!document.getElementById("active-live-styles")) {
+    const style = document.createElement("style");
+    style.id = "active-live-styles";
+    style.textContent =
+      "#activeMeta{display:inline-flex;align-items:center;gap:6px;color:#dc2626;font-size:12px;font-weight:500;}" +
+      "#activeMeta .active-dot{width:7px;height:7px;border-radius:50%;background:#dc2626;flex-shrink:0;animation:pk-live-pulse 1.5s ease-in-out infinite;}" +
+      "@keyframes pk-live-pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(1.4);}}";
+    document.head.appendChild(style);
+  }
+
     style.textContent =
       ".qcard{padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;margin-bottom:10px;}" +
       ".qcard.is-hero{padding:22px;border-width:2px;border-color:var(--accent);}" +
@@ -490,9 +500,11 @@
     const metaEl = $id("activeMeta");
     if (!metaEl || !activeLastUpdatedAt) return;
     const sec = Math.max(0, Math.floor((Date.now() - activeLastUpdatedAt) / 1000));
-    if (sec < 5) metaEl.textContent = "Live · just now";
-    else if (sec < 60) metaEl.textContent = "Live · " + sec + "s ago";
-    else metaEl.textContent = "Live · " + Math.floor(sec / 60) + "m ago";
+    let text;
+    if (sec < 5) text = "Live · just now";
+    else if (sec < 60) text = "Live · " + sec + "s ago";
+    else text = "Live · " + Math.floor(sec / 60) + "m ago";
+    metaEl.innerHTML = '<span class="active-dot"></span><span>' + text + '</span>';
   }
 
   function startActiveRefresh() {
