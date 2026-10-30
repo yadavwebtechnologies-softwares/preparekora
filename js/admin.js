@@ -17,23 +17,11 @@
   const EXPIRES_KEY = "pk_admin_expires_at";
   const INACTIVITY_MS = 10 * 60 * 1000;
 
-  /* ---------- Inline CSS for analysis ---------- */
+  /* ---------- Inline CSS: analysis + live status ---------- */
 
   if (!document.getElementById("analysis-styles")) {
     const style = document.createElement("style");
     style.id = "analysis-styles";
-      if (!document.getElementById("active-live-styles")) {
-    const style = document.createElement("style");
-    style.id = "active-live-styles";
-    style.textContent =
-      "#activeMeta{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--muted);}" +
-      "#activeMeta.is-live{color:#dc2626;}" +
-      "#activeMeta .active-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;display:none;}" +
-      "#activeMeta.is-live .active-dot{display:inline-block;background:#dc2626;animation:pk-live-pulse 1.5s ease-in-out infinite;}" +
-      "@keyframes pk-live-pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(1.4);}}";
-    document.head.appendChild(style);
-  }
-
     style.textContent =
       ".qcard{padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;margin-bottom:10px;}" +
       ".qcard.is-hero{padding:22px;border-width:2px;border-color:var(--accent);}" +
@@ -89,6 +77,18 @@
         ".optrow{font-size:12px;padding:7px 9px;}" +
         ".share-actions .btn{min-width:100%;}" +
       "}";
+    document.head.appendChild(style);
+  }
+
+  if (!document.getElementById("active-live-styles")) {
+    const style = document.createElement("style");
+    style.id = "active-live-styles";
+    style.textContent =
+      "#activeMeta{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--muted);}" +
+      "#activeMeta.is-live{color:#dc2626;}" +
+      "#activeMeta .active-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;display:none;}" +
+      "#activeMeta.is-live .active-dot{display:inline-block;background:#dc2626;animation:pk-live-pulse 1.5s ease-in-out infinite;}" +
+      "@keyframes pk-live-pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(1.4);}}";
     document.head.appendChild(style);
   }
 
@@ -439,7 +439,8 @@
 
   const signOutBtn = $id("signOutBtn");
   if (signOutBtn) signOutBtn.addEventListener("click", function () { openLogoutModal(); });
-    const activeRefreshBtn = $id("activeRefreshBtn");
+
+  const activeRefreshBtn = $id("activeRefreshBtn");
   if (activeRefreshBtn) activeRefreshBtn.addEventListener("click", refreshActiveCount);
 
   /* ---------- TABS ---------- */
@@ -453,23 +454,18 @@
     if (tabSettings) { const a = tab === "settings"; tabSettings.classList.toggle("is-active", a); tabSettings.setAttribute("aria-selected", String(a)); }
     if (panelTests) panelTests.hidden = tab !== "tests";
     if (panelSettings) panelSettings.hidden = tab !== "settings";
-    if (tab === "settings") { loadSettings(); loadInterruptionSettings(); }
+    if (tab === "settings") {
+      if (window.PKLoader) window.PKLoader.show();
+      Promise.all([loadSettings(), loadInterruptionSettings()]).finally(function () {
+        if (window.PKLoader) window.PKLoader.hide();
+      });
+    }
   }
 
   if (tabTests) tabTests.addEventListener("click", function () { setTab("tests"); });
   if (tabSettings) tabSettings.addEventListener("click", function () { setTab("settings"); });
 
-  /* ---------- DASHBOARD ---------- */
-
-  async function enterDashboard() {
-    if (!state.admin) return;
-    const nameEl = $id("adminDisplayName");
-    if (nameEl) nameEl.textContent = state.admin.displayName || "";
-    showScreen("dashboard");
-    setTab("tests");
-    await loadTests();
-  }
-    /* ---------- ACTIVE NOW ---------- */
+  /* ---------- ACTIVE NOW ---------- */
 
   let activeRefreshIntervalId = null;
   let activeMetaIntervalId = null;
@@ -530,6 +526,19 @@
   function stopActiveRefresh() {
     if (activeRefreshIntervalId) { clearInterval(activeRefreshIntervalId); activeRefreshIntervalId = null; }
     if (activeMetaIntervalId) { clearInterval(activeMetaIntervalId); activeMetaIntervalId = null; }
+  }
+
+  /* ---------- DASHBOARD ---------- */
+
+  async function enterDashboard() {
+    if (!state.admin) return;
+    const nameEl = $id("adminDisplayName");
+    if (nameEl) nameEl.textContent = state.admin.displayName || "";
+    if (window.PKLoader) window.PKLoader.show();
+    showScreen("dashboard");
+    setTab("tests");
+    await loadTests();
+    if (window.PKLoader) window.PKLoader.hide();
   }
 
   async function loadTests() {
@@ -648,6 +657,7 @@
     if (bodyEl) bodyEl.hidden = true;
     if (listEl) listEl.innerHTML = "";
 
+    if (window.PKLoader) window.PKLoader.show();
     try {
       const res = await api.getSubmissions(testId);
       if (titleEl) titleEl.textContent = res.testTitle || "Submissions";
@@ -680,6 +690,8 @@
       if (err.status === 401) return showLogin();
       if (loadingEl) loadingEl.hidden = true;
       if (emptyEl) { emptyEl.hidden = false; emptyEl.textContent = err.message || "Could not load submissions"; }
+    } finally {
+      if (window.PKLoader) window.PKLoader.hide();
     }
   }
 
@@ -845,6 +857,7 @@
     if (emptyEl) emptyEl.hidden = true;
     if (bodyEl) bodyEl.hidden = true;
 
+    if (window.PKLoader) window.PKLoader.show();
     try {
       const res = await api.getSubmissions(testId);
       if (loadingEl) loadingEl.hidden = true;
@@ -861,17 +874,16 @@
 
       if (cache.totalSubsWithAnswers === 0) {
         if (emptyEl) emptyEl.hidden = false;
+        if (window.PKLoader) window.PKLoader.hide();
         return;
       }
 
-      // Stats
       $id("analysisSubs").textContent = String(cache.totalSubsWithAnswers);
       $id("analysisWrong").textContent = String(cache.totalWrong);
       const toughest = cache.toughest;
       $id("analysisToughest").textContent =
         toughest ? ("Q" + (toughest.index + 1) + " · " + toughest.wrongPct + "%") : "—";
 
-      // Render
       renderAnalysisByQ();
       renderAnalysisByTough();
 
@@ -880,6 +892,8 @@
       if (err.status === 401) return showLogin();
       if (loadingEl) loadingEl.hidden = true;
       if (emptyEl) { emptyEl.hidden = false; emptyEl.textContent = err.message || "Could not load analysis"; }
+    } finally {
+      if (window.PKLoader) window.PKLoader.hide();
     }
   }
 
@@ -1227,7 +1241,7 @@
 
   function buildShareCanvas(canvas, info) {
     const testMeta = state.tests.find(function (x) { return x.id === state.analysisTestId; });
-    const testTitle = testMeta ? testMeta.title : (state.analysisCache ? "" : "");
+    const testTitle = testMeta ? testMeta.title : "";
     const publisher = testMeta ? testMeta.publisherName : "";
 
     const scale = 2;
@@ -1472,6 +1486,7 @@
   }
 
   async function openEditor(id) {
+    if (window.PKLoader) window.PKLoader.show();
     try {
       const res = await api.getOwn(id);
       if (!res || !res.test) throw new Error("Test not found");
@@ -1487,6 +1502,8 @@
     } catch (err) {
       if (err.status === 401) return showLogin();
       toast(err.message || "Error", "error");
+    } finally {
+      if (window.PKLoader) window.PKLoader.hide();
     }
   }
 
