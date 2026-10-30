@@ -180,8 +180,8 @@
   }
 
   /* ---------- Fetch ---------- */
-
   async function loadTests() {
+    if (window.PKLoader) window.PKLoader.show();
     try {
       const res = await apiFetch("/tests");
       state.tests = Array.isArray(res.tests) ? res.tests : [];
@@ -195,6 +195,8 @@
         emptyState.hidden = false;
         emptyState.textContent = t("loadFailed");
       }
+    } finally {
+      if (window.PKLoader) window.PKLoader.hide();
     }
   }
 
