@@ -197,6 +197,9 @@
     getSettings: function () { return request("/settings", { noAuth: true }); },
     updateSettings: function (payload) {
       return request("/settings", { method: "PUT", body: JSON.stringify(payload) });
+    },
+    getActiveSessions: function () {
+      return request("/admin/sessions/active");
     }
   };
 
@@ -262,6 +265,11 @@
   function showScreen(name) {
     Object.keys(screens).forEach(function (k) { if (screens[k]) screens[k].hidden = (k !== name); });
     window.scrollTo({ top: 0, behavior: "auto" });
+    if (name === "dashboard") {
+      if (typeof startActiveRefresh === "function") startActiveRefresh();
+    } else {
+      if (typeof stopActiveRefresh === "function") stopActiveRefresh();
+    }
   }
 
   function showLogin() {
@@ -419,6 +427,8 @@
 
   const signOutBtn = $id("signOutBtn");
   if (signOutBtn) signOutBtn.addEventListener("click", function () { openLogoutModal(); });
+    const activeRefreshBtn = $id("activeRefreshBtn");
+  if (activeRefreshBtn) activeRefreshBtn.addEventListener("click", refreshActiveCount);
 
   /* ---------- TABS ---------- */
 
@@ -446,6 +456,55 @@
     showScreen("dashboard");
     setTab("tests");
     await loadTests();
+  }
+    /* ---------- ACTIVE NOW ---------- */
+
+  let activeRefreshIntervalId = null;
+  let activeMetaIntervalId = null;
+  let activeLastUpdatedAt = 0;
+
+  async function refreshActiveCount() {
+    const countEl = $id("activeCount");
+    const metaEl = $id("activeMeta");
+    const refreshBtn = $id("activeRefreshBtn");
+    if (!countEl || !metaEl) return;
+
+    if (refreshBtn) refreshBtn.disabled = true;
+
+    try {
+      const res = await api.getActiveSessions();
+      const count = Number(res.active) || 0;
+      countEl.textContent = String(count);
+      activeLastUpdatedAt = Date.now();
+      updateActiveMeta();
+    } catch (err) {
+      if (err.status === 401) return showLogin();
+      countEl.textContent = "—";
+      metaEl.textContent = "Could not load";
+    } finally {
+      if (refreshBtn) refreshBtn.disabled = false;
+    }
+  }
+
+  function updateActiveMeta() {
+    const metaEl = $id("activeMeta");
+    if (!metaEl || !activeLastUpdatedAt) return;
+    const sec = Math.max(0, Math.floor((Date.now() - activeLastUpdatedAt) / 1000));
+    if (sec < 5) metaEl.textContent = "Live · just now";
+    else if (sec < 60) metaEl.textContent = "Live · " + sec + "s ago";
+    else metaEl.textContent = "Live · " + Math.floor(sec / 60) + "m ago";
+  }
+
+  function startActiveRefresh() {
+    stopActiveRefresh();
+    refreshActiveCount();
+    activeRefreshIntervalId = setInterval(refreshActiveCount, 15000);
+    activeMetaIntervalId = setInterval(updateActiveMeta, 1000);
+  }
+
+  function stopActiveRefresh() {
+    if (activeRefreshIntervalId) { clearInterval(activeRefreshIntervalId); activeRefreshIntervalId = null; }
+    if (activeMetaIntervalId) { clearInterval(activeMetaIntervalId); activeMetaIntervalId = null; }
   }
 
   async function loadTests() {
