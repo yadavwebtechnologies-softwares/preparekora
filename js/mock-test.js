@@ -158,7 +158,9 @@
     userWhatsApp: "",
     translatedTitle: "",
     translatedPublisher: "",
-    settings: { enabled: true, duration: 5 }
+    settings: { enabled: true, duration: 5 },
+    answerChangeCount: 0,
+    sessionId: ""
   };
     window.MockTestState = state;
 
@@ -398,6 +400,8 @@
     state.started = true;
     state.index = 0;
     state.answers = {};
+    state.answerChangeCount = 0;
+    state.sessionId = Math.random().toString(36).slice(2, 10);
     state.marked.clear();
     state.visited.clear();
     state.finished = false;
@@ -487,6 +491,9 @@
   }
 
   function selectOption(optionIndex) {
+    if (Object.prototype.hasOwnProperty.call(state.answers, state.index) && state.answers[state.index] !== optionIndex) {
+      state.answerChangeCount++;
+    }
     state.answers[state.index] = optionIndex;
     optionsFieldset.querySelectorAll(".option").forEach(function (label) {
       label.classList.toggle("is-selected", label.dataset.value === String(optionIndex));
@@ -629,7 +636,21 @@
         answers: payloadAnswers,
         userName: state.userName,
         userWhatsApp: state.userWhatsApp || "",
-        timeTaken: state.elapsed || 0
+        timeTaken: state.elapsed || 0,
+        interruptions: getInterruptCount(),
+        language: (window.PK && PK.lang) ? PK.lang : "en",
+        submittedBy: fromTimer ? "timer" : "manual",
+        startedAt: state.startedAt,
+        visitedCount: state.visited.size,
+        markedIndices: Array.from(state.marked),
+        answerChangeCount: state.answerChangeCount,
+        sessionId: state.sessionId,
+        deviceType: (function () {
+          const ua = navigator.userAgent;
+          if (/iPad|Tablet/i.test(ua)) return "tablet";
+          if (/Mobi|Android/i.test(ua)) return "mobile";
+          return "desktop";
+        })()
       });
     } catch (err) {
       scored = { correct: 0, wrong: 0, unattempted: state.publicTest.questions.length, total: state.publicTest.questions.length, percent: 0 };
