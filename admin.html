@@ -262,6 +262,61 @@
 
     </section>
 
+        <!-- WRONG ANALYSIS -->
+    <section id="analysisScreen" hidden>
+
+      <div class="submissions-header">
+        <h1 id="analysisTitle">Wrong Analysis</h1>
+        <div class="submissions-header-actions">
+          <button class="btn btn-sm" id="analysisBackBtn" type="button">
+            Back to submissions
+          </button>
+        </div>
+      </div>
+
+      <div id="analysisLoading" class="loading-state">
+        <div class="spinner"></div>
+        <span data-i18n="loading">Loading…</span>
+      </div>
+
+      <div id="analysisEmpty" class="empty-state" hidden>
+        Not enough data yet.
+      </div>
+
+      <div id="analysisBody" hidden>
+
+        <div class="submissions-stats">
+          <div class="submission-stat">
+            <strong id="analysisSubs">0</strong>
+            <span>Submissions</span>
+          </div>
+          <div class="submission-stat">
+            <strong id="analysisWrong">0</strong>
+            <span>Total wrong attempts</span>
+          </div>
+          <div class="submission-stat">
+            <strong id="analysisToughest">—</strong>
+            <span>Toughest question</span>
+          </div>
+        </div>
+
+        <div class="admin-tabs" role="tablist">
+          <button class="admin-tab is-active" id="analysisTabByQ" type="button" role="tab" aria-selected="true">
+            By Question
+          </button>
+          <button class="admin-tab" id="analysisTabTough" type="button" role="tab" aria-selected="false">
+            Toughest Question
+          </button>
+        </div>
+
+        <div id="analysisByQ"></div>
+        <div id="analysisByTough" hidden></div>
+
+      </div>
+
+    </section>
+
+
     <!-- EDITOR -->
     <section id="editorScreen" hidden>
 
@@ -339,6 +394,9 @@
       <div class="submissions-header">
         <h1 id="submissionsTitle">—</h1>
         <div class="submissions-header-actions">
+          <button class="btn btn-sm" id="openAnalysisBtn" type="button">
+            Wrong Analysis
+          </button>
           <button class="btn btn-sm" id="submissionsBackBtn" type="button" data-i18n="backToTests">
             Back to tests
           </button>
