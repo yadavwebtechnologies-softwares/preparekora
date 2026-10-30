@@ -314,7 +314,7 @@
     const payload = JSON.stringify({ testId: testId, sessionId: heartbeatSessionId });
     try {
       if (navigator.sendBeacon) {
-        navigator.sendBeacon(API_BASE + "/sessions/end", new Blob([payload], { type: "application/json" }));
+        navigator.sendBeacon(API_BASE + "/sessions/end", payload);
       } else {
         fetch(API_BASE + "/sessions/end", {
           method: "POST",
