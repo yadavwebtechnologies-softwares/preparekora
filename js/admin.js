@@ -26,8 +26,10 @@
     const style = document.createElement("style");
     style.id = "active-live-styles";
     style.textContent =
-      "#activeMeta{display:inline-flex;align-items:center;gap:6px;color:#dc2626;font-size:12px;font-weight:500;}" +
-      "#activeMeta .active-dot{width:7px;height:7px;border-radius:50%;background:#dc2626;flex-shrink:0;animation:pk-live-pulse 1.5s ease-in-out infinite;}" +
+      "#activeMeta{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--muted);}" +
+      "#activeMeta.is-live{color:#dc2626;}" +
+      "#activeMeta .active-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;display:none;}" +
+      "#activeMeta.is-live .active-dot{display:inline-block;background:#dc2626;animation:pk-live-pulse 1.5s ease-in-out infinite;}" +
       "@keyframes pk-live-pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(1.4);}}";
     document.head.appendChild(style);
   }
@@ -498,7 +500,18 @@
 
   function updateActiveMeta() {
     const metaEl = $id("activeMeta");
+    const countEl = $id("activeCount");
     if (!metaEl || !activeLastUpdatedAt) return;
+
+    const count = countEl ? (parseInt(countEl.textContent, 10) || 0) : 0;
+
+    if (count <= 0) {
+      metaEl.classList.remove("is-live");
+      metaEl.innerHTML = '<span>No active users</span>';
+      return;
+    }
+
+    metaEl.classList.add("is-live");
     const sec = Math.max(0, Math.floor((Date.now() - activeLastUpdatedAt) / 1000));
     let text;
     if (sec < 5) text = "Live · just now";
