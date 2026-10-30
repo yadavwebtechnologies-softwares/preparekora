@@ -267,6 +267,67 @@
 
   const params = new URLSearchParams(window.location.search);
   const testId = params.get("test") || "";
+  
+  /* ---------- Heartbeat (live presence) ---------- */
+
+  let heartbeatSessionId = "";
+  let heartbeatIntervalId = null;
+
+  function makeHeartbeatId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  }
+
+  function startHeartbeat() {
+    if (!state.publicTest || !testId) return;
+
+    heartbeatSessionId = makeHeartbeatId();
+    const payload = {
+      testId: testId,
+      sessionId: heartbeatSessionId,
+      userName: state.userName || ""
+    };
+
+    fetch(API_BASE + "/sessions/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).catch(function () {});
+
+    if (heartbeatIntervalId) clearInterval(heartbeatIntervalId);
+    heartbeatIntervalId = setInterval(function () {
+      if (!heartbeatSessionId) return;
+      fetch(API_BASE + "/sessions/ping", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ testId: testId, sessionId: heartbeatSessionId })
+      }).catch(function () {});
+    }, 20000);
+  }
+
+  function stopHeartbeat() {
+    if (heartbeatIntervalId) {
+      clearInterval(heartbeatIntervalId);
+      heartbeatIntervalId = null;
+    }
+    if (!heartbeatSessionId || !testId) return;
+
+    const payload = JSON.stringify({ testId: testId, sessionId: heartbeatSessionId });
+    try {
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(API_BASE + "/sessions/end", new Blob([payload], { type: "application/json" }));
+      } else {
+        fetch(API_BASE + "/sessions/end", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payload,
+          keepalive: true
+        }).catch(function () {});
+      }
+    } catch (e) {}
+    heartbeatSessionId = "";
+  }
+
+  window.addEventListener("beforeunload", function () { stopHeartbeat(); });
 
   async function loadTest() {
     if (!testId) { showScreen("notFound"); return; }
@@ -411,6 +472,8 @@
     renderPalette();
     updateNavSummary();
     startTimer();
+
+    startHeartbeat();
 
     announce(t("questionOf", { n: 1, total: state.publicTest.questions.length }));
     if (nextBtn) nextBtn.focus();
@@ -615,6 +678,8 @@
     closePalette();
     closeConfirm();
 
+    stopHeartbeat();
+
     state.elapsed = Math.round((Date.now() - state.startedAt) / 1000);
 
     const payloadAnswers = {};
@@ -773,6 +838,7 @@
     hideInterruptModal();
     closePalette();
     closeConfirm();
+    stopHeartbeat();
     markTerminated();
     showTerminateModal();
   }
