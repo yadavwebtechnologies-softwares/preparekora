@@ -4,20 +4,17 @@
 
   const API_BASE = (function () {
     const host = window.location.hostname;
-    const isLocal =
-      host === "localhost" || host === "127.0.0.1" ||
-      host === "0.0.0.0" || host === "" || host.endsWith(".local");
-    return isLocal
-      ? "http://localhost:8787/api"
-      : "https://preparekora-api.yadavsubba2003.workers.dev/api";
+    const isLocal = host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host === "" || host.endsWith(".local");
+    return isLocal ? "http://localhost:8787/api" : "https://preparekora-api.yadavsubba2003.workers.dev/api";
   })();
 
   const TOKEN_KEY = "pk_admin_id_token";
   const REFRESH_KEY = "pk_admin_refresh_token";
   const EXPIRES_KEY = "pk_admin_expires_at";
   const INACTIVITY_MS = 10 * 60 * 1000;
+  const MAX_IMAGE_CHARS = 700000;
 
-  /* ---------- Inline CSS: analysis + live status ---------- */
+  /* ---------- Inline CSS ---------- */
 
   if (!document.getElementById("analysis-styles")) {
     const style = document.createElement("style");
@@ -72,10 +69,19 @@
       ".share-preview canvas{max-width:100%;height:auto;border:1px solid var(--border);border-radius:8px;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.08);}" +
       ".share-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}" +
       ".share-actions .btn{flex:1;min-width:120px;}" +
+      ".editor-fields{margin-top:12px;padding:12px;border:1px dashed var(--border);border-radius:6px;background:var(--surface);}" +
+      ".editor-fields-label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px;}" +
+      ".editor-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;}" +
+      ".editor-row label{font-size:12px;font-weight:600;color:var(--text);min-width:100px;}" +
+      ".editor-row input[type=text],.editor-row input[type=number]{flex:1;min-width:100px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:#fff;font-size:12px;}" +
+      ".editor-type-select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;}" +
+      ".editor-img-preview{max-width:120px;max-height:100px;border-radius:4px;border:1px solid var(--border);margin-top:6px;display:block;}" +
+      ".editor-img-actions{display:flex;gap:6px;margin-top:6px;}" +
       "@media (max-width:560px){" +
         ".qcard.is-hero .qtext{font-size:14px;}" +
         ".optrow{font-size:12px;padding:7px 9px;}" +
         ".share-actions .btn{min-width:100%;}" +
+        ".editor-row label{min-width:100%;}" +
       "}";
     document.head.appendChild(style);
   }
@@ -99,11 +105,9 @@
       if (expiresIn) localStorage.setItem(EXPIRES_KEY, String(Date.now() + Number(expiresIn) * 1000));
     } catch (e) {}
   }
-
   function getIdToken() { try { return localStorage.getItem(TOKEN_KEY) || ""; } catch (e) { return ""; } }
   function getRefreshToken() { try { return localStorage.getItem(REFRESH_KEY) || ""; } catch (e) { return ""; } }
   function getExpiresAt() { try { return parseInt(localStorage.getItem(EXPIRES_KEY) || "0", 10) || 0; } catch (e) { return 0; } }
-
   function clearTokens() {
     try {
       localStorage.removeItem(TOKEN_KEY);
@@ -113,7 +117,6 @@
   }
 
   let refreshingPromise = null;
-
   async function refreshTokens() {
     if (refreshingPromise) return refreshingPromise;
     refreshingPromise = (async function () {
@@ -153,11 +156,7 @@
 
     let res;
     try {
-      res = await fetch(API_BASE + path, {
-        method: opts.method || "GET",
-        headers: headers,
-        body: opts.body
-      });
+      res = await fetch(API_BASE + path, { method: opts.method || "GET", headers, body: opts.body });
     } catch (err) {
       const e = new Error("Network error. Check your connection.");
       e.status = 0;
@@ -167,11 +166,7 @@
     if (res.status === 401 && !opts.noAuth) {
       try { await refreshTokens(); } catch (e) { clearTokens(); showLogin(); throw new Error("Session expired"); }
       headers["Authorization"] = "Bearer " + getIdToken();
-      res = await fetch(API_BASE + path, {
-        method: opts.method || "GET",
-        headers: headers,
-        body: opts.body
-      });
+      res = await fetch(API_BASE + path, { method: opts.method || "GET", headers, body: opts.body });
     }
 
     let data = null;
@@ -182,37 +177,24 @@
       e.status = res.status;
       throw e;
     }
-
     return data;
   }
 
   const api = {
-    login: function (email, password) {
-      return request("/login", { method: "POST", noAuth: true, body: JSON.stringify({ email: email, password: password }) });
-    },
+    login: function (email, password) { return request("/login", { method: "POST", noAuth: true, body: JSON.stringify({ email, password }) }); },
     me: function () { return request("/me"); },
-    updateMe: function (name) {
-      return request("/me", { method: "PUT", body: JSON.stringify({ displayName: name }) });
-    },
+    updateMe: function (name) { return request("/me", { method: "PUT", body: JSON.stringify({ displayName: name }) }); },
     listOwn: function () { return request("/admin/tests"); },
     getOwn: function (id) { return request("/admin/tests/" + encodeURIComponent(id)); },
-    createTest: function (payload) {
-      return request("/admin/tests", { method: "POST", body: JSON.stringify(payload) });
-    },
-    updateTest: function (id, payload) {
-      return request("/admin/tests/" + encodeURIComponent(id), { method: "PUT", body: JSON.stringify(payload) });
-    },
+    createTest: function (payload) { return request("/admin/tests", { method: "POST", body: JSON.stringify(payload) }); },
+    updateTest: function (id, payload) { return request("/admin/tests/" + encodeURIComponent(id), { method: "PUT", body: JSON.stringify(payload) }); },
     deleteTest: function (id) { return request("/admin/tests/" + encodeURIComponent(id), { method: "DELETE" }); },
     publish: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/publish", { method: "POST" }); },
     unpublish: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/unpublish", { method: "POST" }); },
     getSubmissions: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/submissions"); },
     getSettings: function () { return request("/settings", { noAuth: true }); },
-    updateSettings: function (payload) {
-      return request("/settings", { method: "PUT", body: JSON.stringify(payload) });
-    },
-    getActiveSessions: function () {
-      return request("/admin/sessions/active");
-    }
+    updateSettings: function (payload) { return request("/settings", { method: "PUT", body: JSON.stringify(payload) }); },
+    getActiveSessions: function () { return request("/admin/sessions/active"); }
   };
 
   function t(key, vars) { return (window.PK && window.PK.t) ? window.PK.t(key, vars) : key; }
@@ -260,6 +242,22 @@
     return d.toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true });
   }
 
+  function fileToBase64(file) {
+    return new Promise(function (resolve, reject) {
+      const reader = new FileReader();
+      reader.onload = function () { resolve(String(reader.result || "")); };
+      reader.onerror = function () { reject(new Error("Failed to read image")); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function getQuestionType(q) {
+    if (!q || typeof q !== "object") return "mcq";
+    const t = q.type;
+    if (t === "math" || t === "reasoning" || t === "mcq") return t;
+    return "mcq";
+  }
+
   const state = {
     admin: null, tests: [], editing: null, currentTab: "tests",
     submissionsTestId: null, submissionsCache: [],
@@ -277,11 +275,8 @@
   function showScreen(name) {
     Object.keys(screens).forEach(function (k) { if (screens[k]) screens[k].hidden = (k !== name); });
     window.scrollTo({ top: 0, behavior: "auto" });
-    if (name === "dashboard") {
-      if (typeof startActiveRefresh === "function") startActiveRefresh();
-    } else {
-      if (typeof stopActiveRefresh === "function") stopActiveRefresh();
-    }
+    if (name === "dashboard") { if (typeof startActiveRefresh === "function") startActiveRefresh(); }
+    else { if (typeof stopActiveRefresh === "function") stopActiveRefresh(); }
   }
 
   function showLogin() {
@@ -293,98 +288,47 @@
     showScreen("login");
   }
 
-  /* ---------- INACTIVITY TIMER ---------- */
+  /* ---------- INACTIVITY ---------- */
 
   let inactivityTimerId = null;
-
   function resetInactivityTimer() {
     if (inactivityTimerId) clearTimeout(inactivityTimerId);
     if (!getIdToken() && !getRefreshToken()) return;
     inactivityTimerId = setTimeout(handleInactivityTimeout, INACTIVITY_MS);
   }
-
   function startInactivityTimer() { resetInactivityTimer(); }
-
-  function stopInactivityTimer() {
-    if (inactivityTimerId) { clearTimeout(inactivityTimerId); inactivityTimerId = null; }
-  }
-
-  ["click", "keydown", "scroll", "touchstart"].forEach(function (ev) {
-    document.addEventListener(ev, resetInactivityTimer, { passive: true });
-  });
-  document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState === "visible") resetInactivityTimer();
-  });
-
-  function handleInactivityTimeout() {
-    stopInactivityTimer();
-    clearTokens();
-    state.admin = null; state.tests = []; state.editing = null;
-    openSessionTimeoutModal();
-  }
-
-  /* ---------- SESSION TIMEOUT MODAL ---------- */
+  function stopInactivityTimer() { if (inactivityTimerId) { clearTimeout(inactivityTimerId); inactivityTimerId = null; } }
+  ["click", "keydown", "scroll", "touchstart"].forEach(function (ev) { document.addEventListener(ev, resetInactivityTimer, { passive: true }); });
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") resetInactivityTimer(); });
+  function handleInactivityTimeout() { stopInactivityTimer(); clearTokens(); state.admin = null; state.tests = []; state.editing = null; openSessionTimeoutModal(); }
 
   let sessionTimeoutModalEl = null;
-
   function ensureSessionTimeoutModal() {
     if (sessionTimeoutModalEl) return sessionTimeoutModalEl;
     const overlay = document.createElement("div");
     overlay.className = "modal-overlay";
     overlay.id = "sessionTimeoutOverlay";
-    overlay.setAttribute("role", "dialog");
-    overlay.setAttribute("aria-modal", "true");
     overlay.hidden = true;
-    overlay.innerHTML =
-      '<div class="modal">' +
-        '<h2>Session timed out</h2>' +
-        '<p class="muted-text" style="margin-bottom: 20px;">' +
-          'Your session has expired due to inactivity. Please log in again to continue.' +
-        '</p>' +
-        '<div class="modal-actions">' +
-          '<button type="button" class="btn btn-primary" id="sessionTimeoutLoginBtn">Go to login</button>' +
-        '</div>' +
-      '</div>';
+    overlay.innerHTML = '<div class="modal"><h2>Session timed out</h2><p class="muted-text" style="margin-bottom:20px;">Your session has expired due to inactivity. Please log in again to continue.</p><div class="modal-actions"><button type="button" class="btn btn-primary" id="sessionTimeoutLoginBtn">Go to login</button></div></div>';
     document.body.appendChild(overlay);
-    overlay.querySelector("#sessionTimeoutLoginBtn").addEventListener("click", function () {
-      overlay.hidden = true; overlay.classList.remove("open"); showLogin();
-    });
+    overlay.querySelector("#sessionTimeoutLoginBtn").addEventListener("click", function () { overlay.hidden = true; overlay.classList.remove("open"); showLogin(); });
     sessionTimeoutModalEl = overlay;
     return overlay;
   }
-
   function openSessionTimeoutModal() {
     const overlay = ensureSessionTimeoutModal();
     overlay.hidden = false; overlay.classList.add("open");
-    setTimeout(function () {
-      const btn = overlay.querySelector("#sessionTimeoutLoginBtn");
-      if (btn) btn.focus();
-    }, 40);
+    setTimeout(function () { const b = overlay.querySelector("#sessionTimeoutLoginBtn"); if (b) b.focus(); }, 40);
   }
 
-  /* ---------- LOGOUT CONFIRM MODAL ---------- */
-
   let logoutModalEl = null;
-
   function ensureLogoutModal() {
     if (logoutModalEl) return logoutModalEl;
     const overlay = document.createElement("div");
     overlay.className = "modal-overlay";
     overlay.id = "logoutOverlay";
-    overlay.setAttribute("role", "dialog");
-    overlay.setAttribute("aria-modal", "true");
     overlay.hidden = true;
-    overlay.innerHTML =
-      '<div class="modal">' +
-        '<h2>Sign out?</h2>' +
-        '<p class="muted-text" style="margin-bottom: 20px;">' +
-          'You will need to sign in again to manage your tests.' +
-        '</p>' +
-        '<div class="modal-actions">' +
-          '<button type="button" class="btn" id="logoutCancelBtn">Stay signed in</button>' +
-          '<button type="button" class="btn btn-primary" id="logoutConfirmBtn">Sign out</button>' +
-        '</div>' +
-      '</div>';
+    overlay.innerHTML = '<div class="modal"><h2>Sign out?</h2><p class="muted-text" style="margin-bottom:20px;">You will need to sign in again to manage your tests.</p><div class="modal-actions"><button type="button" class="btn" id="logoutCancelBtn">Stay signed in</button><button type="button" class="btn btn-primary" id="logoutConfirmBtn">Sign out</button></div></div>';
     document.body.appendChild(overlay);
     const cancelBtn = overlay.querySelector("#logoutCancelBtn");
     const confirmBtn = overlay.querySelector("#logoutConfirmBtn");
@@ -392,20 +336,14 @@
     cancelBtn.addEventListener("click", close);
     overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !overlay.hidden) close(); });
-    confirmBtn.addEventListener("click", function () {
-      close(); clearTokens(); stopInactivityTimer(); showLogin();
-    });
+    confirmBtn.addEventListener("click", function () { close(); clearTokens(); stopInactivityTimer(); showLogin(); });
     logoutModalEl = overlay;
     return overlay;
   }
-
   function openLogoutModal() {
     const overlay = ensureLogoutModal();
     overlay.hidden = false; overlay.classList.add("open");
-    setTimeout(function () {
-      const btn = overlay.querySelector("#logoutCancelBtn");
-      if (btn) btn.focus();
-    }, 40);
+    setTimeout(function () { const b = overlay.querySelector("#logoutCancelBtn"); if (b) b.focus(); }, 40);
   }
 
   /* ---------- LOGIN ---------- */
@@ -428,10 +366,7 @@
         await enterDashboard();
         startInactivityTimer();
       } catch (err) {
-        errEl.textContent =
-          err.status === 401 ? t("invalidLogin") :
-          err.status === 403 ? (err.message || "Not authorized") :
-          (err.message || "Error");
+        errEl.textContent = err.status === 401 ? t("invalidLogin") : err.status === 403 ? (err.message || "Not authorized") : (err.message || "Error");
         errEl.hidden = false;
       } finally { btn.disabled = false; }
     });
@@ -456,12 +391,9 @@
     if (panelSettings) panelSettings.hidden = tab !== "settings";
     if (tab === "settings") {
       if (window.PKLoader) window.PKLoader.show();
-      Promise.all([loadSettings(), loadInterruptionSettings()]).finally(function () {
-        if (window.PKLoader) window.PKLoader.hide();
-      });
+      Promise.all([loadSettings(), loadInterruptionSettings()]).finally(function () { if (window.PKLoader) window.PKLoader.hide(); });
     }
   }
-
   if (tabTests) tabTests.addEventListener("click", function () { setTab("tests"); });
   if (tabSettings) tabSettings.addEventListener("click", function () { setTab("settings"); });
 
@@ -476,9 +408,7 @@
     const metaEl = $id("activeMeta");
     const refreshBtn = $id("activeRefreshBtn");
     if (!countEl || !metaEl) return;
-
     if (refreshBtn) refreshBtn.disabled = true;
-
     try {
       const res = await api.getActiveSessions();
       const count = Number(res.active) || 0;
@@ -489,40 +419,23 @@
       if (err.status === 401) return showLogin();
       countEl.textContent = "—";
       metaEl.textContent = "Could not load";
-    } finally {
-      if (refreshBtn) refreshBtn.disabled = false;
-    }
+    } finally { if (refreshBtn) refreshBtn.disabled = false; }
   }
-
   function updateActiveMeta() {
     const metaEl = $id("activeMeta");
     const countEl = $id("activeCount");
     if (!metaEl || !activeLastUpdatedAt) return;
-
     const count = countEl ? (parseInt(countEl.textContent, 10) || 0) : 0;
-
-    if (count <= 0) {
-      metaEl.classList.remove("is-live");
-      metaEl.innerHTML = '<span>No active users</span>';
-      return;
-    }
-
+    if (count <= 0) { metaEl.classList.remove("is-live"); metaEl.innerHTML = "<span>No active users</span>"; return; }
     metaEl.classList.add("is-live");
     const sec = Math.max(0, Math.floor((Date.now() - activeLastUpdatedAt) / 1000));
     let text;
     if (sec < 5) text = "Live · just now";
     else if (sec < 60) text = "Live · " + sec + "s ago";
     else text = "Live · " + Math.floor(sec / 60) + "m ago";
-    metaEl.innerHTML = '<span class="active-dot"></span><span>' + text + '</span>';
+    metaEl.innerHTML = '<span class="active-dot"></span><span>' + text + "</span>";
   }
-
-  function startActiveRefresh() {
-    stopActiveRefresh();
-    refreshActiveCount();
-    activeRefreshIntervalId = setInterval(refreshActiveCount, 15000);
-    activeMetaIntervalId = setInterval(updateActiveMeta, 1000);
-  }
-
+  function startActiveRefresh() { stopActiveRefresh(); refreshActiveCount(); activeRefreshIntervalId = setInterval(refreshActiveCount, 15000); activeMetaIntervalId = setInterval(updateActiveMeta, 1000); }
   function stopActiveRefresh() {
     if (activeRefreshIntervalId) { clearInterval(activeRefreshIntervalId); activeRefreshIntervalId = null; }
     if (activeMetaIntervalId) { clearInterval(activeMetaIntervalId); activeMetaIntervalId = null; }
@@ -547,7 +460,6 @@
     if (loading) loading.hidden = false;
     if (empty) empty.hidden = true;
     list.hidden = true; list.innerHTML = "";
-
     try {
       const res = await api.listOwn();
       state.tests = Array.isArray(res.tests) ? res.tests : [];
@@ -566,18 +478,15 @@
     const card = document.createElement("div");
     card.className = "admin-test-card";
     const isPublished = test.status === "published";
-
     card.innerHTML =
       '<div class="admin-test-info">' +
-        '<p class="admin-test-title">' + esc(test.title) + '</p>' +
+        '<p class="admin-test-title">' + esc(test.title) + "</p>" +
         '<div class="admin-test-meta">' +
-          '<span class="status-badge ' + (isPublished ? "published" : "draft") + '">' +
-            esc(isPublished ? t("published") : t("draft")) +
-          '</span>' +
-          '<span>' + Number(test.questionCount || 0) + " " + esc(t("questionsUnit")) + '</span>' +
-          '<span>' + Number(test.minutes || 0) + " " + esc(t("minutesUnit")) + '</span>' +
-        '</div>' +
-      '</div>' +
+          '<span class="status-badge ' + (isPublished ? "published" : "draft") + '">' + esc(isPublished ? t("published") : t("draft")) + "</span>" +
+          "<span>" + Number(test.questionCount || 0) + " " + esc(t("questionsUnit")) + "</span>" +
+          "<span>" + Number(test.minutes || 0) + " " + esc(t("minutesUnit")) + "</span>" +
+        "</div>" +
+      "</div>" +
       '<div class="admin-test-actions"></div>';
 
     const actions = card.querySelector(".admin-test-actions");
@@ -591,8 +500,7 @@
       const copyBtn = document.createElement("button");
       copyBtn.type = "button"; copyBtn.className = "btn btn-sm"; copyBtn.textContent = t("copyUrl");
       copyBtn.addEventListener("click", function () {
-        copyText(publicTestUrl(test.id)).then(function () { toast(t("urlCopied"), "success"); })
-          .catch(function () { toast("Copy failed", "error"); });
+        copyText(publicTestUrl(test.id)).then(function () { toast(t("urlCopied"), "success"); }).catch(function () { toast("Copy failed", "error"); });
       });
       actions.appendChild(copyBtn);
     }
@@ -639,18 +547,16 @@
     return card;
   }
 
-  /* ---------- SUBMISSIONS VIEWER ---------- */
+  /* ---------- SUBMISSIONS ---------- */
 
   async function openSubmissions(testId) {
     state.submissionsTestId = testId;
     showScreen("submissions");
-
     const titleEl = $id("submissionsTitle");
     const loadingEl = $id("submissionsLoading");
     const emptyEl = $id("submissionsEmpty");
     const bodyEl = $id("submissionsBody");
     const listEl = $id("submissionsList");
-
     if (titleEl) titleEl.textContent = "Loading…";
     if (loadingEl) loadingEl.hidden = false;
     if (emptyEl) emptyEl.hidden = true;
@@ -662,48 +568,32 @@
       const res = await api.getSubmissions(testId);
       if (titleEl) titleEl.textContent = res.testTitle || "Submissions";
       if (loadingEl) loadingEl.hidden = true;
-
       const list = Array.isArray(res.submissions) ? res.submissions : [];
       state.submissionsCache = list;
-
       if (list.length === 0) { if (emptyEl) emptyEl.hidden = false; return; }
-
       let totalPercent = 0, topPercent = 0;
-      list.forEach(function (s) {
-        totalPercent += Number(s.percent) || 0;
-        if (Number(s.percent) > topPercent) topPercent = Number(s.percent);
-      });
+      list.forEach(function (s) { totalPercent += Number(s.percent) || 0; if (Number(s.percent) > topPercent) topPercent = Number(s.percent); });
       const avgPercent = Math.round(totalPercent / list.length);
-
-      const totalEl = $id("submissionsTotal");
-      const avgEl = $id("submissionsAvg");
-      const topEl = $id("submissionsTop");
+      const totalEl = $id("submissionsTotal"), avgEl = $id("submissionsAvg"), topEl = $id("submissionsTop");
       if (totalEl) totalEl.textContent = String(list.length);
       if (avgEl) avgEl.textContent = avgPercent + "%";
       if (topEl) topEl.textContent = topPercent + "%";
-
-      if (listEl) {
-        list.forEach(function (s, idx) { listEl.appendChild(renderSubmissionRow(s, idx)); });
-      }
+      if (listEl) list.forEach(function (s, idx) { listEl.appendChild(renderSubmissionRow(s, idx)); });
       if (bodyEl) bodyEl.hidden = false;
     } catch (err) {
       if (err.status === 401) return showLogin();
       if (loadingEl) loadingEl.hidden = true;
       if (emptyEl) { emptyEl.hidden = false; emptyEl.textContent = err.message || "Could not load submissions"; }
-    } finally {
-      if (window.PKLoader) window.PKLoader.hide();
-    }
+    } finally { if (window.PKLoader) window.PKLoader.hide(); }
   }
 
   function renderSubmissionRow(s, idx) {
     const row = document.createElement("div");
     row.className = "submission-row";
-
     const name = esc(s.userName || "—");
     const correct = Number(s.correct) || 0;
     const total = Number(s.total) || 0;
     const percent = Number(s.percent) || 0;
-
     let timeText = "—";
     if (s.submittedAt) {
       const diff = Date.now() - Number(s.submittedAt);
@@ -713,18 +603,14 @@
       else if (mins < 1440) timeText = Math.floor(mins / 60) + "h ago";
       else timeText = Math.floor(mins / 1440) + "d ago";
     }
-
     row.innerHTML =
-      '<div class="submission-name">' + name + '</div>' +
-      '<div class="submission-score"><strong>' + correct + '</strong><span>/ ' + total + '</span></div>' +
-      '<div class="submission-percent">' + percent + '%</div>' +
-      '<div class="submission-time">' + esc(timeText) + '</div>';
-
+      '<div class="submission-name">' + name + "</div>" +
+      '<div class="submission-score"><strong>' + correct + "</strong><span>/ " + total + "</span></div>" +
+      '<div class="submission-percent">' + percent + "%</div>" +
+      '<div class="submission-time">' + esc(timeText) + "</div>";
     row.addEventListener("click", function () { openSubmissionDetail(idx); });
     return row;
   }
-
-  /* ---------- SUBMISSION DETAIL MODAL ---------- */
 
   function ensureSubmissionModal() {
     let overlay = $id("submissionDetailOverlay");
@@ -732,22 +618,8 @@
     overlay = document.createElement("div");
     overlay.id = "submissionDetailOverlay";
     overlay.className = "modal-overlay";
-    overlay.setAttribute("role", "dialog");
-    overlay.setAttribute("aria-modal", "true");
     overlay.hidden = true;
-    overlay.innerHTML =
-      '<div class="submission-detail-modal">' +
-        '<div class="submission-detail-head">' +
-          '<div>' +
-            '<h2 id="submissionDetailName">—</h2>' +
-            '<p id="submissionDetailTest">—</p>' +
-          '</div>' +
-          '<button type="button" class="submission-detail-close" id="submissionDetailClose" aria-label="Close">' +
-            '<svg viewBox="0 0 24 24"><path d="m6 6 12 12"></path><path d="M18 6 6 18"></path></svg>' +
-          '</button>' +
-        '</div>' +
-        '<div class="submission-detail-body" id="submissionDetailBody"></div>' +
-      '</div>';
+    overlay.innerHTML = '<div class="submission-detail-modal"><div class="submission-detail-head"><div><h2 id="submissionDetailName">—</h2><p id="submissionDetailTest">—</p></div><button type="button" class="submission-detail-close" id="submissionDetailClose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12"></path><path d="M18 6 6 18"></path></svg></button></div><div class="submission-detail-body" id="submissionDetailBody"></div></div>';
     document.body.appendChild(overlay);
     function close() { overlay.hidden = true; overlay.classList.remove("open"); }
     overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
@@ -771,14 +643,11 @@
     const percent = Number(s.percent) || 0;
     const attempted = correct + wrong;
     const accuracy = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
-
     nameEl.textContent = s.userName || "—";
     const currentTest = state.tests.find(function (x) { return x.id === state.submissionsTestId; });
     testEl.textContent = currentTest ? currentTest.title : "Test";
-
     const timeTakenText = s.timeTaken > 0 ? formatDuration(s.timeTaken) : "Not recorded";
     const waText = s.userWhatsApp && s.userWhatsApp.trim() ? esc(s.userWhatsApp) : "Not provided";
-
     bodyEl.innerHTML =
       '<div class="submission-metrics">' +
         '<div class="submission-metric"><strong>' + correct + " / " + total + '</strong><span>Score</span></div>' +
@@ -796,7 +665,6 @@
         '<div class="submission-meta-row"><span class="label">Submitted</span><span class="value">' + esc(formatDateTime(s.submittedAt)) + '</span></div>' +
         '<div class="submission-meta-row"><span class="label">WhatsApp</span><span class="value' + (s.userWhatsApp && s.userWhatsApp.trim() ? "" : " muted") + '">' + waText + '</span></div>' +
       '</div>';
-
     overlay.hidden = false; overlay.classList.add("open");
     const closeBtn = overlay.querySelector("#submissionDetailClose");
     if (closeBtn) setTimeout(function () { closeBtn.focus(); }, 40);
@@ -810,14 +678,10 @@
     });
   }
 
-  /* ---------- WRONG ANALYSIS ---------- */
+  /* ---------- ANALYSIS ---------- */
 
   const openAnalysisBtn = $id("openAnalysisBtn");
-  if (openAnalysisBtn) {
-    openAnalysisBtn.addEventListener("click", function () {
-      if (state.submissionsTestId) openAnalysis(state.submissionsTestId);
-    });
-  }
+  if (openAnalysisBtn) openAnalysisBtn.addEventListener("click", function () { if (state.submissionsTestId) openAnalysis(state.submissionsTestId); });
 
   const analysisBackBtn = $id("analysisBackBtn");
   if (analysisBackBtn) {
@@ -829,87 +693,61 @@
 
   const analysisTabByQ = $id("analysisTabByQ");
   const analysisTabTough = $id("analysisTabTough");
-  if (analysisTabByQ) {
-    analysisTabByQ.addEventListener("click", function () {
-      analysisTabByQ.classList.add("is-active"); analysisTabByQ.setAttribute("aria-selected", "true");
-      analysisTabTough.classList.remove("is-active"); analysisTabTough.setAttribute("aria-selected", "false");
-      $id("analysisByQ").hidden = false;
-      $id("analysisByTough").hidden = true;
-    });
-  }
-  if (analysisTabTough) {
-    analysisTabTough.addEventListener("click", function () {
-      analysisTabTough.classList.add("is-active"); analysisTabTough.setAttribute("aria-selected", "true");
-      analysisTabByQ.classList.remove("is-active"); analysisTabByQ.setAttribute("aria-selected", "false");
-      $id("analysisByQ").hidden = true;
-      $id("analysisByTough").hidden = false;
-    });
-  }
+  if (analysisTabByQ) analysisTabByQ.addEventListener("click", function () {
+    analysisTabByQ.classList.add("is-active"); analysisTabByQ.setAttribute("aria-selected", "true");
+    analysisTabTough.classList.remove("is-active"); analysisTabTough.setAttribute("aria-selected", "false");
+    $id("analysisByQ").hidden = false; $id("analysisByTough").hidden = true;
+  });
+  if (analysisTabTough) analysisTabTough.addEventListener("click", function () {
+    analysisTabTough.classList.add("is-active"); analysisTabTough.setAttribute("aria-selected", "true");
+    analysisTabByQ.classList.remove("is-active"); analysisTabByQ.setAttribute("aria-selected", "false");
+    $id("analysisByQ").hidden = true; $id("analysisByTough").hidden = false;
+  });
 
   async function openAnalysis(testId) {
     state.analysisTestId = testId;
     showScreen("analysis");
-
-    const loadingEl = $id("analysisLoading");
-    const emptyEl = $id("analysisEmpty");
-    const bodyEl = $id("analysisBody");
+    const loadingEl = $id("analysisLoading"), emptyEl = $id("analysisEmpty"), bodyEl = $id("analysisBody");
     if (loadingEl) loadingEl.hidden = false;
     if (emptyEl) emptyEl.hidden = true;
     if (bodyEl) bodyEl.hidden = true;
-
     if (window.PKLoader) window.PKLoader.show();
     try {
       const res = await api.getSubmissions(testId);
       if (loadingEl) loadingEl.hidden = true;
-
       const submissions = Array.isArray(res.submissions) ? res.submissions : [];
       const questions = Array.isArray(res.questions) ? res.questions : [];
       const testTitle = res.testTitle || "";
-
       const titleEl = $id("analysisTitle");
       if (titleEl) titleEl.textContent = testTitle ? ("Wrong Analysis · " + testTitle) : "Wrong Analysis";
-
       const cache = aggregateAnalysis(submissions, questions);
       state.analysisCache = cache;
-
-      if (cache.totalSubsWithAnswers === 0) {
-        if (emptyEl) emptyEl.hidden = false;
-        if (window.PKLoader) window.PKLoader.hide();
-        return;
-      }
-
+      if (cache.totalSubsWithAnswers === 0) { if (emptyEl) emptyEl.hidden = false; if (window.PKLoader) window.PKLoader.hide(); return; }
       $id("analysisSubs").textContent = String(cache.totalSubsWithAnswers);
       $id("analysisWrong").textContent = String(cache.totalWrong);
       const toughest = cache.toughest;
-      $id("analysisToughest").textContent =
-        toughest ? ("Q" + (toughest.index + 1) + " · " + toughest.wrongPct + "%") : "—";
-
+      $id("analysisToughest").textContent = toughest ? ("Q" + (toughest.index + 1) + " · " + toughest.wrongPct + "%") : "—";
       renderAnalysisByQ();
       renderAnalysisByTough();
-
       if (bodyEl) bodyEl.hidden = false;
     } catch (err) {
       if (err.status === 401) return showLogin();
       if (loadingEl) loadingEl.hidden = true;
       if (emptyEl) { emptyEl.hidden = false; emptyEl.textContent = err.message || "Could not load analysis"; }
-    } finally {
-      if (window.PKLoader) window.PKLoader.hide();
-    }
+    } finally { if (window.PKLoader) window.PKLoader.hide(); }
   }
 
   function aggregateAnalysis(submissions, questions) {
     const perQ = questions.map(function (q, qi) {
       return {
         index: qi, q: q.q, options: Array.isArray(q.options) ? q.options.slice() : [],
-        correct: q.answer,
+        correct: q.answer, type: q.type || "mcq",
         optionCounts: (q.options || []).map(function () { return 0; }),
         correctCount: 0, wrongCount: 0, unattempted: 0, wrongUsers: []
       };
     });
-
     let totalWrong = 0;
     let totalSubsWithAnswers = 0;
-
     submissions.forEach(function (s) {
       if (!s.answers || typeof s.answers !== "object") return;
       totalSubsWithAnswers += 1;
@@ -917,7 +755,14 @@
         const a = s.answers[qi] !== undefined ? s.answers[qi] : s.answers[String(qi)];
         const info = perQ[qi];
         if (a === undefined || a === null) { info.unattempted += 1; return; }
-        if (typeof a !== "number" || a < 0 || a >= (q.options || []).length) { info.unattempted += 1; return; }
+        if (typeof a !== "number") { info.unattempted += 1; return; }
+        if (q.type === "math") {
+          const tol = Number(q.tolerance) || 0;
+          if (Math.abs(a - q.numericAnswer) <= tol) info.correctCount += 1;
+          else { info.wrongCount += 1; info.wrongUsers.push({ name: s.userName || "—", chosen: a }); totalWrong += 1; }
+          return;
+        }
+        if (a < 0 || a >= (q.options || []).length) { info.unattempted += 1; return; }
         info.optionCounts[a] = (info.optionCounts[a] || 0) + 1;
         if (a === q.answer) info.correctCount += 1;
         else {
@@ -927,40 +772,33 @@
         }
       });
     });
-
     perQ.forEach(function (info) {
       const attempted = info.correctCount + info.wrongCount;
       info.attempted = attempted;
       info.wrongPct = attempted > 0 ? Math.round((info.wrongCount / attempted) * 100) : 0;
-
       let trapIdx = -1, trapCount = 0;
       info.optionCounts.forEach(function (count, oi) {
         if (oi === info.correct) return;
         if (count > trapCount) { trapCount = count; trapIdx = oi; }
       });
-      info.trapOption = trapIdx;
-      info.trapCount = trapCount;
+      info.trapOption = trapIdx; info.trapCount = trapCount;
       info.trapPct = info.wrongCount > 0 ? Math.round((trapCount / info.wrongCount) * 100) : 0;
-
       if (info.wrongPct >= 50) info.level = "hard";
       else if (info.wrongPct >= 20) info.level = "medium";
       else info.level = "easy";
     });
-
     const sorted = perQ.slice().sort(function (a, b) {
       if (b.wrongPct !== a.wrongPct) return b.wrongPct - a.wrongPct;
       return b.wrongCount - a.wrongCount;
     });
     const toughest = (sorted[0] && sorted[0].wrongCount > 0) ? sorted[0] : null;
-
-    return { perQ: perQ, totalWrong: totalWrong, totalSubsWithAnswers: totalSubsWithAnswers, toughest: toughest };
+    return { perQ, totalWrong, totalSubsWithAnswers, toughest };
   }
 
   function buildAnalysisCard(info, hero) {
     const isHot = info.wrongPct >= 40;
     const badgeClass = "qbadge" + (isHot ? " is-hot" : "");
     const levelClass = "qbadge level-" + info.level;
-
     const optionsHtml = info.options.map(function (opt, oi) {
       const isCorrect = oi === info.correct;
       const isTrap = oi === info.trapOption && info.trapCount > 0;
@@ -969,130 +807,48 @@
       if (isCorrect) cls += " is-correct";
       else if (isTrap) cls += " is-trap";
       else if (count > 0) cls += " has-wrong";
-      return (
-        '<div class="' + cls + '">' +
-          '<span class="optkey">' + "ABCD".charAt(oi) + '</span>' +
-          '<span class="opttext">' + esc(opt) + '</span>' +
-          (isTrap ? '<span class="trap-tag">Trap</span>' : '') +
-          '<span class="optcount">' + count + '</span>' +
-        '</div>'
-      );
+      return '<div class="' + cls + '"><span class="optkey">' + "ABCD".charAt(oi) + '</span><span class="opttext">' + esc(opt) + "</span>" + (isTrap ? '<span class="trap-tag">Trap</span>' : "") + '<span class="optcount">' + count + "</span></div>";
     }).join("");
-
-    const seeBtn = info.wrongCount > 0
-      ? '<button class="btn btn-sm" type="button" data-analysis-who="' + info.index + '">See ' + info.wrongCount + ' who got it wrong</button>'
-      : '<span class="qfoot-meta">No wrong attempts</span>';
-
-    const trapInfo = info.trapCount > 0 && info.trapOption >= 0
-      ? ' · <strong>Trap: ' + "ABCD".charAt(info.trapOption) + '</strong> (' + info.trapCount + '/' + info.wrongCount + ')'
-      : '';
-
+    const seeBtn = info.wrongCount > 0 ? '<button class="btn btn-sm" type="button" data-analysis-who="' + info.index + '">See ' + info.wrongCount + ' who got it wrong</button>' : '<span class="qfoot-meta">No wrong attempts</span>';
+    const trapInfo = info.trapCount > 0 && info.trapOption >= 0 ? ' · <strong>Trap: ' + "ABCD".charAt(info.trapOption) + '</strong> (' + info.trapCount + '/' + info.wrongCount + ")" : "";
     const headLeft = hero
-      ? '<div class="qhead-left">' +
-          '<span class="qnum">Q' + (info.index + 1) + '</span>' +
-          '<span class="qbadge is-toughest">Toughest</span>' +
-          '<span class="' + levelClass + '">' + info.level.toUpperCase() + '</span>' +
-        '</div>'
-      : '<div class="qhead-left">' +
-          '<span class="qnum">Q' + (info.index + 1) + '</span>' +
-          '<span class="' + levelClass + '">' + info.level.toUpperCase() + '</span>' +
-        '</div>';
-
-    return (
-      '<div class="qcard' + (hero ? ' is-hero' : '') + '">' +
-        '<div class="qhead">' +
-          headLeft +
-          '<span class="' + badgeClass + '">' + info.wrongCount + ' wrong of ' + info.attempted + ' attempted</span>' +
-        '</div>' +
-        '<p class="qtext">' + esc(info.q) + '</p>' +
-        optionsHtml +
-        '<div class="qfoot">' +
-          '<span class="qfoot-meta"><strong>' + info.wrongPct + '%</strong> wrong' + trapInfo + '</span>' +
-          '<div class="qfoot-actions">' +
-            '<button class="btn btn-sm" type="button" data-analysis-share="' + info.index + '">Share</button>' +
-            seeBtn +
-          '</div>' +
-        '</div>' +
-      '</div>'
-    );
+      ? '<div class="qhead-left"><span class="qnum">Q' + (info.index + 1) + '</span><span class="qbadge is-toughest">Toughest</span><span class="' + levelClass + '">' + info.level.toUpperCase() + "</span></div>"
+      : '<div class="qhead-left"><span class="qnum">Q' + (info.index + 1) + '</span><span class="' + levelClass + '">' + info.level.toUpperCase() + "</span></div>";
+    return '<div class="qcard' + (hero ? " is-hero" : "") + '">' +
+      '<div class="qhead">' + headLeft + '<span class="' + badgeClass + '">' + info.wrongCount + " wrong of " + info.attempted + " attempted</span></div>" +
+      '<p class="qtext">' + esc(info.q) + "</p>" + optionsHtml +
+      '<div class="qfoot"><span class="qfoot-meta"><strong>' + info.wrongPct + "%</strong> wrong" + trapInfo + "</span>" +
+      '<div class="qfoot-actions"><button class="btn btn-sm" type="button" data-analysis-share="' + info.index + '">Share</button>' + seeBtn + "</div></div></div>";
   }
 
   function attachAnalysisHandlers(root) {
-    root.querySelectorAll("button[data-analysis-who]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        openWho(parseInt(btn.getAttribute("data-analysis-who"), 10));
-      });
-    });
-    root.querySelectorAll("button[data-analysis-share]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        openShare(parseInt(btn.getAttribute("data-analysis-share"), 10));
-      });
-    });
+    root.querySelectorAll("button[data-analysis-who]").forEach(function (btn) { btn.addEventListener("click", function () { openWho(parseInt(btn.getAttribute("data-analysis-who"), 10)); }); });
+    root.querySelectorAll("button[data-analysis-share]").forEach(function (btn) { btn.addEventListener("click", function () { openShare(parseInt(btn.getAttribute("data-analysis-share"), 10)); }); });
   }
-
   function renderAnalysisByQ() {
     const wrap = $id("analysisByQ");
     if (!wrap || !state.analysisCache) return;
-    wrap.innerHTML = state.analysisCache.perQ.map(function (info) {
-      return buildAnalysisCard(info, false);
-    }).join("");
+    wrap.innerHTML = state.analysisCache.perQ.map(function (info) { return buildAnalysisCard(info, false); }).join("");
     attachAnalysisHandlers(wrap);
   }
-
   function renderAnalysisByTough() {
     const wrap = $id("analysisByTough");
     if (!wrap || !state.analysisCache) return;
     const t = state.analysisCache.toughest;
     if (!t) { wrap.innerHTML = '<div class="empty-state">Not enough data yet.</div>'; return; }
-
-    const banner =
-      '<div class="hero-banner">' +
-        '<div class="hero-banner-icon">' +
-          '<svg viewBox="0 0 24 24"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>' +
-        '</div>' +
-        '<div class="hero-banner-text">' +
-          '<strong>Toughest question of this test</strong>' +
-          '<span>Based on wrong % among attempted students</span>' +
-        '</div>' +
-        '<div class="hero-banner-pct">' + t.wrongPct + '<small>%</small></div>' +
-      '</div>';
-
+    const banner = '<div class="hero-banner"><div class="hero-banner-icon"><svg viewBox="0 0 24 24"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg></div><div class="hero-banner-text"><strong>Toughest question of this test</strong><span>Based on wrong % among attempted students</span></div><div class="hero-banner-pct">' + t.wrongPct + "<small>%</small></div></div>";
     const card = buildAnalysisCard(t, true);
-    const futureNote =
-      '<div class="future-note">' +
-        '<p><strong>More analysis coming soon.</strong><br>' +
-        'Question-level time spent, option distribution trends across batches, and per-student comparison.</p>' +
-      '</div>';
-
+    const futureNote = '<div class="future-note"><p><strong>More analysis coming soon.</strong><br>Question-level time spent, option distribution trends across batches, and per-student comparison.</p></div>';
     wrap.innerHTML = banner + card + futureNote;
     attachAnalysisHandlers(wrap);
   }
 
-  /* ---------- WHO MODAL ---------- */
-
   let whoModalEl = null;
-
   function ensureWhoModal() {
     if (whoModalEl) return whoModalEl;
     const overlay = document.createElement("div");
-    overlay.className = "modal-overlay";
-    overlay.id = "whoOverlay";
-    overlay.setAttribute("role", "dialog");
-    overlay.setAttribute("aria-modal", "true");
-    overlay.hidden = true;
-    overlay.innerHTML =
-      '<div class="modal" style="max-width: 480px; padding: 0;">' +
-        '<div class="submission-detail-head">' +
-          '<div>' +
-            '<h2 id="whoTitle">—</h2>' +
-            '<p id="whoSubtitle">—</p>' +
-          '</div>' +
-          '<button type="button" class="submission-detail-close" id="whoClose" aria-label="Close">' +
-            '<svg viewBox="0 0 24 24"><path d="m6 6 12 12"></path><path d="M18 6 6 18"></path></svg>' +
-          '</button>' +
-        '</div>' +
-        '<div class="submission-detail-body" id="whoBody"></div>' +
-      '</div>';
+    overlay.className = "modal-overlay"; overlay.id = "whoOverlay"; overlay.hidden = true;
+    overlay.innerHTML = '<div class="modal" style="max-width:480px;padding:0;"><div class="submission-detail-head"><div><h2 id="whoTitle">—</h2><p id="whoSubtitle">—</p></div><button type="button" class="submission-detail-close" id="whoClose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12"></path><path d="M18 6 6 18"></path></svg></button></div><div class="submission-detail-body" id="whoBody"></div></div>';
     document.body.appendChild(overlay);
     function close() { overlay.hidden = true; overlay.classList.remove("open"); }
     overlay.querySelector("#whoClose").addEventListener("click", close);
@@ -1101,78 +857,39 @@
     whoModalEl = overlay;
     return overlay;
   }
-
   function openWho(qi) {
     if (!state.analysisCache) return;
     const info = state.analysisCache.perQ[qi];
     if (!info) return;
     const overlay = ensureWhoModal();
-    const titleEl = overlay.querySelector("#whoTitle");
-    const subEl = overlay.querySelector("#whoSubtitle");
+    overlay.querySelector("#whoTitle").textContent = "Q" + (qi + 1) + " · " + info.wrongCount + " wrong";
+    overlay.querySelector("#whoSubtitle").textContent = info.q;
     const bodyEl = overlay.querySelector("#whoBody");
-
-    titleEl.textContent = "Q" + (qi + 1) + " · " + info.wrongCount + " wrong";
-    subEl.textContent = info.q;
-
     bodyEl.innerHTML = info.wrongUsers.length
-      ? info.wrongUsers.map(function (u) {
-          return '<div class="analysis-user-row"><span class="analysis-user-name">' + esc(u.name) +
-            '</span><span class="analysis-user-choice">Chose ' + "ABCD".charAt(u.chosen) + '</span></div>';
-        }).join("")
+      ? info.wrongUsers.map(function (u) { return '<div class="analysis-user-row"><span class="analysis-user-name">' + esc(u.name) + '</span><span class="analysis-user-choice">Chose ' + (info.type === "math" ? u.chosen : "ABCD".charAt(u.chosen)) + "</span></div>"; }).join("")
       : '<div class="empty-state">No wrong attempts</div>';
-
     overlay.hidden = false; overlay.classList.add("open");
-    const closeBtn = overlay.querySelector("#whoClose");
-    if (closeBtn) setTimeout(function () { closeBtn.focus(); }, 40);
+    const c = overlay.querySelector("#whoClose"); if (c) setTimeout(function () { c.focus(); }, 40);
   }
-
-  /* ---------- SHARE MODAL ---------- */
 
   let shareModalEl = null;
   let currentShareQI = -1;
-
   function ensureShareModal() {
     if (shareModalEl) return shareModalEl;
     const overlay = document.createElement("div");
-    overlay.className = "modal-overlay";
-    overlay.id = "shareOverlay";
-    overlay.setAttribute("role", "dialog");
-    overlay.setAttribute("aria-modal", "true");
-    overlay.hidden = true;
-    overlay.innerHTML =
-      '<div class="modal" style="max-width: 620px; padding: 0;">' +
-        '<div class="submission-detail-head">' +
-          '<div>' +
-            '<h2>Share question</h2>' +
-            '<p>Preview the image before sharing</p>' +
-          '</div>' +
-          '<button type="button" class="submission-detail-close" id="shareClose" aria-label="Close">' +
-            '<svg viewBox="0 0 24 24"><path d="m6 6 12 12"></path><path d="M18 6 6 18"></path></svg>' +
-          '</button>' +
-        '</div>' +
-        '<div class="submission-detail-body">' +
-          '<div class="share-preview"><canvas id="shareCanvas"></canvas></div>' +
-          '<div class="share-actions">' +
-            '<button class="btn btn-primary" id="shareWaBtn" type="button">Share to WhatsApp</button>' +
-            '<button class="btn" id="shareDlBtn" type="button">Download image</button>' +
-            '<button class="btn" id="shareCopyBtn" type="button">Copy text</button>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
+    overlay.className = "modal-overlay"; overlay.id = "shareOverlay"; overlay.hidden = true;
+    overlay.innerHTML = '<div class="modal" style="max-width:620px;padding:0;"><div class="submission-detail-head"><div><h2>Share question</h2><p>Preview the image before sharing</p></div><button type="button" class="submission-detail-close" id="shareClose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12"></path><path d="M18 6 6 18"></path></svg></button></div><div class="submission-detail-body"><div class="share-preview"><canvas id="shareCanvas"></canvas></div><div class="share-actions"><button class="btn btn-primary" id="shareWaBtn" type="button">Share to WhatsApp</button><button class="btn" id="shareDlBtn" type="button">Download image</button><button class="btn" id="shareCopyBtn" type="button">Copy text</button></div></div></div>';
     document.body.appendChild(overlay);
-
     function close() { overlay.hidden = true; overlay.classList.remove("open"); }
     overlay.querySelector("#shareClose").addEventListener("click", close);
     overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !overlay.hidden) close(); });
-
     overlay.querySelector("#shareWaBtn").addEventListener("click", function () {
       if (!state.analysisCache) return;
       const info = state.analysisCache.perQ[currentShareQI];
       if (!info) return;
       window.open("https://wa.me/?text=" + encodeURIComponent(buildShareText(info)), "_blank");
     });
-
     overlay.querySelector("#shareDlBtn").addEventListener("click", function () {
       const canvas = overlay.querySelector("#shareCanvas");
       const link = document.createElement("a");
@@ -1180,22 +897,16 @@
       link.href = canvas.toDataURL("image/png");
       link.click();
     });
-
     overlay.querySelector("#shareCopyBtn").addEventListener("click", function () {
       if (!state.analysisCache) return;
       const info = state.analysisCache.perQ[currentShareQI];
       if (!info) return;
       const btn = overlay.querySelector("#shareCopyBtn");
-      copyText(buildShareText(info)).then(function () {
-        btn.textContent = "Copied!";
-        setTimeout(function () { btn.textContent = "Copy text"; }, 1500);
-      });
+      copyText(buildShareText(info)).then(function () { btn.textContent = "Copied!"; setTimeout(function () { btn.textContent = "Copy text"; }, 1500); });
     });
-
     shareModalEl = overlay;
     return overlay;
   }
-
   function openShare(qi) {
     if (!state.analysisCache) return;
     const info = state.analysisCache.perQ[qi];
@@ -1205,17 +916,12 @@
     buildShareCanvas(overlay.querySelector("#shareCanvas"), info);
     overlay.hidden = false; overlay.classList.add("open");
   }
-
   function buildShareText(info) {
-    return (
-      "Q" + (info.index + 1) + ". " + info.q + "\n\n" +
-      info.options.map(function (o, i) { return "ABCD".charAt(i) + ". " + o; }).join("\n") + "\n" +
-      "---------------------\n" +
-      info.wrongCount + " of " + info.attempted + " got this wrong (" + info.wrongPct + "%)\n" +
-      "Correct: " + "ABCD".charAt(info.correct)
-    );
+    if (info.type === "math") {
+      return "Q" + (info.index + 1) + ". " + info.q + "\n\n" + info.wrongCount + " of " + info.attempted + " got this wrong (" + info.wrongPct + "%)";
+    }
+    return "Q" + (info.index + 1) + ". " + info.q + "\n\n" + info.options.map(function (o, i) { return "ABCD".charAt(i) + ". " + o; }).join("\n") + "\n---------------------\n" + info.wrongCount + " of " + info.attempted + " got this wrong (" + info.wrongPct + "%)\nCorrect: " + "ABCD".charAt(info.correct);
   }
-
   function roundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
     ctx.moveTo(x + r, y);
@@ -1225,7 +931,6 @@
     ctx.arcTo(x, y, x + w, y, r);
     ctx.closePath();
   }
-
   function wrapText(ctx, text, maxWidth) {
     const words = String(text).split(/\s+/);
     const lines = [];
@@ -1238,154 +943,100 @@
     if (line) lines.push(line);
     return lines;
   }
-
   function buildShareCanvas(canvas, info) {
     const testMeta = state.tests.find(function (x) { return x.id === state.analysisTestId; });
     const testTitle = testMeta ? testMeta.title : "";
     const publisher = testMeta ? testMeta.publisherName : "";
-
-    const scale = 2;
-    const W = 720;
-    const H = 900;
-    canvas.width = W * scale;
-    canvas.height = H * scale;
+    const scale = 2, W = 720, H = 900;
+    canvas.width = W * scale; canvas.height = H * scale;
     const ctx = canvas.getContext("2d");
-    ctx.scale(scale, scale);
-    ctx.textBaseline = "alphabetic";
-
+    ctx.scale(scale, scale); ctx.textBaseline = "alphabetic";
     ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H);
     ctx.strokeStyle = "#e7e7e7"; ctx.lineWidth = 2;
     roundRect(ctx, 1, 1, W - 2, H - 2, 16); ctx.stroke();
-
     const pad = 40;
     let y = 60;
-
     ctx.font = "600 22px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#111111";
     ctx.fillText("preparekora", pad, y);
     const bw = ctx.measureText("preparekora").width;
-    ctx.font = "400 22px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#858585";
-    ctx.fillText(".in", pad + bw, y);
-
+    ctx.font = "400 22px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#858585"; ctx.fillText(".in", pad + bw, y);
     ctx.font = "600 11px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#737373";
     ctx.textAlign = "right"; ctx.fillText("WRONG ANALYSIS", W - pad, y); ctx.textAlign = "left";
-
     y += 26;
     ctx.strokeStyle = "#e7e7e7"; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
-
     y += 28;
     ctx.font = "400 13px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#737373";
-    if (testTitle) {
-      const titleLines = wrapText(ctx, testTitle, W - pad * 2).slice(0, 2);
-      titleLines.forEach(function (line) { ctx.fillText(line, pad, y); y += 18; });
-      y += 6;
-    }
-    if (publisher) {
-      ctx.font = "400 12px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#737373";
-      ctx.fillText("By " + publisher, pad, y);
-    }
+    if (testTitle) { wrapText(ctx, testTitle, W - pad * 2).slice(0, 2).forEach(function (line) { ctx.fillText(line, pad, y); y += 18; }); y += 6; }
+    if (publisher) { ctx.font = "400 12px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#737373"; ctx.fillText("By " + publisher, pad, y); }
     y += 24;
-
-    ctx.strokeStyle = "#e7e7e7";
-    ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
+    ctx.strokeStyle = "#e7e7e7"; ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
     y += 26;
-
     ctx.font = "600 11px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#737373";
     ctx.fillText("Q" + (info.index + 1), pad, y);
-
     const levelText = info.level.toUpperCase();
     ctx.font = "600 10px Arial, Helvetica, sans-serif";
     const levelColor = info.level === "hard" ? "#b91c1c" : info.level === "medium" ? "#b45309" : "#15803d";
     const levelBg = info.level === "hard" ? "#fef2f2" : info.level === "medium" ? "#fef3c7" : "#f0fdf4";
     const lw = ctx.measureText(levelText).width + 14;
     const levelX = pad + 30;
-    ctx.fillStyle = levelBg;
-    roundRect(ctx, levelX, y - 11, lw, 16, 8); ctx.fill();
+    ctx.fillStyle = levelBg; roundRect(ctx, levelX, y - 11, lw, 16, 8); ctx.fill();
     ctx.fillStyle = levelColor; ctx.fillText(levelText, levelX + 7, y);
     y += 20;
-
     ctx.font = "600 16px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#111111";
-    const qLines = wrapText(ctx, info.q, W - pad * 2);
-    qLines.forEach(function (line) { ctx.fillText(line, pad, y); y += 22; });
+    wrapText(ctx, info.q, W - pad * 2).forEach(function (line) { ctx.fillText(line, pad, y); y += 22; });
     y += 10;
-
-    const optH = 40;
-    info.options.forEach(function (opt, oi) {
-      const isCorrect = oi === info.correct;
-      const isTrap = oi === info.trapOption && info.trapCount > 0;
-      const count = info.optionCounts[oi] || 0;
-
-      if (isCorrect) { ctx.strokeStyle = "#15803d"; ctx.lineWidth = 1.5; ctx.fillStyle = "#f0fdf4"; }
-      else if (isTrap) { ctx.strokeStyle = "#b91c1c"; ctx.lineWidth = 2; ctx.fillStyle = "#fef2f2"; }
-      else { ctx.strokeStyle = "#e7e7e7"; ctx.lineWidth = 1; ctx.fillStyle = "#ffffff"; }
-      roundRect(ctx, pad, y, W - pad * 2, optH, 8); ctx.fill(); ctx.stroke();
-
-      const keyX = pad + 14;
-      const keyY = y + optH / 2;
-      ctx.beginPath(); ctx.arc(keyX + 10, keyY, 10, 0, Math.PI * 2);
-      if (isCorrect) { ctx.fillStyle = "#15803d"; ctx.fill(); }
-      else if (isTrap) { ctx.fillStyle = "#b91c1c"; ctx.fill(); }
-      else { ctx.fillStyle = "#ffffff"; ctx.fill(); ctx.strokeStyle = "#e7e7e7"; ctx.lineWidth = 1; ctx.stroke(); }
-
-      ctx.font = "600 11px Arial, Helvetica, sans-serif";
-      ctx.fillStyle = (isCorrect || isTrap) ? "#ffffff" : "#737373";
-      ctx.textAlign = "center"; ctx.fillText("ABCD".charAt(oi), keyX + 10, keyY + 4); ctx.textAlign = "left";
-
-      ctx.font = "500 13px Arial, Helvetica, sans-serif";
-      ctx.fillStyle = isCorrect ? "#14532d" : isTrap ? "#7f1d1d" : "#171717";
-      const optStartX = pad + 40;
-      const optRightLimit = W - pad - 100;
-      const optLines = wrapText(ctx, opt, optRightLimit - optStartX).slice(0, 2);
-      let optTextY = y + (optLines.length === 1 ? optH / 2 + 4 : optH / 2 - 6);
-      optLines.forEach(function (line) { ctx.fillText(line, optStartX, optTextY); optTextY += 15; });
-
-      const badgeText = String(count);
-      ctx.font = "600 11px Arial, Helvetica, sans-serif";
-      const bw2 = ctx.measureText(badgeText).width + 16;
-      const badgeX = W - pad - bw2 - 10;
-
-      if (isCorrect) ctx.fillStyle = "#15803d";
-      else if (isTrap) ctx.fillStyle = "#b91c1c";
-      else ctx.fillStyle = "#f7f7f7";
-      roundRect(ctx, badgeX, keyY - 9, bw2, 18, 9); ctx.fill();
-      ctx.fillStyle = (isCorrect || isTrap) ? "#ffffff" : "#737373";
-      ctx.textAlign = "center"; ctx.fillText(badgeText, badgeX + bw2 / 2, keyY + 4); ctx.textAlign = "left";
-
-      if (isTrap) {
-        ctx.font = "700 9px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#b91c1c";
-        ctx.textAlign = "right"; ctx.fillText("TRAP", W - pad - 8, y - 4); ctx.textAlign = "left";
-      }
-
-      y += optH + 8;
-    });
-
+    if (info.type !== "math") {
+      const optH = 40;
+      info.options.forEach(function (opt, oi) {
+        const isCorrect = oi === info.correct;
+        const isTrap = oi === info.trapOption && info.trapCount > 0;
+        const count = info.optionCounts[oi] || 0;
+        if (isCorrect) { ctx.strokeStyle = "#15803d"; ctx.lineWidth = 1.5; ctx.fillStyle = "#f0fdf4"; }
+        else if (isTrap) { ctx.strokeStyle = "#b91c1c"; ctx.lineWidth = 2; ctx.fillStyle = "#fef2f2"; }
+        else { ctx.strokeStyle = "#e7e7e7"; ctx.lineWidth = 1; ctx.fillStyle = "#ffffff"; }
+        roundRect(ctx, pad, y, W - pad * 2, optH, 8); ctx.fill(); ctx.stroke();
+        const keyX = pad + 14, keyY = y + optH / 2;
+        ctx.beginPath(); ctx.arc(keyX + 10, keyY, 10, 0, Math.PI * 2);
+        if (isCorrect) { ctx.fillStyle = "#15803d"; ctx.fill(); }
+        else if (isTrap) { ctx.fillStyle = "#b91c1c"; ctx.fill(); }
+        else { ctx.fillStyle = "#ffffff"; ctx.fill(); ctx.strokeStyle = "#e7e7e7"; ctx.lineWidth = 1; ctx.stroke(); }
+        ctx.font = "600 11px Arial, Helvetica, sans-serif"; ctx.fillStyle = (isCorrect || isTrap) ? "#ffffff" : "#737373";
+        ctx.textAlign = "center"; ctx.fillText("ABCD".charAt(oi), keyX + 10, keyY + 4); ctx.textAlign = "left";
+        ctx.font = "500 13px Arial, Helvetica, sans-serif"; ctx.fillStyle = isCorrect ? "#14532d" : isTrap ? "#7f1d1d" : "#171717";
+        const optStartX = pad + 40, optRightLimit = W - pad - 100;
+        const optLines = wrapText(ctx, opt, optRightLimit - optStartX).slice(0, 2);
+        let optY = y + (optLines.length === 1 ? optH / 2 + 4 : optH / 2 - 6);
+        optLines.forEach(function (line) { ctx.fillText(line, optStartX, optY); optY += 15; });
+        const badgeText = String(count);
+        ctx.font = "600 11px Arial, Helvetica, sans-serif";
+        const bw2 = ctx.measureText(badgeText).width + 16;
+        const badgeX = W - pad - bw2 - 10;
+        if (isCorrect) ctx.fillStyle = "#15803d"; else if (isTrap) ctx.fillStyle = "#b91c1c"; else ctx.fillStyle = "#f7f7f7";
+        roundRect(ctx, badgeX, keyY - 9, bw2, 18, 9); ctx.fill();
+        ctx.fillStyle = (isCorrect || isTrap) ? "#ffffff" : "#737373"; ctx.textAlign = "center";
+        ctx.fillText(badgeText, badgeX + bw2 / 2, keyY + 4); ctx.textAlign = "left";
+        if (isTrap) { ctx.font = "700 9px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#b91c1c"; ctx.textAlign = "right"; ctx.fillText("TRAP", W - pad - 8, y - 4); ctx.textAlign = "left"; }
+        y += optH + 8;
+      });
+    } else {
+      ctx.font = "400 13px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#737373";
+      ctx.fillText("Numeric answer required (via keypad)", pad, y); y += 22;
+    }
     y += 8;
     ctx.strokeStyle = "#e7e7e7"; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
     y += 24;
-
     ctx.font = "600 13px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#111111";
     ctx.fillText(info.wrongCount + " of " + info.attempted + " got this wrong", pad, y);
-
     ctx.font = "500 13px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#737373";
     ctx.textAlign = "right"; ctx.fillText(info.wrongPct + "%", W - pad, y); ctx.textAlign = "left";
-    y += 18;
-
-    if (info.trapCount > 0 && info.trapOption >= 0) {
-      ctx.font = "400 12px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#737373";
-      ctx.fillText("Most chosen wrong: " + "ABCD".charAt(info.trapOption) +
-        " (" + info.trapCount + "/" + info.wrongCount + " — " + info.trapPct + "%)", pad, y);
-    }
-
     const footerY = H - 30;
     ctx.strokeStyle = "#e7e7e7"; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(pad, footerY - 16); ctx.lineTo(W - pad, footerY - 16); ctx.stroke();
-
     ctx.font = "400 11px Arial, Helvetica, sans-serif"; ctx.fillStyle = "#737373";
     ctx.fillText("preparekora.in", pad, footerY);
-    ctx.textAlign = "right";
-    if (publisher) ctx.fillText("By " + publisher, W - pad, footerY);
-    ctx.textAlign = "left";
+    ctx.textAlign = "right"; if (publisher) ctx.fillText("By " + publisher, W - pad, footerY); ctx.textAlign = "left";
   }
 
   /* ---------- SETTINGS ---------- */
@@ -1396,8 +1047,7 @@
     try {
       const me = await api.me();
       state.admin = me;
-      const nameEl = $id("adminDisplayName");
-      if (nameEl) nameEl.textContent = me.displayName || "";
+      const nameEl = $id("adminDisplayName"); if (nameEl) nameEl.textContent = me.displayName || "";
       input.value = me.displayName || "";
       const errEl = $id("displayNameError"); if (errEl) errEl.hidden = true;
     } catch (err) { if (err.status === 401) showLogin(); }
@@ -1418,8 +1068,7 @@
       try {
         const res = await api.updateMe(value);
         state.admin = res;
-        const nameEl = $id("adminDisplayName");
-        if (nameEl) nameEl.textContent = res.displayName;
+        const nameEl = $id("adminDisplayName"); if (nameEl) nameEl.textContent = res.displayName;
         toast(t("nameUpdated"), "success");
       } catch (err) {
         if (err.status === 401) return showLogin();
@@ -1431,12 +1080,10 @@
   async function loadInterruptionSettings() {
     try {
       const res = await api.getSettings();
-      const cb = $id("interruptionEnabled");
-      const dur = $id("interruptionDuration");
+      const cb = $id("interruptionEnabled"), dur = $id("interruptionDuration");
       if (cb) cb.checked = res.interruptionEnabled !== false;
       if (dur) dur.value = res.interruptionDuration || 5;
-      const errEl = $id("interruptionError");
-      if (errEl) errEl.hidden = true;
+      const errEl = $id("interruptionError"); if (errEl) errEl.hidden = true;
     } catch (err) {}
   }
 
@@ -1444,14 +1091,12 @@
   if (interruptionForm) {
     interruptionForm.addEventListener("submit", async function (e) {
       e.preventDefault();
-      const errEl = $id("interruptionError");
-      const btn = $id("saveInterruptionBtn");
+      const errEl = $id("interruptionError"), btn = $id("saveInterruptionBtn");
       errEl.hidden = true;
       const enabled = $id("interruptionEnabled").checked;
       const duration = Number($id("interruptionDuration").value);
       if (!Number.isInteger(duration) || duration < 1 || duration > 120) {
-        errEl.textContent = "Duration must be between 1 and 120 minutes";
-        errEl.hidden = false; return;
+        errEl.textContent = "Duration must be between 1 and 120 minutes"; errEl.hidden = false; return;
       }
       btn.disabled = true;
       try {
@@ -1459,8 +1104,7 @@
         toast("Settings saved", "success");
       } catch (err) {
         if (err.status === 401) return showLogin();
-        errEl.textContent = err.message || "Save failed";
-        errEl.hidden = false;
+        errEl.textContent = err.message || "Save failed"; errEl.hidden = false;
       } finally { btn.disabled = false; }
     });
   }
@@ -1494,7 +1138,21 @@
         id: res.test.id, status: res.test.status, title: res.test.title,
         minutes: res.test.minutes,
         questions: (res.test.questions || []).map(function (q) {
-          return { q: q.q, options: q.options.slice(), answer: q.answer };
+          const type = getQuestionType(q);
+          return {
+            type: type,
+            q: q.q || "",
+            latex: q.latex || "",
+            imageBase64: q.imageBase64 || "",
+            options: Array.isArray(q.options) ? q.options.slice() : ["", "", "", ""],
+            optionImages: Array.isArray(q.optionImages) ? q.optionImages.slice() : ["", "", "", ""],
+            answer: typeof q.answer === "number" ? q.answer : 0,
+            numericAnswer: (typeof q.numericAnswer === "number") ? q.numericAnswer : "",
+            tolerance: (typeof q.tolerance === "number") ? q.tolerance : 0,
+            explanation: q.explanation || "",
+            explanationLatex: q.explanationLatex || "",
+            explanationImageBase64: q.explanationImageBase64 || ""
+          };
         })
       };
       renderEditor();
@@ -1502,12 +1160,17 @@
     } catch (err) {
       if (err.status === 401) return showLogin();
       toast(err.message || "Error", "error");
-    } finally {
-      if (window.PKLoader) window.PKLoader.hide();
-    }
+    } finally { if (window.PKLoader) window.PKLoader.hide(); }
   }
 
-  function blankQuestion() { return { q: "", options: ["", "", "", ""], answer: 0 }; }
+  function blankQuestion() {
+    return {
+      type: "mcq", q: "", latex: "", imageBase64: "",
+      options: ["", "", "", ""], optionImages: ["", "", "", ""], answer: 0,
+      numericAnswer: "", tolerance: 0,
+      explanation: "", explanationLatex: "", explanationImageBase64: ""
+    };
+  }
 
   function renderEditor() {
     if (!state.editing) return;
@@ -1516,8 +1179,7 @@
     $id("editorTitle").value = state.editing.title || "";
     $id("editorMinutes").value = state.editing.minutes || 10;
     $id("editorError").hidden = true;
-    const saveDraftBtn = $id("saveDraftBtn");
-    const publishBtn = $id("publishBtn");
+    const saveDraftBtn = $id("saveDraftBtn"), publishBtn = $id("publishBtn");
     if (saveDraftBtn) { saveDraftBtn.removeAttribute("data-i18n"); saveDraftBtn.textContent = isPublished ? "Save changes" : t("saveDraft"); }
     if (publishBtn) { publishBtn.removeAttribute("data-i18n"); publishBtn.textContent = isPublished ? t("unpublish") : t("publishNow"); publishBtn.className = isPublished ? "btn btn-sm" : "btn btn-primary btn-sm"; }
     renderQuestionsList();
@@ -1532,73 +1194,267 @@
       const block = document.createElement("div");
       block.className = "editor-question";
 
+      // HEAD
       const head = document.createElement("div");
       head.className = "editor-question-head";
-
       const numWrap = document.createElement("div");
       numWrap.className = "editor-question-num-wrap";
-
       const num = document.createElement("span");
       num.className = "editor-question-number";
       num.textContent = String(qi + 1);
-
       const label = document.createElement("span");
       label.className = "editor-question-label";
       label.textContent = "Question " + (qi + 1);
-
       numWrap.appendChild(num); numWrap.appendChild(label);
-
       const removeBtn = document.createElement("button");
-      removeBtn.type = "button"; removeBtn.className = "editor-remove-btn"; removeBtn.textContent = "Remove";
+      removeBtn.type = "button";
+      removeBtn.className = "editor-remove-btn";
+      removeBtn.textContent = "Remove";
       removeBtn.addEventListener("click", function () {
         if (state.editing.questions.length <= 1) { toast(t("atLeastOneQuestion"), "error"); return; }
-        state.editing.questions.splice(qi, 1); renderQuestionsList();
+        state.editing.questions.splice(qi, 1);
+        renderQuestionsList();
       });
-
       head.appendChild(numWrap); head.appendChild(removeBtn); block.appendChild(head);
 
-      const qField = document.createElement("div"); qField.className = "form-field";
-      const qLabel = document.createElement("label"); qLabel.className = "form-label"; qLabel.textContent = "Question";
+      // TYPE SELECTOR
+      const typeRow = document.createElement("div");
+      typeRow.className = "form-field";
+      const typeLabel = document.createElement("label");
+      typeLabel.className = "form-label";
+      typeLabel.textContent = "Question type";
+      const typeSelect = document.createElement("select");
+      typeSelect.className = "editor-type-select";
+      [["mcq", "MCQ (4 options)"], ["math", "Math (numeric answer)"], ["reasoning", "Reasoning (MCQ)"]].forEach(function (pair) {
+        const opt = document.createElement("option");
+        opt.value = pair[0]; opt.textContent = pair[1];
+        if (question.type === pair[0]) opt.selected = true;
+        typeSelect.appendChild(opt);
+      });
+      typeSelect.addEventListener("change", function () {
+        question.type = typeSelect.value;
+        renderQuestionsList();
+      });
+      typeRow.appendChild(typeLabel); typeRow.appendChild(typeSelect);
+      block.appendChild(typeRow);
+
+      // QUESTION TEXT
+      const qField = document.createElement("div");
+      qField.className = "form-field";
+      const qLabel = document.createElement("label");
+      qLabel.className = "form-label"; qLabel.textContent = "Question";
       const qInput = document.createElement("textarea");
-      qInput.className = "form-textarea"; qInput.rows = 2; qInput.value = question.q;
+      qInput.className = "form-textarea";
+      qInput.rows = 2;
+      qInput.value = question.q;
       qInput.placeholder = "Type the question";
       qInput.addEventListener("input", function () { question.q = qInput.value; });
       qField.appendChild(qLabel); qField.appendChild(qInput); block.appendChild(qField);
 
-      const optLabel = document.createElement("div");
-      optLabel.className = "form-label"; optLabel.style.marginTop = "14px";
-      optLabel.textContent = "Options — click the circle to mark the correct answer";
-      block.appendChild(optLabel);
+      // LATEX (optional)
+      const latexField = document.createElement("div");
+      latexField.className = "form-field";
+      const latexLabel = document.createElement("label");
+      latexLabel.className = "form-label";
+      latexLabel.innerHTML = 'LaTeX formula <span class="form-required">(optional)</span>';
+      const latexInput = document.createElement("input");
+      latexInput.type = "text";
+      latexInput.className = "form-input";
+      latexInput.placeholder = "e.g. SI = \\frac{P \\times R \\times T}{100}";
+      latexInput.value = question.latex || "";
+      latexInput.addEventListener("input", function () { question.latex = latexInput.value; });
+      latexField.appendChild(latexLabel); latexField.appendChild(latexInput); block.appendChild(latexField);
 
-      const optWrap = document.createElement("div"); optWrap.className = "editor-options";
+      // QUESTION IMAGE (optional)
+      const imgField = document.createElement("div");
+      imgField.className = "form-field";
+      const imgLabel = document.createElement("label");
+      imgLabel.className = "form-label";
+      imgLabel.innerHTML = 'Question image <span class="form-required">(optional)</span>';
+      imgField.appendChild(imgLabel);
 
-      question.options.forEach(function (_, oi) {
-        const row = document.createElement("div");
-        row.className = "editor-option" + (question.answer === oi ? " is-answer" : "");
+      const imgActions = document.createElement("div");
+      imgActions.className = "editor-img-actions";
+      const imgFile = document.createElement("input");
+      imgFile.type = "file";
+      imgFile.accept = "image/*";
+      imgFile.style.display = "none";
+      const imgChooseBtn = document.createElement("button");
+      imgChooseBtn.type = "button";
+      imgChooseBtn.className = "btn btn-sm";
+      imgChooseBtn.textContent = question.imageBase64 ? "Change image" : "Upload image";
+      imgChooseBtn.addEventListener("click", function () { imgFile.click(); });
+      imgFile.addEventListener("change", async function () {
+        const f = imgFile.files && imgFile.files[0];
+        if (!f) return;
+        if (f.size > 500 * 1024) { toast("Image too large (max 500KB)", "error"); return; }
+        try {
+          const b64 = await fileToBase64(f);
+          if (b64.length > MAX_IMAGE_CHARS) { toast("Image too large after encoding", "error"); return; }
+          question.imageBase64 = b64;
+          renderQuestionsList();
+        } catch (e) { toast("Failed to read image", "error"); }
+      });
+      imgActions.appendChild(imgChooseBtn);
+      if (question.imageBase64) {
+        const rmImg = document.createElement("button");
+        rmImg.type = "button";
+        rmImg.className = "btn btn-sm";
+        rmImg.textContent = "Remove";
+        rmImg.addEventListener("click", function () { question.imageBase64 = ""; renderQuestionsList(); });
+        imgActions.appendChild(rmImg);
+      }
+      imgActions.appendChild(imgFile);
+      imgField.appendChild(imgActions);
+      if (question.imageBase64) {
+        const preview = document.createElement("img");
+        preview.src = question.imageBase64;
+        preview.className = "editor-img-preview";
+        imgField.appendChild(preview);
+      }
+      block.appendChild(imgField);
 
-        const radio = document.createElement("input");
-        radio.type = "radio"; radio.name = "answer-q" + qi; radio.checked = question.answer === oi;
-        radio.className = "editor-option-radio";
-        radio.setAttribute("aria-label", "Mark option " + "ABCD".charAt(oi) + " as correct");
-        radio.addEventListener("change", function () {
-          question.answer = oi;
-          block.querySelectorAll(".editor-option").forEach(function (r, idx) { r.classList.toggle("is-answer", idx === oi); });
+      // OPTIONS or NUMERIC
+      if (question.type === "math") {
+        const numField = document.createElement("div");
+        numField.className = "form-field";
+        const numLabel = document.createElement("label");
+        numLabel.className = "form-label";
+        numLabel.textContent = "Numeric answer";
+        const numInput = document.createElement("input");
+        numInput.type = "number";
+        numInput.className = "form-input";
+        numInput.step = "any";
+        numInput.value = question.numericAnswer === "" ? "" : String(question.numericAnswer);
+        numInput.addEventListener("input", function () { question.numericAnswer = numInput.value; });
+        numField.appendChild(numLabel); numField.appendChild(numInput);
+        block.appendChild(numField);
+
+        const tolField = document.createElement("div");
+        tolField.className = "form-field";
+        const tolLabel = document.createElement("label");
+        tolLabel.className = "form-label";
+        tolLabel.innerHTML = 'Tolerance <span class="form-required">(optional, default 0)</span>';
+        const tolInput = document.createElement("input");
+        tolInput.type = "number";
+        tolInput.className = "form-input";
+        tolInput.step = "any";
+        tolInput.min = "0";
+        tolInput.value = String(question.tolerance || 0);
+        tolInput.addEventListener("input", function () { question.tolerance = Number(tolInput.value) || 0; });
+        tolField.appendChild(tolLabel); tolField.appendChild(tolInput);
+        block.appendChild(tolField);
+      } else {
+        const optLabel = document.createElement("div");
+        optLabel.className = "form-label";
+        optLabel.style.marginTop = "14px";
+        optLabel.textContent = "Options — click the circle to mark the correct answer";
+        block.appendChild(optLabel);
+
+        const optWrap = document.createElement("div");
+        optWrap.className = "editor-options";
+
+        question.options.forEach(function (_, oi) {
+          const row = document.createElement("div");
+          row.className = "editor-option" + (question.answer === oi ? " is-answer" : "");
+
+          const radio = document.createElement("input");
+          radio.type = "radio";
+          radio.name = "answer-q" + qi;
+          radio.checked = question.answer === oi;
+          radio.className = "editor-option-radio";
+          radio.setAttribute("aria-label", "Mark option " + "ABCD".charAt(oi) + " as correct");
+          radio.addEventListener("change", function () {
+            question.answer = oi;
+            block.querySelectorAll(".editor-option").forEach(function (r, idx) { r.classList.toggle("is-answer", idx === oi); });
+          });
+
+          const key = document.createElement("span");
+          key.className = "editor-option-key";
+          key.textContent = "ABCD".charAt(oi);
+
+          const input = document.createElement("input");
+          input.type = "text";
+          input.className = "editor-option-input";
+          input.placeholder = "Option " + "ABCD".charAt(oi);
+          input.value = question.options[oi];
+          input.addEventListener("input", function () { question.options[oi] = input.value; });
+
+          row.appendChild(radio); row.appendChild(key); row.appendChild(input);
+          optWrap.appendChild(row);
         });
 
-        const key = document.createElement("span");
-        key.className = "editor-option-key"; key.textContent = "ABCD".charAt(oi);
+        block.appendChild(optWrap);
+      }
 
-        const input = document.createElement("input");
-        input.type = "text"; input.className = "editor-option-input";
-        input.placeholder = "Option " + "ABCD".charAt(oi);
-        input.value = question.options[oi];
-        input.addEventListener("input", function () { question.options[oi] = input.value; });
+      // EXPLANATION (optional, all types)
+      const expWrapper = document.createElement("div");
+      expWrapper.className = "editor-fields";
+      expWrapper.innerHTML = '<span class="editor-fields-label">Explanation (optional)</span>';
 
-        row.appendChild(radio); row.appendChild(key); row.appendChild(input);
-        optWrap.appendChild(row);
+      const expText = document.createElement("textarea");
+      expText.className = "form-textarea";
+      expText.rows = 2;
+      expText.placeholder = "Explain the correct answer";
+      expText.value = question.explanation || "";
+      expText.addEventListener("input", function () { question.explanation = expText.value; });
+      expWrapper.appendChild(expText);
+
+      const expLatexRow = document.createElement("div");
+      expLatexRow.className = "editor-row";
+      expLatexRow.style.marginTop = "8px";
+      const expLatexLabel = document.createElement("label");
+      expLatexLabel.textContent = "LaTeX:";
+      const expLatexInput = document.createElement("input");
+      expLatexInput.type = "text";
+      expLatexInput.placeholder = "Optional LaTeX for explanation";
+      expLatexInput.value = question.explanationLatex || "";
+      expLatexInput.addEventListener("input", function () { question.explanationLatex = expLatexInput.value; });
+      expLatexRow.appendChild(expLatexLabel); expLatexRow.appendChild(expLatexInput);
+      expWrapper.appendChild(expLatexRow);
+
+      const expImgActions = document.createElement("div");
+      expImgActions.className = "editor-img-actions";
+      expImgActions.style.marginTop = "8px";
+      const expFile = document.createElement("input");
+      expFile.type = "file";
+      expFile.accept = "image/*";
+      expFile.style.display = "none";
+      const expChooseBtn = document.createElement("button");
+      expChooseBtn.type = "button";
+      expChooseBtn.className = "btn btn-sm";
+      expChooseBtn.textContent = question.explanationImageBase64 ? "Change explanation image" : "Add explanation image";
+      expChooseBtn.addEventListener("click", function () { expFile.click(); });
+      expFile.addEventListener("change", async function () {
+        const f = expFile.files && expFile.files[0];
+        if (!f) return;
+        if (f.size > 500 * 1024) { toast("Image too large (max 500KB)", "error"); return; }
+        try {
+          const b64 = await fileToBase64(f);
+          if (b64.length > MAX_IMAGE_CHARS) { toast("Image too large after encoding", "error"); return; }
+          question.explanationImageBase64 = b64;
+          renderQuestionsList();
+        } catch (e) { toast("Failed to read image", "error"); }
       });
+      expImgActions.appendChild(expChooseBtn);
+      if (question.explanationImageBase64) {
+        const rm = document.createElement("button");
+        rm.type = "button"; rm.className = "btn btn-sm"; rm.textContent = "Remove";
+        rm.addEventListener("click", function () { question.explanationImageBase64 = ""; renderQuestionsList(); });
+        expImgActions.appendChild(rm);
+      }
+      expImgActions.appendChild(expFile);
+      expWrapper.appendChild(expImgActions);
 
-      block.appendChild(optWrap); container.appendChild(block);
+      if (question.explanationImageBase64) {
+        const preview = document.createElement("img");
+        preview.src = question.explanationImageBase64;
+        preview.className = "editor-img-preview";
+        expWrapper.appendChild(preview);
+      }
+      block.appendChild(expWrapper);
+
+      container.appendChild(block);
     });
   }
 
@@ -1611,10 +1467,11 @@
       const container = $id("questionsContainer");
       if (container && container.lastElementChild) container.lastElementChild.scrollIntoView({ behavior: "smooth", block: "center" });
     });
-
     if (!$id("importJsonBtn")) {
       const importBtn = document.createElement("button");
-      importBtn.id = "importJsonBtn"; importBtn.type = "button"; importBtn.className = "btn btn-sm";
+      importBtn.id = "importJsonBtn";
+      importBtn.type = "button";
+      importBtn.className = "btn btn-sm";
       importBtn.textContent = "Import JSON";
       importBtn.addEventListener("click", openImportModal);
       addQuestionBtn.parentNode.insertBefore(importBtn, addQuestionBtn);
@@ -1628,41 +1485,23 @@
     overlay.id = "importModalOverlay";
     overlay.className = "import-modal-overlay";
     overlay.hidden = true;
-    overlay.innerHTML =
-      '<div class="import-modal" role="dialog" aria-modal="true" aria-labelledby="importTitle">' +
-        '<h2 id="importTitle">Import questions from JSON</h2>' +
-        '<p class="import-hint">Paste a JSON <strong>array of questions</strong>, or an <strong>object</strong> with <code>title</code>, <code>minutes</code>, and <code>questions</code>.</p>' +
-        '<details class="import-example"><summary>Show example</summary>' +
-          '<pre>{\n  "title": "Assam GK Mock Test",\n  "minutes": 20,\n  "questions": [\n    {\n      "q": "What is the capital of Assam?",\n      "options": ["Guwahati", "Dispur", "Jorhat", "Tezpur"],\n      "answer": 1\n    }\n  ]\n}</pre>' +
-        '</details>' +
-        '<textarea id="importTextarea" class="import-textarea" placeholder="Paste JSON here..."></textarea>' +
-        '<p class="form-error" id="importError" hidden></p>' +
-        '<div class="import-modal-actions">' +
-          '<button type="button" class="btn" id="importCancelBtn">Cancel</button>' +
-          '<button type="button" class="btn btn-primary" id="importConfirmBtn">Import</button>' +
-        '</div>' +
-      '</div>';
+    overlay.innerHTML = '<div class="import-modal"><h2>Import questions from JSON</h2><p class="import-hint">Array of questions or object with <code>title</code>, <code>minutes</code>, <code>questions</code>.</p><p class="import-hint" style="margin-top:6px;">Each question supports: <code>type</code> (mcq|math|reasoning), <code>q</code>, <code>latex</code>, <code>imageBase64</code>, <code>options</code>, <code>answer</code>, <code>numericAnswer</code>, <code>tolerance</code>, <code>explanation</code>.</p><textarea id="importTextarea" class="import-textarea" placeholder="Paste JSON here..."></textarea><p class="form-error" id="importError" hidden></p><div class="import-modal-actions"><button type="button" class="btn" id="importCancelBtn">Cancel</button><button type="button" class="btn btn-primary" id="importConfirmBtn">Import</button></div></div>';
     document.body.appendChild(overlay);
-
     const cancel = overlay.querySelector("#importCancelBtn");
     const confirm = overlay.querySelector("#importConfirmBtn");
     const ta = overlay.querySelector("#importTextarea");
     const errEl = overlay.querySelector("#importError");
-
     function close() { overlay.hidden = true; }
     cancel.addEventListener("click", close);
     overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !overlay.hidden) close(); });
-
     confirm.addEventListener("click", function () {
       errEl.hidden = true;
       const raw = ta.value.trim();
       if (!raw) { errEl.textContent = "Paste JSON first"; errEl.hidden = false; return; }
-
       let parsed;
       try { parsed = JSON.parse(raw); }
       catch (e) { errEl.textContent = "Invalid JSON: " + e.message; errEl.hidden = false; return; }
-
       let rawQuestions = null, title = null, minutes = null;
       if (Array.isArray(parsed)) rawQuestions = parsed;
       else if (parsed && typeof parsed === "object") {
@@ -1670,39 +1509,56 @@
         if (typeof parsed.title === "string") title = parsed.title;
         if (typeof parsed.minutes === "number") minutes = parsed.minutes;
       }
-
-      if (!Array.isArray(rawQuestions) || rawQuestions.length === 0) { errEl.textContent = "JSON must contain a non-empty questions array"; errEl.hidden = false; return; }
-
+      if (!Array.isArray(rawQuestions) || rawQuestions.length === 0) { errEl.textContent = "JSON must contain questions array"; errEl.hidden = false; return; }
       const cleaned = [];
       for (let i = 0; i < rawQuestions.length; i++) {
-        const rawQ = rawQuestions[i]; const n = i + 1;
-        if (!rawQ || typeof rawQ !== "object") { errEl.textContent = "Question " + n + ": invalid entry"; errEl.hidden = false; return; }
-        if (typeof rawQ.q !== "string" || !rawQ.q.trim()) { errEl.textContent = "Question " + n + ": missing q"; errEl.hidden = false; return; }
-        if (!Array.isArray(rawQ.options) || rawQ.options.length !== 4) { errEl.textContent = "Question " + n + ": exactly 4 options required"; errEl.hidden = false; return; }
-        for (let j = 0; j < 4; j++) { if (typeof rawQ.options[j] !== "string" || !rawQ.options[j].trim()) { errEl.textContent = "Question " + n + ": option " + (j + 1) + " is empty"; errEl.hidden = false; return; } }
-        if (typeof rawQ.answer !== "number" || !Number.isInteger(rawQ.answer) || rawQ.answer < 0 || rawQ.answer > 3) { errEl.textContent = "Question " + n + ": answer must be 0, 1, 2, or 3"; errEl.hidden = false; return; }
-        cleaned.push({ q: rawQ.q.trim(), options: rawQ.options.map(function (o) { return o.trim(); }), answer: rawQ.answer });
+        const rq = rawQuestions[i]; const n = i + 1;
+        if (!rq || typeof rq !== "object") { errEl.textContent = "Question " + n + ": invalid"; errEl.hidden = false; return; }
+        if (typeof rq.q !== "string" || !rq.q.trim()) { errEl.textContent = "Question " + n + ": missing q"; errEl.hidden = false; return; }
+        const type = getQuestionType(rq);
+        const obj = {
+          type: type,
+          q: rq.q.trim(),
+          latex: rq.latex || "",
+          imageBase64: rq.imageBase64 || "",
+          options: ["", "", "", ""],
+          optionImages: ["", "", "", ""],
+          answer: 0,
+          numericAnswer: "",
+          tolerance: 0,
+          explanation: rq.explanation || "",
+          explanationLatex: rq.explanationLatex || "",
+          explanationImageBase64: rq.explanationImageBase64 || ""
+        };
+        if (type === "math") {
+          if (typeof rq.numericAnswer !== "number") { errEl.textContent = "Question " + n + ": numericAnswer required for math"; errEl.hidden = false; return; }
+          obj.numericAnswer = rq.numericAnswer;
+          obj.tolerance = (typeof rq.tolerance === "number" && rq.tolerance >= 0) ? rq.tolerance : 0;
+        } else {
+          if (!Array.isArray(rq.options) || rq.options.length !== 4) { errEl.textContent = "Question " + n + ": 4 options required"; errEl.hidden = false; return; }
+          for (let j = 0; j < 4; j++) { if (typeof rq.options[j] !== "string" || !rq.options[j].trim()) { errEl.textContent = "Question " + n + ": option " + (j + 1) + " empty"; errEl.hidden = false; return; } }
+          if (typeof rq.answer !== "number" || rq.answer < 0 || rq.answer > 3) { errEl.textContent = "Question " + n + ": answer must be 0-3"; errEl.hidden = false; return; }
+          obj.options = rq.options.map(function (o) { return o.trim(); });
+          obj.answer = rq.answer;
+        }
+        cleaned.push(obj);
       }
-
       if (!state.editing) { close(); return; }
-
       const hasExisting = state.editing.questions.length > 0 && !(state.editing.questions.length === 1 && !state.editing.questions[0].q.trim());
       if (hasExisting) {
         const ok = window.confirm("Import " + cleaned.length + " question(s)?\n\nOK = Append\nCancel = Replace");
         if (ok) state.editing.questions = state.editing.questions.concat(cleaned);
         else state.editing.questions = cleaned.slice();
       } else state.editing.questions = cleaned.slice();
-
       if (title && !$id("editorTitle").value.trim()) $id("editorTitle").value = title.trim().slice(0, 200);
       if (minutes && Number.isInteger(minutes) && minutes >= 1 && minutes <= 180) $id("editorMinutes").value = minutes;
-
       state.editing.title = $id("editorTitle").value;
       state.editing.minutes = Number($id("editorMinutes").value) || state.editing.minutes;
-
-      renderQuestionsList(); close(); ta.value = "";
+      renderQuestionsList();
+      close();
+      ta.value = "";
       toast("Imported " + cleaned.length + " question(s)", "success");
     });
-
     return overlay;
   }
 
@@ -1723,11 +1579,31 @@
     const questions = [];
     for (let i = 0; i < state.editing.questions.length; i++) {
       const raw = state.editing.questions[i];
-      const cleaned = { q: raw.q.trim(), options: raw.options.map(function (o) { return o.trim(); }), answer: raw.answer };
-      if (!cleaned.q) return { error: "Question " + (i + 1) + ": text is required" };
-      if (cleaned.options.some(function (o) { return !o; })) return { error: "Question " + (i + 1) + ": all 4 options are required" };
-      if (typeof cleaned.answer !== "number" || cleaned.answer < 0 || cleaned.answer > 3) return { error: "Question " + (i + 1) + ": select the correct answer" };
-      questions.push(cleaned);
+      const n = i + 1;
+      const type = getQuestionType(raw);
+      if (!raw.q || !raw.q.trim()) return { error: "Question " + n + ": text is required" };
+
+      const out = { type: type, q: raw.q.trim() };
+      if (raw.latex && raw.latex.trim()) out.latex = raw.latex.trim();
+      if (raw.imageBase64) out.imageBase64 = raw.imageBase64;
+      if (raw.explanation && raw.explanation.trim()) out.explanation = raw.explanation.trim();
+      if (raw.explanationLatex && raw.explanationLatex.trim()) out.explanationLatex = raw.explanationLatex.trim();
+      if (raw.explanationImageBase64) out.explanationImageBase64 = raw.explanationImageBase64;
+
+      if (type === "math") {
+        const num = Number(raw.numericAnswer);
+        if (raw.numericAnswer === "" || !isFinite(num)) return { error: "Question " + n + ": numeric answer required" };
+        out.numericAnswer = num;
+        out.tolerance = (typeof raw.tolerance === "number" && raw.tolerance >= 0) ? raw.tolerance : 0;
+      } else {
+        const opts = raw.options.map(function (o) { return (o || "").trim(); });
+        if (opts.some(function (o) { return !o; })) return { error: "Question " + n + ": all 4 options required" };
+        out.options = opts;
+        if (raw.optionImages && raw.optionImages.some(function (x) { return x; })) out.optionImages = raw.optionImages;
+        if (typeof raw.answer !== "number" || raw.answer < 0 || raw.answer > 3) return { error: "Question " + n + ": select correct answer" };
+        out.answer = raw.answer;
+      }
+      questions.push(out);
     }
     if (questions.length === 0) return { error: "Add at least one question" };
     return { payload: { title: title, minutes: minutes, questions: questions } };
@@ -1738,27 +1614,15 @@
     errEl.hidden = true;
     const collected = collectEditor();
     if (collected.error) { errEl.textContent = collected.error; errEl.hidden = false; errEl.scrollIntoView({ behavior: "smooth", block: "center" }); return; }
-
     const payload = collected.payload;
-    const saveDraftBtn = $id("saveDraftBtn");
-    const publishBtn = $id("publishBtn");
+    const saveDraftBtn = $id("saveDraftBtn"), publishBtn = $id("publishBtn");
     saveDraftBtn.disabled = true; publishBtn.disabled = true;
-
     try {
       if (state.editing.id) await api.updateTest(state.editing.id, payload);
       else { const created = await api.createTest(payload); state.editing.id = created.test.id; }
-
-      if (action === "publish") {
-        await new Promise(function (r) { setTimeout(r, 250); });
-        await api.publish(state.editing.id);
-        toast(t("testPublished"), "success");
-      } else if (action === "unpublish") {
-        await api.unpublish(state.editing.id);
-        toast(t("testUnpublished"));
-      } else {
-        toast(t("testUpdated"));
-      }
-
+      if (action === "publish") { await new Promise(function (r) { setTimeout(r, 250); }); await api.publish(state.editing.id); toast(t("testPublished"), "success"); }
+      else if (action === "unpublish") { await api.unpublish(state.editing.id); toast(t("testUnpublished")); }
+      else { toast(t("testUpdated")); }
       state.editing = null;
       showScreen("dashboard");
       await loadTests();
@@ -1787,26 +1651,16 @@
   const menuToggle = $id("menuToggle"), menuPanel = $id("menuPanel"), menuIcon = $id("menuIcon");
   const hamburgerSVG = '<path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path>';
   const closeSVG = '<path d="m6 6 12 12"></path><path d="M18 6 6 18"></path>';
-
-  function closeMenu() {
-    if (!menuPanel || !menuToggle || !menuIcon) return;
-    menuPanel.classList.remove("open");
-    menuToggle.setAttribute("aria-expanded", "false");
-    menuIcon.innerHTML = hamburgerSVG;
-  }
-
+  function closeMenu() { if (!menuPanel || !menuToggle || !menuIcon) return; menuPanel.classList.remove("open"); menuToggle.setAttribute("aria-expanded", "false"); menuIcon.innerHTML = hamburgerSVG; }
   if (menuToggle && menuPanel && menuIcon) {
     menuToggle.addEventListener("click", function (e) {
       e.stopPropagation();
       if (menuPanel.classList.contains("open")) closeMenu();
       else { menuPanel.classList.add("open"); menuToggle.setAttribute("aria-expanded", "true"); menuIcon.innerHTML = closeSVG; }
     });
-    document.addEventListener("click", function (e) {
-      if (menuPanel.classList.contains("open") && !menuPanel.contains(e.target) && !menuToggle.contains(e.target)) closeMenu();
-    });
+    document.addEventListener("click", function (e) { if (menuPanel.classList.contains("open") && !menuPanel.contains(e.target) && !menuToggle.contains(e.target)) closeMenu(); });
     menuPanel.querySelectorAll("a").forEach(function (link) { link.addEventListener("click", closeMenu); });
   }
-
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeMenu(); });
 
   document.addEventListener("pk:langchange", function () {
