@@ -131,6 +131,17 @@
   const retakeBtn       = document.getElementById("retakeBtn");
 
   const srStatus        = document.getElementById("srStatus");
+  
+  const qLatex          = document.getElementById("qLatex");
+  const qImage          = document.getElementById("qImage");
+  const numericInput    = document.getElementById("numericInput");
+  const numericField    = document.getElementById("numericField");
+  const numericClear    = document.getElementById("numericClear");
+  const keypad          = document.getElementById("keypad");
+  const scratchpadToggle= document.getElementById("scratchpadToggle");
+  const scratchpadBody  = document.getElementById("scratchpadBody");
+  const scratchpadCanvas= document.getElementById("scratchpadCanvas");
+  const scratchpadClear = document.getElementById("scratchpadClear");
 
   const menuToggle      = document.getElementById("menuToggle");
   const menuPanel       = document.getElementById("menuPanel");
@@ -261,6 +272,173 @@
 
   function publisherLine(name) {
     return t("byLine", { name: name || "—" });
+  }
+    /* ---------- Math / Reasoning helpers ---------- */
+
+  function getQuestionType(q) {
+    if (!q || typeof q !== "object") return "mcq";
+    const tp = q.type;
+    if (tp === "math" || tp === "reasoning" || tp === "mcq") return tp;
+    return "mcq";
+  }
+
+  function renderLatex(el, tex) {
+    if (!el || !tex) return;
+    el.replaceChildren();
+    if (window.katex && typeof window.katex.render === "function") {
+      try {
+        window.katex.render(String(tex), el, { throwOnError: false, displayMode: true });
+      } catch (e) {
+        el.textContent = String(tex);
+      }
+    } else {
+      el.textContent = String(tex);
+    }
+  }
+
+  function setNumericAnswer(val) {
+    const s = String(val == null ? "" : val);
+    if (s === "") {
+      delete state.answers[state.index];
+    } else {
+      state.answers[state.index] = s;
+    }
+    if (numericField) numericField.value = s;
+    qStatus.textContent = statusFor(state.index);
+    renderPalette();
+    updateNavSummary();
+  }
+
+  function setupKeypad() {
+    if (!keypad || !numericField) return;
+    keypad.addEventListener("click", function (e) {
+      const btn = e.target.closest("button[data-key]");
+      if (!btn) return;
+      const key = btn.getAttribute("data-key");
+      let cur = String(numericField.value || "");
+      if (key === "backspace") {
+        cur = cur.slice(0, -1);
+      } else if (key === "-") {
+        if (cur.startsWith("-")) cur = cur.slice(1);
+        else if (cur === "") cur = "-";
+        else cur = "-" + cur;
+      } else if (key === ".") {
+        if (!cur.includes(".")) cur = (cur === "" ? "0." : cur + ".");
+      } else {
+        if (cur === "0" && key !== ".") cur = key;
+        else cur = cur + key;
+      }
+      setNumericAnswer(cur);
+    });
+    if (numericClear) numericClear.addEventListener("click", function () { setNumericAnswer(""); });
+  }
+
+  function setupScratchpad() {
+    if (!scratchpadToggle || !scratchpadBody || !scratchpadCanvas) return;
+
+    let ctx = null;
+    let drawing = false;
+    let mode = "pen";
+    let lastX = 0;
+    let lastY = 0;
+    let canvasReady = false;
+
+    function initCanvas() {
+      if (canvasReady) return;
+      const rect = scratchpadCanvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const dpr = window.devicePixelRatio || 1;
+      scratchpadCanvas.width = Math.round(rect.width * dpr);
+      scratchpadCanvas.height = Math.round(rect.height * dpr);
+      ctx = scratchpadCanvas.getContext("2d");
+      if (!ctx) return;
+      ctx.scale(dpr, dpr);
+      ctx.strokeStyle = "#171717";
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      canvasReady = true;
+    }
+
+    scratchpadToggle.addEventListener("click", function () {
+      const isOpen = !scratchpadBody.hidden;
+      if (isOpen) {
+        scratchpadBody.hidden = true;
+        scratchpadToggle.setAttribute("aria-expanded", "false");
+      } else {
+        scratchpadBody.hidden = false;
+        scratchpadToggle.setAttribute("aria-expanded", "true");
+        setTimeout(initCanvas, 30);
+      }
+    });
+
+    function getPos(e) {
+      const r = scratchpadCanvas.getBoundingClientRect();
+      let cx = 0, cy = 0;
+      if (e.touches && e.touches[0]) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; }
+      else { cx = e.clientX; cy = e.clientY; }
+      return { x: cx - r.left, y: cy - r.top };
+    }
+
+    function start(e) {
+      initCanvas();
+      if (!ctx) return;
+      drawing = true;
+      const p = getPos(e);
+      lastX = p.x; lastY = p.y;
+    }
+
+    function move(e) {
+      if (!drawing || !ctx) return;
+      if (e.cancelable) e.preventDefault();
+      const p = getPos(e);
+      ctx.globalCompositeOperation = mode === "eraser" ? "destination-out" : "source-over";
+      ctx.lineWidth = mode === "eraser" ? 20 : 2;
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      lastX = p.x; lastY = p.y;
+    }
+
+    function stop() { drawing = false; }
+
+    scratchpadCanvas.addEventListener("mousedown", start);
+    scratchpadCanvas.addEventListener("mousemove", move);
+    scratchpadCanvas.addEventListener("mouseup", stop);
+    scratchpadCanvas.addEventListener("mouseleave", stop);
+    scratchpadCanvas.addEventListener("touchstart", start, { passive: true });
+    scratchpadCanvas.addEventListener("touchmove", move, { passive: false });
+    scratchpadCanvas.addEventListener("touchend", stop);
+
+    scratchpadBody.querySelectorAll(".scratchpad-mode").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        mode = btn.getAttribute("data-mode") || "pen";
+        scratchpadBody.querySelectorAll(".scratchpad-mode").forEach(function (b) {
+          const active = b === btn;
+          b.classList.toggle("is-active", active);
+          b.setAttribute("aria-pressed", String(active));
+        });
+      });
+    });
+
+    if (scratchpadClear) {
+      scratchpadClear.addEventListener("click", function () {
+        if (ctx && canvasReady) {
+          const rect = scratchpadCanvas.getBoundingClientRect();
+          ctx.save();
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.clearRect(0, 0, scratchpadCanvas.width, scratchpadCanvas.height);
+          ctx.restore();
+        }
+      });
+    }
+
+    window.addEventListener("resize", function () {
+      canvasReady = false;
+      ctx = null;
+      if (!scratchpadBody.hidden) setTimeout(initCanvas, 50);
+    });
   }
 
   /* ---------- Load test ---------- */
@@ -493,57 +671,160 @@
     qNumber.textContent = t("questionOf", { n: index + 1, total: pt.questions.length });
     qStatus.textContent = statusFor(index);
     qText.textContent = question.q;
+
+    const qType = getQuestionType(question);
+
+    /* --- LaTeX --- */
+    if (qLatex) {
+      if (question.latex && question.latex.trim()) {
+        qLatex.hidden = false;
+        renderLatex(qLatex, question.latex);
+      } else {
+        qLatex.hidden = true;
+        qLatex.replaceChildren();
+      }
+    }
+
+    /* --- Image --- */
+    if (qImage) {
+      qImage.replaceChildren();
+      if (question.imageBase64 && String(question.imageBase64).startsWith("data:image")) {
+        const img = document.createElement("img");
+        img.src = question.imageBase64;
+        img.alt = "";
+        img.loading = "lazy";
+        qImage.appendChild(img);
+        qImage.hidden = false;
+      } else {
+        qImage.hidden = true;
+      }
+    }
+
     optionsFieldset.replaceChildren();
 
-    const selected = hasAnswer(index) ? state.answers[index] : null;
+    if (qType === "math") {
+      optionsFieldset.hidden = true;
+      if (numericInput) numericInput.hidden = false;
+      const existing = state.answers[index];
+      if (numericField) {
+        numericField.value = (existing !== undefined && existing !== null && String(existing) !== "") ? String(existing) : "";
+      }
+    } else {
+      if (numericInput) numericInput.hidden = true;
+      optionsFieldset.hidden = false;
 
-    const buildOptions = function (optionTexts) {
-      optionTexts.forEach(function (optText, optionIndex) {
-        const label = document.createElement("label");
-        label.className = "option";
-        label.dataset.value = String(optionIndex);
-        if (selected === optionIndex) label.classList.add("is-selected");
+      const selected = hasAnswer(index) ? state.answers[index] : null;
 
-        const input = document.createElement("input");
-        input.type = "radio";
-        input.name = "q-option";
-        input.value = String(optionIndex);
-        input.checked = selected === optionIndex;
-        input.addEventListener("change", function () { selectOption(optionIndex); });
+      const buildOptions = function (optionTexts, optionImages) {
+        optionTexts.forEach(function (optText, optionIndex) {
+          const label = document.createElement("label");
+          label.className = "option";
+          label.dataset.value = String(optionIndex);
+          if (selected === optionIndex) label.classList.add("is-selected");
 
-        const key = document.createElement("span");
-        key.className = "option-key";
-        key.setAttribute("aria-hidden", "true");
-        key.textContent = "ABCD".charAt(optionIndex);
+          const input = document.createElement("input");
+          input.type = "radio";
+          input.name = "q-option";
+          input.value = String(optionIndex);
+          input.checked = selected === optionIndex;
+          input.addEventListener("change", function () { selectOption(optionIndex); });
 
-        const text = document.createElement("span");
-        text.className = "option-text";
-        text.textContent = optText;
+          const key = document.createElement("span");
+          key.className = "option-key";
+          key.setAttribute("aria-hidden", "true");
+          key.textContent = "ABCD".charAt(optionIndex);
 
-        label.appendChild(input);
-        label.appendChild(key);
-        label.appendChild(text);
-        optionsFieldset.appendChild(label);
-      });
-    };
+          const text = document.createElement("span");
+          text.className = "option-text";
+          text.textContent = optText || "";
 
-    buildOptions(question.options);
+          label.appendChild(input);
+          label.appendChild(key);
+          label.appendChild(text);
+
+          if (optionImages && optionImages[optionIndex] && String(optionImages[optionIndex]).startsWith("data:image")) {
+            const img = document.createElement("img");
+            img.src = optionImages[optionIndex];
+            img.alt = "";
+            img.style.maxWidth = "100%";
+            img.style.marginTop = "6px";
+            img.style.borderRadius = "4px";
+            text.appendChild(document.createElement("br"));
+            text.appendChild(img);
+          }
+
+          optionsFieldset.appendChild(label);
+        });
+      };
+
+      buildOptions(question.options || [], question.optionImages || null);
+    }
+
     prevBtn.disabled = index === 0;
     nextBtn.disabled = index === pt.questions.length - 1;
     updateMarkButton();
     updateNavSummary();
 
+    /* --- Assamese translation (skip math numeric input) --- */
     if (window.PK && PK.lang === "as") {
       try {
-        const translated = await apiTranslateMany([question.q].concat(question.options), "as");
-        if (translated && translated.length === question.options.length + 1) {
-          qText.textContent = translated[0];
-          optionsFieldset.replaceChildren();
-          buildOptions(translated.slice(1));
-          prevBtn.disabled = index === 0;
-          nextBtn.disabled = index === pt.questions.length - 1;
-          updateMarkButton();
-          updateNavSummary();
+        if (qType === "math") {
+          const translated = await apiTranslate(question.q, "as");
+          if (translated) qText.textContent = translated;
+        } else {
+          const items = [question.q].concat(question.options || []);
+          const translated = await apiTranslateMany(items, "as");
+          if (translated && translated.length === (question.options || []).length + 1) {
+            qText.textContent = translated[0];
+            const currentSelected = hasAnswer(index) ? state.answers[index] : null;
+            optionsFieldset.replaceChildren();
+            const rebuilt = function (optionTexts, optionImages) {
+              optionTexts.forEach(function (optText, optionIndex) {
+                const label = document.createElement("label");
+                label.className = "option";
+                label.dataset.value = String(optionIndex);
+                if (currentSelected === optionIndex) label.classList.add("is-selected");
+
+                const input = document.createElement("input");
+                input.type = "radio";
+                input.name = "q-option";
+                input.value = String(optionIndex);
+                input.checked = currentSelected === optionIndex;
+                input.addEventListener("change", function () { selectOption(optionIndex); });
+
+                const key = document.createElement("span");
+                key.className = "option-key";
+                key.setAttribute("aria-hidden", "true");
+                key.textContent = "ABCD".charAt(optionIndex);
+
+                const text = document.createElement("span");
+                text.className = "option-text";
+                text.textContent = optText || "";
+
+                label.appendChild(input);
+                label.appendChild(key);
+                label.appendChild(text);
+
+                if (optionImages && optionImages[optionIndex] && String(optionImages[optionIndex]).startsWith("data:image")) {
+                  const img = document.createElement("img");
+                  img.src = optionImages[optionIndex];
+                  img.alt = "";
+                  img.style.maxWidth = "100%";
+                  img.style.marginTop = "6px";
+                  img.style.borderRadius = "4px";
+                  text.appendChild(document.createElement("br"));
+                  text.appendChild(img);
+                }
+
+                optionsFieldset.appendChild(label);
+              });
+            };
+            rebuilt(translated.slice(1), question.optionImages || null);
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === pt.questions.length - 1;
+            updateMarkButton();
+            updateNavSummary();
+          }
         }
       } catch (err) {}
     }
@@ -560,10 +841,20 @@
   }
 
   function clearResponse() {
-    if (!hasAnswer(state.index)) return;
-    delete state.answers[state.index];
-    optionsFieldset.querySelectorAll(".option").forEach(function (label) { label.classList.remove("is-selected"); });
-    optionsFieldset.querySelectorAll("input[type='radio']").forEach(function (input) { input.checked = false; });
+    const q = state.publicTest && state.publicTest.questions[state.index];
+    const qType = getQuestionType(q);
+
+    if (qType === "math") {
+      if (!hasAnswer(state.index)) return;
+      delete state.answers[state.index];
+      if (numericField) numericField.value = "";
+    } else {
+      if (!hasAnswer(state.index)) return;
+      delete state.answers[state.index];
+      optionsFieldset.querySelectorAll(".option").forEach(function (label) { label.classList.remove("is-selected"); });
+      optionsFieldset.querySelectorAll("input[type='radio']").forEach(function (input) { input.checked = false; });
+    }
+
     qStatus.textContent = statusFor(state.index);
     renderPalette();
     updateNavSummary();
@@ -685,7 +976,14 @@
     const payloadAnswers = {};
     Object.keys(state.answers).forEach(function (i) {
       const v = state.answers[i];
-      if (typeof v === "number" && v >= 0 && v <= 3) payloadAnswers[String(i)] = v;
+      const q = state.publicTest.questions[i];
+      const qType = getQuestionType(q);
+      if (qType === "math") {
+        const num = typeof v === "number" ? v : Number(v);
+        if (isFinite(num) && String(v).trim() !== "") payloadAnswers[String(i)] = num;
+      } else {
+        if (typeof v === "number" && v >= 0 && v <= 3) payloadAnswers[String(i)] = v;
+      }
     });
 
     let scored = null;
@@ -706,7 +1004,9 @@
       unattempted: Number(scored.unattempted) || 0,
       total: Number(scored.total) || state.publicTest.questions.length,
       percent: Number(scored.percent) || 0,
-      correctAnswers: (scored && scored.correctAnswers) ? scored.correctAnswers : null
+      correctAnswers: (scored && scored.correctAnswers) ? scored.correctAnswers : null,
+      correctNumeric: (scored && scored.correctNumeric) ? scored.correctNumeric : null,
+      questionTypes: (scored && scored.questionTypes) ? scored.questionTypes : null
     };
 
     showScreen("result");
@@ -1151,6 +1451,9 @@
 
   const yearEl = document.getElementById("currentYear");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  setupKeypad();
+  setupScratchpad();
 
   showScreen("loading");
   loadTest();
