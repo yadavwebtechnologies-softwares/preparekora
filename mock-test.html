@@ -7,11 +7,13 @@
   <meta name="description" content="PrepareKora.in — Take a mock test and check your score.">
   <title>Mock Test — PrepareKora.in</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
 
-  <header class="header">
+  <header class="header">e
     <div class="header-inner">
 
       <a class="brand" href="index.html" aria-label="PrepareKora home">
@@ -223,9 +225,52 @@
 
           <h2 class="q-text" id="qText">—</h2>
 
+          <div class="q-latex" id="qLatex" hidden></div>
+          <div class="q-image" id="qImage" hidden></div>
+
           <fieldset class="options" id="optionsFieldset">
             <legend class="sr-only" id="optionsLegend" data-i18n="optionsLegend">Answer options</legend>
           </fieldset>
+
+          <div class="numeric-input" id="numericInput" hidden>
+            <p class="form-label" style="margin-bottom: 8px;">Your answer</p>
+            <div class="numeric-display">
+              <input type="text" id="numericField" class="numeric-field" readonly inputmode="none" autocomplete="off">
+              <button type="button" id="numericClear" class="btn btn-sm" type="button">Clear</button>
+            </div>
+            <div class="keypad" id="keypad">
+              <button type="button" class="keypad-btn" data-key="7">7</button>
+              <button type="button" class="keypad-btn" data-key="8">8</button>
+              <button type="button" class="keypad-btn" data-key="9">9</button>
+              <button type="button" class="keypad-btn keypad-action" data-key="backspace" aria-label="Backspace">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><path d="m18 9-6 6"></path><path d="m12 9 6 6"></path></svg>
+              </button>
+              <button type="button" class="keypad-btn" data-key="4">4</button>
+              <button type="button" class="keypad-btn" data-key="5">5</button>
+              <button type="button" class="keypad-btn" data-key="6">6</button>
+              <button type="button" class="keypad-btn" data-key=".">.</button>
+              <button type="button" class="keypad-btn" data-key="1">1</button>
+              <button type="button" class="keypad-btn" data-key="2">2</button>
+              <button type="button" class="keypad-btn" data-key="3">3</button>
+              <button type="button" class="keypad-btn" data-key="-">−</button>
+              <button type="button" class="keypad-btn keypad-wide" data-key="0">0</button>
+            </div>
+          </div>
+
+          <div class="scratchpad" id="scratchpad">
+            <button type="button" class="scratchpad-toggle" id="scratchpadToggle" aria-expanded="false">
+              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+              Rough work
+            </button>
+            <div class="scratchpad-body" id="scratchpadBody" hidden>
+              <canvas id="scratchpadCanvas" class="scratchpad-canvas"></canvas>
+              <div class="scratchpad-actions">
+                <button type="button" class="btn btn-sm scratchpad-mode is-active" data-mode="pen" aria-pressed="true">Pen</button>
+                <button type="button" class="btn btn-sm scratchpad-mode" data-mode="eraser" aria-pressed="false">Eraser</button>
+                <button type="button" class="btn btn-sm" id="scratchpadClear">Clear</button>
+              </div>
+            </div>
+          </div>
 
           <div class="q-actions">
             <button class="btn btn-sm" id="markBtn" type="button" data-i18n="markForReview">
