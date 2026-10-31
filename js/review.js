@@ -125,6 +125,81 @@
     if (typeof v2 === "number") return v2;
     return null;
   }
+    function isAnswerCorrect(question, index) {
+    const state = window.MockTestState;
+    if (!state) return false;
+    const chosen = answerFor(index);
+    if (chosen === null || chosen === undefined || chosen === "") return false;
+    const qType = getQuestionType(question);
+    if (qType === "math") {
+      const correctNum = correctNumericFor(index);
+      if (correctNum === null) return false;
+      const tol = Number(question.tolerance) || 0;
+      return Math.abs(Number(chosen) - correctNum) <= tol;
+    }
+    const correct = correctAnswerFor(index);
+    return correct !== null && Number(chosen) === correct;
+  }
+
+  function getExplainCacheKey(question) {
+    const qText = (question.q || "").slice(0, 80).replace(/\s+/g, " ").trim();
+    const correct = question.type === "math" ? question.numericAnswer : question.answer;
+    const raw = qText + "|" + String(correct);
+    let hash = 0;
+    for (let i = 0; i < raw.length; i++) {
+      hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+      hash |= 0;
+    }
+    return "pke_" + Math.abs(hash).toString(36);
+  }
+
+  function getCachedExplanation(question) {
+    try { return localStorage.getItem(getExplainCacheKey(question)) || null; }
+    catch (e) { return null; }
+  }
+
+  function setCachedExplanation(question, text) {
+    try { localStorage.setItem(getExplainCacheKey(question), String(text).slice(0, 600)); }
+    catch (e) {}
+  }
+
+  async function fetchAIExplanation(question, index) {
+    const cached = getCachedExplanation(question);
+    if (cached) return cached;
+
+    const qType = getQuestionType(question);
+    const chosen = answerFor(index);
+    const correctNum = correctNumericFor(index);
+    const correctAns = correctAnswerFor(index);
+
+    const apiBase = (function () {
+      const host = window.location.hostname;
+      const isLocal = host === "localhost" || host === "127.0.0.1" || host === "" || host.endsWith(".local");
+      return isLocal ? "http://localhost:8787/api" : "https://preparekora-api.yadavsubba2003.workers.dev/api";
+    })();
+
+    const payload = { question: question.q || "", type: qType };
+    if (qType === "math") {
+      payload.correctAnswer = correctNum;
+      payload.userAnswer = chosen;
+    } else {
+      payload.options = question.options || [];
+      payload.correctAnswer = correctAns;
+      payload.userAnswer = chosen;
+    }
+
+    const res = await fetch(apiBase + "/explain", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    const text = (data && data.explanation) ? String(data.explanation).trim() : "";
+    if (text) setCachedExplanation(question, text);
+    return text;
+  }
+
 
   function renderLatex(el, tex) {
     if (!el || !tex) return;
@@ -256,24 +331,26 @@
   /* ---------- Build explanation ---------- */
 
   function buildExplanation(question, index) {
-    const hasText = question.explanation && String(question.explanation).trim();
-    const hasLatex = question.explanationLatex && String(question.explanationLatex).trim();
-    const hasImage = question.explanationImageBase64 && String(question.explanationImageBase64).startsWith("data:image");
+    const hasManual = question.explanation && String(question.explanation).trim();
+    const hasManualLatex = question.explanationLatex && String(question.explanationLatex).trim();
+    const hasManualImage = question.explanationImageBase64 && String(question.explanationImageBase64).startsWith("data:image");
 
-    if (!hasText && !hasLatex && !hasImage) return null;
+    const correct = isAnswerCorrect(question, index);
+    const answered = answerFor(index) !== null && answerFor(index) !== undefined && answerFor(index) !== "";
+
+    /* Correct answer + no manual explanation → skip */
+    if (correct && !hasManual && !hasManualLatex && !hasManualImage) return null;
+
+    const bodyId = "exp-body-" + index;
 
     const wrap = document.createElement("div");
     wrap.className = "review-exp";
-
-    const btnId = "exp-toggle-" + index;
-    const bodyId = "exp-body-" + index;
 
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "review-exp-toggle";
     btn.setAttribute("aria-expanded", "false");
     btn.setAttribute("aria-controls", bodyId);
-    btn.id = btnId;
     btn.innerHTML = ICON_CHEV + "<span>Show explanation</span>";
 
     const body = document.createElement("div");
@@ -281,23 +358,62 @@
     body.id = bodyId;
     body.hidden = true;
 
-    if (hasText) {
-      const p = document.createElement("p");
-      p.style.margin = "0";
-      p.textContent = question.explanation;
-      body.appendChild(p);
+    let loaded = false;
+    let cached = null;
+
+    if (hasManual || hasManualLatex || hasManualImage) {
+      /* Manual content — pre-populate */
+      if (hasManualLatex) {
+        const latexEl = document.createElement("div");
+        renderLatex(latexEl, question.explanationLatex);
+        body.appendChild(latexEl);
+      }
+      if (hasManual) {
+        const p = document.createElement("p");
+        p.style.margin = hasManualLatex ? "8px 0 0 0" : "0";
+        p.textContent = question.explanation;
+        body.appendChild(p);
+      }
+      if (hasManualImage) {
+        const img = document.createElement("img");
+        img.src = question.explanationImageBase64;
+        img.alt = "";
+        body.appendChild(img);
+      }
+      loaded = true;
+    } else {
+      /* AI — check cache in background (prefetch), populate on click */
+      cached = getCachedExplanation(question);
+      if (cached) {
+        const p = document.createElement("p");
+        p.style.margin = "0";
+        p.textContent = cached;
+        body.appendChild(p);
+        loaded = true;
+      } else {
+        /* Kick off background fetch so it's ready when user clicks */
+        fetchAIExplanation(question, index).catch(function () {});
+      }
     }
-    if (hasLatex) {
-      const latexEl = document.createElement("div");
-      latexEl.style.marginTop = hasText ? "8px" : "0";
-      renderLatex(latexEl, question.explanationLatex);
-      body.appendChild(latexEl);
-    }
-    if (hasImage) {
-      const img = document.createElement("img");
-      img.src = question.explanationImageBase64;
-      img.alt = "";
-      body.appendChild(img);
+
+    async function loadAIIfNeeded() {
+      if (loaded) return;
+      loaded = true;
+      body.replaceChildren();
+      body.innerHTML = '<div class="inline-loading"><div class="spinner"></div><span>Generating explanation…</span></div>';
+      try {
+        const text = await fetchAIExplanation(question, index);
+        if (text) {
+          const p = document.createElement("p");
+          p.style.margin = "0";
+          p.textContent = text;
+          body.replaceChildren(p);
+        } else {
+          body.textContent = "Explanation unavailable.";
+        }
+      } catch (err) {
+        body.textContent = "Could not generate explanation. Check connection.";
+      }
     }
 
     btn.addEventListener("click", function () {
@@ -306,7 +422,19 @@
       body.hidden = open;
       const span = btn.querySelector("span");
       if (span) span.textContent = open ? "Show explanation" : "Hide explanation";
+      if (!open && !loaded) loadAIIfNeeded();
     });
+
+    /* Auto-expand for wrong/unattempted if we already have a cached/AI answer */
+    if (!answered || !correct) {
+      if (cached) {
+        /* Show immediately for wrong/unattempted when cached */
+        btn.setAttribute("aria-expanded", "true");
+        body.hidden = false;
+        const span = btn.querySelector("span");
+        if (span) span.textContent = "Hide explanation";
+      }
+    }
 
     wrap.appendChild(btn);
     wrap.appendChild(body);
