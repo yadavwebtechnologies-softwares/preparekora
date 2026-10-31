@@ -2442,6 +2442,36 @@ input:focus-visible {
   color: #ffffff;
 }
 
+/* --- Spinner + inline loading (for AI explanation) --- */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: pk-spin 0.7s linear infinite;
+}
+
+@keyframes pk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.inline-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.inline-loading .spinner {
+  width: 14px;
+  height: 14px;
+  border-width: 1.5px;
+}
+
 /* --- Responsive --- */
 @media (max-width: 560px) {
   .numeric-field {
