@@ -725,7 +725,7 @@
 
     optionsFieldset.replaceChildren();
 
-    const mathHasOptions = qType === "math" && Array.isArray(question.options) && question.options.length === 4 && typeof question.answer === "number";
+    const mathHasOptions = qType === "math" && Array.isArray(question.options) && question.options.length === 4;
 
     if (qType === "math" && !mathHasOptions) {
       optionsFieldset.hidden = true;
@@ -1003,7 +1003,7 @@
       const v = state.answers[i];
       const q = state.publicTest.questions[i];
       const qType = getQuestionType(q);
-      const mathHasOptions = qType === "math" && Array.isArray(q.options) && q.options.length === 4 && typeof q.answer === "number";
+      const mathHasOptions = qType === "math" && Array.isArray(q.options) && q.options.length === 4;
       if (qType === "math" && !mathHasOptions) {
         const num = typeof v === "number" ? v : Number(v);
         if (isFinite(num) && String(v).trim() !== "") payloadAnswers[String(i)] = num;
