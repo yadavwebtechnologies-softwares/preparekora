@@ -656,6 +656,29 @@
     announce(t("questionOf", { n: 1, total: state.publicTest.questions.length }));
     if (nextBtn) nextBtn.focus();
   }
+    /* ---------- Option LaTeX render ---------- */
+
+  function renderOptionText(el, raw) {
+    const str = String(raw || "");
+    if (!str) { el.textContent = ""; return; }
+    if (!window.katex || str.indexOf("$") === -1) { el.textContent = str; return; }
+    el.replaceChildren();
+    let i = 0;
+    while (i < str.length) {
+      const open = str.indexOf("$", i);
+      if (open === -1) { el.appendChild(document.createTextNode(str.slice(i))); break; }
+      if (open > i) el.appendChild(document.createTextNode(str.slice(i, open)));
+      const close = str.indexOf("$", open + 1);
+      if (close === -1) { el.appendChild(document.createTextNode(str.slice(open))); break; }
+      const tex = str.slice(open + 1, close);
+      const span = document.createElement("span");
+      try { window.katex.render(tex, span, { throwOnError: false }); }
+      catch (e) { span.textContent = tex; }
+      el.appendChild(span);
+      i = close + 1;
+    }
+  }
+
 
   /* ---------- Question rendering ---------- */
 
@@ -736,9 +759,9 @@
           key.setAttribute("aria-hidden", "true");
           key.textContent = "ABCD".charAt(optionIndex);
 
-          const text = document.createElement("span");
-          text.className = "option-text";
-          text.textContent = optText || "";
+      const txt = document.createElement("span");
+      txt.className = "review-opt-text";
+      renderOptionTextInline(txt, optText || "");
 
           label.appendChild(input);
           label.appendChild(key);
@@ -799,9 +822,9 @@
                 key.setAttribute("aria-hidden", "true");
                 key.textContent = "ABCD".charAt(optionIndex);
 
-                const text = document.createElement("span");
-                text.className = "option-text";
-                text.textContent = optText || "";
+      const txt = document.createElement("span");
+      txt.className = "review-opt-text";
+      renderOptionTextInline(txt, optText || "");
 
                 label.appendChild(input);
                 label.appendChild(key);
