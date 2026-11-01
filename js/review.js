@@ -125,13 +125,15 @@
     if (typeof v2 === "number") return v2;
     return null;
   }
+
     function isAnswerCorrect(question, index) {
     const state = window.MockTestState;
     if (!state) return false;
     const chosen = answerFor(index);
     if (chosen === null || chosen === undefined || chosen === "") return false;
     const qType = getQuestionType(question);
-    if (qType === "math") {
+    const mathHasOptions = qType === "math" && Array.isArray(question.options) && question.options.length === 4;
+    if (qType === "math" && !mathHasOptions) {
       const correctNum = correctNumericFor(index);
       if (correctNum === null) return false;
       const tol = Number(question.tolerance) || 0;
@@ -178,8 +180,9 @@
       return isLocal ? "http://localhost:8787/api" : "https://preparekora-api.yadavsubba2003.workers.dev/api";
     })();
 
+    const mathHasOptions = qType === "math" && Array.isArray(question.options) && question.options.length === 4;
     const payload = { question: question.q || "", type: qType };
-    if (qType === "math") {
+    if (qType === "math" && !mathHasOptions) {
       payload.correctAnswer = correctNum;
       payload.userAnswer = chosen;
     } else {
@@ -489,7 +492,8 @@
       card.appendChild(imgWrap);
     }
 
-    if (qType === "math") {
+    const mathHasOptions = qType === "math" && Array.isArray(question.options) && question.options.length === 4;
+    if (qType === "math" && !mathHasOptions) {
       const correctNum = correctNumericFor(index);
       const tol = (typeof question.tolerance === "number") ? question.tolerance : 0;
       card.appendChild(buildNumericBlock(index, chosen, correctNum, tol));
