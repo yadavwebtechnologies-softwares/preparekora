@@ -354,15 +354,11 @@
   /* ---------- Build explanation ---------- */
 
   function buildExplanation(question, index) {
-    const hasManual = question.explanation && String(question.explanation).trim();
-    const hasManualLatex = question.explanationLatex && String(question.explanationLatex).trim();
-    const hasManualImage = question.explanationImageBase64 && String(question.explanationImageBase64).startsWith("data:image");
-
+    const qType = getQuestionType(question);
     const correct = isAnswerCorrect(question, index);
     const answered = answerFor(index) !== null && answerFor(index) !== undefined && answerFor(index) !== "";
 
-    /* Correct answer + no manual explanation → skip */
-    if (correct && !hasManual && !hasManualLatex && !hasManualImage) return null;
+    if (correct && qType === "mcq") return null;
 
     const bodyId = "exp-body-" + index;
 
@@ -382,41 +378,16 @@
     body.hidden = true;
 
     let loaded = false;
-    let cached = null;
+    const cached = getCachedExplanation(question);
 
-    if (hasManual || hasManualLatex || hasManualImage) {
-      /* Manual content — pre-populate */
-      if (hasManualLatex) {
-        const latexEl = document.createElement("div");
-        renderLatex(latexEl, question.explanationLatex);
-        body.appendChild(latexEl);
-      }
-      if (hasManual) {
-        const p = document.createElement("p");
-        p.style.margin = hasManualLatex ? "8px 0 0 0" : "0";
-        p.textContent = question.explanation;
-        body.appendChild(p);
-      }
-      if (hasManualImage) {
-        const img = document.createElement("img");
-        img.src = question.explanationImageBase64;
-        img.alt = "";
-        body.appendChild(img);
-      }
+    if (cached) {
+      const p = document.createElement("p");
+      p.style.margin = "0";
+      p.innerHTML = formatExplanationBlock(cached);
+      body.appendChild(p);
       loaded = true;
     } else {
-      /* AI — check cache in background (prefetch), populate on click */
-      cached = getCachedExplanation(question);
-      if (cached) {
-        const p = document.createElement("p");
-        p.style.margin = "0";
-        p.innerHTML = formatExplanationBlock(cached);
-        body.appendChild(p);
-        loaded = true;
-      } else {
-        /* Kick off background fetch so it's ready when user clicks */
-        fetchAIExplanation(question, index).catch(function () {});
-      }
+      fetchAIExplanation(question, index).catch(function () {});
     }
 
     async function loadAIIfNeeded() {
@@ -448,15 +419,11 @@
       if (!open && !loaded) loadAIIfNeeded();
     });
 
-    /* Auto-expand for wrong/unattempted if we already have a cached/AI answer */
-    if (!answered || !correct) {
-      if (cached) {
-        /* Show immediately for wrong/unattempted when cached */
-        btn.setAttribute("aria-expanded", "true");
-        body.hidden = false;
-        const span = btn.querySelector("span");
-        if (span) span.textContent = "Hide explanation";
-      }
+    if ((!answered || !correct) && cached) {
+      btn.setAttribute("aria-expanded", "true");
+      body.hidden = false;
+      const span = btn.querySelector("span");
+      if (span) span.textContent = "Hide explanation";
     }
 
     wrap.appendChild(btn);
