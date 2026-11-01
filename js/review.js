@@ -327,6 +327,29 @@
     wrap.appendChild(correctBox);
     return wrap;
   }
+    function formatExplanationLine(line) {
+    let safe = esc(line);
+
+    /* Final answer — whole value bold italic */
+    const finalMatch = safe.match(/^(Final answer)\s*[.:]\s*(.+)$/i);
+    if (finalMatch) {
+      return "<strong>" + finalMatch[1] + ":</strong> <strong><em>" + finalMatch[2] + "</em></strong>";
+    }
+
+    /* Step N / Line N — bold label, numbers bold italic */
+    const stepMatch = safe.match(/^(Step\s*\d+|Line\s*\d+)\s*[.:]?\s*(.*)$/i);
+    if (stepMatch) {
+      const body = stepMatch[2].replace(/(\d+(?:[.,]\d+)*)/g, "<strong><em>$1</em></strong>");
+      return "<strong>" + stepMatch[1] + ":</strong> " + body;
+    }
+
+    /* Default — numbers bold italic */
+    return safe.replace(/(\d+(?:[.,]\d+)*)/g, "<strong><em>$1</em></strong>");
+  }
+
+  function formatExplanationBlock(text) {
+    return String(text).split(/\n+/).map(formatExplanationLine).join("<br>");
+  }
 
   /* ---------- Build explanation ---------- */
 
@@ -387,7 +410,7 @@
       if (cached) {
         const p = document.createElement("p");
         p.style.margin = "0";
-        p.textContent = cached;
+        p.innerHTML = formatExplanationBlock(cached);
         body.appendChild(p);
         loaded = true;
       } else {
@@ -406,7 +429,7 @@
         if (text) {
           const p = document.createElement("p");
           p.style.margin = "0";
-          p.textContent = text;
+          p.innerHTML = formatExplanationBlock(text);
           body.replaceChildren(p);
         } else {
           body.textContent = "Explanation unavailable.";
