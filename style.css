@@ -2488,3 +2488,10 @@ input:focus-visible {
     height: 180px;
   }
 }
+/* --- Review explanation body (bilingual, pre-line) --- */
+.review-exp-body {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.7;
+}
