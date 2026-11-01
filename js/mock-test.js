@@ -759,9 +759,9 @@
           key.setAttribute("aria-hidden", "true");
           key.textContent = "ABCD".charAt(optionIndex);
 
-      const txt = document.createElement("span");
-      txt.className = "review-opt-text";
-      renderOptionTextInline(txt, optText || "");
+          const text = document.createElement("span");
+          text.className = "option-text";
+          renderOptionText(text, optText || "");
 
           label.appendChild(input);
           label.appendChild(key);
@@ -822,9 +822,9 @@
                 key.setAttribute("aria-hidden", "true");
                 key.textContent = "ABCD".charAt(optionIndex);
 
-      const txt = document.createElement("span");
-      txt.className = "review-opt-text";
-      renderOptionTextInline(txt, optText || "");
+                const text = document.createElement("span");
+                text.className = "option-text";
+                renderOptionText(text, optText || "");
 
                 label.appendChild(input);
                 label.appendChild(key);
