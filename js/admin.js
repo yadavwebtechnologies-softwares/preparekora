@@ -1610,11 +1610,34 @@
           explanationLatex: rq.explanationLatex || "",
           explanationImageBase64: rq.explanationImageBase64 || ""
         };
-        if (type === "math") {
-          if (typeof rq.numericAnswer !== "number") { errEl.textContent = "Question " + n + ": numericAnswer required for math"; errEl.hidden = false; return; }
-          obj.numericAnswer = rq.numericAnswer;
-          obj.tolerance = (typeof rq.tolerance === "number" && rq.tolerance >= 0) ? rq.tolerance : 0;
-        } else {
+if (type === "math") {
+  const hasOptions = Array.isArray(rq.options) && rq.options.length === 4 && typeof rq.answer === "number";
+  const hasNumeric = typeof rq.numericAnswer === "number" && isFinite(rq.numericAnswer);
+  if (!hasOptions && !hasNumeric) {
+    errEl.textContent = "Question " + n + ": math needs 4 options + answer, or numericAnswer";
+    errEl.hidden = false;
+    return;
+  }
+  if (hasOptions) {
+    for (let j = 0; j < 4; j++) {
+      if (typeof rq.options[j] !== "string" || !rq.options[j].trim()) {
+        errEl.textContent = "Question " + n + ": option " + (j + 1) + " empty";
+        errEl.hidden = false;
+        return;
+      }
+    }
+    if (rq.answer < 0 || rq.answer > 3) {
+      errEl.textContent = "Question " + n + ": answer must be 0-3";
+      errEl.hidden = false;
+      return;
+    }
+    obj.options = rq.options.map(function (o) { return o.trim(); });
+    obj.answer = rq.answer;
+  } else {
+    obj.numericAnswer = rq.numericAnswer;
+    obj.tolerance = (typeof rq.tolerance === "number" && rq.tolerance >= 0) ? rq.tolerance : 0;
+  }
+} else {
           if (!Array.isArray(rq.options) || rq.options.length !== 4) { errEl.textContent = "Question " + n + ": 4 options required"; errEl.hidden = false; return; }
           for (let j = 0; j < 4; j++) { if (typeof rq.options[j] !== "string" || !rq.options[j].trim()) { errEl.textContent = "Question " + n + ": option " + (j + 1) + " empty"; errEl.hidden = false; return; } }
           if (typeof rq.answer !== "number" || rq.answer < 0 || rq.answer > 3) { errEl.textContent = "Question " + n + ": answer must be 0-3"; errEl.hidden = false; return; }
