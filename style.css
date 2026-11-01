@@ -2520,3 +2520,14 @@ input:focus-visible {
   border: 0;
   border-top: 1px solid var(--border);
 }
+/* --- Option LaTeX (inline in options) --- */
+.option-text .katex,
+.review-opt-text .katex {
+  font-size: 1.05em;
+}
+
+.option-text .katex-display,
+.review-opt-text .katex-display {
+  display: inline-block;
+  margin: 0;
+}
