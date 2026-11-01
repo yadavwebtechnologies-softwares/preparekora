@@ -833,7 +833,7 @@
   }
 
   function selectOption(optionIndex) {
-    state.answers[state.index] = optionIndex;
+    state.answers[state.index] = Number(optionIndex);
     optionsFieldset.querySelectorAll(".option").forEach(function (label) {
       label.classList.toggle("is-selected", label.dataset.value === String(optionIndex));
     });
@@ -985,9 +985,13 @@
         const num = typeof v === "number" ? v : Number(v);
         if (isFinite(num) && String(v).trim() !== "") payloadAnswers[String(i)] = num;
       } else {
-        if (typeof v === "number" && v >= 0 && v <= 3) payloadAnswers[String(i)] = v;
+        const idx = typeof v === "number" ? v : Number(v);
+        if (Number.isInteger(idx) && idx >= 0 && idx <= 3) payloadAnswers[String(i)] = idx;
       }
     });
+    console.log("[PK DEBUG] state.answers count:", Object.keys(state.answers).length);
+    console.log("[PK DEBUG] payloadAnswers count:", Object.keys(payloadAnswers).length);
+    console.log("[PK DEBUG] sample:", JSON.stringify(state.answers).slice(0, 200));
 
     let scored = null;
     try {
