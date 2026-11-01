@@ -368,9 +368,11 @@
 
   function buildExplanationHTML(expEn, expAs) {
     const enHTML = formatExplanationBlock(expEn || "");
-    const asHTML = expAs && String(expAs).trim() ? formatExplanationBlock(expAs) : "";
-    if (!asHTML) return enHTML;
-    return enHTML + '<hr class="exp-sep">' + asHTML;
+    const asClean = expAs ? String(expAs).trim() : "";
+    if (!asClean || asClean === String(expEn || "").trim()) {
+      return enHTML;
+    }
+    return enHTML + '<hr class="exp-sep">' + formatExplanationBlock(asClean);
   }
 
   /* ---------- Build explanation ---------- */
