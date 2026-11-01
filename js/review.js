@@ -342,23 +342,31 @@
     wrap.appendChild(correctBox);
     return wrap;
   }
-    function formatExplanationLine(line) {
-    let safe = esc(line);
+  function formatExplanationLine(line) {
+    const decoded = String(line)
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&apos;/g, "'")
+      .replace(/&#(\d+);/g, function (_, code) { return String.fromCharCode(parseInt(code, 10)); });
 
-    /* Final answer — whole value bold italic */
+    const safe = decoded
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
     const finalMatch = safe.match(/^(Final answer)\s*[.:]\s*(.+)$/i);
     if (finalMatch) {
       return "<strong>" + finalMatch[1] + ":</strong> <strong><em>" + finalMatch[2] + "</em></strong>";
     }
 
-    /* Step N / Line N — bold label, numbers bold italic */
     const stepMatch = safe.match(/^(Step\s*\d+|Line\s*\d+)\s*[.:]?\s*(.*)$/i);
     if (stepMatch) {
       const body = stepMatch[2].replace(/(\d+(?:[.,]\d+)*)/g, "<strong><em>$1</em></strong>");
       return "<strong>" + stepMatch[1] + ":</strong> " + body;
     }
 
-    /* Default — numbers bold italic */
     return safe.replace(/(\d+(?:[.,]\d+)*)/g, "<strong><em>$1</em></strong>");
   }
 
