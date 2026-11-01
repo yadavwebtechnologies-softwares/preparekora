@@ -2495,3 +2495,23 @@ input:focus-visible {
   font-size: 13px;
   line-height: 1.7;
 }
+.review-q-latex {
+  margin-bottom: 10px;
+  padding: 8px 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  text-align: center;
+}
+
+.review-q-latex .katex {
+  font-size: 1.05em;
+}
+
+.review-q-latex .katex-display {
+  margin: 0;
+}
+
+.q-latex {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
