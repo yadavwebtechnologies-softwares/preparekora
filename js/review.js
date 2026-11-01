@@ -156,8 +156,15 @@
   }
 
   function getCachedExplanation(question) {
-    try { return localStorage.getItem(getExplainCacheKey(question)) || null; }
-    catch (e) { return null; }
+    try {
+      const raw = localStorage.getItem(getExplainCacheKey(question));
+      if (!raw) return null;
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.en) return { en: parsed.en, as: parsed.as || "" };
+      } catch (e) {}
+      return { en: raw, as: "" };
+    } catch (e) { return null; }
   }
 
   function setCachedExplanation(question, text) {
@@ -198,9 +205,14 @@
     });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
-    const text = (data && data.explanation) ? String(data.explanation).trim() : "";
-    if (text) setCachedExplanation(question, text);
-    return text;
+    const en = (data && data.explanation) ? String(data.explanation).trim() : "";
+    const as = (data && data.explanationAs) ? String(data.explanationAs).trim() : "";
+    if (en) {
+      try {
+        localStorage.setItem(getExplainCacheKey(question), JSON.stringify({ en: en, as: as }).slice(0, 4500));
+      } catch (e) {}
+    }
+    return { en: en, as: as };
   }
 
 
@@ -354,6 +366,13 @@
     return String(text).split(/\n+/).map(formatExplanationLine).join("<br>");
   }
 
+  function buildExplanationHTML(expEn, expAs) {
+    const enHTML = formatExplanationBlock(expEn || "");
+    const asHTML = expAs && String(expAs).trim() ? formatExplanationBlock(expAs) : "";
+    if (!asHTML) return enHTML;
+    return enHTML + '<hr class="exp-sep">' + asHTML;
+  }
+
   /* ---------- Build explanation ---------- */
 
   function buildExplanation(question, index) {
@@ -386,7 +405,7 @@
     if (cached) {
       const p = document.createElement("p");
       p.style.margin = "0";
-      p.innerHTML = formatExplanationBlock(cached);
+      p.innerHTML = buildExplanationHTML(cached.en, cached.as);
       body.appendChild(p);
       loaded = true;
     } else {
@@ -399,11 +418,11 @@
       body.replaceChildren();
       body.innerHTML = '<div class="inline-loading"><div class="spinner"></div><span>Generating explanation…</span></div>';
       try {
-        const text = await fetchAIExplanation(question, index);
-        if (text) {
+        const result = await fetchAIExplanation(question, index);
+        if (result && result.en) {
           const p = document.createElement("p");
           p.style.margin = "0";
-          p.innerHTML = formatExplanationBlock(text);
+          p.innerHTML = buildExplanationHTML(result.en, result.as);
           body.replaceChildren(p);
         } else {
           body.textContent = "Explanation unavailable.";
