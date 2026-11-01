@@ -2515,3 +2515,8 @@ input:focus-visible {
   overflow-x: auto;
   overflow-y: hidden;
 }
+.exp-sep {
+  margin: 12px 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
