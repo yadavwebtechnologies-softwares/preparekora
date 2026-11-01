@@ -475,7 +475,7 @@
     card.appendChild(head);
     card.appendChild(qText);
 
-    if (question.latex && String(question.latex).trim()) {
+    if (qType !== "reasoning" && question.latex && String(question.latex).trim()) {
       const latexEl = document.createElement("div");
       latexEl.className = "review-q-latex";
       renderLatex(latexEl, question.latex);
