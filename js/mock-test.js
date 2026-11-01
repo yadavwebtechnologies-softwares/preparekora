@@ -702,7 +702,9 @@
 
     optionsFieldset.replaceChildren();
 
-    if (qType === "math") {
+    const mathHasOptions = qType === "math" && Array.isArray(question.options) && question.options.length === 4 && typeof question.answer === "number";
+
+    if (qType === "math" && !mathHasOptions) {
       optionsFieldset.hidden = true;
       if (numericInput) numericInput.hidden = false;
       const existing = state.answers[index];
@@ -768,7 +770,7 @@
     /* --- Assamese translation (skip math numeric input) --- */
     if (window.PK && PK.lang === "as") {
       try {
-        if (qType === "math") {
+        if (qType === "math" && !mathHasOptions) {
           const translated = await apiTranslate(question.q, "as");
           if (translated) qText.textContent = translated;
         } else {
@@ -978,7 +980,8 @@
       const v = state.answers[i];
       const q = state.publicTest.questions[i];
       const qType = getQuestionType(q);
-      if (qType === "math") {
+      const mathHasOptions = qType === "math" && Array.isArray(q.options) && q.options.length === 4 && typeof q.answer === "number";
+      if (qType === "math" && !mathHasOptions) {
         const num = typeof v === "number" ? v : Number(v);
         if (isFinite(num) && String(v).trim() !== "") payloadAnswers[String(i)] = num;
       } else {
