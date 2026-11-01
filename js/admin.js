@@ -1139,19 +1139,19 @@
         minutes: res.test.minutes,
         questions: (res.test.questions || []).map(function (q) {
           const type = getQuestionType(q);
+          const hasOptions = Array.isArray(q.options) && q.options.length === 4 && typeof q.answer === "number";
+          const detectedMathMode = type === "math" ? (hasOptions ? "options" : "keypad") : "options";
           return {
             type: type,
             q: q.q || "",
             latex: q.latex || "",
             imageBase64: q.imageBase64 || "",
-            options: Array.isArray(q.options) ? q.options.slice() : ["", "", "", ""],
-            optionImages: Array.isArray(q.optionImages) ? q.optionImages.slice() : ["", "", "", ""],
+            options: Array.isArray(q.options) && q.options.length === 4 ? q.options.slice() : ["", "", "", ""],
+            optionImages: Array.isArray(q.optionImages) && q.optionImages.length === 4 ? q.optionImages.slice() : ["", "", "", ""],
             answer: typeof q.answer === "number" ? q.answer : 0,
             numericAnswer: (typeof q.numericAnswer === "number") ? q.numericAnswer : "",
             tolerance: (typeof q.tolerance === "number") ? q.tolerance : 0,
-            explanation: q.explanation || "",
-            explanationLatex: q.explanationLatex || "",
-            explanationImageBase64: q.explanationImageBase64 || ""
+            mathMode: detectedMathMode
           };
         })
       };
@@ -1167,8 +1167,7 @@
     return {
       type: "mcq", q: "", latex: "", imageBase64: "",
       options: ["", "", "", ""], optionImages: ["", "", "", ""], answer: 0,
-      numericAnswer: "", tolerance: 0,
-      explanation: "", explanationLatex: "", explanationImageBase64: ""
+      numericAnswer: "", tolerance: 0, mathMode: "options"
     };
   }
 
@@ -1316,34 +1315,115 @@
 
       // OPTIONS or NUMERIC
       if (question.type === "math") {
-        const numField = document.createElement("div");
-        numField.className = "form-field";
-        const numLabel = document.createElement("label");
-        numLabel.className = "form-label";
-        numLabel.textContent = "Numeric answer";
-        const numInput = document.createElement("input");
-        numInput.type = "number";
-        numInput.className = "form-input";
-        numInput.step = "any";
-        numInput.value = question.numericAnswer === "" ? "" : String(question.numericAnswer);
-        numInput.addEventListener("input", function () { question.numericAnswer = numInput.value; });
-        numField.appendChild(numLabel); numField.appendChild(numInput);
-        block.appendChild(numField);
+        /* Sub-mode selector */
+        const modeRow = document.createElement("div");
+        modeRow.className = "form-field";
+        const modeLabel = document.createElement("label");
+        modeLabel.className = "form-label";
+        modeLabel.textContent = "Answer method";
+        const modeWrap = document.createElement("div");
+        modeWrap.style.display = "flex";
+        modeWrap.style.gap = "16px";
+        modeWrap.style.flexWrap = "wrap";
 
-        const tolField = document.createElement("div");
-        tolField.className = "form-field";
-        const tolLabel = document.createElement("label");
-        tolLabel.className = "form-label";
-        tolLabel.innerHTML = 'Tolerance <span class="form-required">(optional, default 0)</span>';
-        const tolInput = document.createElement("input");
-        tolInput.type = "number";
-        tolInput.className = "form-input";
-        tolInput.step = "any";
-        tolInput.min = "0";
-        tolInput.value = String(question.tolerance || 0);
-        tolInput.addEventListener("input", function () { question.tolerance = Number(tolInput.value) || 0; });
-        tolField.appendChild(tolLabel); tolField.appendChild(tolInput);
-        block.appendChild(tolField);
+        [["options", "Options (4 choices)"], ["keypad", "Keypad (numeric)"]].forEach(function (pair) {
+          const lab = document.createElement("label");
+          lab.style.display = "flex";
+          lab.style.alignItems = "center";
+          lab.style.gap = "6px";
+          lab.style.cursor = "pointer";
+          lab.style.fontSize = "13px";
+          const r = document.createElement("input");
+          r.type = "radio";
+          r.name = "mathmode-" + qi;
+          r.value = pair[0];
+          r.checked = (question.mathMode || "options") === pair[0];
+          r.addEventListener("change", function () {
+            question.mathMode = pair[0];
+            renderQuestionsList();
+          });
+          lab.appendChild(r);
+          lab.appendChild(document.createTextNode(pair[1]));
+          modeWrap.appendChild(lab);
+        });
+
+        modeRow.appendChild(modeLabel);
+        modeRow.appendChild(modeWrap);
+        block.appendChild(modeRow);
+
+        if ((question.mathMode || "options") === "options") {
+          /* Options mode — 4 text inputs + radio */
+          const optLabel = document.createElement("div");
+          optLabel.className = "form-label";
+          optLabel.style.marginTop = "14px";
+          optLabel.textContent = "Options — click the circle to mark the correct answer";
+          block.appendChild(optLabel);
+
+          const optWrap = document.createElement("div");
+          optWrap.className = "editor-options";
+
+          question.options.forEach(function (_, oi) {
+            const row = document.createElement("div");
+            row.className = "editor-option" + (question.answer === oi ? " is-answer" : "");
+
+            const radio = document.createElement("input");
+            radio.type = "radio";
+            radio.name = "answer-q" + qi;
+            radio.checked = question.answer === oi;
+            radio.className = "editor-option-radio";
+            radio.setAttribute("aria-label", "Mark option " + "ABCD".charAt(oi) + " as correct");
+            radio.addEventListener("change", function () {
+              question.answer = oi;
+              block.querySelectorAll(".editor-option").forEach(function (r, idx) { r.classList.toggle("is-answer", idx === oi); });
+            });
+
+            const key = document.createElement("span");
+            key.className = "editor-option-key";
+            key.textContent = "ABCD".charAt(oi);
+
+            const input = document.createElement("input");
+            input.type = "text";
+            input.className = "editor-option-input";
+            input.placeholder = "Option " + "ABCD".charAt(oi) + " (number or value)";
+            input.value = question.options[oi];
+            input.addEventListener("input", function () { question.options[oi] = input.value; });
+
+            row.appendChild(radio); row.appendChild(key); row.appendChild(input);
+            optWrap.appendChild(row);
+          });
+
+          block.appendChild(optWrap);
+        } else {
+          /* Keypad mode — numeric answer + tolerance */
+          const numField = document.createElement("div");
+          numField.className = "form-field";
+          const numLabel = document.createElement("label");
+          numLabel.className = "form-label";
+          numLabel.textContent = "Numeric answer";
+          const numInput = document.createElement("input");
+          numInput.type = "number";
+          numInput.className = "form-input";
+          numInput.step = "any";
+          numInput.value = question.numericAnswer === "" ? "" : String(question.numericAnswer);
+          numInput.addEventListener("input", function () { question.numericAnswer = numInput.value; });
+          numField.appendChild(numLabel); numField.appendChild(numInput);
+          block.appendChild(numField);
+
+          const tolField = document.createElement("div");
+          tolField.className = "form-field";
+          const tolLabel = document.createElement("label");
+          tolLabel.className = "form-label";
+          tolLabel.innerHTML = 'Tolerance <span class="form-required">(optional, default 0)</span>';
+          const tolInput = document.createElement("input");
+          tolInput.type = "number";
+          tolInput.className = "form-input";
+          tolInput.step = "any";
+          tolInput.min = "0";
+          tolInput.value = String(question.tolerance || 0);
+          tolInput.addEventListener("input", function () { question.tolerance = Number(tolInput.value) || 0; });
+          tolField.appendChild(tolLabel); tolField.appendChild(tolInput);
+          block.appendChild(tolField);
+        }
       } else {
         const optLabel = document.createElement("div");
         optLabel.className = "form-label";
@@ -1591,10 +1671,19 @@
       if (raw.explanationImageBase64) out.explanationImageBase64 = raw.explanationImageBase64;
 
       if (type === "math") {
-        const num = Number(raw.numericAnswer);
-        if (raw.numericAnswer === "" || !isFinite(num)) return { error: "Question " + n + ": numeric answer required" };
-        out.numericAnswer = num;
-        out.tolerance = (typeof raw.tolerance === "number" && raw.tolerance >= 0) ? raw.tolerance : 0;
+        const mode = raw.mathMode || "options";
+        if (mode === "options") {
+          const opts = raw.options.map(function (o) { return (o || "").trim(); });
+          if (opts.some(function (o) { return !o; })) return { error: "Question " + n + ": all 4 options required" };
+          out.options = opts;
+          if (typeof raw.answer !== "number" || raw.answer < 0 || raw.answer > 3) return { error: "Question " + n + ": select correct answer" };
+          out.answer = raw.answer;
+        } else {
+          const num = Number(raw.numericAnswer);
+          if (raw.numericAnswer === "" || !isFinite(num)) return { error: "Question " + n + ": numeric answer required" };
+          out.numericAnswer = num;
+          out.tolerance = (typeof raw.tolerance === "number" && raw.tolerance >= 0) ? raw.tolerance : 0;
+        }
       } else {
         const opts = raw.options.map(function (o) { return (o || "").trim(); });
         if (opts.some(function (o) { return !o; })) return { error: "Question " + n + ": all 4 options required" };
