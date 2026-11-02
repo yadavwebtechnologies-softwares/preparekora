@@ -4,6 +4,9 @@
   PrepareKora — Homepage logic (self-contained).
   Loads only translation.js. API client inlined here so
   no extra scripts are required in index.html.
+
+  Earlier section is paginated (5 per page).
+  Today & Yesterday show all tests.
 */
 
 (function () {
@@ -18,7 +21,7 @@
       host === "0.0.0.0" ||
       host === "" ||
       host.endsWith(".local");
-    return isLocal ? "http://localhost:8787/api" : "https://preparekora-api.yadavsubba2003.workers.dev/api";
+    return isLocal ? "http://localhost:8787/api" : "/api";
   })();
 
   async function apiFetch(path) {
@@ -35,20 +38,22 @@
   }
 
   /* ---------- State ---------- */
+
+  const EARLIER_PAGE_SIZE = 5;
+
   const state = {
     tests: [],
     loaded: false,
     earlierPage: 0
   };
 
-  const EARLIER_PAGE_SIZE = 5;
   /* ---------- DOM ---------- */
 
   const todayList = document.getElementById("todayTests");
   const yesterdayList = document.getElementById("yesterdayTests");
   const earlierList = document.getElementById("earlierTests");
   const emptyState = document.getElementById("archiveEmpty");
-  
+
   const earlierPagination = document.getElementById("earlierPagination");
   const earlierPrevBtn = document.getElementById("earlierPrevBtn");
   const earlierNextBtn = document.getElementById("earlierNextBtn");
@@ -138,6 +143,7 @@
   }
 
   /* ---------- Render ---------- */
+
   function render() {
     if (!state.loaded) {
       [todayList, yesterdayList, earlierList].forEach(function (el) {
@@ -177,7 +183,7 @@
       });
     }
 
-    /* Earlier — paginated (5 per page) */
+    /* Earlier — paginated */
     const totalEarlierPages = Math.max(1, Math.ceil(groups.earlier.length / EARLIER_PAGE_SIZE));
 
     if (state.earlierPage >= totalEarlierPages) {
@@ -198,7 +204,7 @@
       });
     }
 
-    /* Pagination controls */
+    /* Pagination */
     if (earlierPagination) {
       earlierPagination.hidden = groups.earlier.length <= EARLIER_PAGE_SIZE;
     }
@@ -226,8 +232,8 @@
   }
 
   /* ---------- Fetch ---------- */
+
   async function loadTests() {
-    if (window.PKLoader) window.PKLoader.show();
     try {
       const res = await apiFetch("/tests");
       state.tests = Array.isArray(res.tests) ? res.tests : [];
@@ -241,9 +247,41 @@
         emptyState.hidden = false;
         emptyState.textContent = t("loadFailed");
       }
-    } finally {
-      if (window.PKLoader) window.PKLoader.hide();
     }
+  }
+
+  /* ---------- Earlier pagination handlers ---------- */
+
+  function scrollToEarlier() {
+    const section = document.querySelector('[data-group="earlier"]');
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  if (earlierPrevBtn) {
+    earlierPrevBtn.addEventListener("click", function () {
+      if (state.earlierPage > 0) {
+        state.earlierPage--;
+        render();
+        scrollToEarlier();
+      }
+    });
+  }
+
+  if (earlierNextBtn) {
+    earlierNextBtn.addEventListener("click", function () {
+      const earlierCount = state.tests.filter(function (test) {
+        return groupFor(test.createdAt) === "earlier";
+      }).length;
+      const totalPages = Math.max(1, Math.ceil(earlierCount / EARLIER_PAGE_SIZE));
+
+      if (state.earlierPage < totalPages - 1) {
+        state.earlierPage++;
+        render();
+        scrollToEarlier();
+      }
+    });
   }
 
   /* ---------- Mobile menu ---------- */
@@ -284,41 +322,8 @@
       }
     });
 
-  menuPanel.querySelectorAll("a").forEach(function (link) {
-    link.addEventListener("click", closeMenu);
-  });
-
-  /* ---------- Earlier pagination ---------- */
-
-  function scrollToEarlier() {
-    const earlierSection = document.querySelector('[data-group="earlier"]');
-    if (earlierSection) {
-      earlierSection.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }
-
-  if (earlierPrevBtn) {
-    earlierPrevBtn.addEventListener("click", function () {
-      if (state.earlierPage > 0) {
-        state.earlierPage--;
-        render();
-        scrollToEarlier();
-      }
-    });
-  }
-
-  if (earlierNextBtn) {
-    earlierNextBtn.addEventListener("click", function () {
-      const earlierCount = state.tests.filter(function (test) {
-        return groupFor(test.createdAt) === "earlier";
-      }).length;
-      const totalPages = Math.max(1, Math.ceil(earlierCount / EARLIER_PAGE_SIZE));
-
-      if (state.earlierPage < totalPages - 1) {
-        state.earlierPage++;
-        render();
-        scrollToEarlier();
-      }
+    menuPanel.querySelectorAll("a").forEach(function (link) {
+      link.addEventListener("click", closeMenu);
     });
   }
 
