@@ -2986,7 +2986,318 @@ img { max-width: 100%; height: auto; }
   .db-tree {
     max-height: 300px;
   }
+/* =========================================================
+   === CONTROL ROOM v2 (section-based) ===
+   ========================================================= */
 
+.db-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.db-toolbar .search-input-wrap {
+  flex: 1;
+  max-width: 360px;
+  height: 40px;
+}
+
+.db-toolbar .search-input-wrap input {
+  width: 100%;
+  height: 38px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.db-toolbar .search-input-wrap input::placeholder {
+  color: #a3a3a3;
+}
+
+.db-toolbar .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.db-section-nav {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  overflow-x: auto;
+}
+
+.db-section-btn {
+  flex: 1;
+  min-width: 100px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.db-section-btn:hover { color: var(--text); }
+
+.db-section-btn.is-active {
+  background: #ffffff;
+  color: #111111;
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+}
+
+.db-content {
+  min-height: 400px;
+}
+
+.db-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.db-item-card {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.db-item-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.db-item-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.db-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  overflow-wrap: anywhere;
+  flex: 1;
+  min-width: 0;
+}
+
+.db-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.db-item-id {
+  padding: 4px 8px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--muted);
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+  display: inline-block;
+}
+
+.db-item-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.db-item-actions .btn {
+  font-size: 11px;
+  padding: 7px 11px;
+}
+
+.db-delete-btn {
+  color: #7f1d1d;
+  border-color: #d4d4d4;
+}
+
+.db-delete-btn:hover {
+  background: #fef2f2;
+  border-color: #b91c1c;
+  color: #b91c1c;
+}
+
+.db-count-badge {
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.db-score-badge {
+  padding: 3px 9px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.db-back-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.db-back-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.db-setting-value {
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  color: var(--text);
+  background: var(--surface);
+  padding: 3px 7px;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+
+.db-audit-paths {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.db-path-code {
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+
+.db-delete-path {
+  padding: 10px 12px;
+  margin: 8px 0;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.db-delete-warn {
+  padding: 10px 12px;
+  margin: 8px 0;
+  border-radius: 6px;
+  background: #fef2f2;
+  border: 1px solid #b91c1c;
+  color: #7f1d1d;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.db-modal-wide {
+  max-width: 720px;
+  padding: 0;
+}
+
+.db-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.db-modal-head h2 {
+  margin: 0 0 3px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  overflow-wrap: anywhere;
+}
+
+.db-modal-path {
+  margin: 0;
+  color: var(--muted);
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.db-modal-body {
+  padding: 14px 20px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.db-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.db-json {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+
+@media (max-width: 560px) {
+  .db-toolbar { flex-wrap: wrap; }
+  .db-toolbar .search-input-wrap { max-width: 100%; flex-basis: 100%; }
+  .db-toolbar .btn { width: 100%; justify-content: center; }
+  .db-item-actions .btn { flex: 1; }
+  .db-modal-wide { max-width: 100%; }
+}
   .db-viewer-body {
     max-height: 400px;
   }
