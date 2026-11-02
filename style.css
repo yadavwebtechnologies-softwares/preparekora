@@ -2794,3 +2794,200 @@ img { max-width: 100%; height: auto; }
     width: 100%;
   }
 }
+/* =========================================================
+   === CONTROL ROOM (append at end) ===
+   ========================================================= */
+
+.db-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 16px;
+  min-height: 500px;
+}
+
+.db-tree-panel {
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #ffffff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.db-tree-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.db-tree-head h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.db-tree-head .icon-button {
+  width: 30px;
+  height: 30px;
+}
+
+.db-tree {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+  max-height: 600px;
+}
+
+.db-node-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 0;
+}
+
+.db-node-row:hover {
+  background: var(--surface);
+}
+
+.db-node-toggle {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 9px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+.db-node-toggle.is-open {
+  transform: rotate(90deg);
+}
+
+.db-node-toggle-spacer {
+  width: 18px;
+  flex-shrink: 0;
+}
+
+.db-node-label {
+  flex: 1;
+  padding: 4px 6px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+
+.db-node-label:hover {
+  background: var(--surface-strong);
+}
+
+.db-viewer {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.db-viewer-head {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.db-viewer-path {
+  font-size: 12px;
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.db-viewer-body {
+  flex: 1;
+  overflow: auto;
+  padding: 14px;
+  max-height: 600px;
+}
+
+.db-json {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+
+.db-empty {
+  padding: 40px 20px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.db-empty-small {
+  padding: 16px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.db-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.db-error {
+  padding: 16px;
+  color: var(--text);
+  font-size: 12px;
+  text-align: center;
+}
+
+.db-warn {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface-strong);
+  font-size: 11px;
+  color: var(--text);
+}
+
+@media (max-width: 760px) {
+  .db-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .db-tree {
+    max-height: 300px;
+  }
+
+  .db-viewer-body {
+    max-height: 400px;
+  }
+}
