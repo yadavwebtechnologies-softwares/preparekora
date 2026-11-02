@@ -258,10 +258,12 @@
     return "mcq";
   }
 
+  const ADMIN_PAGE_SIZE = 5;
   const state = {
     admin: null, tests: [], editing: null, currentTab: "tests",
     submissionsTestId: null, submissionsCache: [],
-    analysisTestId: null, analysisCache: null
+    analysisTestId: null, analysisCache: null,
+    searchQuery: "", testsPage: 0
   };
   const screens = {
     loading: $id("adminLoading"),
@@ -283,8 +285,10 @@
     stopInactivityTimer();
     state.admin = null; state.tests = []; state.editing = null;
     state.submissionsTestId = null; state.analysisTestId = null; state.analysisCache = null;
+    state.searchQuery = ""; state.testsPage = 0;
     const u = $id("loginUser"), p = $id("loginPass"), e = $id("loginError");
     if (u) u.value = ""; if (p) p.value = ""; if (e) e.hidden = true;
+    const s = $id("adminTestSearch"); if (s) s.value = "";
     showScreen("login");
   }
 
@@ -394,8 +398,55 @@
       Promise.all([loadSettings(), loadInterruptionSettings()]).finally(function () { if (window.PKLoader) window.PKLoader.hide(); });
     }
   }
-  if (tabTests) tabTests.addEventListener("click", function () { setTab("tests"); });
+
+    if (tabTests) tabTests.addEventListener("click", function () { setTab("tests"); });
   if (tabSettings) tabSettings.addEventListener("click", function () { setTab("settings"); });
+
+  const adminTestSearch = $id("adminTestSearch");
+  const testsPagination = $id("testsPagination");
+  const testsPrevBtn = $id("testsPrevBtn");
+  const testsNextBtn = $id("testsNextBtn");
+  const testsPageInfo = $id("testsPageInfo");
+
+  if (adminTestSearch) {
+    adminTestSearch.addEventListener("input", function () {
+      state.searchQuery = adminTestSearch.value;
+      state.testsPage = 0;
+      renderTestsList();
+    });
+  }
+
+  if (testsPrevBtn) {
+    testsPrevBtn.addEventListener("click", function () {
+      if (state.testsPage > 0) {
+        state.testsPage--;
+        renderTestsList();
+      }
+    });
+  }
+
+  if (testsNextBtn) {
+    testsNextBtn.addEventListener("click", function () {
+      const query = state.searchQuery.trim().toLowerCase();
+      const filtered = query
+        ? state.tests.filter(function (test) {
+            const haystack = [
+              test.title || "",
+              test.publisherName || "",
+              test.status || ""
+            ].join(" ").toLowerCase();
+            return haystack.indexOf(query) !== -1;
+          })
+        : state.tests;
+
+      const totalPages = Math.max(1, Math.ceil(filtered.length / ADMIN_PAGE_SIZE));
+
+      if (state.testsPage < totalPages - 1) {
+        state.testsPage++;
+        renderTestsList();
+      }
+    });
+  }
 
   /* ---------- ACTIVE NOW ---------- */
 
@@ -460,17 +511,79 @@
     if (loading) loading.hidden = false;
     if (empty) empty.hidden = true;
     list.hidden = true; list.innerHTML = "";
+
     try {
       const res = await api.listOwn();
       state.tests = Array.isArray(res.tests) ? res.tests : [];
       if (loading) loading.hidden = true;
-      if (state.tests.length === 0) { if (empty) empty.hidden = false; return; }
-      list.hidden = false;
-      state.tests.forEach(function (test) { list.appendChild(renderTestCard(test)); });
+      renderTestsList();
     } catch (err) {
       if (loading) loading.hidden = true;
       if (err.status === 401) { showLogin(); return; }
       if (empty) { empty.hidden = false; empty.textContent = err.message || t("loadFailed"); }
+    }
+  }
+
+  function renderTestsList() {
+    const empty = $id("testsEmpty");
+    const list = $id("testsList");
+    if (!list) return;
+
+    const query = state.searchQuery.trim().toLowerCase();
+
+    const filtered = query
+      ? state.tests.filter(function (test) {
+          const haystack = [
+            test.title || "",
+            test.publisherName || "",
+            test.status || ""
+          ].join(" ").toLowerCase();
+          return haystack.indexOf(query) !== -1;
+        })
+      : state.tests;
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / ADMIN_PAGE_SIZE));
+
+    if (state.testsPage >= totalPages) state.testsPage = totalPages - 1;
+    if (state.testsPage < 0) state.testsPage = 0;
+
+    const startIdx = state.testsPage * ADMIN_PAGE_SIZE;
+    const endIdx = startIdx + ADMIN_PAGE_SIZE;
+    const pageSlice = filtered.slice(startIdx, endIdx);
+
+    list.replaceChildren();
+
+    if (filtered.length === 0) {
+      list.hidden = true;
+      if (empty) {
+        empty.hidden = false;
+        if (state.tests.length === 0) {
+          empty.textContent = t("noTests");
+        } else if (query) {
+          empty.textContent = "No tests match \"" + state.searchQuery + "\"";
+        } else {
+          empty.textContent = t("noTests");
+        }
+      }
+    } else {
+      list.hidden = false;
+      if (empty) empty.hidden = true;
+      pageSlice.forEach(function (test) {
+        list.appendChild(renderTestCard(test));
+      });
+    }
+
+    if (testsPagination) {
+      testsPagination.hidden = filtered.length <= ADMIN_PAGE_SIZE;
+    }
+    if (testsPageInfo) {
+      testsPageInfo.textContent = "Page " + (state.testsPage + 1) + " of " + totalPages;
+    }
+    if (testsPrevBtn) {
+      testsPrevBtn.disabled = state.testsPage === 0;
+    }
+    if (testsNextBtn) {
+      testsNextBtn.disabled = state.testsPage >= totalPages - 1;
     }
   }
 
@@ -1777,8 +1890,7 @@ if (type === "math") {
 
   document.addEventListener("pk:langchange", function () {
     if (screens.dashboard && !screens.dashboard.hidden && state.tests.length) {
-      const list = $id("testsList");
-      if (list) { list.innerHTML = ""; state.tests.forEach(function (test) { list.appendChild(renderTestCard(test)); }); }
+      renderTestsList();
     }
     if (state.editing && screens.editor && !screens.editor.hidden) renderEditor();
     if (state.submissionsTestId && screens.submissions && !screens.submissions.hidden) openSubmissions(state.submissionsTestId);
