@@ -35,18 +35,24 @@
   }
 
   /* ---------- State ---------- */
-
   const state = {
     tests: [],
-    loaded: false
+    loaded: false,
+    earlierPage: 0
   };
 
+  const EARLIER_PAGE_SIZE = 5;
   /* ---------- DOM ---------- */
 
   const todayList = document.getElementById("todayTests");
   const yesterdayList = document.getElementById("yesterdayTests");
   const earlierList = document.getElementById("earlierTests");
   const emptyState = document.getElementById("archiveEmpty");
+  
+  const earlierPagination = document.getElementById("earlierPagination");
+  const earlierPrevBtn = document.getElementById("earlierPrevBtn");
+  const earlierNextBtn = document.getElementById("earlierNextBtn");
+  const earlierPageInfo = document.getElementById("earlierPageInfo");
 
   const menuToggle = document.getElementById("menuToggle");
   const menuPanel = document.getElementById("menuPanel");
@@ -132,7 +138,6 @@
   }
 
   /* ---------- Render ---------- */
-
   function render() {
     if (!state.loaded) {
       [todayList, yesterdayList, earlierList].forEach(function (el) {
@@ -143,6 +148,7 @@
         }
       });
       if (emptyState) emptyState.hidden = true;
+      if (earlierPagination) earlierPagination.hidden = true;
       return;
     }
 
@@ -151,32 +157,72 @@
       groups[groupFor(test.createdAt)].push(test);
     });
 
-    const mapping = {
-      today: todayList,
-      yesterday: yesterdayList,
-      earlier: earlierList
-    };
-
-    let total = 0;
-
-    Object.keys(mapping).forEach(function (key) {
-      const container = mapping[key];
-      if (!container) return;
-      container.replaceChildren();
-      groups[key]
-        .sort(function (a, b) { return b.createdAt - a.createdAt; })
-        .forEach(function (test) {
-          container.appendChild(buildCard(test));
-          total++;
-        });
+    Object.keys(groups).forEach(function (key) {
+      groups[key].sort(function (a, b) { return b.createdAt - a.createdAt; });
     });
 
+    /* Today — all */
+    if (todayList) {
+      todayList.replaceChildren();
+      groups.today.forEach(function (test) {
+        todayList.appendChild(buildCard(test));
+      });
+    }
+
+    /* Yesterday — all */
+    if (yesterdayList) {
+      yesterdayList.replaceChildren();
+      groups.yesterday.forEach(function (test) {
+        yesterdayList.appendChild(buildCard(test));
+      });
+    }
+
+    /* Earlier — paginated (5 per page) */
+    const totalEarlierPages = Math.max(1, Math.ceil(groups.earlier.length / EARLIER_PAGE_SIZE));
+
+    if (state.earlierPage >= totalEarlierPages) {
+      state.earlierPage = totalEarlierPages - 1;
+    }
+    if (state.earlierPage < 0) {
+      state.earlierPage = 0;
+    }
+
+    const startIdx = state.earlierPage * EARLIER_PAGE_SIZE;
+    const endIdx = startIdx + EARLIER_PAGE_SIZE;
+    const earlierSlice = groups.earlier.slice(startIdx, endIdx);
+
+    if (earlierList) {
+      earlierList.replaceChildren();
+      earlierSlice.forEach(function (test) {
+        earlierList.appendChild(buildCard(test));
+      });
+    }
+
+    /* Pagination controls */
+    if (earlierPagination) {
+      earlierPagination.hidden = groups.earlier.length <= EARLIER_PAGE_SIZE;
+    }
+    if (earlierPageInfo) {
+      earlierPageInfo.textContent = "Page " + (state.earlierPage + 1) + " of " + totalEarlierPages;
+    }
+    if (earlierPrevBtn) {
+      earlierPrevBtn.disabled = state.earlierPage === 0;
+    }
+    if (earlierNextBtn) {
+      earlierNextBtn.disabled = state.earlierPage >= totalEarlierPages - 1;
+    }
+
+    /* Hide empty sections */
     document.querySelectorAll(".archive-section").forEach(function (section) {
-      const list = section.querySelector(".test-list");
-      section.hidden = !list || list.children.length === 0;
+      const group = section.getAttribute("data-group");
+      if (group === "today") section.hidden = groups.today.length === 0;
+      else if (group === "yesterday") section.hidden = groups.yesterday.length === 0;
+      else if (group === "earlier") section.hidden = groups.earlier.length === 0;
     });
 
-    if (emptyState) emptyState.hidden = total !== 0;
+    if (emptyState) {
+      emptyState.hidden = state.tests.length !== 0;
+    }
   }
 
   /* ---------- Fetch ---------- */
@@ -238,8 +284,41 @@
       }
     });
 
-    menuPanel.querySelectorAll("a").forEach(function (link) {
-      link.addEventListener("click", closeMenu);
+  menuPanel.querySelectorAll("a").forEach(function (link) {
+    link.addEventListener("click", closeMenu);
+  });
+
+  /* ---------- Earlier pagination ---------- */
+
+  function scrollToEarlier() {
+    const earlierSection = document.querySelector('[data-group="earlier"]');
+    if (earlierSection) {
+      earlierSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  if (earlierPrevBtn) {
+    earlierPrevBtn.addEventListener("click", function () {
+      if (state.earlierPage > 0) {
+        state.earlierPage--;
+        render();
+        scrollToEarlier();
+      }
+    });
+  }
+
+  if (earlierNextBtn) {
+    earlierNextBtn.addEventListener("click", function () {
+      const earlierCount = state.tests.filter(function (test) {
+        return groupFor(test.createdAt) === "earlier";
+      }).length;
+      const totalPages = Math.max(1, Math.ceil(earlierCount / EARLIER_PAGE_SIZE));
+
+      if (state.earlierPage < totalPages - 1) {
+        state.earlierPage++;
+        render();
+        scrollToEarlier();
+      }
     });
   }
 
