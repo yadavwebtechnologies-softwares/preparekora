@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# Block admin panel from search engines
+Disallow: /admin.html
+
+Sitemap: https://yadavwebtechnologies-softwares.github.io/preparekora/sitemap.xml
