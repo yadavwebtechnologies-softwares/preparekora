@@ -108,7 +108,32 @@ img { max-width: 100%; height: auto; }
 
 .brand-main { color: #111111; }
 .brand-in { color: #858585; }
+/*=================================================================
+/* ---------- Scroll to bottom button (editor only, after JSON import) ---------- */
+.scroll-bottom-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 50;
+  display: none;
+}
 
+.scroll-bottom-btn.is-visible {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scroll-bottom-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/*=================================================================
 /* ============================
    Desktop Navigation
    ============================ */
