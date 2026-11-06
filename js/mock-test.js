@@ -515,7 +515,8 @@
       if (settingsRes) {
         state.settings = {
           enabled: settingsRes.interruptionEnabled !== false,
-          duration: Number(settingsRes.interruptionDuration) || 5
+          duration: Number(settingsRes.interruptionDuration) || 5,
+          practiceMode: settingsRes.practiceMode === true
         };
       }
     } catch (e) { /* use defaults */ }
@@ -634,6 +635,11 @@
       return;
     }
 
+    if (state.settings.practiceMode) {
+      beginPracticeTest();
+      return;
+    }
+
     state.started = true;
     state.index = 0;
     state.answers = {};
@@ -656,6 +662,242 @@
     announce(t("questionOf", { n: 1, total: state.publicTest.questions.length }));
     if (nextBtn) nextBtn.focus();
   }
+
+    /* ---------- Practice mode ---------- */
+
+  function beginPracticeTest() {
+    state.started = true;
+    state.index = 0;
+    state.answers = {};
+    state.marked.clear();
+    state.visited.clear();
+    state.finished = false;
+    state.submitting = false;
+    state.startedAt = Date.now();
+    state.elapsed = 0;
+
+    clearInterruptState();
+
+    document.body.classList.add("is-practice-mode");
+
+    showScreen("test");
+    examTitle.textContent = state.translatedTitle || state.publicTest.title;
+
+    if (timerEl) timerEl.hidden = true;
+    if (submitBtn) submitBtn.hidden = true;
+    if (paletteToggle) paletteToggle.hidden = true;
+    if (prevBtn) prevBtn.hidden = true;
+    if (nextBtn) nextBtn.hidden = true;
+    if (markBtn) markBtn.hidden = true;
+    if (clearBtn) clearBtn.hidden = true;
+    if (qNumber) qNumber.hidden = true;
+    if (qStatus) qStatus.hidden = true;
+    if (examSub) examSub.textContent = "";
+
+    renderPracticeAll();
+    startHeartbeat();
+    announce("Practice mode. All questions shown. Tap an option to check your answer.");
+  }
+
+  function renderPracticeAll() {
+    const pt = state.publicTest;
+    if (!pt) return;
+
+    const container = document.createElement("div");
+    container.className = "practice-container";
+
+    pt.questions.forEach(function (question, qIndex) {
+      const card = document.createElement("div");
+      card.className = "practice-card";
+      card.dataset.qIndex = String(qIndex);
+
+      const qType = getQuestionType(question);
+
+      const numLine = document.createElement("p");
+      numLine.className = "practice-qnum";
+      numLine.textContent = "Q" + (qIndex + 1);
+      card.appendChild(numLine);
+
+      const qTextEl = document.createElement("p");
+      qTextEl.className = "practice-qtext";
+      qTextEl.textContent = question.q;
+      card.appendChild(qTextEl);
+
+      if (question.latex && String(question.latex).trim()) {
+        const latexEl = document.createElement("div");
+        latexEl.className = "practice-latex";
+        renderLatex(latexEl, question.latex);
+        card.appendChild(latexEl);
+      }
+
+      if (question.imageBase64 && String(question.imageBase64).startsWith("data:image")) {
+        const img = document.createElement("img");
+        img.src = question.imageBase64;
+        img.alt = "";
+        img.loading = "lazy";
+        img.className = "practice-qimage";
+        card.appendChild(img);
+      }
+
+      const mathHasOptions = qType === "math" && Array.isArray(question.options) && question.options.length === 4;
+
+      if (qType === "math" && !mathHasOptions) {
+        const note = document.createElement("p");
+        note.className = "practice-note";
+        note.textContent = "Numeric answer (keypad) — not available in practice mode.";
+        card.appendChild(note);
+      } else {
+        const optionsWrap = document.createElement("div");
+        optionsWrap.className = "practice-options";
+
+        (question.options || []).forEach(function (optText, optIndex) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "practice-option";
+          btn.dataset.qIndex = String(qIndex);
+          btn.dataset.optIndex = String(optIndex);
+
+          const key = document.createElement("span");
+          key.className = "practice-optkey";
+          key.textContent = "ABCD".charAt(optIndex);
+
+          const text = document.createElement("span");
+          text.className = "practice-opttext";
+          renderOptionText(text, optText || "");
+
+          btn.appendChild(key);
+          btn.appendChild(text);
+
+          if (question.optionImages && question.optionImages[optIndex] && String(question.optionImages[optIndex]).startsWith("data:image")) {
+            const img = document.createElement("img");
+            img.src = question.optionImages[optIndex];
+            img.alt = "";
+            img.className = "practice-optimg";
+            btn.appendChild(img);
+          }
+
+          btn.addEventListener("click", function () {
+            handlePracticeAnswer(qIndex, optIndex, card, question, optionsWrap);
+          });
+
+          optionsWrap.appendChild(btn);
+        });
+
+        card.appendChild(optionsWrap);
+      }
+
+      const feedback = document.createElement("div");
+      feedback.className = "practice-feedback";
+      feedback.hidden = true;
+      card.appendChild(feedback);
+
+      container.appendChild(card);
+    });
+
+    if (optionsFieldset) optionsFieldset.hidden = true;
+    if (qLatex) qLatex.hidden = true;
+    if (qImage) qImage.hidden = true;
+    if (numericInput) numericInput.hidden = true;
+
+    const testScreen = document.getElementById("testScreen");
+    const existing = testScreen.querySelector(".practice-container");
+    if (existing) existing.remove();
+    testScreen.appendChild(container);
+  }
+
+  function handlePracticeAnswer(qIndex, optIndex, card, question, optionsWrap) {
+    if (card.dataset.locked === "1") return;
+    card.dataset.locked = "1";
+
+    state.answers[qIndex] = optIndex;
+
+    const correctIndex = question.answer;
+    const isCorrect = optIndex === correctIndex;
+
+    const allBtns = optionsWrap.querySelectorAll(".practice-option");
+    allBtns.forEach(function (btn, i) {
+      btn.disabled = true;
+      if (i === correctIndex) {
+        btn.classList.add("is-correct");
+      } else if (i === optIndex && !isCorrect) {
+        btn.classList.add("is-wrong");
+      } else {
+        btn.classList.add("is-dim");
+      }
+    });
+
+    const feedback = card.querySelector(".practice-feedback");
+    if (!feedback) return;
+
+    feedback.hidden = false;
+    feedback.classList.add(isCorrect ? "is-correct" : "is-wrong");
+
+    const strip = document.createElement("div");
+    strip.className = "practice-strip";
+
+    if (isCorrect) {
+      strip.textContent = "Correct";
+    } else {
+      strip.textContent = "Wrong — correct answer: " + "ABCD".charAt(correctIndex);
+    }
+
+    feedback.appendChild(strip);
+
+    if (question.explanation && String(question.explanation).trim()) {
+      const exp = document.createElement("p");
+      exp.className = "practice-explanation";
+      exp.textContent = question.explanation;
+      feedback.appendChild(exp);
+    }
+  }
+
+  function submitPracticeTest() {
+    if (state.submitting || state.finished) return;
+    state.submitting = true;
+    state.finished = true;
+    state.elapsed = Math.round((Date.now() - state.startedAt) / 1000);
+    stopHeartbeat();
+
+    const payloadAnswers = {};
+    Object.keys(state.answers).forEach(function (i) {
+      const v = state.answers[i];
+      const idx = typeof v === "number" ? v : Number(v);
+      if (Number.isInteger(idx) && idx >= 0 && idx <= 3) payloadAnswers[String(i)] = idx;
+    });
+
+    apiSubmit(testId, {
+      answers: payloadAnswers,
+      userName: state.userName,
+      userWhatsApp: state.userWhatsApp || "",
+      timeTaken: state.elapsed || 0,
+      mode: "practice"
+    }).then(function (scored) {
+      state.result = {
+        correct: Number(scored.correct) || 0,
+        wrong: Number(scored.wrong) || 0,
+        unattempted: Number(scored.unattempted) || 0,
+        total: Number(scored.total) || state.publicTest.questions.length,
+        percent: Number(scored.percent) || 0,
+        correctAnswers: (scored && scored.correctAnswers) ? scored.correctAnswers : null,
+        correctNumeric: (scored && scored.correctNumeric) ? scored.correctNumeric : null,
+        questionTypes: (scored && scored.questionTypes) ? scored.questionTypes : null
+      };
+      document.body.classList.remove("is-practice-mode");
+      showScreen("result");
+      renderResult();
+    }).catch(function () {
+      state.result = {
+        correct: 0, wrong: 0,
+        unattempted: state.publicTest.questions.length,
+        total: state.publicTest.questions.length,
+        percent: 0
+      };
+      document.body.classList.remove("is-practice-mode");
+      showScreen("result");
+      renderResult();
+    });
+  }
+
     /* ---------- Option LaTeX render ---------- */
 
   function renderOptionText(el, raw) {
