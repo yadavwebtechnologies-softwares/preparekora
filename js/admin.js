@@ -395,7 +395,7 @@
     if (panelSettings) panelSettings.hidden = tab !== "settings";
     if (tab === "settings") {
       if (window.PKLoader) window.PKLoader.show();
-      Promise.all([loadSettings(), loadInterruptionSettings()]).finally(function () { if (window.PKLoader) window.PKLoader.hide(); });
+      Promise.all([loadSettings(), loadInterruptionSettings(), loadPracticeModeSettings()]).finally(function () { if (window.PKLoader) window.PKLoader.hide(); });
     }
   }
 
@@ -1198,6 +1198,36 @@
       if (dur) dur.value = res.interruptionDuration || 5;
       const errEl = $id("interruptionError"); if (errEl) errEl.hidden = true;
     } catch (err) {}
+  }
+    async function loadPracticeModeSettings() {
+    try {
+      const res = await api.getSettings();
+      const cb = $id("practiceModeToggle");
+      if (cb) cb.checked = res.practiceMode === true;
+    } catch (err) {}
+  }
+
+    const practiceModeForm = $id("practiceModeForm");
+  if (practiceModeForm) {
+    practiceModeForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const btn = $id("savePracticeModeBtn");
+      const cb = $id("practiceModeToggle");
+      if (!btn || !cb) return;
+      btn.disabled = true;
+      try {
+        const current = await api.getSettings();
+        await api.updateSettings({
+          interruptionEnabled: current.interruptionEnabled !== false,
+          interruptionDuration: Number(current.interruptionDuration) || 5,
+          practiceMode: cb.checked
+        });
+        toast("Practice mode " + (cb.checked ? "enabled" : "disabled"), "success");
+      } catch (err) {
+        if (err.status === 401) return showLogin();
+        toast(err.message || "Save failed", "error");
+      } finally { btn.disabled = false; }
+    });
   }
 
   const interruptionForm = $id("interruptionForm");
