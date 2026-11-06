@@ -640,6 +640,9 @@
       return;
     }
 
+    const finishBar = document.getElementById("practiceFinishBar");
+    if (finishBar) finishBar.style.display = "none";
+
     state.started = true;
     state.index = 0;
     state.answers = {};
@@ -1232,6 +1235,8 @@
     state.submitting = true;
     state.finished = true;
 
+    const finishBar = document.getElementById("practiceFinishBar");
+    if (finishBar) finishBar.style.display = "none";
     if (state.timerId) { window.clearInterval(state.timerId); state.timerId = null; }
     closePalette();
     closeConfirm();
@@ -1731,3 +1736,13 @@
   loadTest();
 
 })();
+  /* ---------- new ---------- */
+    const finishBtn = document.getElementById("practiceFinishBtn");
+    if (finishBtn) {
+      finishBtn.style.display = "";
+      finishBtn.onclick = function () {
+        if (window.confirm("Finish the test and see your result?")) {
+          submitPracticeTest();
+        }
+      };
+    }
