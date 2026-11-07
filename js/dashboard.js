@@ -50,6 +50,23 @@
     c.appendChild(el);
     setTimeout(function () { el.remove(); }, 3000);
   }
+    async function fetchUserStreak(token) {
+    try {
+      const res = await fetch(API_BASE + "/user/profile", {
+        method: "GET",
+        headers: { "Authorization": "Bearer " + token }
+      });
+      if (!res.ok) return 0;
+      // Also try to get stats from daily-quizzes/today endpoint which includes streak
+      const res2 = await fetch(API_BASE + "/daily-quizzes/today", {
+        method: "GET",
+        headers: { "Authorization": "Bearer " + token }
+      });
+      if (!res2.ok) return 0;
+      const data = await res2.json();
+      return data && data.stats ? Number(data.stats.streak) || 0 : 0;
+    } catch (e) { return 0; }
+  }
 
   async function fetchProfile(token) {
     const res = await fetch(API_BASE + "/user/profile", {
@@ -159,9 +176,16 @@
 
     const nameInput = $id("displayNameInput");
     if (nameInput) nameInput.value = profile.name || "";
+
+    // Update streak badge
+    const streakEl = $id("dashStreak");
+    if (streakEl && profile.streak && profile.streak > 0) {
+      streakEl.textContent = "🔥 " + profile.streak + "-day streak";
+      streakEl.hidden = false;
+    }
   }
 
-    async function loadAttempts() {
+  async function loadAttempts() {
     const token = getToken();
     if (!token) return;
 
@@ -174,45 +198,70 @@
     if (listEl) listEl.innerHTML = "";
 
     try {
-      const res = await fetchAttempts(token);
-      const attempts = Array.isArray(res.attempts) ? res.attempts : [];
+      // Fetch both mock test attempts and quiz attempts
+      const [mockRes, quizRes] = await Promise.all([
+        fetchAttempts(token).catch(function () { return { attempts: [] }; }),
+        fetch(API_BASE + "/user/quiz-attempts", {
+          headers: { "Authorization": "Bearer " + token }
+        }).then(function (r) { return r.ok ? r.json() : { attempts: [] }; }).catch(function () { return { attempts: [] }; })
+      ]);
+
+      const mockAttempts = (Array.isArray(mockRes.attempts) ? mockRes.attempts : []).map(function (a) {
+        return Object.assign({}, a, { _type: "mock" });
+      });
+      const quizAttempts = (Array.isArray(quizRes.attempts) ? quizRes.attempts : []).map(function (a) {
+        return Object.assign({}, a, { _type: "quiz" });
+      });
+
+      // Merge and sort by submittedAt (newest first)
+      const allAttempts = mockAttempts.concat(quizAttempts);
+      allAttempts.sort(function (a, b) { return (b.submittedAt || 0) - (a.submittedAt || 0); });
 
       if (loadingEl) loadingEl.hidden = true;
 
-      if (attempts.length === 0) {
+      if (allAttempts.length === 0) {
         if (emptyEl) emptyEl.hidden = false;
         return;
       }
 
       if (!listEl) return;
 
-      attempts.forEach(function (a) {
+      allAttempts.forEach(function (a) {
         const card = document.createElement("div");
         card.className = "admin-test-card";
         card.style.cursor = "pointer";
+
+        let title, subtitle, href;
+        if (a._type === "quiz") {
+          title = a.subjectName || "Quiz";
+          subtitle = "Daily Quiz · " + a.date;
+          href = "result.html?date=" + encodeURIComponent(a.date) + "&subject=" + encodeURIComponent(a.subjectId);
+        } else {
+          title = a.testTitle || "Mock Test";
+          subtitle = "Mock Test";
+          href = "mock-test.html?test=" + encodeURIComponent(a.testId) + "&review=" + encodeURIComponent(a.id);
+        }
+
         card.innerHTML =
           '<div class="admin-test-info">' +
-            '<p class="admin-test-title">' + esc(a.testTitle || "Untitled Test") + '</p>' +
+            '<p class="admin-test-title">' + esc(title) + '</p>' +
             '<div class="admin-test-meta">' +
-              '<span class="status-badge published">' + a.percent + '%</span>' +
-              '<span>' + a.correct + ' / ' + a.total + ' correct</span>' +
+              '<span class="status-badge ' + (a._type === "quiz" ? "draft" : "published") + '">' + esc(subtitle) + '</span>' +
+              '<span>' + a.correct + ' / ' + a.total + ' correct (' + a.percent + '%)</span>' +
               '<span>' + formatTimeTaken(a.timeTaken) + '</span>' +
               '<span>' + formatAttemptDate(a.submittedAt) + '</span>' +
             '</div>' +
           '</div>' +
           '<div class="admin-test-actions">' +
-            '<button class="btn btn-sm" type="button">Review</button>' +
+            '<button class="btn btn-sm" type="button">View</button>' +
           '</div>';
 
-        const reviewBtn = card.querySelector(".admin-test-actions .btn");
-        if (reviewBtn) {
-          reviewBtn.addEventListener("click", function (e) {
-            e.stopPropagation();
-            window.location.href = "mock-test.html?test=" + encodeURIComponent(a.testId) + "&review=" + encodeURIComponent(a.id);
-          });
-        }
+        card.querySelector(".admin-test-actions .btn").addEventListener("click", function (e) {
+          e.stopPropagation();
+          window.location.href = href;
+        });
         card.addEventListener("click", function () {
-          window.location.href = "mock-test.html?test=" + encodeURIComponent(a.testId) + "&review=" + encodeURIComponent(a.id);
+          window.location.href = href;
         });
 
         listEl.appendChild(card);
@@ -621,12 +670,16 @@
         startInactivityTimer();
 
     try {
-      const profile = await fetchProfile(token);
+      const [profile, streak] = await Promise.all([
+        fetchProfile(token),
+        fetchUserStreak(token)
+      ]);
+      profile.streak = streak;
       renderProfile(profile);
       const loadingEl = $id("dashLoading");
-      const screenEl = $id("dashboardScreen");
+      const contentEl = $id("dashContent");
       if (loadingEl) loadingEl.hidden = true;
-      if (screenEl) screenEl.hidden = false;
+      if (contentEl) contentEl.hidden = false;
     } catch (err) {
       if (err && err.code === "unauth") { redirectToLogin(); return; }
       const loadingEl = $id("dashLoading");
