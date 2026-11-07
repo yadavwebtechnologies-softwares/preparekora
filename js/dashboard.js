@@ -26,7 +26,7 @@
   }
 
   function redirectToLogin(reason) {
-    if (typeof stopInactivityTimer === "function") stopInactivityTimer();
+    stopInactivityTimer();
     clearTokens();
     const url = (reason === "signout") ? "login.html?logout=1" : "login.html";
     window.location.replace(url);
@@ -49,43 +49,6 @@
     el.textContent = msg;
     c.appendChild(el);
     setTimeout(function () { el.remove(); }, 3000);
-  }
-    async function fetchUserStreak(token) {
-    try {
-      const res = await fetch(API_BASE + "/user/profile", {
-        method: "GET",
-        headers: { "Authorization": "Bearer " + token }
-      });
-      if (!res.ok) return 0;
-      // Also try to get stats from daily-quizzes/today endpoint which includes streak
-      const res2 = await fetch(API_BASE + "/daily-quizzes/today", {
-        method: "GET",
-        headers: { "Authorization": "Bearer " + token }
-      });
-      if (!res2.ok) return 0;
-      const data = await res2.json();
-      return data && data.stats ? Number(data.stats.streak) || 0 : 0;
-    } catch (e) { return 0; }
-  }
-
-  async function fetchProfile(token) {
-    const res = await fetch(API_BASE + "/user/profile", {
-      method: "GET",
-      headers: { "Authorization": "Bearer " + token }
-    });
-    if (res.status === 401 || res.status === 403) throw { code: "unauth" };
-    if (!res.ok) throw { code: "http", status: res.status };
-    return await res.json();
-  }
-
-    async function fetchAttempts(token) {
-    const res = await fetch(API_BASE + "/user/attempts", {
-      method: "GET",
-      headers: { "Authorization": "Bearer " + token }
-    });
-    if (res.status === 401 || res.status === 403) throw { code: "unauth" };
-    if (!res.ok) throw { code: "http", status: res.status };
-    return await res.json();
   }
 
   function formatAttemptDate(ts) {
@@ -111,7 +74,18 @@
     return m + "m " + String(r).padStart(2, "0") + "s";
   }
 
-  
+  /* ---------- PROFILE ---------- */
+
+  async function fetchProfile(token) {
+    const res = await fetch(API_BASE + "/user/profile", {
+      method: "GET",
+      headers: { "Authorization": "Bearer " + token }
+    });
+    if (res.status === 401 || res.status === 403) throw { code: "unauth" };
+    if (!res.ok) throw { code: "http", status: res.status };
+    return await res.json();
+  }
+
   async function updateProfileName(token, name) {
     const res = await fetch(API_BASE + "/user/profile", {
       method: "PUT",
@@ -128,9 +102,21 @@
     return data;
   }
 
+  async function fetchUserStreak(token) {
+    try {
+      const res = await fetch(API_BASE + "/daily-quizzes/today", {
+        method: "GET",
+        headers: { "Authorization": "Bearer " + token }
+      });
+      if (!res.ok) return 0;
+      const data = await res.json();
+      return data && data.stats ? Number(data.stats.streak) || 0 : 0;
+    } catch (e) { return 0; }
+  }
+
   let currentProfile = null;
 
-  function formatDate(ts) {
+  function formatProfileDate(ts) {
     if (!ts) return "—";
     const d = new Date(Number(ts));
     if (isNaN(d.getTime())) return "—";
@@ -145,6 +131,7 @@
     const emailEl = $id("profileEmail");
     const avatarEl = $id("dashAvatar");
     const metaEl = $id("profileMeta");
+    const streakEl = $id("dashStreak");
 
     if (nameTagEl) nameTagEl.textContent = profile.name || "User";
     if (nameEl) nameEl.textContent = profile.name || "User";
@@ -170,20 +157,89 @@
     if (metaEl) {
       metaEl.innerHTML =
         '<span>Email <strong style="color: var(--text); font-weight: 600;">' + esc(profile.email || "—") + '</strong></span>' +
-        '<span>Joined <strong style="color: var(--text); font-weight: 600;">' + esc(formatDate(profile.createdAt)) + '</strong></span>' +
-        '<span>Last login <strong style="color: var(--text); font-weight: 600;">' + esc(formatDate(profile.lastLoginAt)) + '</strong></span>';
+        '<span>Joined <strong style="color: var(--text); font-weight: 600;">' + esc(formatProfileDate(profile.createdAt)) + '</strong></span>' +
+        '<span>Last login <strong style="color: var(--text); font-weight: 600;">' + esc(formatProfileDate(profile.lastLoginAt)) + '</strong></span>';
     }
 
     const nameInput = $id("displayNameInput");
     if (nameInput) nameInput.value = profile.name || "";
 
-    // Update streak badge
-    const streakEl = $id("dashStreak");
     if (streakEl && profile.streak && profile.streak > 0) {
       streakEl.textContent = "🔥 " + profile.streak + "-day streak";
       streakEl.hidden = false;
     }
   }
+
+  /* ---------- TODAY'S QUIZZES ---------- */
+
+  async function loadTodayQuizzes() {
+    const wrap = $id("quizzesPanelContent");
+    if (!wrap) return;
+
+    const token = getToken();
+    if (!token) { redirectToLogin(); return; }
+
+    wrap.innerHTML = '<div class="loading-state" style="padding: 30px 16px;"><div class="spinner"></div><span>Loading quizzes…</span></div>';
+
+    try {
+      const res = await fetch(API_BASE + "/daily-quizzes/today", {
+        method: "GET",
+        headers: { "Authorization": "Bearer " + token }
+      });
+
+      if (res.status === 401 || res.status === 403) { redirectToLogin(); return; }
+      if (!res.ok) {
+        wrap.innerHTML = '<div class="empty-state" style="padding: 30px 16px;">Could not load quizzes. Please refresh.</div>';
+        return;
+      }
+
+      const data = await res.json();
+      const quizzes = Array.isArray(data.quizzes) ? data.quizzes : [];
+      const date = data.date || "";
+
+      if (quizzes.length === 0) {
+        wrap.innerHTML = '<div class="empty-state" style="padding: 40px 20px;">No quizzes available today. Check back soon.</div>';
+        return;
+      }
+
+      wrap.innerHTML = "";
+      const grid = document.createElement("div");
+      grid.style.cssText = "display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px;";
+
+      quizzes.forEach(function (q) {
+        const card = document.createElement("div");
+        card.style.cssText = "padding: 20px; border: 1px solid rgba(216,222,232,0.6); border-radius: 14px; background: #ffffff; box-shadow: 0 8px 20px rgba(163,177,198,0.3);";
+
+        if (q.attempted) {
+          card.innerHTML =
+            '<p style="margin: 0 0 10px; font-size: 15px; font-weight: 600; color: var(--text);">' + esc(q.subjectName) + '</p>' +
+            '<div style="padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); text-align: center;">' +
+              '<p style="margin: 0; font-size: 13px; font-weight: 600; color: var(--accent);">Attempted · ' + q.score + '/' + q.total + '</p>' +
+              '<p style="margin: 4px 0 0; font-size: 11px; color: var(--muted);">' + q.percent + '% score</p>' +
+            '</div>';
+          card.style.cursor = "pointer";
+          card.addEventListener("click", function () {
+            window.location.href = "result.html?date=" + encodeURIComponent(date) + "&subject=" + encodeURIComponent(q.subjectId);
+          });
+        } else {
+          card.innerHTML =
+            '<p style="margin: 0 0 10px; font-size: 15px; font-weight: 600; color: var(--text);">' + esc(q.subjectName) + '</p>' +
+            '<div style="padding: 10px 12px; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent); color: #fff; text-align: center; cursor: pointer; font-size: 13px; font-weight: 600;">Start Quiz</div>';
+          card.querySelector("div").addEventListener("click", function () {
+            window.location.href = "quiz.html?date=" + encodeURIComponent(date) + "&subject=" + encodeURIComponent(q.subjectId);
+          });
+        }
+
+        grid.appendChild(card);
+      });
+
+      wrap.appendChild(grid);
+    } catch (err) {
+      wrap.innerHTML = '<div class="empty-state" style="padding: 30px 16px;">Network error. Please refresh.</div>';
+    }
+  }
+
+  /* ---------- ATTEMPTS ---------- */
 
   async function loadAttempts() {
     const token = getToken();
@@ -198,9 +254,10 @@
     if (listEl) listEl.innerHTML = "";
 
     try {
-      // Fetch both mock test attempts and quiz attempts
       const [mockRes, quizRes] = await Promise.all([
-        fetchAttempts(token).catch(function () { return { attempts: [] }; }),
+        fetch(API_BASE + "/user/attempts", {
+          headers: { "Authorization": "Bearer " + token }
+        }).then(function (r) { return r.ok ? r.json() : { attempts: [] }; }).catch(function () { return { attempts: [] }; }),
         fetch(API_BASE + "/user/quiz-attempts", {
           headers: { "Authorization": "Bearer " + token }
         }).then(function (r) { return r.ok ? r.json() : { attempts: [] }; }).catch(function () { return { attempts: [] }; })
@@ -213,7 +270,6 @@
         return Object.assign({}, a, { _type: "quiz" });
       });
 
-      // Merge and sort by submittedAt (newest first)
       const allAttempts = mockAttempts.concat(quizAttempts);
       allAttempts.sort(function (a, b) { return (b.submittedAt || 0) - (a.submittedAt || 0); });
 
@@ -274,152 +330,9 @@
       }
     }
   }
-    /* ---------- TODAY'S QUIZZES ---------- */
-
-  async function loadTodayQuizzes() {
-    const wrap = $id("quizzesPanelContent");
-    if (!wrap) return;
-
-    const token = getToken();
-    if (!token) { redirectToLogin(); return; }
-
-    wrap.innerHTML = '<div class="loading-state" style="padding: 30px 16px;"><div class="spinner"></div><span>Loading quizzes…</span></div>';
-
-    try {
-      const res = await fetch(API_BASE + "/daily-quizzes/today", {
-        method: "GET",
-        headers: { "Authorization": "Bearer " + token }
-      });
-
-      if (res.status === 401 || res.status === 403) { redirectToLogin(); return; }
-      if (!res.ok) {
-        wrap.innerHTML = '<div class="empty-state" style="padding: 30px 16px;">Could not load quizzes. Please refresh.</div>';
-        return;
-      }
-
-      const data = await res.json();
-      const quizzes = Array.isArray(data.quizzes) ? data.quizzes : [];
-      const date = data.date || "";
-
-      // Update streak in header if present
-      const streakEl = $id("dashStreak");
-      if (streakEl && data.stats) {
-        const s = Number(data.stats.streak) || 0;
-        streakEl.textContent = s > 0 ? ("🔥 " + s + "-day streak") : "";
-        streakEl.hidden = s === 0;
-      }
-
-      if (quizzes.length === 0) {
-        wrap.innerHTML = '<div class="empty-state" style="padding: 40px 20px;">No quizzes available today. Check back soon.</div>';
-        return;
-      }
-
-      wrap.innerHTML = "";
-      const grid = document.createElement("div");
-      grid.style.cssText = "display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px;";
-
-      quizzes.forEach(function (q) {
-        const card = document.createElement("div");
-        card.style.cssText = "padding: 20px; border: 1px solid rgba(216,222,232,0.6); border-radius: 14px; background: #ffffff; box-shadow: 0 8px 20px rgba(163,177,198,0.3);";
-
-        if (q.attempted) {
-          card.innerHTML =
-            '<p style="margin: 0 0 10px; font-size: 15px; font-weight: 600; color: var(--text);">' + esc(q.subjectName) + '</p>' +
-            '<div style="padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); text-align: center;">' +
-              '<p style="margin: 0; font-size: 13px; font-weight: 600; color: var(--accent);">Attempted · ' + q.score + '/' + q.total + '</p>' +
-              '<p style="margin: 4px 0 0; font-size: 11px; color: var(--muted);">' + q.percent + '% score</p>' +
-            '</div>';
-          card.style.cursor = "pointer";
-          card.addEventListener("click", function () {
-            window.location.href = "result.html?date=" + encodeURIComponent(date) + "&subject=" + encodeURIComponent(q.subjectId);
-          });
-        } else {
-          card.innerHTML =
-            '<p style="margin: 0 0 10px; font-size: 15px; font-weight: 600; color: var(--text);">' + esc(q.subjectName) + '</p>' +
-            '<div style="padding: 10px 12px; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent); color: #fff; text-align: center; cursor: pointer; font-size: 13px; font-weight: 600;">Start Quiz</div>';
-          card.querySelector("div").addEventListener("click", function () {
-            window.location.href = "quiz.html?date=" + encodeURIComponent(date) + "&subject=" + encodeURIComponent(q.subjectId);
-          });
-        }
-
-        grid.appendChild(card);
-      });
-
-      wrap.appendChild(grid);
-    } catch (err) {
-      wrap.innerHTML = '<div class="empty-state" style="padding: 30px 16px;">Network error. Please refresh.</div>';
-    }
-  }
-    /* ---------- TODAY'S QUIZZES ---------- */
-
-  async function loadTodayQuizzes() {
-    const wrap = $id("quizzesPanelContent");
-    if (!wrap) return;
-
-    const token = getToken();
-    if (!token) { redirectToLogin(); return; }
-
-    wrap.innerHTML = '<div class="loading-state" style="padding: 30px 16px;"><div class="spinner"></div><span>Loading quizzes…</span></div>';
-
-    try {
-      const res = await fetch(API_BASE + "/daily-quizzes/today", {
-        method: "GET",
-        headers: { "Authorization": "Bearer " + token }
-      });
-
-      if (res.status === 401 || res.status === 403) { redirectToLogin(); return; }
-      if (!res.ok) {
-        wrap.innerHTML = '<div class="empty-state" style="padding: 30px 16px;">Could not load quizzes. Please refresh.</div>';
-        return;
-      }
-
-      const data = await res.json();
-      const quizzes = Array.isArray(data.quizzes) ? data.quizzes : [];
-      const date = data.date || "";
-
-      if (quizzes.length === 0) {
-        wrap.innerHTML = '<div class="empty-state" style="padding: 40px 20px;">No quizzes available today. Check back soon.</div>';
-        return;
-      }
-
-      wrap.innerHTML = "";
-      const grid = document.createElement("div");
-      grid.style.cssText = "display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px;";
-
-      quizzes.forEach(function (q) {
-        const card = document.createElement("div");
-        card.style.cssText = "padding: 20px; border: 1px solid rgba(216,222,232,0.6); border-radius: 14px; background: #ffffff; box-shadow: 0 8px 20px rgba(163,177,198,0.3);";
-
-        if (q.attempted) {
-          card.innerHTML =
-            '<p style="margin: 0 0 10px; font-size: 15px; font-weight: 600; color: var(--text);">' + esc(q.subjectName) + '</p>' +
-            '<div style="padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); text-align: center;">' +
-              '<p style="margin: 0; font-size: 13px; font-weight: 600; color: var(--accent);">Attempted · ' + q.score + '/' + q.total + '</p>' +
-              '<p style="margin: 4px 0 0; font-size: 11px; color: var(--muted);">' + q.percent + '% score</p>' +
-            '</div>';
-          card.style.cursor = "pointer";
-          card.addEventListener("click", function () {
-            window.location.href = "result.html?date=" + encodeURIComponent(date) + "&subject=" + encodeURIComponent(q.subjectId);
-          });
-        } else {
-          card.innerHTML =
-            '<p style="margin: 0 0 10px; font-size: 15px; font-weight: 600; color: var(--text);">' + esc(q.subjectName) + '</p>' +
-            '<div style="padding: 10px 12px; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent); color: #fff; text-align: center; cursor: pointer; font-size: 13px; font-weight: 600;">Start Quiz</div>';
-          card.querySelector("div").addEventListener("click", function () {
-            window.location.href = "quiz.html?date=" + encodeURIComponent(date) + "&subject=" + encodeURIComponent(q.subjectId);
-          });
-        }
-
-        grid.appendChild(card);
-      });
-
-      wrap.appendChild(grid);
-    } catch (err) {
-      wrap.innerHTML = '<div class="empty-state" style="padding: 30px 16px;">Network error. Please refresh.</div>';
-    }
-  }
 
   /* ---------- TABS ---------- */
+
   function bindTabs() {
     const tabs = {
       quizzes: { tab: $id("tabQuizzes"), panel: $id("panelQuizzes") },
@@ -512,7 +425,8 @@
           email: updated.email,
           photoURL: updated.photoURL,
           createdAt: updated.createdAt,
-          lastLoginAt: updated.lastLoginAt
+          lastLoginAt: updated.lastLoginAt,
+          streak: currentProfile ? currentProfile.streak : 0
         });
         toast("Name updated", "success");
       } catch (err) {
@@ -564,7 +478,8 @@
       if (e.key === "Escape") closeMenu();
     });
   }
-    /* ---------- INACTIVITY AUTO-LOGOUT ---------- */
+
+  /* ---------- INACTIVITY ---------- */
 
   let inactivityTimerId = null;
 
@@ -596,8 +511,6 @@
     openSessionTimeoutModal();
   }
 
-  /* ---------- SESSION TIMEOUT MODAL ---------- */
-
   function openSessionTimeoutModal() {
     let overlay = $id("sessionTimeoutOverlay");
     if (!overlay) {
@@ -628,7 +541,6 @@
     }, 40);
   }
 
-
   /* ---------- INIT ---------- */
 
   async function init() {
@@ -638,9 +550,7 @@
     bindMobileMenu();
     bindTabs();
     bindSettings();
-    loadTodayQuizzes();
 
-    // Sign out
     const signOutBtn = $id("signOutBtn");
     if (signOutBtn) signOutBtn.addEventListener("click", openSignOutModal);
 
@@ -664,10 +574,10 @@
       if (e.key === "Escape") closeSignOutModal();
     });
 
-    // Load profile
     const token = getToken();
     if (!token) { redirectToLogin(); return; }
-        startInactivityTimer();
+
+    startInactivityTimer();
 
     try {
       const [profile, streak] = await Promise.all([
@@ -676,10 +586,13 @@
       ]);
       profile.streak = streak;
       renderProfile(profile);
+
       const loadingEl = $id("dashLoading");
-      const contentEl = $id("dashContent");
+      const screenEl = $id("dashboardScreen");
       if (loadingEl) loadingEl.hidden = true;
-      if (contentEl) contentEl.hidden = false;
+      if (screenEl) screenEl.hidden = false;
+
+      loadTodayQuizzes();
     } catch (err) {
       if (err && err.code === "unauth") { redirectToLogin(); return; }
       const loadingEl = $id("dashLoading");
