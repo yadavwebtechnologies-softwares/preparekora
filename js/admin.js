@@ -194,7 +194,23 @@
     getSubmissions: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/submissions"); },
     getSettings: function () { return request("/settings", { noAuth: true }); },
     updateSettings: function (payload) { return request("/settings", { method: "PUT", body: JSON.stringify(payload) }); },
-    getActiveSessions: function () { return request("/admin/sessions/active"); }
+    getActiveSessions: function () { return request("/admin/sessions/active"); },
+    listSubjects: function () { return request("/admin/subjects"); },
+    createSubject: function (payload) { return request("/admin/subjects", { method: "POST", body: JSON.stringify(payload) }); },
+    updateSubject: function (id, payload) { return request("/admin/subjects/" + encodeURIComponent(id), { method: "PUT", body: JSON.stringify(payload) }); },
+    deleteSubject: function (id) { return request("/admin/subjects/" + encodeURIComponent(id), { method: "DELETE" }); },
+    importQuestions: function (id, payload) { return request("/admin/subjects/" + encodeURIComponent(id) + "/import", { method: "POST", body: JSON.stringify(payload) }); },
+    listQuestions: function (id, params) {
+      const qs = [];
+      if (params && params.search) qs.push("search=" + encodeURIComponent(params.search));
+      if (params && params.limit) qs.push("limit=" + params.limit);
+      if (params && params.offset) qs.push("offset=" + params.offset);
+      const suffix = qs.length ? "?" + qs.join("&") : "";
+      return request("/admin/subjects/" + encodeURIComponent(id) + "/questions" + suffix);
+    },
+    deleteQuestion: function (subjectId, questionId) {
+      return request("/admin/subjects/" + encodeURIComponent(subjectId) + "/questions/" + encodeURIComponent(questionId), { method: "DELETE" });
+    }
   };
 
   function t(key, vars) { return (window.PK && window.PK.t) ? window.PK.t(key, vars) : key; }
@@ -383,24 +399,35 @@
   if (activeRefreshBtn) activeRefreshBtn.addEventListener("click", refreshActiveCount);
 
   /* ---------- TABS ---------- */
-
-  const tabTests = $id("tabTests"), tabSettings = $id("tabSettings");
-  const panelTests = $id("panelTests"), panelSettings = $id("panelSettings");
+  const tabTests = $id("tabTests"), tabSettings = $id("tabSettings"), tabSubjects = $id("tabSubjects"), tabDatabase = $id("tabDatabase");
+  const panelTests = $id("panelTests"), panelSettings = $id("panelSettings"), panelSubjects = $id("panelSubjects"), panelDatabase = $id("panelDatabase");
 
   function setTab(tab) {
     state.currentTab = tab;
     if (tabTests) { const a = tab === "tests"; tabTests.classList.toggle("is-active", a); tabTests.setAttribute("aria-selected", String(a)); }
     if (tabSettings) { const a = tab === "settings"; tabSettings.classList.toggle("is-active", a); tabSettings.setAttribute("aria-selected", String(a)); }
+    if (tabSubjects) { const a = tab === "subjects"; tabSubjects.classList.toggle("is-active", a); tabSubjects.setAttribute("aria-selected", String(a)); }
+    if (tabDatabase) { const a = tab === "database"; tabDatabase.classList.toggle("is-active", a); tabDatabase.setAttribute("aria-selected", String(a)); }
     if (panelTests) panelTests.hidden = tab !== "tests";
     if (panelSettings) panelSettings.hidden = tab !== "settings";
+    if (panelSubjects) panelSubjects.hidden = tab !== "subjects";
+    if (panelDatabase) panelDatabase.hidden = tab !== "database";
     if (tab === "settings") {
       if (window.PKLoader) window.PKLoader.show();
       Promise.all([loadSettings(), loadInterruptionSettings()]).finally(function () { if (window.PKLoader) window.PKLoader.hide(); });
+    }
+    if (tab === "subjects") {
+      loadSubjects();
+    }
+    if (tab === "database") {
+      if (typeof window.initControlRoom === "function") window.initControlRoom();
     }
   }
 
     if (tabTests) tabTests.addEventListener("click", function () { setTab("tests"); });
   if (tabSettings) tabSettings.addEventListener("click", function () { setTab("settings"); });
+  if (tabSubjects) tabSubjects.addEventListener("click", function () { setTab("subjects"); });
+  if (tabDatabase) tabDatabase.addEventListener("click", function () { setTab("database"); });
 
   const adminTestSearch = $id("adminTestSearch");
   const testsPagination = $id("testsPagination");
@@ -447,9 +474,188 @@
       }
     });
   }
+    /* ---------- QUESTION BANK (Subjects) ---------- */
+
+  async function loadSubjects() {
+    const loading = $id("subjectsLoading");
+    const empty = $id("subjectsEmpty");
+    const list = $id("subjectsList");
+    if (!list) return;
+
+    if (loading) loading.hidden = false;
+    if (empty) empty.hidden = true;
+    list.hidden = true;
+    list.innerHTML = "";
+
+    try {
+      const res = await api.listSubjects();
+      const subjects = Array.isArray(res.subjects) ? res.subjects : [];
+
+      if (loading) loading.hidden = true;
+
+      if (subjects.length === 0) {
+        if (empty) empty.hidden = false;
+        return;
+      }
+
+      list.hidden = false;
+      subjects.forEach(function (s) {
+        list.appendChild(renderSubjectCard(s));
+      });
+    } catch (err) {
+      if (loading) loading.hidden = true;
+      if (err && err.status === 401) return showLogin();
+      if (empty) {
+        empty.hidden = false;
+        empty.textContent = "Could not load subjects: " + (err.message || "Error");
+      }
+    }
+  }
+
+  function renderSubjectCard(subject) {
+    const card = document.createElement("div");
+    card.className = "admin-test-card";
+
+    const isActive = subject.active !== false;
+    const qCount = Number(subject.questionCount) || 0;
+
+    card.innerHTML =
+      '<div class="admin-test-info">' +
+        '<p class="admin-test-title">' + esc(subject.name) + '</p>' +
+        '<div class="admin-test-meta">' +
+          '<span class="status-badge ' + (isActive ? "published" : "draft") + '">' + (isActive ? "Active" : "Inactive") + '</span>' +
+          '<span>' + qCount + ' questions</span>' +
+          (subject.category ? '<span>' + esc(subject.category) + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="admin-test-actions"></div>';
+
+    const actions = card.querySelector(".admin-test-actions");
+
+    const editBtn = document.createElement("button");
+    editBtn.type = "button"; editBtn.className = "btn btn-sm"; editBtn.textContent = "Edit";
+    editBtn.addEventListener("click", function () { openSubjectEditor(subject); });
+    actions.appendChild(editBtn);
+
+    const questionsBtn = document.createElement("button");
+    questionsBtn.type = "button"; questionsBtn.className = "btn btn-sm"; questionsBtn.textContent = "Questions (" + qCount + ")";
+    questionsBtn.addEventListener("click", function () { toast("Phase 2.5 me aayega"); });
+    questionsBtn.disabled = true;
+    questionsBtn.title = "Coming in Phase 2.5";
+    actions.appendChild(questionsBtn);
+
+    const toggleBtn = document.createElement("button");
+    toggleBtn.type = "button";
+    toggleBtn.className = "btn btn-sm" + (isActive ? "" : " btn-primary");
+    toggleBtn.textContent = isActive ? "Deactivate" : "Activate";
+    toggleBtn.addEventListener("click", async function () {
+      if (isActive && !window.confirm("Deactivate this subject? Its questions will be kept but not used for daily quizzes.")) return;
+      toggleBtn.disabled = true;
+      try {
+        await api.updateSubject(subject.id, { active: !isActive });
+        toast(isActive ? "Subject deactivated" : "Subject activated", "success");
+        await loadSubjects();
+      } catch (err) {
+        if (err && err.status === 401) return showLogin();
+        toast(err.message || "Error", "error");
+      } finally {
+        toggleBtn.disabled = false;
+      }
+    });
+    actions.appendChild(toggleBtn);
+
+    return card;
+  }
+
+  function openSubjectEditor(subject) {
+    const isEdit = !!subject;
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.hidden = false;
+    overlay.innerHTML =
+      '<div class="modal" style="max-width: 420px;">' +
+        '<h2>' + (isEdit ? "Edit Subject" : "Add Subject") + '</h2>' +
+        '<div class="form-field">' +
+          '<label class="form-label">Name *</label>' +
+          '<input type="text" class="form-input" id="subjectNameInput" maxlength="60" value="' + esc(subject ? subject.name : "") + '" placeholder="e.g. Assam GK">' +
+        '</div>' +
+        '<div class="form-field">' +
+          '<label class="form-label">Category (optional)</label>' +
+          '<input type="text" class="form-input" id="subjectCategoryInput" maxlength="40" value="' + esc(subject ? (subject.category || "") : "") + '" placeholder="e.g. GK, Math, Reasoning">' +
+        '</div>' +
+        '<div class="form-field">' +
+          '<label class="form-label">Order (optional)</label>' +
+          '<input type="number" class="form-input" id="subjectOrderInput" min="0" value="' + (subject ? (subject.order || 0) : 0) + '">' +
+          '<p class="form-hint">Lower number appears first.</p>' +
+        '</div>' +
+        '<p class="form-error" id="subjectEditorError" hidden></p>' +
+        '<div class="modal-actions">' +
+          '<button type="button" class="btn btn-sm" id="subjectEditorCancel">Cancel</button>' +
+          '<button type="button" class="btn btn-primary btn-sm" id="subjectEditorSave">' + (isEdit ? "Save" : "Create") + '</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    const nameInput = overlay.querySelector("#subjectNameInput");
+    const catInput = overlay.querySelector("#subjectCategoryInput");
+    const orderInput = overlay.querySelector("#subjectOrderInput");
+    const errEl = overlay.querySelector("#subjectEditorError");
+    const saveBtn = overlay.querySelector("#subjectEditorSave");
+    const cancelBtn = overlay.querySelector("#subjectEditorCancel");
+
+    function close() {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }
+
+    cancelBtn.addEventListener("click", close);
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) close();
+    });
+    document.addEventListener("keydown", function handler(e) {
+      if (e.key === "Escape") { close(); document.removeEventListener("keydown", handler); }
+    });
+
+    saveBtn.addEventListener("click", async function () {
+      errEl.hidden = true;
+      const name = nameInput.value.trim();
+      if (!name || name.length < 2) { errEl.textContent = "Name must be at least 2 characters"; errEl.hidden = false; return; }
+      if (name.length > 60) { errEl.textContent = "Name too long"; errEl.hidden = false; return; }
+
+      saveBtn.disabled = true;
+      try {
+        const payload = {
+          name: name,
+          category: catInput.value.trim(),
+          order: Number(orderInput.value) || 0
+        };
+        if (isEdit) {
+          await api.updateSubject(subject.id, payload);
+          toast("Subject updated", "success");
+        } else {
+          await api.createSubject(payload);
+          toast("Subject created", "success");
+        }
+        close();
+        await loadSubjects();
+      } catch (err) {
+        if (err && err.status === 401) { close(); return showLogin(); }
+        errEl.textContent = err.message || "Save failed";
+        errEl.hidden = false;
+      } finally {
+        saveBtn.disabled = false;
+      }
+    });
+
+    setTimeout(function () { nameInput.focus(); }, 60);
+  }
+
+  const newSubjectBtn = $id("newSubjectBtn");
+  if (newSubjectBtn) {
+    newSubjectBtn.addEventListener("click", function () { openSubjectEditor(null); });
+  }
 
   /* ---------- ACTIVE NOW ---------- */
-
   let activeRefreshIntervalId = null;
   let activeMetaIntervalId = null;
   let activeLastUpdatedAt = 0;
