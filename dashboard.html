@@ -3,277 +3,168 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#eef1f6">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="PrepareKora.in — Your dashboard.">
+  <title>Dashboard — PrepareKora.in</title>
   <meta name="robots" content="noindex, nofollow">
-  <title>Dashboard — PrepareKora</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    :root {
-      --dash-space-xs: 8px;
-      --dash-space-sm: 12px;
-      --dash-space-md: 16px;
-      --dash-space-lg: 24px;
-      --dash-space-xl: 32px;
-    }
-
-    .dash-loading {
-      min-height: 60vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .dash-loading .spinner {
-      width: 28px;
-      height: 28px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: pk-spin 0.7s linear infinite;
-    }
-    @keyframes pk-spin { to { transform: rotate(360deg); } }
-
-    .dash-section {
-      margin-bottom: var(--dash-space-xl);
-    }
-    .dash-section-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--dash-space-sm);
-      margin-bottom: var(--dash-space-md);
-    }
-    .dash-section-title {
-      margin: 0;
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: -0.2px;
-      color: var(--text);
-    }
-
-    .dash-panel {
-      background: #ffffff;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: var(--dash-space-lg);
-    }
-
-    .profile-row {
-      display: flex;
-      align-items: center;
-      gap: var(--dash-space-md);
-      flex-wrap: wrap;
-    }
-    .profile-avatar {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-    .profile-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .profile-avatar-fallback {
-      font-size: 20px;
-      font-weight: 600;
-      color: var(--accent);
-    }
-    .profile-info {
-      flex: 1;
-      min-width: 0;
-    }
-    .profile-name {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 600;
-      letter-spacing: -0.3px;
-      line-height: 1.2;
-      overflow-wrap: anywhere;
-    }
-    .profile-email {
-      margin: 3px 0 0;
-      font-size: 13px;
-      color: var(--muted);
-      overflow-wrap: anywhere;
-    }
-    .profile-meta {
-      margin: var(--dash-space-md) 0 0;
-      padding-top: var(--dash-space-md);
-      border-top: 1px solid var(--border);
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--dash-space-sm) var(--dash-space-lg);
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .profile-meta span strong {
-      color: var(--text);
-      font-weight: 600;
-    }
-
-    .empty-quizzes {
-      padding: var(--dash-space-xl) var(--dash-space-md);
-      text-align: center;
-      background: var(--surface);
-      border: 1px dashed var(--border);
-      border-radius: var(--radius);
-    }
-    .empty-quizzes p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    .settings-form {
-      display: flex;
-      flex-direction: column;
-      gap: var(--dash-space-md);
-    }
-    .settings-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: var(--dash-space-xs);
-    }
-
-    .signout-row {
-      display: flex;
-      justify-content: flex-start;
-    }
-
-    /* Modal (admin jaisa) */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 200;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      background: rgba(26, 29, 35, 0.35);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-    }
-    .modal-overlay.open { display: flex; }
-    .modal {
-      width: 100%;
-      max-width: 400px;
-      padding: 24px;
-      background: #ffffff;
-      border: 1px solid rgba(216, 222, 232, 0.6);
-      border-radius: var(--radius);
-      box-shadow: 0 20px 50px rgba(163, 177, 198, 0.55);
-      animation: modalIn 0.25s ease;
-    }
-    @keyframes modalIn {
-      from { opacity: 0; transform: scale(0.96) translateY(8px); }
-      to { opacity: 1; transform: scale(1) translateY(0); }
-    }
-    .modal h2 {
-      margin: 0 0 10px;
-      font-size: 17px;
-      font-weight: 600;
-      letter-spacing: -0.3px;
-    }
-    .modal p {
-      margin: 0 0 20px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.6;
-    }
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-
-    @media (max-width: 560px) {
-      .profile-row { gap: var(--dash-space-sm); }
-      .profile-avatar { width: 48px; height: 48px; }
-      .profile-name { font-size: 16px; }
-      .dash-panel { padding: var(--dash-space-md); }
-      .dash-section { margin-bottom: var(--dash-space-lg); }
-    }
-  </style>
 </head>
 
 <body>
 
   <header class="header">
     <div class="header-inner">
+
       <a class="brand" href="index.html" aria-label="PrepareKora home">
         <span class="brand-main">preparekora</span><span class="brand-in">.in</span>
       </a>
-      <button class="icon-button" id="signOutBtn" type="button" aria-label="Sign out" title="Sign out">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-          <polyline points="16 17 21 12 16 7"></polyline>
-          <line x1="21" y1="12" x2="9" y2="12"></line>
-        </svg>
-      </button>
+
+      <nav class="desktop-nav" aria-label="Desktop navigation">
+        <a href="about.html" data-i18n="navAbout">About</a>
+        <a href="find-us.html" data-i18n="navFindUs">Find Us</a>
+      </nav>
+
+      <div class="nav-actions">
+
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button class="lang-btn is-active" type="button" data-lang="en" aria-pressed="true">EN</button>
+          <button class="lang-btn" type="button" data-lang="as" aria-pressed="false">অসমীয়া</button>
+        </div>
+
+        <button
+          class="icon-button"
+          id="menuToggle"
+          type="button"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+          aria-controls="menuPanel"
+        >
+          <svg id="menuIcon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16"></path>
+            <path d="M4 12h16"></path>
+            <path d="M4 17h16"></path>
+          </svg>
+        </button>
+
+      </div>
+
+      <nav class="menu-panel" id="menuPanel" aria-label="Mobile navigation">
+        <a href="about.html" data-i18n="navAbout">About</a>
+        <a href="find-us.html" data-i18n="navFindUs">Find Us</a>
+
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button class="lang-btn is-active" type="button" data-lang="en" aria-pressed="true">EN</button>
+          <button class="lang-btn" type="button" data-lang="as" aria-pressed="false">অসমীয়া</button>
+        </div>
+      </nav>
+
     </div>
   </header>
 
   <main class="page-container">
 
-    <div id="dashLoading" class="dash-loading">
-      <div class="spinner"></div>
-    </div>
+    <!-- LOADING -->
+    <section id="dashLoading">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <span data-i18n="loading">Loading…</span>
+      </div>
+    </section>
 
-    <div id="dashContent" hidden>
+    <!-- DASHBOARD -->
+    <section id="dashboardScreen" hidden>
+
+      <div class="admin-header">
+        <h1 data-i18n="dashboard">Dashboard</h1>
+
+        <div class="admin-header-actions">
+          <span class="admin-name-tag">
+            <strong id="userDisplayName">—</strong>
+          </span>
+          <button class="icon-button" id="signOutBtn" type="button" aria-label="Sign out" title="Sign out">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
 
       <!-- PROFILE -->
-      <section class="dash-section">
-        <div class="dash-section-head">
-          <h2 class="dash-section-title">Profile</h2>
-        </div>
-        <div class="dash-panel">
-          <div class="profile-row">
-            <div class="profile-avatar" id="dashAvatar"></div>
-            <div class="profile-info">
-              <h1 class="profile-name" id="dashName">—</h1>
-              <p class="profile-email" id="dashEmail"></p>
-            </div>
+      <div class="card" id="profileCard" style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <div style="width: 52px; height: 52px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); display: grid; place-items: center; overflow: hidden; flex-shrink: 0;" id="dashAvatar"></div>
+          <div style="flex: 1; min-width: 0;">
+            <p style="margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.3px; line-height: 1.2; overflow-wrap: anywhere;" id="profileName">—</p>
+            <p style="margin: 3px 0 0; color: var(--muted); font-size: 13px; overflow-wrap: anywhere;" id="profileEmail"></p>
           </div>
-          <div class="profile-meta" id="profileMeta"></div>
         </div>
-      </section>
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 12px 24px; font-size: 12px; color: var(--muted);" id="profileMeta"></div>
+      </div>
 
       <!-- TABS -->
-      <div class="admin-tabs" role="tablist" style="margin-bottom: 20px;">
-        <button class="admin-tab is-active" id="tabQuizzes" type="button" role="tab" aria-selected="true">
+      <div class="admin-tabs" role="tablist">
+        <button
+          class="admin-tab is-active"
+          id="tabQuizzes"
+          type="button"
+          role="tab"
+          aria-selected="true"
+        >
           Daily Quizzes
         </button>
-        <button class="admin-tab" id="tabSettings" type="button" role="tab" aria-selected="false">
+        <button
+          class="admin-tab"
+          id="tabSettings"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          data-i18n="settings"
+        >
           Settings
         </button>
-        <button class="admin-tab" id="tabHelp" type="button" role="tab" aria-selected="false">
+        <button
+          class="admin-tab"
+          id="tabHelp"
+          type="button"
+          role="tab"
+          aria-selected="false"
+        >
           Help
         </button>
-        <button class="admin-tab" id="tabPurchase" type="button" role="tab" aria-selected="false">
+        <button
+          class="admin-tab"
+          id="tabPurchase"
+          type="button"
+          role="tab"
+          aria-selected="false"
+        >
           Purchase
         </button>
       </div>
 
       <!-- QUIZZES PANEL -->
       <div id="panelQuizzes">
-        <div class="empty-quizzes">
-          <p>Your daily quizzes will appear here. Check back soon.</p>
+        <div class="empty-state" style="padding: 60px 20px;">
+          Your daily quizzes will appear here. Check back soon.
         </div>
       </div>
 
       <!-- SETTINGS PANEL -->
       <div id="panelSettings" hidden>
-        <div class="dash-panel">
-          <form id="settingsForm" class="settings-form" novalidate>
-            <div class="form-field" style="margin-bottom: 0;">
-              <label for="displayNameInput" class="form-label">Display name</label>
+        <div class="card" style="max-width: 480px;">
+
+          <h2 style="margin: 0 0 16px; font-size: 15px; font-weight: 600;">
+            <span data-i18n="displayName">Display Name</span>
+          </h2>
+
+          <form id="settingsForm" novalidate>
+
+            <div class="form-field">
+              <label for="displayNameInput" class="form-label" data-i18n="displayName">
+                Display Name
+              </label>
               <input
                 id="displayNameInput"
                 type="text"
@@ -281,25 +172,31 @@
                 maxlength="60"
                 autocomplete="name"
               >
-              <p class="form-hint">This name appears on your dashboard and shared results.</p>
+              <p class="form-hint">
+                This name appears on your dashboard and shared results.
+              </p>
               <p class="form-error" id="displayNameError" hidden></p>
             </div>
-            <div class="settings-actions">
-              <button class="btn btn-primary btn-sm" id="saveNameBtn" type="submit">
+
+            <div class="form-actions">
+              <button class="btn btn-primary" id="saveNameBtn" type="submit" data-i18n="save">
                 Save
               </button>
             </div>
+
           </form>
+
         </div>
       </div>
 
       <!-- HELP PANEL -->
       <div id="panelHelp" hidden>
-        <div class="dash-panel">
+        <div class="card" style="max-width: 480px;">
+          <h2 style="margin: 0 0 16px; font-size: 15px; font-weight: 600;">Help</h2>
           <p class="muted-text" style="margin: 0 0 14px;">Need help? We're here for you.</p>
           <ul style="margin: 0; padding-left: 20px; color: var(--text); font-size: 14px; line-height: 1.9;">
             <li>Login / sign-in problems</li>
-            <li>Test or quiz issues</li>
+            <li>Quiz or test issues</li>
             <li>Report a wrong question</li>
             <li>Account or profile questions</li>
           </ul>
@@ -311,23 +208,27 @@
 
       <!-- PURCHASE PANEL -->
       <div id="panelPurchase" hidden>
-        <div class="dash-panel">
-          <div class="empty-quizzes" style="padding: 40px 20px;">
-            <p><strong style="color: var(--text); display: block; margin-bottom: 8px;">Coming soon</strong>Purchases will be available here in the future.</p>
-          </div>
+        <div class="card" style="max-width: 480px;">
+          <h2 style="margin: 0 0 16px; font-size: 15px; font-weight: 600;">Purchase</h2>
+          <p class="muted-text" style="margin: 0;">Coming soon — purchases will be available here in the future.</p>
         </div>
       </div>
 
-    </div>
+    </section>
+
   </main>
 
   <footer class="footer">
     <div class="footer-inner">
       <a href="index.html" class="footer-brand">PrepareKora.in</a>
-      <div class="footer-copy">© <span id="currentYear"></span> PrepareKora.in</div>
+
+      <div class="footer-copy">
+        © <span id="currentYear"></span> PrepareKora.in
+      </div>
+
       <nav class="footer-links" aria-label="Footer navigation">
-        <a href="about.html">About</a>
-        <a href="find-us.html">Find Us</a>
+        <a href="about.html" data-i18n="navAbout">About</a>
+        <a href="find-us.html" data-i18n="navFindUs">Find Us</a>
       </nav>
     </div>
   </footer>
@@ -336,7 +237,7 @@
   <div class="modal-overlay" id="signOutOverlay" hidden>
     <div class="modal">
       <h2>Sign out?</h2>
-      <p>You will need to sign in again to access your dashboard.</p>
+      <p class="muted-text" style="margin-bottom: 20px;">You will need to sign in again to access your dashboard.</p>
       <div class="modal-actions">
         <button class="btn btn-sm" id="signOutCancelBtn" type="button">Stay signed in</button>
         <button class="btn btn-primary btn-sm" id="signOutConfirmBtn" type="button">Sign out</button>
@@ -344,6 +245,10 @@
     </div>
   </div>
 
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/translation.js"></script>
+  <script src="js/loader.js"></script>
   <script src="js/dashboard.js"></script>
 
 </body>
