@@ -185,6 +185,15 @@
         >
           Control Room
         </button>
+                <button
+          class="admin-tab"
+          id="tabCronLogs"
+          type="button"
+          role="tab"
+          aria-selected="false"
+        >
+          Cron Logs
+        </button>
       </div>
 
       <!-- TESTS PANEL -->
@@ -369,6 +378,26 @@
         </div>
 
         <div class="admin-test-list" id="subjectsList" hidden></div>
+      </div>
+            <!-- CRON LOGS PANEL -->
+      <div id="panelCronLogs" hidden>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600;">Daily Quiz — Cron Logs</h2>
+          <button class="btn btn-primary btn-sm" id="runCronNowBtn" type="button">
+            Run Now
+          </button>
+        </div>
+
+        <div id="cronLogsLoading" class="loading-state">
+          <div class="spinner"></div>
+          <span>Loading…</span>
+        </div>
+
+        <div id="cronLogsEmpty" class="empty-state" hidden style="padding: 40px 20px;">
+          No cron runs yet. Click "Run Now" to generate today's quizzes.
+        </div>
+
+        <div class="admin-test-list" id="cronLogsList" hidden></div>
       </div>
 
       <!-- CONTROL ROOM PANEL -->
