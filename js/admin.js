@@ -210,7 +210,9 @@
     },
     deleteQuestion: function (subjectId, questionId) {
       return request("/admin/subjects/" + encodeURIComponent(subjectId) + "/questions/" + encodeURIComponent(questionId), { method: "DELETE" });
-    }
+    },
+    getDailyQuizConfig: function () { return request("/admin/cron/config"); },
+    saveDailyQuizConfig: function (payload) { return request("/admin/cron/config", { method: "PUT", body: JSON.stringify(payload) }); }
   };
 
   function t(key, vars) { return (window.PK && window.PK.t) ? window.PK.t(key, vars) : key; }
@@ -415,7 +417,7 @@
     if (panelDatabase) panelDatabase.hidden = tab !== "database";
     if (tab === "settings") {
       if (window.PKLoader) window.PKLoader.show();
-      Promise.all([loadSettings(), loadInterruptionSettings()]).finally(function () { if (window.PKLoader) window.PKLoader.hide(); });
+      Promise.all([loadSettings(), loadInterruptionSettings(), loadDailyQuizSettings()]).finally(function () { if (window.PKLoader) window.PKLoader.hide(); });
     }
     if (tab === "subjects") {
       loadSubjects();
@@ -1577,9 +1579,54 @@
       } finally { btn.disabled = false; }
     });
   }
+    /* ---------- DAILY QUIZ SETTINGS ---------- */
+
+  async function loadDailyQuizSettings() {
+    try {
+      const res = await api.getDailyQuizConfig();
+      const val = (res && Number(res.defaultQuestionsPerQuiz)) || 5;
+      const input = $id("defaultQuestionsPerQuiz");
+      if (input) input.value = String(val);
+      const errEl = $id("dailyQuizError");
+      if (errEl) errEl.hidden = true;
+    } catch (err) {
+      // Config endpoint might not exist yet — fallback to default
+      const input = $id("defaultQuestionsPerQuiz");
+      if (input) input.value = "5";
+    }
+  }
+
+  const dailyQuizForm = $id("dailyQuizForm");
+  if (dailyQuizForm) {
+    dailyQuizForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const input = $id("defaultQuestionsPerQuiz");
+      const errEl = $id("dailyQuizError");
+      const btn = $id("saveDailyQuizBtn");
+      const value = Number(input.value);
+
+      errEl.hidden = true;
+      if (!Number.isInteger(value) || value < 5 || value > 30) {
+        errEl.textContent = "Must be between 5 and 30";
+        errEl.hidden = false;
+        return;
+      }
+
+      btn.disabled = true;
+      try {
+        await api.saveDailyQuizConfig({ defaultQuestionsPerQuiz: value });
+        toast("Daily quiz settings saved", "success");
+      } catch (err) {
+        if (err && err.status === 401) return showLogin();
+        errEl.textContent = err.message || "Save failed";
+        errEl.hidden = false;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
 
   /* ---------- EDITOR ---------- */
-
   const newTestBtn = $id("newTestBtn");
   if (newTestBtn) {
     newTestBtn.addEventListener("click", function () {
