@@ -278,8 +278,18 @@
                 const exp = user.stsTokenManager && user.stsTokenManager.expirationTime;
                 if (exp) localStorage.setItem(EXPIRES_KEY, String(exp));
               } catch (e) {}
-              await syncProfileWithWorker(idToken);
-              window.location.replace("dashboard.html");
+            await syncProfileWithWorker(idToken);
+            const redirect = (function () {
+              try {
+                const r = sessionStorage.getItem("pk_post_login_redirect");
+                if (r) {
+                  sessionStorage.removeItem("pk_post_login_redirect");
+                  return r;
+                }
+              } catch (e) {}
+              return "dashboard.html";
+            })();
+            window.location.replace(redirect);
             } catch (e) {
               // Profile sync failed — let user retry
             }
@@ -302,7 +312,17 @@
               if (exp) localStorage.setItem(EXPIRES_KEY, String(exp));
             } catch (e) {}
             await syncProfileWithWorker(idToken);
-            window.location.replace("dashboard.html");
+            const redirect = (function () {
+              try {
+                const r = sessionStorage.getItem("pk_post_login_redirect");
+                if (r) {
+                  sessionStorage.removeItem("pk_post_login_redirect");
+                  return r;
+                }
+              } catch (e) {}
+              return "dashboard.html";
+            })();
+            window.location.replace(redirect);
           } catch (err) {
             const code = err && err.code ? String(err.code) : "";
             if (code === "auth/popup-closed-by-user") {
