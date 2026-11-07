@@ -61,6 +61,40 @@
     return await res.json();
   }
 
+    async function fetchAttempts(token) {
+    const res = await fetch(API_BASE + "/user/attempts", {
+      method: "GET",
+      headers: { "Authorization": "Bearer " + token }
+    });
+    if (res.status === 401 || res.status === 403) throw { code: "unauth" };
+    if (!res.ok) throw { code: "http", status: res.status };
+    return await res.json();
+  }
+
+  function formatAttemptDate(ts) {
+    if (!ts) return "—";
+    const d = new Date(Number(ts));
+    if (isNaN(d.getTime())) return "—";
+    const now = Date.now();
+    const diff = now - d.getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return mins + "m ago";
+    if (mins < 1440) return Math.floor(mins / 60) + "h ago";
+    if (mins < 10080) return Math.floor(mins / 1440) + "d ago";
+    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  }
+
+  function formatTimeTaken(sec) {
+    const s = Number(sec) || 0;
+    if (s <= 0) return "—";
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    if (m === 0) return r + "s";
+    return m + "m " + String(r).padStart(2, "0") + "s";
+  }
+
+  
   async function updateProfileName(token, name) {
     const res = await fetch(API_BASE + "/user/profile", {
       method: "PUT",
@@ -127,11 +161,77 @@
     if (nameInput) nameInput.value = profile.name || "";
   }
 
-  /* ---------- TABS ---------- */
+    async function loadAttempts() {
+    const token = getToken();
+    if (!token) return;
 
+    const loadingEl = $id("attemptsLoading");
+    const emptyEl = $id("attemptsEmpty");
+    const listEl = $id("attemptsList");
+
+    if (loadingEl) loadingEl.hidden = false;
+    if (emptyEl) emptyEl.hidden = true;
+    if (listEl) listEl.innerHTML = "";
+
+    try {
+      const res = await fetchAttempts(token);
+      const attempts = Array.isArray(res.attempts) ? res.attempts : [];
+
+      if (loadingEl) loadingEl.hidden = true;
+
+      if (attempts.length === 0) {
+        if (emptyEl) emptyEl.hidden = false;
+        return;
+      }
+
+      if (!listEl) return;
+
+      attempts.forEach(function (a) {
+        const card = document.createElement("div");
+        card.className = "admin-test-card";
+        card.style.cursor = "pointer";
+        card.innerHTML =
+          '<div class="admin-test-info">' +
+            '<p class="admin-test-title">' + esc(a.testTitle || "Untitled Test") + '</p>' +
+            '<div class="admin-test-meta">' +
+              '<span class="status-badge published">' + a.percent + '%</span>' +
+              '<span>' + a.correct + ' / ' + a.total + ' correct</span>' +
+              '<span>' + formatTimeTaken(a.timeTaken) + '</span>' +
+              '<span>' + formatAttemptDate(a.submittedAt) + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="admin-test-actions">' +
+            '<button class="btn btn-sm" type="button">Review</button>' +
+          '</div>';
+
+        const reviewBtn = card.querySelector(".admin-test-actions .btn");
+        if (reviewBtn) {
+          reviewBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            window.location.href = "mock-test.html?test=" + encodeURIComponent(a.testId) + "&review=" + encodeURIComponent(a.id);
+          });
+        }
+        card.addEventListener("click", function () {
+          window.location.href = "mock-test.html?test=" + encodeURIComponent(a.testId) + "&review=" + encodeURIComponent(a.id);
+        });
+
+        listEl.appendChild(card);
+      });
+    } catch (err) {
+      if (loadingEl) loadingEl.hidden = true;
+      if (emptyEl) {
+        emptyEl.hidden = false;
+        emptyEl.textContent = "Could not load attempts.";
+      }
+    }
+  }
+
+  
+  /* ---------- TABS ---------- */
   function bindTabs() {
     const tabs = {
       quizzes: { tab: $id("tabQuizzes"), panel: $id("panelQuizzes") },
+      attempts: { tab: $id("tabAttempts"), panel: $id("panelAttempts") },
       settings: { tab: $id("tabSettings"), panel: $id("panelSettings") },
       help: { tab: $id("tabHelp"), panel: $id("panelHelp") },
       purchase: { tab: $id("tabPurchase"), panel: $id("panelPurchase") }
@@ -151,7 +251,10 @@
     Object.keys(tabs).forEach(function (k) {
       const tab = tabs[k];
       if (!tab.tab) return;
-      tab.tab.addEventListener("click", function () { activate(k); });
+      tab.tab.addEventListener("click", function () {
+        activate(k);
+        if (k === "attempts") loadAttempts();
+      });
     });
   }
 
