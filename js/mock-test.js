@@ -12,6 +12,25 @@
       : "https://preparekora-api.yadavsubba2003.workers.dev/api";
   })();
 
+    const USER_TOKEN_KEY = "pk_user_id_token";
+
+  function getUserToken() {
+    try { return localStorage.getItem(USER_TOKEN_KEY) || ""; } catch (e) { return ""; }
+  }
+
+  async function fetchUserProfile() {
+    const token = getUserToken();
+    if (!token) return null;
+    try {
+      const res = await fetch(API_BASE + "/user/profile", {
+        method: "GET",
+        headers: { "Authorization": "Bearer " + token }
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) { return null; }
+  }
+
   async function apiGet(path) {
     if (window.PK_API && window.PK_API.getPublishedTest) {
       return window.PK_API.getPublishedTest(decodeURIComponent(path.replace("/tests/", "")));
@@ -21,11 +40,13 @@
     return res.json();
   }
 
-  async function apiSubmit(id, payload) {
+  async function apiSubmit(id, payload, token) {
     const url = API_BASE + "/tests/" + encodeURIComponent(id) + "/submit";
+    const headers = { "Content-Type": "application/json", Accept: "application/json" };
+    if (token) headers["Authorization"] = "Bearer " + token;
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: headers,
       body: JSON.stringify(payload)
     });
     if (!res.ok) {
@@ -167,6 +188,8 @@
     result: null,
     userName: "",
     userWhatsApp: "",
+    userEmail: "",
+    userId: "",
     translatedTitle: "",
     translatedPublisher: "",
     settings: { enabled: true, duration: 5 }
@@ -573,9 +596,31 @@
   }
 
   if (startBtn) {
-    startBtn.addEventListener("click", function () {
-      showScreen("name");
-      setTimeout(function () { if (userNameInput) userNameInput.focus(); }, 60);
+    startBtn.addEventListener("click", async function () {
+      // Login mandatory — double check
+      const token = getUserToken();
+      if (!token) {
+        try { sessionStorage.setItem("pk_post_login_redirect", window.location.href); } catch (e) {}
+        window.location.replace("login.html");
+        return;
+      }
+
+      // Fetch profile — skip name screen if name available
+      const profile = await fetchUserProfile();
+      if (!profile || !profile.name || !profile.name.trim()) {
+        // Profile missing name — show name screen as fallback
+        showScreen("name");
+        setTimeout(function () { if (userNameInput) userNameInput.focus(); }, 60);
+        return;
+      }
+
+      // Auto-fill and begin
+      state.userName = profile.name.trim().slice(0, 60);
+      state.userWhatsApp = ""; // not collected automatically
+      state.userEmail = profile.email || "";
+      state.userId = profile.uid || "";
+
+      beginTest();
     });
   }
 
@@ -1018,12 +1063,14 @@
 
     let scored = null;
     try {
+      const token = getUserToken();
       scored = await apiSubmit(testId, {
         answers: payloadAnswers,
         userName: state.userName,
         userWhatsApp: state.userWhatsApp || "",
+        userEmail: state.userEmail || "",
         timeTaken: state.elapsed || 0
-      });
+      }, token);
     } catch (err) {
       scored = { correct: 0, wrong: 0, unattempted: state.publicTest.questions.length, total: state.publicTest.questions.length, percent: 0 };
     }
