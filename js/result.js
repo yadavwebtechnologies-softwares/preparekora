@@ -61,20 +61,15 @@
     if (!token) { redirectToLogin(); return null; }
 
     try {
-      // Fetch quiz + history to reconstruct result
-      const [quizRes, historyRes] = await Promise.all([
-        fetch(API_BASE + "/daily-quizzes/" + encodeURIComponent(date) + "/" + encodeURIComponent(subjectId), {
-          headers: { "Authorization": "Bearer " + token }
-        }),
-        fetch(API_BASE + "/user/profile", {
-          headers: { "Authorization": "Bearer " + token }
-        })
-      ]);
+      const res = await fetch(API_BASE + "/daily-quizzes/" + encodeURIComponent(date) + "/" + encodeURIComponent(subjectId) + "/result", {
+        method: "GET",
+        headers: { "Authorization": "Bearer " + token }
+      });
 
-      // Note: quiz fetch returns 409 if already attempted — that's expected here
-      // We just need history + questions with answers
-      // Since we don't have a dedicated result endpoint, we rely on sessionStorage
-      return null;
+      if (res.status === 401 || res.status === 403) { redirectToLogin(); return null; }
+      if (!res.ok) return null;
+
+      return await res.json();
     } catch (e) { return null; }
   }
 
@@ -84,11 +79,16 @@
       return;
     }
 
-    // Try sessionStorage first (from quiz submit)
+    // Try sessionStorage first (from quiz submit — fast)
     resultData = loadFromSession();
 
+    // If not in session, try Worker (refresh-safe)
     if (!resultData) {
-      showError("Result not found. Please re-take the quiz or check your dashboard.");
+      resultData = await loadFromWorker();
+    }
+
+    if (!resultData) {
+      showError("Result not found. Please check your dashboard.");
       return;
     }
 
