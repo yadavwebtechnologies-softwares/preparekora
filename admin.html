@@ -147,51 +147,19 @@
       </div>
 
       <div class="admin-tabs" role="tablist">
-        <button
-          class="admin-tab is-active"
-          id="tabTests"
-          type="button"
-          role="tab"
-          aria-selected="true"
-          data-i18n="myTests"
-        >
+        <button class="admin-tab is-active" id="tabTests" type="button" role="tab" aria-selected="true" data-i18n="myTests">
           My Tests
         </button>
-        <button
-          class="admin-tab"
-          id="tabSettings"
-          type="button"
-          role="tab"
-          aria-selected="false"
-          data-i18n="settings"
-        >
+        <button class="admin-tab" id="tabSettings" type="button" role="tab" aria-selected="false" data-i18n="settings">
           Settings
         </button>
-        <button
-          class="admin-tab"
-          id="tabSubjects"
-          type="button"
-          role="tab"
-          aria-selected="false"
-        >
+        <button class="admin-tab" id="tabSubjects" type="button" role="tab" aria-selected="false">
           Question Bank
         </button>
-        <button
-          class="admin-tab"
-          id="tabDatabase"
-          type="button"
-          role="tab"
-          aria-selected="false"
-        >
+        <button class="admin-tab" id="tabDatabase" type="button" role="tab" aria-selected="false">
           Control Room
         </button>
-                <button
-          class="admin-tab"
-          id="tabCronLogs"
-          type="button"
-          role="tab"
-          aria-selected="false"
-        >
+        <button class="admin-tab" id="tabCronLogs" type="button" role="tab" aria-selected="false">
           Cron Logs
         </button>
       </div>
@@ -348,42 +316,6 @@
               <p class="form-error" id="dailyQuizError" hidden></p>
             </div>
 
-                        <div class="form-actions">
-              <button class="btn btn-primary" id="saveInterruptionBtn" type="submit" data-i18n="save">
-                Save
-              </button>
-            </div>
-
-          </form>
-
-        </div>
-
-        <div class="card" style="max-width: 480px; margin-top: 16px;">
-
-          <h2 style="margin: 0 0 16px; font-size: 15px; font-weight: 600;">
-            Daily Quiz Defaults
-          </h2>
-
-          <form id="dailyQuizForm" novalidate>
-
-            <div class="form-field">
-              <label for="defaultQuestionsPerQuiz" class="form-label">
-                Default questions per subject
-              </label>
-              <input
-                id="defaultQuestionsPerQuiz"
-                type="number"
-                class="form-input"
-                min="5"
-                max="30"
-                step="1"
-              >
-              <p class="form-hint">
-                How many MCQs per subject in the daily quiz. Can be overridden per subject in Question Bank. Range: 5–30.
-              </p>
-              <p class="form-error" id="dailyQuizError" hidden></p>
-            </div>
-
             <div class="form-actions">
               <button class="btn btn-primary" id="saveDailyQuizBtn" type="submit">
                 Save
@@ -414,26 +346,6 @@
         </div>
 
         <div class="admin-test-list" id="subjectsList" hidden></div>
-      </div>
-            <!-- CRON LOGS PANEL -->
-      <div id="panelCronLogs" hidden>
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-          <h2 style="margin: 0; font-size: 16px; font-weight: 600;">Daily Quiz — Cron Logs</h2>
-          <button class="btn btn-primary btn-sm" id="runCronNowBtn" type="button">
-            Run Now
-          </button>
-        </div>
-
-        <div id="cronLogsLoading" class="loading-state">
-          <div class="spinner"></div>
-          <span>Loading…</span>
-        </div>
-
-        <div id="cronLogsEmpty" class="empty-state" hidden style="padding: 40px 20px;">
-          No cron runs yet. Click "Run Now" to generate today's quizzes.
-        </div>
-
-        <div class="admin-test-list" id="cronLogsList" hidden></div>
       </div>
 
       <!-- CONTROL ROOM PANEL -->
@@ -469,6 +381,27 @@
         <div class="db-content" id="dbContent">
           <div class="db-loading"><div class="spinner"></div></div>
         </div>
+      </div>
+
+      <!-- CRON LOGS PANEL -->
+      <div id="panelCronLogs" hidden>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600;">Daily Quiz — Cron Logs</h2>
+          <button class="btn btn-primary btn-sm" id="runCronNowBtn" type="button">
+            Run Now
+          </button>
+        </div>
+
+        <div id="cronLogsLoading" class="loading-state">
+          <div class="spinner"></div>
+          <span>Loading…</span>
+        </div>
+
+        <div id="cronLogsEmpty" class="empty-state" hidden style="padding: 40px 20px;">
+          No cron runs yet. Click "Run Now" to generate today's quizzes.
+        </div>
+
+        <div class="admin-test-list" id="cronLogsList" hidden></div>
       </div>
 
     </section>
