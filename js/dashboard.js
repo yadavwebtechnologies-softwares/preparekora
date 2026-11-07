@@ -25,10 +25,11 @@
     } catch (e) {}
   }
 
-  function redirectToLogin() {
+  function redirectToLogin(reason) {
     if (typeof stopInactivityTimer === "function") stopInactivityTimer();
     clearTokens();
-    window.location.replace("login.html");
+    const url = (reason === "signout") ? "login.html?logout=1" : "login.html";
+    window.location.replace(url);
   }
 
   function t(key) { return (window.PK && window.PK.t) ? window.PK.t(key) : key; }
@@ -320,7 +321,7 @@
       overlay.querySelector("#sessionTimeoutLoginBtn").addEventListener("click", function () {
         overlay.hidden = true;
         overlay.classList.remove("open");
-        redirectToLogin();
+        redirectToLogin("signout");
       });
     }
     overlay.hidden = false;
@@ -359,7 +360,7 @@
     if (confirmBtn) {
       confirmBtn.addEventListener("click", function () {
         closeSignOutModal();
-        redirectToLogin();
+        redirectToLogin("signout");
       });
     }
     document.addEventListener("keydown", function (e) {
