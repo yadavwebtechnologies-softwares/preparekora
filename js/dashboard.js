@@ -17,7 +17,7 @@
     try { return localStorage.getItem(TOKEN_KEY) || ""; } catch (e) { return ""; }
   }
 
-  function clearToken() {
+  function clearTokens() {
     try {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(EXPIRES_KEY);
@@ -25,8 +25,27 @@
   }
 
   function redirectToLogin() {
-    clearToken();
+    clearTokens();
     window.location.replace("login.html");
+  }
+
+  function t(key) { return (window.PK && window.PK.t) ? window.PK.t(key) : key; }
+
+  function esc(v) {
+    return String(v).replace(/[&<>"']/g, function (c) {
+      const m = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
+      return m[c];
+    });
+  }
+
+  function toast(msg, kind) {
+    const c = $id("toastContainer");
+    if (!c) return;
+    const el = document.createElement("div");
+    el.className = "toast" + (kind ? " " + kind : "");
+    el.textContent = msg;
+    c.appendChild(el);
+    setTimeout(function () { el.remove(); }, 3000);
   }
 
   async function fetchProfile(token) {
@@ -67,11 +86,13 @@
   function renderProfile(profile) {
     currentProfile = profile;
 
-    const nameEl = $id("dashName");
-    const emailEl = $id("dashEmail");
+    const nameTagEl = $id("userDisplayName");
+    const nameEl = $id("profileName");
+    const emailEl = $id("profileEmail");
     const avatarEl = $id("dashAvatar");
     const metaEl = $id("profileMeta");
 
+    if (nameTagEl) nameTagEl.textContent = profile.name || "User";
     if (nameEl) nameEl.textContent = profile.name || "User";
     if (emailEl) emailEl.textContent = profile.email || "";
 
@@ -82,28 +103,56 @@
         img.src = profile.photoURL;
         img.alt = "";
         img.referrerPolicy = "no-referrer";
+        img.style.width = "100%";
+        img.style.height = "100%";
+        img.style.objectFit = "cover";
         avatarEl.appendChild(img);
       } else {
-        const fallback = document.createElement("span");
-        fallback.className = "profile-avatar-fallback";
         const initial = (profile.name || "U").trim().charAt(0).toUpperCase();
-        fallback.textContent = initial;
-        avatarEl.appendChild(fallback);
+        avatarEl.innerHTML = '<span style="font-size: 20px; font-weight: 600; color: var(--accent);">' + esc(initial) + '</span>';
       }
     }
 
     if (metaEl) {
       metaEl.innerHTML =
-        '<span>Email <strong>' + (profile.email || "—") + '</strong></span>' +
-        '<span>Joined <strong>' + formatDate(profile.createdAt) + '</strong></span>' +
-        '<span>Last login <strong>' + formatDate(profile.lastLoginAt) + '</strong></span>';
+        '<span>Email <strong style="color: var(--text); font-weight: 600;">' + esc(profile.email || "—") + '</strong></span>' +
+        '<span>Joined <strong style="color: var(--text); font-weight: 600;">' + esc(formatDate(profile.createdAt)) + '</strong></span>' +
+        '<span>Last login <strong style="color: var(--text); font-weight: 600;">' + esc(formatDate(profile.lastLoginAt)) + '</strong></span>';
     }
 
     const nameInput = $id("displayNameInput");
     if (nameInput) nameInput.value = profile.name || "";
   }
 
-  /* ---------- Sign out modal ---------- */
+  /* ---------- TABS ---------- */
+
+  function bindTabs() {
+    const tabs = {
+      quizzes: { tab: $id("tabQuizzes"), panel: $id("panelQuizzes") },
+      settings: { tab: $id("tabSettings"), panel: $id("panelSettings") },
+      help: { tab: $id("tabHelp"), panel: $id("panelHelp") },
+      purchase: { tab: $id("tabPurchase"), panel: $id("panelPurchase") }
+    };
+
+    function activate(name) {
+      Object.keys(tabs).forEach(function (k) {
+        const tab = tabs[k];
+        if (!tab.tab || !tab.panel) return;
+        const isActive = (k === name);
+        tab.tab.classList.toggle("is-active", isActive);
+        tab.tab.setAttribute("aria-selected", String(isActive));
+        tab.panel.hidden = !isActive;
+      });
+    }
+
+    Object.keys(tabs).forEach(function (k) {
+      const tab = tabs[k];
+      if (!tab.tab) return;
+      tab.tab.addEventListener("click", function () { activate(k); });
+    });
+  }
+
+  /* ---------- SIGN OUT MODAL ---------- */
 
   function openSignOutModal() {
     const overlay = $id("signOutOverlay");
@@ -123,7 +172,7 @@
     overlay.classList.remove("open");
   }
 
-  /* ---------- Settings form ---------- */
+  /* ---------- SETTINGS FORM ---------- */
 
   function bindSettings() {
     const form = $id("settingsForm");
@@ -166,8 +215,7 @@
           createdAt: updated.createdAt,
           lastLoginAt: updated.lastLoginAt
         });
-        btn.textContent = "Saved ✓";
-        setTimeout(function () { btn.textContent = "Save"; }, 1500);
+        toast("Name updated", "success");
       } catch (err) {
         if (err && err.code === "unauth") { redirectToLogin(); return; }
         errEl.textContent = (err && err.message) || "Could not save";
@@ -177,47 +225,65 @@
       }
     });
   }
-    function bindTabs() {
-    const tabs = {
-      quizzes: { tab: $id("tabQuizzes"), panel: $id("panelQuizzes") },
-      settings: { tab: $id("tabSettings"), panel: $id("panelSettings") },
-      help: { tab: $id("tabHelp"), panel: $id("panelHelp") },
-      purchase: { tab: $id("tabPurchase"), panel: $id("panelPurchase") }
-    };
 
-    function activate(name) {
-      Object.keys(tabs).forEach(function (k) {
-        const t = tabs[k];
-        if (!t.tab || !t.panel) return;
-        const isActive = (k === name);
-        t.tab.classList.toggle("is-active", isActive);
-        t.tab.setAttribute("aria-selected", String(isActive));
-        t.panel.hidden = !isActive;
-      });
+  /* ---------- MOBILE MENU ---------- */
+
+  function bindMobileMenu() {
+    const menuToggle = $id("menuToggle");
+    const menuPanel = $id("menuPanel");
+    const menuIcon = $id("menuIcon");
+    if (!menuToggle || !menuPanel || !menuIcon) return;
+
+    const hamburgerSVG = '<path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path>';
+    const closeSVG = '<path d="m6 6 12 12"></path><path d="M18 6 6 18"></path>';
+
+    function closeMenu() {
+      menuPanel.classList.remove("open");
+      menuToggle.setAttribute("aria-expanded", "false");
+      menuIcon.innerHTML = hamburgerSVG;
     }
 
-    Object.keys(tabs).forEach(function (k) {
-      const t = tabs[k];
-      if (!t.tab) return;
-      t.tab.addEventListener("click", function () { activate(k); });
+    menuToggle.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (menuPanel.classList.contains("open")) closeMenu();
+      else {
+        menuPanel.classList.add("open");
+        menuToggle.setAttribute("aria-expanded", "true");
+        menuIcon.innerHTML = closeSVG;
+      }
+    });
+
+    document.addEventListener("click", function (e) {
+      if (menuPanel.classList.contains("open") && !menuPanel.contains(e.target) && !menuToggle.contains(e.target)) closeMenu();
+    });
+
+    menuPanel.querySelectorAll("a").forEach(function (a) {
+      a.addEventListener("click", closeMenu);
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeMenu();
     });
   }
 
-
-  /* ---------- Init ---------- */
+  /* ---------- INIT ---------- */
 
   async function init() {
     const yearEl = $id("currentYear");
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    // Sign out triggers
-    const topBtn = $id("signOutBtn");
-    if (topBtn) topBtn.addEventListener("click", openSignOutModal);
+    bindMobileMenu();
+    bindTabs();
+    bindSettings();
 
-    // Sign out modal
-    const overlay = $id("signOutOverlay");
+    // Sign out
+    const signOutBtn = $id("signOutBtn");
+    if (signOutBtn) signOutBtn.addEventListener("click", openSignOutModal);
+
     const cancelBtn = $id("signOutCancelBtn");
     const confirmBtn = $id("signOutConfirmBtn");
+    const overlay = $id("signOutOverlay");
+
     if (cancelBtn) cancelBtn.addEventListener("click", closeSignOutModal);
     if (overlay) {
       overlay.addEventListener("click", function (e) {
@@ -234,9 +300,6 @@
       if (e.key === "Escape") closeSignOutModal();
     });
 
-    bindSettings();
-        bindTabs();
-
     // Load profile
     const token = getToken();
     if (!token) { redirectToLogin(); return; }
@@ -245,14 +308,14 @@
       const profile = await fetchProfile(token);
       renderProfile(profile);
       const loadingEl = $id("dashLoading");
-      const contentEl = $id("dashContent");
+      const screenEl = $id("dashboardScreen");
       if (loadingEl) loadingEl.hidden = true;
-      if (contentEl) contentEl.hidden = false;
+      if (screenEl) screenEl.hidden = false;
     } catch (err) {
       if (err && err.code === "unauth") { redirectToLogin(); return; }
       const loadingEl = $id("dashLoading");
       if (loadingEl) {
-        loadingEl.innerHTML = '<p style="color:var(--muted);font-size:14px;text-align:center;">Could not load profile.<br><a href="login.html" style="color:var(--accent);">Sign in again</a></p>';
+        loadingEl.innerHTML = '<div class="empty-state" style="max-width: 400px; margin: 40px auto;">Could not load profile. <a href="login.html" style="color: var(--accent); text-decoration: underline;">Sign in again</a></div>';
       }
     }
   }
