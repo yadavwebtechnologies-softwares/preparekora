@@ -579,6 +579,34 @@
   <div class="sr-only" id="srStatus" role="status" aria-live="polite"></div>
 
   <script src="js/config.js"></script>
+    <script>
+  (function () {
+    const TOKEN_KEY = "pk_user_id_token";
+    const EXPIRES_KEY = "pk_user_expires_at";
+
+    function getToken() {
+      try { return localStorage.getItem(TOKEN_KEY) || ""; } catch (e) { return ""; }
+    }
+    function getExpiry() {
+      try { return parseInt(localStorage.getItem(EXPIRES_KEY) || "0", 10) || 0; } catch (e) { return 0; }
+    }
+    function isLoggedIn() {
+      const token = getToken();
+      if (!token) return false;
+      const exp = getExpiry();
+      if (exp && exp < Date.now()) return false;
+      return true;
+    }
+
+    if (!isLoggedIn()) {
+      // Save current URL to return after login
+      try {
+        sessionStorage.setItem("pk_post_login_redirect", window.location.href);
+      } catch (e) {}
+      window.location.replace("login.html");
+    }
+  })();
+  </script>
   <script src="js/api.js"></script>
   <script src="js/translation.js"></script>
   <script src="js/loader.js"></script>
