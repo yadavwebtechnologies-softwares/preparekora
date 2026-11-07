@@ -126,6 +126,10 @@
 
       <div class="nav-actions">
 
+        <a class="btn btn-sm" id="authActionBtn" href="login.html" style="display: none;">
+          Sign in
+        </a>
+
         <div class="lang-switch" role="group" aria-label="Language">
           <button class="lang-btn is-active" type="button" data-lang="en" aria-pressed="true">EN</button>
           <button class="lang-btn" type="button" data-lang="as" aria-pressed="false">অসমীয়া</button>
@@ -152,6 +156,7 @@
         <a href="about.html" data-i18n="navAbout">About</a>
         <a href="find-us.html" data-i18n="navFindUs">Find Us</a>
         <a href = "admin.html" >Administrator</a>
+        <a href="login.html" id="authActionBtnMobile">Sign in</a>
 
         <div class="lang-switch" role="group" aria-label="Language">
           <button class="lang-btn is-active" type="button" data-lang="en" aria-pressed="true">EN</button>
@@ -263,6 +268,46 @@
   <script src="js/translation.js"></script>
   <script src="js/loader.js"></script>
   <script src="js/main.js"></script>
+
+  <script>
+  (function () {
+    const TOKEN_KEY = "pk_user_id_token";
+    const EXPIRES_KEY = "pk_user_expires_at";
+
+    function getToken() {
+      try { return localStorage.getItem(TOKEN_KEY) || ""; } catch (e) { return ""; }
+    }
+
+    function getExpiry() {
+      try { return parseInt(localStorage.getItem(EXPIRES_KEY) || "0", 10) || 0; } catch (e) { return 0; }
+    }
+
+    function isLoggedIn() {
+      const token = getToken();
+      if (!token) return false;
+      const exp = getExpiry();
+      if (exp && exp < Date.now()) return false;
+      return true;
+    }
+
+    const loggedIn = isLoggedIn();
+    const label = loggedIn ? "Dashboard" : "Sign in";
+    const href = loggedIn ? "dashboard.html" : "login.html";
+
+    const btn = document.getElementById("authActionBtn");
+    if (btn) {
+      btn.textContent = label;
+      btn.href = href;
+      btn.style.display = "";
+    }
+
+    const btnM = document.getElementById("authActionBtnMobile");
+    if (btnM) {
+      btnM.textContent = label;
+      btnM.href = href;
+    }
+  })();
+  </script>
 
 </body>
 </html>
