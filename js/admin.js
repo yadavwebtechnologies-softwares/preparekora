@@ -211,10 +211,10 @@
     deleteQuestion: function (subjectId, questionId) {
       return request("/admin/subjects/" + encodeURIComponent(subjectId) + "/questions/" + encodeURIComponent(questionId), { method: "DELETE" });
     },
-    getDailyQuizConfig: function () { return request("/admin/cron/config"); },
-    saveDailyQuizConfig: function (payload) { return request("/admin/cron/config", { method: "PUT", body: JSON.stringify(payload) }); },
     getCronLogs: function () { return request("/admin/cron/logs"); },
-    runCronNow: function () { return request("/admin/cron/generate", { method: "POST" }); }
+    runCronNow: function () { return request("/admin/cron/generate", { method: "POST" }); },
+    getDailyQuizConfig: function () { return request("/admin/cron/config"); },
+    saveDailyQuizConfig: function (payload) { return request("/admin/cron/config", { method: "PUT", body: JSON.stringify(payload) }); }
   };
 
   function t(key, vars) { return (window.PK && window.PK.t) ? window.PK.t(key, vars) : key; }
@@ -403,6 +403,7 @@
   if (activeRefreshBtn) activeRefreshBtn.addEventListener("click", refreshActiveCount);
 
   /* ---------- TABS ---------- */
+
   const tabTests = $id("tabTests"), tabSettings = $id("tabSettings"), tabSubjects = $id("tabSubjects"), tabDatabase = $id("tabDatabase"), tabCronLogs = $id("tabCronLogs");
   const panelTests = $id("panelTests"), panelSettings = $id("panelSettings"), panelSubjects = $id("panelSubjects"), panelDatabase = $id("panelDatabase"), panelCronLogs = $id("panelCronLogs");
 
@@ -422,22 +423,18 @@
       if (window.PKLoader) window.PKLoader.show();
       Promise.all([loadSettings(), loadInterruptionSettings(), loadDailyQuizSettings()]).finally(function () { if (window.PKLoader) window.PKLoader.hide(); });
     }
-    if (tab === "subjects") {
-      loadSubjects();
-    }
+    if (tab === "subjects") loadSubjects();
     if (tab === "database") {
       if (typeof window.initControlRoom === "function") window.initControlRoom();
     }
-    if (tab === "cronlogs") {
-      loadCronLogs();
-    }
+    if (tab === "cronlogs") loadCronLogs();
   }
 
   if (tabTests) tabTests.addEventListener("click", function () { setTab("tests"); });
   if (tabSettings) tabSettings.addEventListener("click", function () { setTab("settings"); });
   if (tabSubjects) tabSubjects.addEventListener("click", function () { setTab("subjects"); });
   if (tabDatabase) tabDatabase.addEventListener("click", function () { setTab("database"); });
-    if (tabCronLogs) tabCronLogs.addEventListener("click", function () { setTab("cronlogs"); });
+  if (tabCronLogs) tabCronLogs.addEventListener("click", function () { setTab("cronlogs"); });
 
   const adminTestSearch = $id("adminTestSearch");
   const testsPagination = $id("testsPagination");
@@ -455,27 +452,16 @@
 
   if (testsPrevBtn) {
     testsPrevBtn.addEventListener("click", function () {
-      if (state.testsPage > 0) {
-        state.testsPage--;
-        renderTestsList();
-      }
+      if (state.testsPage > 0) { state.testsPage--; renderTestsList(); }
     });
   }
 
   if (testsNextBtn) {
     testsNextBtn.addEventListener("click", function () {
       const query = state.searchQuery.trim().toLowerCase();
-      const filtered = query
-        ? state.tests.filter(function (test) {
-            const haystack = [test.title || "", test.publisherName || "", test.status || ""].join(" ").toLowerCase();
-            return haystack.indexOf(query) !== -1;
-          })
-        : state.tests;
+      const filtered = query ? state.tests.filter(function (test) { const haystack = [test.title || "", test.publisherName || "", test.status || ""].join(" ").toLowerCase(); return haystack.indexOf(query) !== -1; }) : state.tests;
       const totalPages = Math.max(1, Math.ceil(filtered.length / ADMIN_PAGE_SIZE));
-      if (state.testsPage < totalPages - 1) {
-        state.testsPage++;
-        renderTestsList();
-      }
+      if (state.testsPage < totalPages - 1) { state.testsPage++; renderTestsList(); }
     });
   }
 
@@ -486,15 +472,12 @@
   let activeLastUpdatedAt = 0;
 
   async function refreshActiveCount() {
-    const countEl = $id("activeCount");
-    const metaEl = $id("activeMeta");
-    const refreshBtn = $id("activeRefreshBtn");
+    const countEl = $id("activeCount"), metaEl = $id("activeMeta"), refreshBtn = $id("activeRefreshBtn");
     if (!countEl || !metaEl) return;
     if (refreshBtn) refreshBtn.disabled = true;
     try {
       const res = await api.getActiveSessions();
-      const count = Number(res.active) || 0;
-      countEl.textContent = String(count);
+      countEl.textContent = String(Number(res.active) || 0);
       activeLastUpdatedAt = Date.now();
       updateActiveMeta();
     } catch (err) {
@@ -504,8 +487,7 @@
     } finally { if (refreshBtn) refreshBtn.disabled = false; }
   }
   function updateActiveMeta() {
-    const metaEl = $id("activeMeta");
-    const countEl = $id("activeCount");
+    const metaEl = $id("activeMeta"), countEl = $id("activeCount");
     if (!metaEl || !activeLastUpdatedAt) return;
     const count = countEl ? (parseInt(countEl.textContent, 10) || 0) : 0;
     if (count <= 0) { metaEl.classList.remove("is-live"); metaEl.innerHTML = "<span>No active users</span>"; return; }
@@ -555,22 +537,15 @@
   }
 
   function renderTestsList() {
-    const empty = $id("testsEmpty");
-    const list = $id("testsList");
+    const empty = $id("testsEmpty"), list = $id("testsList");
     if (!list) return;
     const query = state.searchQuery.trim().toLowerCase();
-    const filtered = query
-      ? state.tests.filter(function (test) {
-          const haystack = [test.title || "", test.publisherName || "", test.status || ""].join(" ").toLowerCase();
-          return haystack.indexOf(query) !== -1;
-        })
-      : state.tests;
+    const filtered = query ? state.tests.filter(function (test) { const haystack = [test.title || "", test.publisherName || "", test.status || ""].join(" ").toLowerCase(); return haystack.indexOf(query) !== -1; }) : state.tests;
     const totalPages = Math.max(1, Math.ceil(filtered.length / ADMIN_PAGE_SIZE));
     if (state.testsPage >= totalPages) state.testsPage = totalPages - 1;
     if (state.testsPage < 0) state.testsPage = 0;
     const startIdx = state.testsPage * ADMIN_PAGE_SIZE;
-    const endIdx = startIdx + ADMIN_PAGE_SIZE;
-    const pageSlice = filtered.slice(startIdx, endIdx);
+    const pageSlice = filtered.slice(startIdx, startIdx + ADMIN_PAGE_SIZE);
     list.replaceChildren();
     if (filtered.length === 0) {
       list.hidden = true;
@@ -606,12 +581,10 @@
       "</div>" +
       '<div class="admin-test-actions"></div>';
     const actions = card.querySelector(".admin-test-actions");
-
     const subsBtn = document.createElement("button");
     subsBtn.type = "button"; subsBtn.className = "btn btn-sm"; subsBtn.textContent = "Submissions";
     subsBtn.addEventListener("click", function () { openSubmissions(test.id); });
     actions.appendChild(subsBtn);
-
     if (isPublished) {
       const copyBtn = document.createElement("button");
       copyBtn.type = "button"; copyBtn.className = "btn btn-sm"; copyBtn.textContent = t("copyUrl");
@@ -620,12 +593,10 @@
       });
       actions.appendChild(copyBtn);
     }
-
     const editBtn = document.createElement("button");
     editBtn.type = "button"; editBtn.className = "btn btn-sm"; editBtn.textContent = t("edit");
     editBtn.addEventListener("click", function () { openEditor(test.id); });
     actions.appendChild(editBtn);
-
     const pubBtn = document.createElement("button");
     pubBtn.type = "button";
     pubBtn.className = "btn btn-sm" + (isPublished ? "" : " btn-primary");
@@ -643,7 +614,6 @@
       } finally { pubBtn.disabled = false; }
     });
     actions.appendChild(pubBtn);
-
     const delBtn = document.createElement("button");
     delBtn.type = "button"; delBtn.className = "btn btn-sm"; delBtn.textContent = t("delete");
     delBtn.addEventListener("click", async function () {
@@ -659,23 +629,18 @@
       } finally { delBtn.disabled = false; }
     });
     actions.appendChild(delBtn);
-
     return card;
   }
 
   /* ---------- QUESTION BANK ---------- */
 
   async function loadSubjects() {
-    const loading = $id("subjectsLoading");
-    const empty = $id("subjectsEmpty");
-    const list = $id("subjectsList");
+    const loading = $id("subjectsLoading"), empty = $id("subjectsEmpty"), list = $id("subjectsList");
     if (!list) return;
-
     if (loading) loading.hidden = false;
     if (empty) empty.hidden = true;
     list.hidden = true;
     list.innerHTML = "";
-
     try {
       const res = await api.listSubjects();
       const subjects = Array.isArray(res.subjects) ? res.subjects : [];
@@ -706,17 +671,14 @@
       '</div>' +
       '<div class="admin-test-actions"></div>';
     const actions = card.querySelector(".admin-test-actions");
-
     const editBtn = document.createElement("button");
     editBtn.type = "button"; editBtn.className = "btn btn-sm"; editBtn.textContent = "Edit";
     editBtn.addEventListener("click", function () { openSubjectEditor(subject); });
     actions.appendChild(editBtn);
-
     const questionsBtn = document.createElement("button");
     questionsBtn.type = "button"; questionsBtn.className = "btn btn-sm"; questionsBtn.textContent = "Questions (" + qCount + ")";
     questionsBtn.addEventListener("click", function () { openQuestionsViewer(subject); });
     actions.appendChild(questionsBtn);
-
     const toggleBtn = document.createElement("button");
     toggleBtn.type = "button";
     toggleBtn.className = "btn btn-sm" + (isActive ? "" : " btn-primary");
@@ -734,7 +696,6 @@
       } finally { toggleBtn.disabled = false; }
     });
     actions.appendChild(toggleBtn);
-
     return card;
   }
 
@@ -767,21 +728,18 @@
         '</div>' +
       '</div>';
     document.body.appendChild(overlay);
-
     const nameInput = overlay.querySelector("#subjectNameInput");
     const catInput = overlay.querySelector("#subjectCategoryInput");
     const orderInput = overlay.querySelector("#subjectOrderInput");
     const errEl = overlay.querySelector("#subjectEditorError");
     const saveBtn = overlay.querySelector("#subjectEditorSave");
     const cancelBtn = overlay.querySelector("#subjectEditorCancel");
-
     function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
     cancelBtn.addEventListener("click", close);
     overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
     document.addEventListener("keydown", function handler(e) {
       if (e.key === "Escape") { close(); document.removeEventListener("keydown", handler); }
     });
-
     saveBtn.addEventListener("click", async function () {
       errEl.hidden = true;
       const name = nameInput.value.trim();
@@ -800,9 +758,15 @@
         errEl.hidden = false;
       } finally { saveBtn.disabled = false; }
     });
-
     setTimeout(function () { nameInput.focus(); }, 60);
   }
+
+  const newSubjectBtn = $id("newSubjectBtn");
+  if (newSubjectBtn) {
+    newSubjectBtn.addEventListener("click", function () { openSubjectEditor(null); });
+  }
+
+  /* ---------- QUESTIONS VIEWER ---------- */
 
   async function openQuestionsViewer(subject) {
     const overlay = document.createElement("div");
@@ -839,7 +803,6 @@
         '</div>' +
       '</div>';
     document.body.appendChild(overlay);
-
     const listEl = overlay.querySelector("#qvList");
     const countEl = overlay.querySelector("#qvCount");
     const prevBtn = overlay.querySelector("#qvPrev");
@@ -847,17 +810,14 @@
     const searchEl = overlay.querySelector("#qvSearch");
     const importBtn = overlay.querySelector("#qvImportBtn");
     const closeBtn = overlay.querySelector("#qvClose");
-
     const PAGE_SIZE = 20;
     const qState = { offset: 0, search: "", total: 0 };
-
     function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
     closeBtn.addEventListener("click", close);
     overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
     document.addEventListener("keydown", function handler(e) {
       if (e.key === "Escape") { close(); document.removeEventListener("keydown", handler); }
     });
-
     async function loadPage() {
       listEl.innerHTML = '<div class="loading-state"><div class="spinner"></div><span>Loading…</span></div>';
       try {
@@ -914,7 +874,6 @@
         listEl.innerHTML = '<div class="empty-state" style="padding: 30px 16px;">' + esc(err.message || "Failed to load questions") + '</div>';
       }
     }
-
     prevBtn.addEventListener("click", function () {
       if (qState.offset === 0) return;
       qState.offset = Math.max(0, qState.offset - PAGE_SIZE);
@@ -925,7 +884,6 @@
       qState.offset += PAGE_SIZE;
       loadPage();
     });
-
     let searchTimer = null;
     searchEl.addEventListener("input", function () {
       if (searchTimer) clearTimeout(searchTimer);
@@ -935,11 +893,9 @@
         loadPage();
       }, 300);
     });
-
     importBtn.addEventListener("click", function () {
       openBankImportModal(subject, function () { qState.offset = 0; loadPage(); });
     });
-
     await loadPage();
   }
 
@@ -967,12 +923,10 @@
         '</div>' +
       '</div>';
     document.body.appendChild(overlay);
-
     const ta = overlay.querySelector("#impTa");
     const errEl = overlay.querySelector("#impErr");
     const confirmBtn = overlay.querySelector("#impConfirm");
     const cancelBtn = overlay.querySelector("#impCancel");
-
     function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
     cancelBtn.addEventListener("click", close);
     overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
@@ -980,7 +934,6 @@
       if (e.key === "Escape") { close(); document.removeEventListener("keydown", handler); }
     });
     setTimeout(function () { ta.focus(); }, 80);
-
     confirmBtn.addEventListener("click", async function () {
       errEl.hidden = true;
       const raw = ta.value.trim();
@@ -1025,12 +978,182 @@
     });
   }
 
-  const newSubjectBtn = $id("newSubjectBtn");
-  if (newSubjectBtn) {
-    newSubjectBtn.addEventListener("click", function () { openSubjectEditor(null); });
+  /* ---------- CRON LOGS ---------- */
+
+  let cronLogsCache = [];
+
+  async function loadCronLogs() {
+    const loading = $id("cronLogsLoading"), empty = $id("cronLogsEmpty"), list = $id("cronLogsList");
+    if (!list) return;
+    if (loading) loading.hidden = false;
+    if (empty) empty.hidden = true;
+    list.hidden = true;
+    list.innerHTML = "";
+    try {
+      const res = await api.getCronLogs();
+      const logs = Array.isArray(res.logs) ? res.logs : [];
+      cronLogsCache = logs;
+      if (loading) loading.hidden = true;
+      if (logs.length === 0) { if (empty) empty.hidden = false; return; }
+      list.hidden = false;
+      logs.forEach(function (log) { list.appendChild(renderCronLogCard(log)); });
+    } catch (err) {
+      if (loading) loading.hidden = true;
+      if (err && err.status === 401) return showLogin();
+      if (empty) { empty.hidden = false; empty.textContent = "Could not load cron logs: " + (err.message || "Error"); }
+    }
   }
 
-  /* ---------- SUBMISSIONS ---------- */
+  function renderCronLogCard(log) {
+    const card = document.createElement("div");
+    card.className = "admin-test-card";
+    const generatedCount = Number(log.generatedCount) || 0;
+    const skippedCount = Number(log.skippedCount) || 0;
+    card.innerHTML =
+      '<div class="admin-test-info">' +
+        '<p class="admin-test-title">' + esc(log.date) + '</p>' +
+        '<div class="admin-test-meta">' +
+          '<span class="status-badge published">' + generatedCount + ' generated</span>' +
+          (skippedCount > 0 ? '<span style="color: #b45309; font-weight: 600;">' + skippedCount + ' skipped</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="admin-test-actions">' +
+        '<button class="btn btn-sm" type="button" data-log-action="view">Details</button>' +
+      '</div>';
+    card.querySelector('[data-log-action="view"]').addEventListener("click", function () {
+      openCronLogDetail(log);
+    });
+    return card;
+  }
+
+  function openCronLogDetail(log) {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.hidden = false;
+    overlay.classList.add("open");
+    overlay.innerHTML =
+      '<div class="modal" style="max-width: 560px; padding: 0;">' +
+        '<div class="submission-detail-head" style="padding: 18px 20px 14px;">' +
+          '<div>' +
+            '<h2 style="margin: 0 0 3px; font-size: 16px;">' + esc(log.date) + '</h2>' +
+            '<p style="margin: 0; color: var(--muted); font-size: 12px;">Cron run details</p>' +
+          '</div>' +
+          '<button type="button" class="submission-detail-close" id="cronLogDetailClose" aria-label="Close">' +
+            '<svg viewBox="0 0 24 24"><path d="m6 6 12 12"></path><path d="M18 6 6 18"></path></svg>' +
+          '</button>' +
+        '</div>' +
+        '<div style="padding: 16px 20px; max-height: 500px; overflow-y: auto;" id="cronLogBody"></div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    const body = overlay.querySelector("#cronLogBody");
+    const generated = Array.isArray(log.generated) ? log.generated : [];
+    const skipped = Array.isArray(log.skipped) ? log.skipped : [];
+    let html = "";
+    if (generated.length > 0) {
+      html += '<h3 style="margin: 0 0 10px; font-size: 13px; font-weight: 600; color: #15803d;">✓ Generated (' + generated.length + ')</h3>';
+      html += '<div style="margin-bottom: 16px;">';
+      generated.forEach(function (g) {
+        html += '<div style="padding: 10px 12px; border: 1px solid #bbf7d0; border-radius: 8px; background: #f0fdf4; margin-bottom: 6px; font-size: 13px;">' +
+          '<strong>' + esc(g.name || g.id) + '</strong> — ' + (g.count || 0) + ' questions' +
+        '</div>';
+      });
+      html += '</div>';
+    }
+    if (skipped.length > 0) {
+      html += '<h3 style="margin: 0 0 10px; font-size: 13px; font-weight: 600; color: #b45309;">⚠ Skipped (' + skipped.length + ')</h3>';
+      html += '<div>';
+      skipped.forEach(function (s) {
+        let reasonText = s.reason || "unknown";
+        if (s.reason === "pool_too_small") reasonText = "Not enough questions in bank";
+        if (s.reason === "error") reasonText = "Error: " + (s.detail || "unknown");
+        html += '<div style="padding: 10px 12px; border: 1px solid #fef3c7; border-radius: 8px; background: #fffbeb; margin-bottom: 6px; font-size: 13px;">' +
+          '<strong>' + esc(s.name || s.id) + '</strong><br>' +
+          '<span style="color: var(--muted); font-size: 12px;">' + esc(reasonText) + '</span>' +
+        '</div>';
+      });
+      html += '</div>';
+    }
+    if (generated.length === 0 && skipped.length === 0) {
+      html = '<div class="empty-state">No data for this run.</div>';
+    }
+    body.innerHTML = html;
+    function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+    overlay.querySelector("#cronLogDetailClose").addEventListener("click", close);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
+    document.addEventListener("keydown", function handler(e) {
+      if (e.key === "Escape") { close(); document.removeEventListener("keydown", handler); }
+    });
+  }
+
+  const runCronNowBtn = $id("runCronNowBtn");
+  if (runCronNowBtn) {
+    runCronNowBtn.addEventListener("click", async function () {
+      if (!window.confirm("Run daily quiz generation now? This will create today's quizzes for all active subjects.")) return;
+      runCronNowBtn.disabled = true;
+      runCronNowBtn.textContent = "Running…";
+      try {
+        const res = await api.runCronNow();
+        const result = res.result || {};
+        const genCount = result.generatedCount || 0;
+        const skipCount = result.skippedCount || 0;
+        let msg = "Done. " + genCount + " generated";
+        if (skipCount > 0) msg += ", " + skipCount + " skipped";
+        toast(msg, genCount > 0 ? "success" : "error");
+        await loadCronLogs();
+      } catch (err) {
+        if (err && err.status === 401) return showLogin();
+        toast(err.message || "Cron failed", "error");
+      } finally {
+        runCronNowBtn.disabled = false;
+        runCronNowBtn.textContent = "Run Now";
+      }
+    });
+  }
+
+  /* ---------- DAILY QUIZ SETTINGS ---------- */
+
+  async function loadDailyQuizSettings() {
+    try {
+      const res = await api.getDailyQuizConfig();
+      const val = (res && Number(res.defaultQuestionsPerQuiz)) || 5;
+      const input = $id("defaultQuestionsPerQuiz");
+      if (input) input.value = String(val);
+      const errEl = $id("dailyQuizError");
+      if (errEl) errEl.hidden = true;
+    } catch (err) {
+      const input = $id("defaultQuestionsPerQuiz");
+      if (input) input.value = "5";
+    }
+  }
+
+  const dailyQuizForm = $id("dailyQuizForm");
+  if (dailyQuizForm) {
+    dailyQuizForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const input = $id("defaultQuestionsPerQuiz");
+      const errEl = $id("dailyQuizError");
+      const btn = $id("saveDailyQuizBtn");
+      const value = Number(input.value);
+      errEl.hidden = true;
+      if (!Number.isInteger(value) || value < 5 || value > 30) {
+        errEl.textContent = "Must be between 5 and 30";
+        errEl.hidden = false;
+        return;
+      }
+      btn.disabled = true;
+      try {
+        await api.saveDailyQuizConfig({ defaultQuestionsPerQuiz: value });
+        toast("Daily quiz settings saved", "success");
+      } catch (err) {
+        if (err && err.status === 401) return showLogin();
+        errEl.textContent = err.message || "Save failed";
+        errEl.hidden = false;
+      } finally { btn.disabled = false; }
+    });
+  }
+
+
+   /* ---------- SUBMISSIONS ---------- */
 
   async function openSubmissions(testId) {
     state.submissionsTestId = testId;
@@ -1586,265 +1709,9 @@
       } finally { btn.disabled = false; }
     });
   }
-    /* ---------- DAILY QUIZ SETTINGS ---------- */
-
-  async function loadDailyQuizSettings() {
-    try {
-      const res = await api.getDailyQuizConfig();
-      const val = (res && Number(res.defaultQuestionsPerQuiz)) || 5;
-      const input = $id("defaultQuestionsPerQuiz");
-      if (input) input.value = String(val);
-      const errEl = $id("dailyQuizError");
-      if (errEl) errEl.hidden = true;
-    } catch (err) {
-      // Config endpoint might not exist yet — fallback to default
-      const input = $id("defaultQuestionsPerQuiz");
-      if (input) input.value = "5";
-    }
-  }
-
-  const dailyQuizForm = $id("dailyQuizForm");
-  if (dailyQuizForm) {
-    dailyQuizForm.addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const input = $id("defaultQuestionsPerQuiz");
-      const errEl = $id("dailyQuizError");
-      const btn = $id("saveDailyQuizBtn");
-      const value = Number(input.value);
-
-      errEl.hidden = true;
-      if (!Number.isInteger(value) || value < 5 || value > 30) {
-        errEl.textContent = "Must be between 5 and 30";
-        errEl.hidden = false;
-        return;
-      }
-
-      btn.disabled = true;
-      try {
-        await api.saveDailyQuizConfig({ defaultQuestionsPerQuiz: value });
-        toast("Daily quiz settings saved", "success");
-      } catch (err) {
-        if (err && err.status === 401) return showLogin();
-        errEl.textContent = err.message || "Save failed";
-        errEl.hidden = false;
-      } finally {
-        btn.disabled = false;
-      }
-    });
-  }
-    /* ---------- CRON LOGS ---------- */
-
-  let cronLogsCache = [];
-
-  async function loadCronLogs() {
-    const loading = $id("cronLogsLoading");
-    const empty = $id("cronLogsEmpty");
-    const list = $id("cronLogsList");
-    if (!list) return;
-
-    if (loading) loading.hidden = false;
-    if (empty) empty.hidden = true;
-    list.hidden = true;
-    list.innerHTML = "";
-
-    try {
-      const res = await api.getCronLogs();
-      const logs = Array.isArray(res.logs) ? res.logs : [];
-      cronLogsCache = logs;
-
-      if (loading) loading.hidden = true;
-
-      if (logs.length === 0) {
-        if (empty) empty.hidden = false;
-        return;
-      }
-
-      list.hidden = false;
-      logs.forEach(function (log) {
-        list.appendChild(renderCronLogCard(log));
-      });
-    } catch (err) {
-      if (loading) loading.hidden = true;
-      if (err && err.status === 401) return showLogin();
-      if (empty) {
-        empty.hidden = false;
-        empty.textContent = "Could not load cron logs: " + (err.message || "Error");
-      }
-    }
-  }
-
-  function renderCronLogCard(log) {
-    const card = document.createElement("div");
-    card.className = "admin-test-card";
-
-    const generatedCount = Number(log.generatedCount) || 0;
-    const skippedCount = Number(log.skippedCount) || 0;
-    const total = generatedCount + skippedCount;
-    const status = generatedCount > 0 ? "published" : (total === 0 ? "draft" : "draft");
-
-    card.innerHTML =
-      '<div class="admin-test-info">' +
-        '<p class="admin-test-title">' + esc(log.date) + '</p>' +
-        '<div class="admin-test-meta">' +
-          '<span class="status-badge ' + status + '">' + generatedCount + ' generated</span>' +
-          (skippedCount > 0 ? '<span style="color: #b45309; font-weight: 600;">' + skippedCount + ' skipped</span>' : '') +
-        '</div>' +
-      '</div>' +
-      '<div class="admin-test-actions">' +
-        '<button class="btn btn-sm" type="button" data-log-action="view">Details</button>' +
-      '</div>';
-
-    card.querySelector('[data-log-action="view"]').addEventListener("click", function () {
-      openCronLogDetail(log);
-    });
-
-    return card;
-  }
-
-  function openCronLogDetail(log) {
-    const overlay = document.createElement("div");
-    overlay.className = "modal-overlay";
-    overlay.hidden = false;
-    overlay.classList.add("open");
-    overlay.innerHTML =
-      '<div class="modal" style="max-width: 560px; padding: 0;">' +
-        '<div class="submission-detail-head" style="padding: 18px 20px 14px;">' +
-          '<div>' +
-            '<h2 style="margin: 0 0 3px; font-size: 16px;">' + esc(log.date) + '</h2>' +
-            '<p style="margin: 0; color: var(--muted); font-size: 12px;">Cron run details</p>' +
-          '</div>' +
-          '<button type="button" class="submission-detail-close" id="cronLogDetailClose" aria-label="Close">' +
-            '<svg viewBox="0 0 24 24"><path d="m6 6 12 12"></path><path d="M18 6 6 18"></path></svg>' +
-          '</button>' +
-        '</div>' +
-        '<div style="padding: 16px 20px; max-height: 500px; overflow-y: auto;" id="cronLogBody"></div>' +
-      '</div>';
-
-    document.body.appendChild(overlay);
-
-    const body = overlay.querySelector("#cronLogBody");
-    const generated = Array.isArray(log.generated) ? log.generated : [];
-    const skipped = Array.isArray(log.skipped) ? log.skipped : [];
-
-    let html = "";
-
-    if (generated.length > 0) {
-      html += '<h3 style="margin: 0 0 10px; font-size: 13px; font-weight: 600; color: #15803d;">✓ Generated (' + generated.length + ')</h3>';
-      html += '<div style="margin-bottom: 16px;">';
-      generated.forEach(function (g) {
-        html += '<div style="padding: 10px 12px; border: 1px solid #bbf7d0; border-radius: 8px; background: #f0fdf4; margin-bottom: 6px; font-size: 13px;">' +
-          '<strong>' + esc(g.name || g.id) + '</strong> — ' + (g.count || 0) + ' questions' +
-        '</div>';
-      });
-      html += '</div>';
-    }
-
-    if (skipped.length > 0) {
-      html += '<h3 style="margin: 0 0 10px; font-size: 13px; font-weight: 600; color: #b45309;">⚠ Skipped (' + skipped.length + ')</h3>';
-      html += '<div>';
-      skipped.forEach(function (s) {
-        let reasonText = s.reason || "unknown";
-        if (s.reason === "pool_too_small") reasonText = "Not enough questions in bank (need " + 5 + "+)";
-        if (s.reason === "error") reasonText = "Error: " + (s.detail || "unknown");
-        html += '<div style="padding: 10px 12px; border: 1px solid #fef3c7; border-radius: 8px; background: #fffbeb; margin-bottom: 6px; font-size: 13px;">' +
-          '<strong>' + esc(s.name || s.id) + '</strong><br>' +
-          '<span style="color: var(--muted); font-size: 12px;">' + esc(reasonText) + '</span>' +
-        '</div>';
-      });
-      html += '</div>';
-    }
-
-    if (generated.length === 0 && skipped.length === 0) {
-      html = '<div class="empty-state">No data for this run.</div>';
-    }
-
-    body.innerHTML = html;
-
-    function close() {
-      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    }
-
-    overlay.querySelector("#cronLogDetailClose").addEventListener("click", close);
-    overlay.addEventListener("click", function (e) {
-      if (e.target === overlay) close();
-    });
-    document.addEventListener("keydown", function handler(e) {
-      if (e.key === "Escape") { close(); document.removeEventListener("keydown", handler); }
-    });
-  }
-
-  const runCronNowBtn = $id("runCronNowBtn");
-  if (runCronNowBtn) {
-    runCronNowBtn.addEventListener("click", async function () {
-      if (!window.confirm("Run daily quiz generation now? This will create today's quizzes for all active subjects.")) return;
-      runCronNowBtn.disabled = true;
-      runCronNowBtn.textContent = "Running…";
-      try {
-        const res = await api.runCronNow();
-        const result = res.result || {};
-        const genCount = result.generatedCount || 0;
-        const skipCount = result.skippedCount || 0;
-        let msg = "Done. " + genCount + " generated";
-        if (skipCount > 0) msg += ", " + skipCount + " skipped";
-        toast(msg, genCount > 0 ? "success" : "error");
-        await loadCronLogs();
-      } catch (err) {
-        if (err && err.status === 401) return showLogin();
-        toast(err.message || "Cron failed", "error");
-      } finally {
-        runCronNowBtn.disabled = false;
-        runCronNowBtn.textContent = "Run Now";
-      }
-    });
-  }
-
-  /* ---------- DAILY QUIZ SETTINGS ---------- */
-
-  async function loadDailyQuizSettings() {
-    try {
-      const res = await api.getDailyQuizConfig();
-      const val = (res && Number(res.defaultQuestionsPerQuiz)) || 5;
-      const input = $id("defaultQuestionsPerQuiz");
-      if (input) input.value = String(val);
-      const errEl = $id("dailyQuizError");
-      if (errEl) errEl.hidden = true;
-    } catch (err) {
-      const input = $id("defaultQuestionsPerQuiz");
-      if (input) input.value = "5";
-    }
-  }
-
-  const dailyQuizForm = $id("dailyQuizForm");
-  if (dailyQuizForm) {
-    dailyQuizForm.addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const input = $id("defaultQuestionsPerQuiz");
-      const errEl = $id("dailyQuizError");
-      const btn = $id("saveDailyQuizBtn");
-      const value = Number(input.value);
-
-      errEl.hidden = true;
-      if (!Number.isInteger(value) || value < 5 || value > 30) {
-        errEl.textContent = "Must be between 5 and 30";
-        errEl.hidden = false;
-        return;
-      }
-
-      btn.disabled = true;
-      try {
-        await api.saveDailyQuizConfig({ defaultQuestionsPerQuiz: value });
-        toast("Daily quiz settings saved", "success");
-      } catch (err) {
-        if (err && err.status === 401) return showLogin();
-        errEl.textContent = err.message || "Save failed";
-        errEl.hidden = false;
-      } finally {
-        btn.disabled = false;
-      }
-    });
-  }
 
   /* ---------- EDITOR ---------- */
+
   const newTestBtn = $id("newTestBtn");
   if (newTestBtn) {
     newTestBtn.addEventListener("click", function () {
@@ -1922,11 +1789,9 @@
     const container = $id("questionsContainer");
     if (!container || !state.editing) return;
     container.innerHTML = "";
-
     state.editing.questions.forEach(function (question, qi) {
       const block = document.createElement("div");
       block.className = "editor-question";
-
       const head = document.createElement("div");
       head.className = "editor-question-head";
       const numWrap = document.createElement("div");
@@ -1948,7 +1813,6 @@
         renderQuestionsList();
       });
       head.appendChild(numWrap); head.appendChild(removeBtn); block.appendChild(head);
-
       const typeRow = document.createElement("div");
       typeRow.className = "form-field";
       const typeLabel = document.createElement("label");
@@ -1968,7 +1832,6 @@
       });
       typeRow.appendChild(typeLabel); typeRow.appendChild(typeSelect);
       block.appendChild(typeRow);
-
       const qField = document.createElement("div");
       qField.className = "form-field";
       const qLabel = document.createElement("label");
@@ -1980,7 +1843,6 @@
       qInput.placeholder = "Type the question";
       qInput.addEventListener("input", function () { question.q = qInput.value; });
       qField.appendChild(qLabel); qField.appendChild(qInput); block.appendChild(qField);
-
       const latexField = document.createElement("div");
       latexField.className = "form-field";
       const latexLabel = document.createElement("label");
@@ -1993,14 +1855,12 @@
       latexInput.value = question.latex || "";
       latexInput.addEventListener("input", function () { question.latex = latexInput.value; });
       latexField.appendChild(latexLabel); latexField.appendChild(latexInput); block.appendChild(latexField);
-
       const imgField = document.createElement("div");
       imgField.className = "form-field";
       const imgLabel = document.createElement("label");
       imgLabel.className = "form-label";
       imgLabel.innerHTML = 'Question image <span class="form-required">(optional)</span>';
       imgField.appendChild(imgLabel);
-
       const imgActions = document.createElement("div");
       imgActions.className = "editor-img-actions";
       const imgFile = document.createElement("input");
@@ -2039,7 +1899,6 @@
         imgField.appendChild(preview);
       }
       block.appendChild(imgField);
-
       if (question.type === "math") {
         const modeRow = document.createElement("div");
         modeRow.className = "form-field";
@@ -2050,7 +1909,6 @@
         modeWrap.style.display = "flex";
         modeWrap.style.gap = "16px";
         modeWrap.style.flexWrap = "wrap";
-
         [["options", "Options (4 choices)"], ["keypad", "Keypad (numeric)"]].forEach(function (pair) {
           const lab = document.createElement("label");
           lab.style.display = "flex";
@@ -2071,21 +1929,17 @@
           lab.appendChild(document.createTextNode(pair[1]));
           modeWrap.appendChild(lab);
         });
-
         modeRow.appendChild(modeLabel);
         modeRow.appendChild(modeWrap);
         block.appendChild(modeRow);
-
         if ((question.mathMode || "options") === "options") {
           const optLabel = document.createElement("div");
           optLabel.className = "form-label";
           optLabel.style.marginTop = "14px";
           optLabel.textContent = "Options — click the circle to mark the correct answer";
           block.appendChild(optLabel);
-
           const optWrap = document.createElement("div");
           optWrap.className = "editor-options";
-
           question.options.forEach(function (_, oi) {
             const row = document.createElement("div");
             row.className = "editor-option" + (question.answer === oi ? " is-answer" : "");
@@ -2126,7 +1980,6 @@
           numInput.addEventListener("input", function () { question.numericAnswer = numInput.value; });
           numField.appendChild(numLabel); numField.appendChild(numInput);
           block.appendChild(numField);
-
           const tolField = document.createElement("div");
           tolField.className = "form-field";
           const tolLabel = document.createElement("label");
@@ -2177,7 +2030,6 @@
         });
         block.appendChild(optWrap);
       }
-
       const expWrapper = document.createElement("div");
       expWrapper.className = "editor-fields";
       expWrapper.innerHTML = '<span class="editor-fields-label">Explanation (optional)</span>';
@@ -2273,7 +2125,7 @@
         if (type === "math") {
           const hasOptions = Array.isArray(rq.options) && rq.options.length === 4 && typeof rq.answer === "number";
           const hasNumeric = typeof rq.numericAnswer === "number" && isFinite(rq.numericAnswer);
-          if (!hasOptions && !hasNumeric) { errEl.textContent = "Question " + n + ": math needs 4 options + answer, or numericAnswer"; errEl.hidden = false; return; }
+          if (!hasOptions && !hasNumeric) { errEl.textContent = "Question " + n + ": math needs options+answer or numericAnswer"; errEl.hidden = false; return; }
           if (hasOptions) {
             for (let j = 0; j < 4; j++) {
               if (typeof rq.options[j] !== "string" || !rq.options[j].trim()) { errEl.textContent = "Question " + n + ": option " + (j + 1) + " empty"; errEl.hidden = false; return; }
