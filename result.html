@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Quiz Result — PrepareKora</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .result-header-card {
+      background: #ffffff;
+      border: 1px solid rgba(216, 222, 232, 0.6);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 12px 30px rgba(163, 177, 198, 0.4);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .result-subject {
+      margin: 0 0 6px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .result-score-big {
+      margin: 0;
+      font-size: 52px;
+      font-weight: 700;
+      letter-spacing: -2px;
+      line-height: 1;
+      color: var(--text);
+    }
+    .result-score-of {
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--muted);
+      margin-left: 6px;
+    }
+    .result-percent {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .result-streak {
+      display: inline-block;
+      margin-top: 12px;
+      margin-left: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .result-breakdown {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .result-breakdown-item {
+      padding: 14px 8px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      text-align: center;
+    }
+    .result-breakdown-item strong {
+      display: block;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--text);
+    }
+    .result-breakdown-item span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .result-breakdown-item.correct strong { color: #15803d; }
+    .result-breakdown-item.wrong strong { color: #b91c1c; }
+
+    .result-actions-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .result-actions-bar .btn { flex: 1; min-width: 120px; }
+
+    .result-questions { margin-bottom: 20px; }
+
+    .q-review-card {
+      padding: 16px;
+      border: 1px solid rgba(216, 222, 232, 0.6);
+      border-radius: 14px;
+      background: #ffffff;
+      margin-bottom: 12px;
+    }
+    .q-review-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .q-review-num {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .q-review-badge {
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .q-review-badge.correct { background: #15803d; color: #fff; }
+    .q-review-badge.wrong { background: #b91c1c; color: #fff; }
+    .q-review-badge.unattempted { background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+    .q-review-text {
+      margin: 0 0 12px;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.5;
+      color: var(--text);
+    }
+    .q-review-options {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .q-review-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #ffffff;
+      font-size: 13px;
+    }
+    .q-review-option.correct {
+      border-color: #15803d;
+      background: #f0fdf4;
+    }
+    .q-review-option.correct .q-opt-key {
+      background: #15803d;
+      color: #fff;
+      border-color: #15803d;
+    }
+    .q-review-option.wrong {
+      border-color: #b91c1c;
+      background: #fef2f2;
+    }
+    .q-review-option.wrong .q-opt-key {
+      background: #b91c1c;
+      color: #fff;
+      border-color: #b91c1c;
+    }
+    .q-opt-key {
+      display: grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      background: #ffffff;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .q-opt-text { flex: 1; overflow-wrap: anywhere; }
+
+    .q-explanation {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text);
+      white-space: pre-line;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a class="brand" href="index.html" aria-label="PrepareKora home">
+        <span class="brand-main">preparekora</span><span class="brand-in">.in</span>
+      </a>
+      <a class="btn btn-sm" href="dashboard.html">Dashboard</a>
+    </div>
+  </header>
+
+  <main class="page-container">
+
+    <section id="resultLoading">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <span>Loading result…</span>
+      </div>
+    </section>
+
+    <section id="resultError" hidden>
+      <div class="card start-card">
+        <p class="eyebrow">Oops</p>
+        <h1>Could not load result</h1>
+        <p class="muted-text" id="resultErrorMessage"></p>
+        <div class="form-actions">
+          <a class="btn btn-primary" href="dashboard.html">Back to Dashboard</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="resultContent" hidden>
+
+      <div class="result-header-card">
+        <p class="result-subject" id="resultSubject">—</p>
+        <p class="result-score-big">
+          <span id="resultScore">0</span><span class="result-score-of">/ <span id="resultTotal">0</span></span>
+        </p>
+        <span class="result-percent" id="resultPercent">0%</span>
+        <span class="result-streak" id="resultStreak" hidden></span>
+      </div>
+
+      <div class="result-breakdown">
+        <div class="result-breakdown-item correct">
+          <strong id="resultCorrect">0</strong>
+          <span>Correct</span>
+        </div>
+        <div class="result-breakdown-item wrong">
+          <strong id="resultWrong">0</strong>
+          <span>Wrong</span>
+        </div>
+        <div class="result-breakdown-item">
+          <strong id="resultUnattempted">0</strong>
+          <span>Unattempted</span>
+        </div>
+        <div class="result-breakdown-item">
+          <strong id="resultTime">0s</strong>
+          <span>Time</span>
+        </div>
+      </div>
+
+      <div class="result-actions-bar">
+        <a class="btn btn-primary" href="dashboard.html">Back to Dashboard</a>
+        <button class="btn" id="showExplainBtn" type="button">Show Explanations</button>
+      </div>
+
+      <div class="result-questions" id="resultQuestions"></div>
+
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <a href="index.html" class="footer-brand">PrepareKora.in</a>
+      <div class="footer-copy">© <span id="currentYear"></span> PrepareKora.in</div>
+    </div>
+  </footer>
+
+  <script src="js/result.js"></script>
+
+</body>
+</html>
