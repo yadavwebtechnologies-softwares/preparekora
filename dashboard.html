@@ -106,50 +106,19 @@
 
       <!-- TABS -->
       <div class="admin-tabs" role="tablist">
-        <button
-          class="admin-tab is-active"
-          id="tabQuizzes"
-          type="button"
-          role="tab"
-          aria-selected="true"
-        >
+        <button class="admin-tab is-active" id="tabQuizzes" type="button" role="tab" aria-selected="true">
           Daily Quizzes
         </button>
-        <button
-          class="admin-tab"
-          id="tabSettings"
-          type="button"
-          role="tab"
-          aria-selected="false"
-          data-i18n="settings"
-        >
-          Settings
-        </button>
-                <button
-          class="admin-tab"
-          id="tabAttempts"
-          type="button"
-          role="tab"
-          aria-selected="false"
-        >
+        <button class="admin-tab" id="tabAttempts" type="button" role="tab" aria-selected="false">
           My Attempts
         </button>
-        <button
-          class="admin-tab"
-          id="tabHelp"
-          type="button"
-          role="tab"
-          aria-selected="false"
-        >
+        <button class="admin-tab" id="tabSettings" type="button" role="tab" aria-selected="false" data-i18n="settings">
+          Settings
+        </button>
+        <button class="admin-tab" id="tabHelp" type="button" role="tab" aria-selected="false">
           Help
         </button>
-        <button
-          class="admin-tab"
-          id="tabPurchase"
-          type="button"
-          role="tab"
-          aria-selected="false"
-        >
+        <button class="admin-tab" id="tabPurchase" type="button" role="tab" aria-selected="false">
           Purchase
         </button>
       </div>
@@ -158,9 +127,21 @@
       <div id="panelQuizzes">
         <div id="quizzesPanelContent">
           <div class="empty-state" style="padding: 60px 20px;">
-            Your daily quizzes will appear here. Check back soon.
+            Loading quizzes…
           </div>
         </div>
+      </div>
+
+      <!-- ATTEMPTS PANEL -->
+      <div id="panelAttempts" hidden>
+        <div id="attemptsLoading" class="loading-state">
+          <div class="spinner"></div>
+          <span>Loading…</span>
+        </div>
+        <div id="attemptsEmpty" class="empty-state" hidden style="padding: 40px 20px;">
+          You haven't attempted any tests yet.
+        </div>
+        <div id="attemptsList" class="admin-test-list" style="margin-top: 12px;"></div>
       </div>
 
       <!-- SETTINGS PANEL -->
@@ -201,19 +182,6 @@
         </div>
       </div>
 
-            <!-- ATTEMPTS PANEL -->
-      <div id="panelAttempts" hidden>
-        <div id="attemptsLoading" class="loading-state">
-          <div class="spinner"></div>
-          <span>Loading…</span>
-        </div>
-        <div id="attemptsEmpty" class="empty-state" hidden style="padding: 40px 20px;">
-          You haven't attempted any tests yet.
-        </div>
-        <div id="attemptsList" class="admin-test-list" style="margin-top: 12px;"></div>
-      </div>
-
-      
       <!-- HELP PANEL -->
       <div id="panelHelp" hidden>
         <div class="card" style="max-width: 480px;">
