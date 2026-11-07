@@ -210,12 +210,18 @@
     if (a) a.textContent = String(answered);
     if (u) u.textContent = String(unanswered);
     const overlay = $id("confirmOverlay");
-    if (overlay) overlay.hidden = false;
+    if (overlay) {
+      overlay.hidden = false;
+      overlay.classList.add("open");
+    }
   }
 
   function closeConfirm() {
     const overlay = $id("confirmOverlay");
-    if (overlay) overlay.hidden = true;
+    if (overlay) {
+      overlay.hidden = true;
+      overlay.classList.remove("open");
+    }
   }
 
   async function submitQuiz() {
