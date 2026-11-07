@@ -212,7 +212,9 @@
       return request("/admin/subjects/" + encodeURIComponent(subjectId) + "/questions/" + encodeURIComponent(questionId), { method: "DELETE" });
     },
     getDailyQuizConfig: function () { return request("/admin/cron/config"); },
-    saveDailyQuizConfig: function (payload) { return request("/admin/cron/config", { method: "PUT", body: JSON.stringify(payload) }); }
+    saveDailyQuizConfig: function (payload) { return request("/admin/cron/config", { method: "PUT", body: JSON.stringify(payload) }); },
+    getCronLogs: function () { return request("/admin/cron/logs"); },
+    runCronNow: function () { return request("/admin/cron/generate", { method: "POST" }); }
   };
 
   function t(key, vars) { return (window.PK && window.PK.t) ? window.PK.t(key, vars) : key; }
@@ -401,9 +403,8 @@
   if (activeRefreshBtn) activeRefreshBtn.addEventListener("click", refreshActiveCount);
 
   /* ---------- TABS ---------- */
-
-  const tabTests = $id("tabTests"), tabSettings = $id("tabSettings"), tabSubjects = $id("tabSubjects"), tabDatabase = $id("tabDatabase");
-  const panelTests = $id("panelTests"), panelSettings = $id("panelSettings"), panelSubjects = $id("panelSubjects"), panelDatabase = $id("panelDatabase");
+  const tabTests = $id("tabTests"), tabSettings = $id("tabSettings"), tabSubjects = $id("tabSubjects"), tabDatabase = $id("tabDatabase"), tabCronLogs = $id("tabCronLogs");
+  const panelTests = $id("panelTests"), panelSettings = $id("panelSettings"), panelSubjects = $id("panelSubjects"), panelDatabase = $id("panelDatabase"), panelCronLogs = $id("panelCronLogs");
 
   function setTab(tab) {
     state.currentTab = tab;
@@ -411,13 +412,15 @@
     if (tabSettings) { const a = tab === "settings"; tabSettings.classList.toggle("is-active", a); tabSettings.setAttribute("aria-selected", String(a)); }
     if (tabSubjects) { const a = tab === "subjects"; tabSubjects.classList.toggle("is-active", a); tabSubjects.setAttribute("aria-selected", String(a)); }
     if (tabDatabase) { const a = tab === "database"; tabDatabase.classList.toggle("is-active", a); tabDatabase.setAttribute("aria-selected", String(a)); }
+    if (tabCronLogs) { const a = tab === "cronlogs"; tabCronLogs.classList.toggle("is-active", a); tabCronLogs.setAttribute("aria-selected", String(a)); }
     if (panelTests) panelTests.hidden = tab !== "tests";
     if (panelSettings) panelSettings.hidden = tab !== "settings";
     if (panelSubjects) panelSubjects.hidden = tab !== "subjects";
     if (panelDatabase) panelDatabase.hidden = tab !== "database";
+    if (panelCronLogs) panelCronLogs.hidden = tab !== "cronlogs";
     if (tab === "settings") {
       if (window.PKLoader) window.PKLoader.show();
-      Promise.all([loadSettings(), loadInterruptionSettings(), loadDailyQuizSettings()]).finally(function () { if (window.PKLoader) window.PKLoader.hide(); });
+      Promise.all([loadSettings(), loadInterruptionSettings()]).finally(function () { if (window.PKLoader) window.PKLoader.hide(); });
     }
     if (tab === "subjects") {
       loadSubjects();
@@ -425,12 +428,16 @@
     if (tab === "database") {
       if (typeof window.initControlRoom === "function") window.initControlRoom();
     }
+    if (tab === "cronlogs") {
+      loadCronLogs();
+    }
   }
 
   if (tabTests) tabTests.addEventListener("click", function () { setTab("tests"); });
   if (tabSettings) tabSettings.addEventListener("click", function () { setTab("settings"); });
   if (tabSubjects) tabSubjects.addEventListener("click", function () { setTab("subjects"); });
   if (tabDatabase) tabDatabase.addEventListener("click", function () { setTab("database"); });
+    if (tabCronLogs) tabCronLogs.addEventListener("click", function () { setTab("cronlogs"); });
 
   const adminTestSearch = $id("adminTestSearch");
   const testsPagination = $id("testsPagination");
@@ -1625,6 +1632,172 @@
       }
     });
   }
+    /* ---------- CRON LOGS ---------- */
+
+  let cronLogsCache = [];
+
+  async function loadCronLogs() {
+    const loading = $id("cronLogsLoading");
+    const empty = $id("cronLogsEmpty");
+    const list = $id("cronLogsList");
+    if (!list) return;
+
+    if (loading) loading.hidden = false;
+    if (empty) empty.hidden = true;
+    list.hidden = true;
+    list.innerHTML = "";
+
+    try {
+      const res = await api.getCronLogs();
+      const logs = Array.isArray(res.logs) ? res.logs : [];
+      cronLogsCache = logs;
+
+      if (loading) loading.hidden = true;
+
+      if (logs.length === 0) {
+        if (empty) empty.hidden = false;
+        return;
+      }
+
+      list.hidden = false;
+      logs.forEach(function (log) {
+        list.appendChild(renderCronLogCard(log));
+      });
+    } catch (err) {
+      if (loading) loading.hidden = true;
+      if (err && err.status === 401) return showLogin();
+      if (empty) {
+        empty.hidden = false;
+        empty.textContent = "Could not load cron logs: " + (err.message || "Error");
+      }
+    }
+  }
+
+  function renderCronLogCard(log) {
+    const card = document.createElement("div");
+    card.className = "admin-test-card";
+
+    const generatedCount = Number(log.generatedCount) || 0;
+    const skippedCount = Number(log.skippedCount) || 0;
+    const total = generatedCount + skippedCount;
+    const status = generatedCount > 0 ? "published" : (total === 0 ? "draft" : "draft");
+
+    card.innerHTML =
+      '<div class="admin-test-info">' +
+        '<p class="admin-test-title">' + esc(log.date) + '</p>' +
+        '<div class="admin-test-meta">' +
+          '<span class="status-badge ' + status + '">' + generatedCount + ' generated</span>' +
+          (skippedCount > 0 ? '<span style="color: #b45309; font-weight: 600;">' + skippedCount + ' skipped</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="admin-test-actions">' +
+        '<button class="btn btn-sm" type="button" data-log-action="view">Details</button>' +
+      '</div>';
+
+    card.querySelector('[data-log-action="view"]').addEventListener("click", function () {
+      openCronLogDetail(log);
+    });
+
+    return card;
+  }
+
+  function openCronLogDetail(log) {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.hidden = false;
+    overlay.classList.add("open");
+    overlay.innerHTML =
+      '<div class="modal" style="max-width: 560px; padding: 0;">' +
+        '<div class="submission-detail-head" style="padding: 18px 20px 14px;">' +
+          '<div>' +
+            '<h2 style="margin: 0 0 3px; font-size: 16px;">' + esc(log.date) + '</h2>' +
+            '<p style="margin: 0; color: var(--muted); font-size: 12px;">Cron run details</p>' +
+          '</div>' +
+          '<button type="button" class="submission-detail-close" id="cronLogDetailClose" aria-label="Close">' +
+            '<svg viewBox="0 0 24 24"><path d="m6 6 12 12"></path><path d="M18 6 6 18"></path></svg>' +
+          '</button>' +
+        '</div>' +
+        '<div style="padding: 16px 20px; max-height: 500px; overflow-y: auto;" id="cronLogBody"></div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    const body = overlay.querySelector("#cronLogBody");
+    const generated = Array.isArray(log.generated) ? log.generated : [];
+    const skipped = Array.isArray(log.skipped) ? log.skipped : [];
+
+    let html = "";
+
+    if (generated.length > 0) {
+      html += '<h3 style="margin: 0 0 10px; font-size: 13px; font-weight: 600; color: #15803d;">✓ Generated (' + generated.length + ')</h3>';
+      html += '<div style="margin-bottom: 16px;">';
+      generated.forEach(function (g) {
+        html += '<div style="padding: 10px 12px; border: 1px solid #bbf7d0; border-radius: 8px; background: #f0fdf4; margin-bottom: 6px; font-size: 13px;">' +
+          '<strong>' + esc(g.name || g.id) + '</strong> — ' + (g.count || 0) + ' questions' +
+        '</div>';
+      });
+      html += '</div>';
+    }
+
+    if (skipped.length > 0) {
+      html += '<h3 style="margin: 0 0 10px; font-size: 13px; font-weight: 600; color: #b45309;">⚠ Skipped (' + skipped.length + ')</h3>';
+      html += '<div>';
+      skipped.forEach(function (s) {
+        let reasonText = s.reason || "unknown";
+        if (s.reason === "pool_too_small") reasonText = "Not enough questions in bank (need " + 5 + "+)";
+        if (s.reason === "error") reasonText = "Error: " + (s.detail || "unknown");
+        html += '<div style="padding: 10px 12px; border: 1px solid #fef3c7; border-radius: 8px; background: #fffbeb; margin-bottom: 6px; font-size: 13px;">' +
+          '<strong>' + esc(s.name || s.id) + '</strong><br>' +
+          '<span style="color: var(--muted); font-size: 12px;">' + esc(reasonText) + '</span>' +
+        '</div>';
+      });
+      html += '</div>';
+    }
+
+    if (generated.length === 0 && skipped.length === 0) {
+      html = '<div class="empty-state">No data for this run.</div>';
+    }
+
+    body.innerHTML = html;
+
+    function close() {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }
+
+    overlay.querySelector("#cronLogDetailClose").addEventListener("click", close);
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) close();
+    });
+    document.addEventListener("keydown", function handler(e) {
+      if (e.key === "Escape") { close(); document.removeEventListener("keydown", handler); }
+    });
+  }
+
+  const runCronNowBtn = $id("runCronNowBtn");
+  if (runCronNowBtn) {
+    runCronNowBtn.addEventListener("click", async function () {
+      if (!window.confirm("Run daily quiz generation now? This will create today's quizzes for all active subjects.")) return;
+      runCronNowBtn.disabled = true;
+      runCronNowBtn.textContent = "Running…";
+      try {
+        const res = await api.runCronNow();
+        const result = res.result || {};
+        const genCount = result.generatedCount || 0;
+        const skipCount = result.skippedCount || 0;
+        let msg = "Done. " + genCount + " generated";
+        if (skipCount > 0) msg += ", " + skipCount + " skipped";
+        toast(msg, genCount > 0 ? "success" : "error");
+        await loadCronLogs();
+      } catch (err) {
+        if (err && err.status === 401) return showLogin();
+        toast(err.message || "Cron failed", "error");
+      } finally {
+        runCronNowBtn.disabled = false;
+        runCronNowBtn.textContent = "Run Now";
+      }
+    });
+  }
+
 
   /* ---------- EDITOR ---------- */
   const newTestBtn = $id("newTestBtn");
