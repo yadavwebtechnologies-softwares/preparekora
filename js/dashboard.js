@@ -225,8 +225,151 @@
       }
     }
   }
+    /* ---------- TODAY'S QUIZZES ---------- */
 
-  
+  async function loadTodayQuizzes() {
+    const wrap = $id("quizzesPanelContent");
+    if (!wrap) return;
+
+    const token = getToken();
+    if (!token) { redirectToLogin(); return; }
+
+    wrap.innerHTML = '<div class="loading-state" style="padding: 30px 16px;"><div class="spinner"></div><span>Loading quizzes…</span></div>';
+
+    try {
+      const res = await fetch(API_BASE + "/daily-quizzes/today", {
+        method: "GET",
+        headers: { "Authorization": "Bearer " + token }
+      });
+
+      if (res.status === 401 || res.status === 403) { redirectToLogin(); return; }
+      if (!res.ok) {
+        wrap.innerHTML = '<div class="empty-state" style="padding: 30px 16px;">Could not load quizzes. Please refresh.</div>';
+        return;
+      }
+
+      const data = await res.json();
+      const quizzes = Array.isArray(data.quizzes) ? data.quizzes : [];
+      const date = data.date || "";
+
+      // Update streak in header if present
+      const streakEl = $id("dashStreak");
+      if (streakEl && data.stats) {
+        const s = Number(data.stats.streak) || 0;
+        streakEl.textContent = s > 0 ? ("🔥 " + s + "-day streak") : "";
+        streakEl.hidden = s === 0;
+      }
+
+      if (quizzes.length === 0) {
+        wrap.innerHTML = '<div class="empty-state" style="padding: 40px 20px;">No quizzes available today. Check back soon.</div>';
+        return;
+      }
+
+      wrap.innerHTML = "";
+      const grid = document.createElement("div");
+      grid.style.cssText = "display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px;";
+
+      quizzes.forEach(function (q) {
+        const card = document.createElement("div");
+        card.style.cssText = "padding: 20px; border: 1px solid rgba(216,222,232,0.6); border-radius: 14px; background: #ffffff; box-shadow: 0 8px 20px rgba(163,177,198,0.3);";
+
+        if (q.attempted) {
+          card.innerHTML =
+            '<p style="margin: 0 0 10px; font-size: 15px; font-weight: 600; color: var(--text);">' + esc(q.subjectName) + '</p>' +
+            '<div style="padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); text-align: center;">' +
+              '<p style="margin: 0; font-size: 13px; font-weight: 600; color: var(--accent);">Attempted · ' + q.score + '/' + q.total + '</p>' +
+              '<p style="margin: 4px 0 0; font-size: 11px; color: var(--muted);">' + q.percent + '% score</p>' +
+            '</div>';
+          card.style.cursor = "pointer";
+          card.addEventListener("click", function () {
+            window.location.href = "result.html?date=" + encodeURIComponent(date) + "&subject=" + encodeURIComponent(q.subjectId);
+          });
+        } else {
+          card.innerHTML =
+            '<p style="margin: 0 0 10px; font-size: 15px; font-weight: 600; color: var(--text);">' + esc(q.subjectName) + '</p>' +
+            '<div style="padding: 10px 12px; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent); color: #fff; text-align: center; cursor: pointer; font-size: 13px; font-weight: 600;">Start Quiz</div>';
+          card.querySelector("div").addEventListener("click", function () {
+            window.location.href = "quiz.html?date=" + encodeURIComponent(date) + "&subject=" + encodeURIComponent(q.subjectId);
+          });
+        }
+
+        grid.appendChild(card);
+      });
+
+      wrap.appendChild(grid);
+    } catch (err) {
+      wrap.innerHTML = '<div class="empty-state" style="padding: 30px 16px;">Network error. Please refresh.</div>';
+    }
+  }
+    /* ---------- TODAY'S QUIZZES ---------- */
+
+  async function loadTodayQuizzes() {
+    const wrap = $id("quizzesPanelContent");
+    if (!wrap) return;
+
+    const token = getToken();
+    if (!token) { redirectToLogin(); return; }
+
+    wrap.innerHTML = '<div class="loading-state" style="padding: 30px 16px;"><div class="spinner"></div><span>Loading quizzes…</span></div>';
+
+    try {
+      const res = await fetch(API_BASE + "/daily-quizzes/today", {
+        method: "GET",
+        headers: { "Authorization": "Bearer " + token }
+      });
+
+      if (res.status === 401 || res.status === 403) { redirectToLogin(); return; }
+      if (!res.ok) {
+        wrap.innerHTML = '<div class="empty-state" style="padding: 30px 16px;">Could not load quizzes. Please refresh.</div>';
+        return;
+      }
+
+      const data = await res.json();
+      const quizzes = Array.isArray(data.quizzes) ? data.quizzes : [];
+      const date = data.date || "";
+
+      if (quizzes.length === 0) {
+        wrap.innerHTML = '<div class="empty-state" style="padding: 40px 20px;">No quizzes available today. Check back soon.</div>';
+        return;
+      }
+
+      wrap.innerHTML = "";
+      const grid = document.createElement("div");
+      grid.style.cssText = "display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px;";
+
+      quizzes.forEach(function (q) {
+        const card = document.createElement("div");
+        card.style.cssText = "padding: 20px; border: 1px solid rgba(216,222,232,0.6); border-radius: 14px; background: #ffffff; box-shadow: 0 8px 20px rgba(163,177,198,0.3);";
+
+        if (q.attempted) {
+          card.innerHTML =
+            '<p style="margin: 0 0 10px; font-size: 15px; font-weight: 600; color: var(--text);">' + esc(q.subjectName) + '</p>' +
+            '<div style="padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); text-align: center;">' +
+              '<p style="margin: 0; font-size: 13px; font-weight: 600; color: var(--accent);">Attempted · ' + q.score + '/' + q.total + '</p>' +
+              '<p style="margin: 4px 0 0; font-size: 11px; color: var(--muted);">' + q.percent + '% score</p>' +
+            '</div>';
+          card.style.cursor = "pointer";
+          card.addEventListener("click", function () {
+            window.location.href = "result.html?date=" + encodeURIComponent(date) + "&subject=" + encodeURIComponent(q.subjectId);
+          });
+        } else {
+          card.innerHTML =
+            '<p style="margin: 0 0 10px; font-size: 15px; font-weight: 600; color: var(--text);">' + esc(q.subjectName) + '</p>' +
+            '<div style="padding: 10px 12px; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent); color: #fff; text-align: center; cursor: pointer; font-size: 13px; font-weight: 600;">Start Quiz</div>';
+          card.querySelector("div").addEventListener("click", function () {
+            window.location.href = "quiz.html?date=" + encodeURIComponent(date) + "&subject=" + encodeURIComponent(q.subjectId);
+          });
+        }
+
+        grid.appendChild(card);
+      });
+
+      wrap.appendChild(grid);
+    } catch (err) {
+      wrap.innerHTML = '<div class="empty-state" style="padding: 30px 16px;">Network error. Please refresh.</div>';
+    }
+  }
+
   /* ---------- TABS ---------- */
   function bindTabs() {
     const tabs = {
@@ -254,6 +397,7 @@
       tab.tab.addEventListener("click", function () {
         activate(k);
         if (k === "attempts") loadAttempts();
+        if (k === "quizzes") loadTodayQuizzes();
       });
     });
   }
@@ -445,6 +589,7 @@
     bindMobileMenu();
     bindTabs();
     bindSettings();
+    loadTodayQuizzes();
 
     // Sign out
     const signOutBtn = $id("signOutBtn");
