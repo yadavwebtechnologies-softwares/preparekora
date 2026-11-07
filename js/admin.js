@@ -572,6 +572,7 @@
     const overlay = document.createElement("div");
     overlay.className = "modal-overlay";
     overlay.hidden = false;
+    overlay.classList.add("open");
     overlay.innerHTML =
       '<div class="modal" style="max-width: 420px;">' +
         '<h2>' + (isEdit ? "Edit Subject" : "Add Subject") + '</h2>' +
