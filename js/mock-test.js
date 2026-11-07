@@ -666,7 +666,7 @@
     if (nextBtn) nextBtn.focus();
   }
 
-    /* ---------- Practice mode ---------- */
+   /* ---------- Practice mode ---------- */
 
   function beginPracticeTest() {
     state.started = true;
@@ -696,6 +696,21 @@
     if (qNumber) qNumber.hidden = true;
     if (qStatus) qStatus.hidden = true;
     if (examSub) examSub.textContent = "";
+
+    const examBarRight = document.querySelector(".exam-bar-right");
+    if (examBarRight) examBarRight.style.display = "none";
+
+    const finishBar = document.getElementById("practiceFinishBar");
+    if (finishBar) finishBar.style.display = "";
+
+    const finishBtn = document.getElementById("practiceFinishBtn");
+    if (finishBtn) {
+      finishBtn.onclick = function () {
+        if (window.confirm("Finish the test and see your result?")) {
+          submitPracticeTest();
+        }
+      };
+    }
 
     renderPracticeAll();
     startHeartbeat();
