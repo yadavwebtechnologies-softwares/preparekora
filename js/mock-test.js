@@ -814,8 +814,8 @@
 
     state.answers[qIndex] = optIndex;
 
-    const correctIndex = question.answer;
-    const isCorrect = optIndex === correctIndex;
+    const correctIndex = typeof question.answer === "number" ? question.answer : -1;
+    const isCorrect = correctIndex >= 0 && optIndex === correctIndex;
 
     const allBtns = optionsWrap.querySelectorAll(".practice-option");
     allBtns.forEach(function (btn, i) {
