@@ -10,7 +10,7 @@
 
   const TOKEN_KEY = "pk_user_id_token";
   const EXPIRES_KEY = "pk_user_expires_at";
-  const INACTIVITY_MS = 10 * 1000;
+  const INACTIVITY_MS = 5 * 60 * 1000;
 
   const $id = (id) => document.getElementById(id);
 
