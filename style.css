@@ -3488,6 +3488,7 @@ body.is-practice-mode .exam-nav,
 body.is-practice-mode .exam-header-meta {
   display: none;
 }
+/* Practice finish bar — floating bottom */
 .practice-finish-bar {
   position: fixed;
   bottom: 20px;
@@ -3507,4 +3508,9 @@ body.is-practice-mode .exam-header-meta {
   padding: 14px;
   font-size: 15px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Last card button ke peeche na chhupe */
+.practice-container {
+  padding-bottom: 90px;
 }
