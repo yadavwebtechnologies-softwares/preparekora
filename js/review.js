@@ -152,7 +152,7 @@
       hash = ((hash << 5) - hash) + raw.charCodeAt(i);
       hash |= 0;
     }
-    return "pke_" + Math.abs(hash).toString(36);
+    return "pke_v2_" + Math.abs(hash).toString(36);
   }
 
   function getCachedExplanation(question) {
