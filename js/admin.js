@@ -399,6 +399,7 @@
   if (activeRefreshBtn) activeRefreshBtn.addEventListener("click", refreshActiveCount);
 
   /* ---------- TABS ---------- */
+
   const tabTests = $id("tabTests"), tabSettings = $id("tabSettings"), tabSubjects = $id("tabSubjects"), tabDatabase = $id("tabDatabase");
   const panelTests = $id("panelTests"), panelSettings = $id("panelSettings"), panelSubjects = $id("panelSubjects"), panelDatabase = $id("panelDatabase");
 
@@ -424,7 +425,7 @@
     }
   }
 
-    if (tabTests) tabTests.addEventListener("click", function () { setTab("tests"); });
+  if (tabTests) tabTests.addEventListener("click", function () { setTab("tests"); });
   if (tabSettings) tabSettings.addEventListener("click", function () { setTab("settings"); });
   if (tabSubjects) tabSubjects.addEventListener("click", function () { setTab("subjects"); });
   if (tabDatabase) tabDatabase.addEventListener("click", function () { setTab("database"); });
@@ -457,561 +458,20 @@
       const query = state.searchQuery.trim().toLowerCase();
       const filtered = query
         ? state.tests.filter(function (test) {
-            const haystack = [
-              test.title || "",
-              test.publisherName || "",
-              test.status || ""
-            ].join(" ").toLowerCase();
+            const haystack = [test.title || "", test.publisherName || "", test.status || ""].join(" ").toLowerCase();
             return haystack.indexOf(query) !== -1;
           })
         : state.tests;
-
       const totalPages = Math.max(1, Math.ceil(filtered.length / ADMIN_PAGE_SIZE));
-
       if (state.testsPage < totalPages - 1) {
         state.testsPage++;
         renderTestsList();
       }
     });
   }
-    /* ---------- QUESTION BANK (Subjects) ---------- */
-
-  async function loadSubjects() {
-    const loading = $id("subjectsLoading");
-    const empty = $id("subjectsEmpty");
-    const list = $id("subjectsList");
-    if (!list) return;
-
-    if (loading) loading.hidden = false;
-    if (empty) empty.hidden = true;
-    list.hidden = true;
-    list.innerHTML = "";
-
-    try {
-      const res = await api.listSubjects();
-      const subjects = Array.isArray(res.subjects) ? res.subjects : [];
-
-      if (loading) loading.hidden = true;
-
-      if (subjects.length === 0) {
-        if (empty) empty.hidden = false;
-        return;
-      }
-
-      list.hidden = false;
-      subjects.forEach(function (s) {
-        list.appendChild(renderSubjectCard(s));
-      });
-    } catch (err) {
-      if (loading) loading.hidden = true;
-      if (err && err.status === 401) return showLogin();
-      if (empty) {
-        empty.hidden = false;
-        empty.textContent = "Could not load subjects: " + (err.message || "Error");
-      }
-    }
-  }
-
-  function renderSubjectCard(subject) {
-    const card = document.createElement("div");
-    card.className = "admin-test-card";
-
-    const isActive = subject.active !== false;
-    const qCount = Number(subject.questionCount) || 0;
-
-    card.innerHTML =
-      '<div class="admin-test-info">' +
-        '<p class="admin-test-title">' + esc(subject.name) + '</p>' +
-        '<div class="admin-test-meta">' +
-          '<span class="status-badge ' + (isActive ? "published" : "draft") + '">' + (isActive ? "Active" : "Inactive") + '</span>' +
-          '<span>' + qCount + ' questions</span>' +
-          (subject.category ? '<span>' + esc(subject.category) + '</span>' : '') +
-        '</div>' +
-      '</div>' +
-      '<div class="admin-test-actions"></div>';
-
-    const actions = card.querySelector(".admin-test-actions");
-
-    const editBtn = document.createElement("button");
-    editBtn.type = "button"; editBtn.className = "btn btn-sm"; editBtn.textContent = "Edit";
-    editBtn.addEventListener("click", function () { openSubjectEditor(subject); });
-    actions.appendChild(editBtn);
-
-    const questionsBtn = document.createElement("button");
-    questionsBtn.type = "button"; questionsBtn.className = "btn btn-sm"; questionsBtn.textContent = "Questions (" + qCount + ")";
-    questionsBtn.addEventListener("click", function () { openQuestionsViewer(subject); });
-    actions.appendChild(questionsBtn);
-
-    const toggleBtn = document.createElement("button");
-    toggleBtn.type = "button";
-    toggleBtn.className = "btn btn-sm" + (isActive ? "" : " btn-primary");
-    toggleBtn.textContent = isActive ? "Deactivate" : "Activate";
-    toggleBtn.addEventListener("click", async function () {
-      if (isActive && !window.confirm("Deactivate this subject? Its questions will be kept but not used for daily quizzes.")) return;
-      toggleBtn.disabled = true;
-      try {
-        await api.updateSubject(subject.id, { active: !isActive });
-        toast(isActive ? "Subject deactivated" : "Subject activated", "success");
-        await loadSubjects();
-      } catch (err) {
-        if (err && err.status === 401) return showLogin();
-        toast(err.message || "Error", "error");
-      } finally {
-        toggleBtn.disabled = false;
-      }
-    });
-    actions.appendChild(toggleBtn);
-
-    return card;
-  }
-
-  function openSubjectEditor(subject) {
-    const isEdit = !!subject;
-    const overlay = document.createElement("div");
-    overlay.className = "modal-overlay";
-    overlay.hidden = false;
-    overlay.classList.add("open");
-    overlay.innerHTML =
-      '<div class="modal" style="max-width: 420px;">' +
-        '<h2>' + (isEdit ? "Edit Subject" : "Add Subject") + '</h2>' +
-        '<div class="form-field">' +
-          '<label class="form-label">Name *</label>' +
-          '<input type="text" class="form-input" id="subjectNameInput" maxlength="60" value="' + esc(subject ? subject.name : "") + '" placeholder="e.g. Assam GK">' +
-        '</div>' +
-        '<div class="form-field">' +
-          '<label class="form-label">Category (optional)</label>' +
-          '<input type="text" class="form-input" id="subjectCategoryInput" maxlength="40" value="' + esc(subject ? (subject.category || "") : "") + '" placeholder="e.g. GK, Math, Reasoning">' +
-        '</div>' +
-        '<div class="form-field">' +
-          '<label class="form-label">Order (optional)</label>' +
-          '<input type="number" class="form-input" id="subjectOrderInput" min="0" value="' + (subject ? (subject.order || 0) : 0) + '">' +
-          '<p class="form-hint">Lower number appears first.</p>' +
-        '</div>' +
-        '<p class="form-error" id="subjectEditorError" hidden></p>' +
-        '<div class="modal-actions">' +
-          '<button type="button" class="btn btn-sm" id="subjectEditorCancel">Cancel</button>' +
-          '<button type="button" class="btn btn-primary btn-sm" id="subjectEditorSave">' + (isEdit ? "Save" : "Create") + '</button>' +
-        '</div>' +
-      '</div>';
-
-    document.body.appendChild(overlay);
-
-    const nameInput = overlay.querySelector("#subjectNameInput");
-    const catInput = overlay.querySelector("#subjectCategoryInput");
-    const orderInput = overlay.querySelector("#subjectOrderInput");
-    const errEl = overlay.querySelector("#subjectEditorError");
-    const saveBtn = overlay.querySelector("#subjectEditorSave");
-    const cancelBtn = overlay.querySelector("#subjectEditorCancel");
-
-    function close() {
-      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    }
-
-    cancelBtn.addEventListener("click", close);
-    overlay.addEventListener("click", function (e) {
-      if (e.target === overlay) close();
-    });
-    document.addEventListener("keydown", function handler(e) {
-      if (e.key === "Escape") { close(); document.removeEventListener("keydown", handler); }
-    });
-
-    saveBtn.addEventListener("click", async function () {
-      errEl.hidden = true;
-      const name = nameInput.value.trim();
-      if (!name || name.length < 2) { errEl.textContent = "Name must be at least 2 characters"; errEl.hidden = false; return; }
-      if (name.length > 60) { errEl.textContent = "Name too long"; errEl.hidden = false; return; }
-
-      saveBtn.disabled = true;
-      try {
-        const payload = {
-          name: name,
-          category: catInput.value.trim(),
-          order: Number(orderInput.value) || 0
-        };
-        if (isEdit) {
-          await api.updateSubject(subject.id, payload);
-          toast("Subject updated", "success");
-        } else {
-          await api.createSubject(payload);
-          toast("Subject created", "success");
-        }
-        close();
-        await loadSubjects();
-      } catch (err) {
-        if (err && err.status === 401) { close(); return showLogin(); }
-        errEl.textContent = err.message || "Save failed";
-        errEl.hidden = false;
-      } finally {
-        saveBtn.disabled = false;
-      }
-    });
-
-    setTimeout(function () { nameInput.focus(); }, 60);
-  }
-    function openImportModal(subject, onDone) {
-    const overlay = document.createElement("div");
-    overlay.className = "modal-overlay";
-    overlay.hidden = false;
-    overlay.classList.add("open");
-    overlay.style.zIndex = "260";
-    overlay.innerHTML =
-      '<div class="modal" style="max-width: 640px;">' +
-        '<h2>Import questions</h2>' +
-        '<p style="margin: 0 0 12px; color: var(--muted); font-size: 13px;">Paste JSON array of questions for <strong>' + esc(subject.name) + '</strong>.</p>' +
-        '<details style="margin-bottom: 12px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); font-size: 12px;">' +
-          '<summary style="cursor: pointer; font-weight: 600; color: var(--muted);">Format example</summary>' +
-          '<pre style="margin: 8px 0 0; padding: 10px; background: #fff; border-radius: 4px; border: 1px solid var(--border); font-size: 11px; overflow-x: auto;">' +
-          '[{ "q": "Question text", "options": ["A", "B", "C", "D"], "answer": 0, "type": "mcq" }]' +
-          '</pre>' +
-        '</details>' +
-        '<textarea id="impTa" class="import-textarea" placeholder=\'Paste JSON here...\' style="min-height: 220px;"></textarea>' +
-        '<p class="form-error" id="impErr" hidden></p>' +
-        '<div class="modal-actions" style="margin-top: 14px;">' +
-          '<button class="btn btn-sm" id="impCancel" type="button">Cancel</button>' +
-          '<button class="btn btn-primary btn-sm" id="impConfirm" type="button">Import</button>' +
-        '</div>' +
-      '</div>';
-
-    document.body.appendChild(overlay);
-
-    const ta = overlay.querySelector("#impTa");
-    const errEl = overlay.querySelector("#impErr");
-    const confirmBtn = overlay.querySelector("#impConfirm");
-    const cancelBtn = overlay.querySelector("#impCancel");
-
-    function close() {
-      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    }
-
-    cancelBtn.addEventListener("click", close);
-    overlay.addEventListener("click", function (e) {
-      if (e.target === overlay) close();
-    });
-    document.addEventListener("keydown", function handler(e) {
-      if (e.key === "Escape") { close(); document.removeEventListener("keydown", handler); }
-    });
-
-    setTimeout(function () { ta.focus(); }, 80);
-
-    confirmBtn.addEventListener("click", async function () {
-      errEl.hidden = true;
-      const raw = ta.value.trim();
-      if (!raw) { errEl.textContent = "Paste JSON first"; errEl.hidden = false; return; }
-
-      let parsed;
-      try { parsed = JSON.parse(raw); }
-      catch (e) { errEl.textContent = "Invalid JSON: " + e.message; errEl.hidden = false; return; }
-
-      const questions = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.questions) ? parsed.questions : null);
-      if (!questions || questions.length === 0) {
-        errEl.textContent = "JSON must be an array of questions";
-        errEl.hidden = false;
-        return;
-      }
-
-      confirmBtn.disabled = true;
-      confirmBtn.textContent = "Importing…";
-
-      try {
-        const res = await api.importQuestions(subject.id, { questions: questions });
-
-        const added = Number(res.added) || 0;
-        const skipped = Number(res.skipped) || 0;
-        const errors = Array.isArray(res.errors) ? res.errors : [];
-
-        let msg = "Imported " + added + " question(s).";
-        if (skipped > 0) msg += " " + skipped + " duplicate(s) skipped.";
-        if (errors.length > 0) msg += " " + errors.length + " error(s).";
-        toast(msg, added > 0 ? "success" : "error");
-
-        if (errors.length > 0) {
-          errEl.innerHTML = "<strong>Errors:</strong><br>" + errors.slice(0, 5).map(esc).join("<br>");
-          errEl.hidden = false;
-          confirmBtn.disabled = false;
-          confirmBtn.textContent = "Import";
-          if (added > 0 && typeof onDone === "function") onDone();
-          return;
-        }
-
-        close();
-        if (typeof onDone === "function") onDone();
-      } catch (err) {
-        if (err && err.status === 401) { close(); return showLogin(); }
-        errEl.textContent = err.message || "Import failed";
-        errEl.hidden = false;
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = "Import";
-      }
-    });
-  }
-
-
-  const newSubjectBtn = $id("newSubjectBtn");
-  if (newSubjectBtn) {
-    newSubjectBtn.addEventListener("click", function () { openSubjectEditor(null); });
-  }
-    /* ---------- Questions Viewer ---------- */
-
-  async function openQuestionsViewer(subject) {
-    const overlay = document.createElement("div");
-    overlay.className = "modal-overlay";
-    overlay.hidden = false;
-    overlay.classList.add("open");
-    overlay.innerHTML =
-      '<div class="modal" style="max-width: 720px; padding: 0;">' +
-        '<div class="submission-detail-head" style="padding: 18px 20px 14px;">' +
-          '<div>' +
-            '<h2 style="margin: 0 0 3px; font-size: 16px;">' + esc(subject.name) + '</h2>' +
-            '<p style="margin: 0; color: var(--muted); font-size: 12px;">Questions bank</p>' +
-          '</div>' +
-          '<button type="button" class="submission-detail-close" id="qvClose" aria-label="Close">' +
-            '<svg viewBox="0 0 24 24"><path d="m6 6 12 12"></path><path d="M18 6 6 18"></path></svg>' +
-          '</button>' +
-        '</div>' +
-        '<div style="padding: 14px 20px; display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--border);">' +
-          '<button class="btn btn-primary btn-sm" id="qvImportBtn" type="button">+ Import JSON</button>' +
-          '<div class="search-input-wrap" style="flex: 1; min-width: 160px; height: 38px;">' +
-            '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 4.5 4.5"></path></svg>' +
-            '<input type="search" id="qvSearch" placeholder="Search questions..." autocomplete="off" style="height: 36px;">' +
-          '</div>' +
-        '</div>' +
-        '<div id="qvList" style="padding: 14px 20px; max-height: 500px; overflow-y: auto;">' +
-          '<div class="loading-state"><div class="spinner"></div><span>Loading…</span></div>' +
-        '</div>' +
-        '<div style="padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">' +
-          '<span id="qvCount" style="font-size: 12px; color: var(--muted);">—</span>' +
-          '<div style="display: flex; gap: 6px;">' +
-            '<button class="btn btn-sm" id="qvPrev" type="button" disabled>← Prev</button>' +
-            '<button class="btn btn-sm" id="qvNext" type="button" disabled>Next →</button>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
-
-    document.body.appendChild(overlay);
-
-    const listEl = overlay.querySelector("#qvList");
-    const countEl = overlay.querySelector("#qvCount");
-    const prevBtn = overlay.querySelector("#qvPrev");
-    const nextBtn = overlay.querySelector("#qvNext");
-    const searchEl = overlay.querySelector("#qvSearch");
-    const importBtn = overlay.querySelector("#qvImportBtn");
-    const closeBtn = overlay.querySelector("#qvClose");
-
-    const PAGE_SIZE = 20;
-    const qState = { offset: 0, search: "", total: 0 };
-
-    function close() {
-      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    }
-
-    closeBtn.addEventListener("click", close);
-    overlay.addEventListener("click", function (e) {
-      if (e.target === overlay) close();
-    });
-    document.addEventListener("keydown", function handler(e) {
-      if (e.key === "Escape") { close(); document.removeEventListener("keydown", handler); }
-    });
-
-    async function loadPage() {
-      listEl.innerHTML = '<div class="loading-state"><div class="spinner"></div><span>Loading…</span></div>';
-      try {
-        const res = await api.listQuestions(subject.id, {
-          limit: PAGE_SIZE,
-          offset: qState.offset,
-          search: qState.search
-        });
-        const questions = Array.isArray(res.questions) ? res.questions : [];
-        qState.total = Number(res.total) || 0;
-
-        if (questions.length === 0) {
-          listEl.innerHTML = '<div class="empty-state" style="padding: 30px 16px;">' +
-            (qState.search ? 'No questions match "' + esc(qState.search) + '"' : 'No questions yet. Click "Import JSON" to add.') +
-            '</div>';
-        } else {
-          listEl.innerHTML = "";
-          questions.forEach(function (q, idx) {
-            const card = document.createElement("div");
-            card.style.cssText = "padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 8px; background: #ffffff;";
-            const num = qState.offset + idx + 1;
-            card.innerHTML =
-              '<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px;">' +
-                '<div style="font-size: 13px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere;">' +
-                  '<span style="color: var(--muted); margin-right: 6px;">Q' + num + '.</span>' + esc(q.q) +
-                '</div>' +
-                '<button class="btn btn-sm" type="button" data-del="' + esc(q.id) + '" style="color: #b91c1c; flex-shrink: 0;">Delete</button>' +
-              '</div>' +
-              '<div style="font-size: 11px; color: var(--muted);">' +
-                (Array.isArray(q.options) ? q.options.map(function (o, i) {
-                  var cls = i === q.answer ? "color: #15803d; font-weight: 600;" : "";
-                  return '<div style="' + cls + '">' + String.fromCharCode(65 + i) + '. ' + esc(o) + (i === q.answer ? ' ✓' : '') + '</div>';
-                }).join("") : '') +
-              '</div>';
-
-            const delBtn = card.querySelector("[data-del]");
-            delBtn.addEventListener("click", async function () {
-              if (!window.confirm("Delete this question? This cannot be undone.")) return;
-              delBtn.disabled = true;
-              try {
-                await api.deleteQuestion(subject.id, q.id);
-                toast("Question deleted", "success");
-                await loadPage();
-              } catch (err) {
-                if (err && err.status === 401) return showLogin();
-                toast(err.message || "Delete failed", "error");
-                delBtn.disabled = false;
-              }
-            });
-
-            listEl.appendChild(card);
-          });
-        }
-
-        const start = qState.total === 0 ? 0 : qState.offset + 1;
-        const end = Math.min(qState.offset + questions.length, qState.total);
-        countEl.textContent = qState.total === 0 ? "No questions" : "Showing " + start + "–" + end + " of " + qState.total;
-        prevBtn.disabled = qState.offset === 0;
-        nextBtn.disabled = qState.offset + PAGE_SIZE >= qState.total;
-      } catch (err) {
-        if (err && err.status === 401) { close(); return showLogin(); }
-        listEl.innerHTML = '<div class="empty-state" style="padding: 30px 16px;">' +
-          esc(err.message || "Failed to load questions") +
-          '</div>';
-      }
-    }
-
-    prevBtn.addEventListener("click", function () {
-      if (qState.offset === 0) return;
-      qState.offset = Math.max(0, qState.offset - PAGE_SIZE);
-      loadPage();
-    });
-
-    nextBtn.addEventListener("click", function () {
-      if (qState.offset + PAGE_SIZE >= qState.total) return;
-      qState.offset += PAGE_SIZE;
-      loadPage();
-    });
-
-    let searchTimer = null;
-    searchEl.addEventListener("input", function () {
-      if (searchTimer) clearTimeout(searchTimer);
-      searchTimer = setTimeout(function () {
-        qState.search = searchEl.value;
-        qState.offset = 0;
-        loadPage();
-      }, 300);
-    });
-
-    importBtn.addEventListener("click", function () {
-      openBankImportModal(subject, function () {
-        qState.offset = 0;
-        loadPage();
-      });
-    });
-
-    await loadPage();
-  }
-
-  /* ---------- Import JSON modal ---------- */
-
-  function openBankImportModal(subject, onDone) {
-    const overlay = document.createElement("div");
-    overlay.className = "modal-overlay";
-    overlay.hidden = false;
-    overlay.classList.add("open");
-    overlay.style.zIndex = "260";
-    overlay.innerHTML =
-      '<div class="modal" style="max-width: 640px;">' +
-        '<h2>Import questions</h2>' +
-        '<p style="margin: 0 0 12px; color: var(--muted); font-size: 13px;">Paste JSON array of questions for <strong>' + esc(subject.name) + '</strong>.</p>' +
-        '<details style="margin-bottom: 12px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); font-size: 12px;">' +
-          '<summary style="cursor: pointer; font-weight: 600; color: var(--muted);">Format example</summary>' +
-          '<pre style="margin: 8px 0 0; padding: 10px; background: #fff; border-radius: 4px; border: 1px solid var(--border); font-size: 11px; overflow-x: auto;">' +
-          '[{ "q": "Question text", "options": ["A", "B", "C", "D"], "answer": 0, "type": "mcq" }]' +
-          '</pre>' +
-        '</details>' +
-        '<textarea id="impTa" class="import-textarea" placeholder=\'Paste JSON here...\' style="min-height: 220px;"></textarea>' +
-        '<p class="form-error" id="impErr" hidden></p>' +
-        '<div class="modal-actions" style="margin-top: 14px;">' +
-          '<button class="btn btn-sm" id="impCancel" type="button">Cancel</button>' +
-          '<button class="btn btn-primary btn-sm" id="impConfirm" type="button">Import</button>' +
-        '</div>' +
-      '</div>';
-
-    document.body.appendChild(overlay);
-
-    const ta = overlay.querySelector("#impTa");
-    const errEl = overlay.querySelector("#impErr");
-    const confirmBtn = overlay.querySelector("#impConfirm");
-    const cancelBtn = overlay.querySelector("#impCancel");
-
-    function close() {
-      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    }
-
-    cancelBtn.addEventListener("click", close);
-    overlay.addEventListener("click", function (e) {
-      if (e.target === overlay) close();
-    });
-    document.addEventListener("keydown", function handler(e) {
-      if (e.key === "Escape") { close(); document.removeEventListener("keydown", handler); }
-    });
-
-    setTimeout(function () { ta.focus(); }, 80);
-
-    confirmBtn.addEventListener("click", async function () {
-      errEl.hidden = true;
-      const raw = ta.value.trim();
-      if (!raw) { errEl.textContent = "Paste JSON first"; errEl.hidden = false; return; }
-
-      let parsed;
-      try { parsed = JSON.parse(raw); }
-      catch (e) { errEl.textContent = "Invalid JSON: " + e.message; errEl.hidden = false; return; }
-
-      const questions = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.questions) ? parsed.questions : null);
-      if (!questions || questions.length === 0) {
-        errEl.textContent = "JSON must be an array of questions";
-        errEl.hidden = false;
-        return;
-      }
-
-      confirmBtn.disabled = true;
-      confirmBtn.textContent = "Importing…";
-
-      try {
-        const res = await api.importQuestions(subject.id, { questions: questions });
-
-        const added = Number(res.added) || 0;
-        const skipped = Number(res.skipped) || 0;
-        const errors = Array.isArray(res.errors) ? res.errors : [];
-
-        let msg = "Imported " + added + " question(s).";
-        if (skipped > 0) msg += " " + skipped + " duplicate(s) skipped.";
-        if (errors.length > 0) msg += " " + errors.length + " error(s).";
-        toast(msg, added > 0 ? "success" : "error");
-
-        if (errors.length > 0) {
-          errEl.innerHTML = "<strong>Errors:</strong><br>" + errors.slice(0, 5).map(esc).join("<br>");
-          errEl.hidden = false;
-          confirmBtn.disabled = false;
-          confirmBtn.textContent = "Import";
-          if (added > 0 && typeof onDone === "function") onDone();
-          return;
-        }
-
-        close();
-        if (typeof onDone === "function") onDone();
-      } catch (err) {
-        if (err && err.status === 401) { close(); return showLogin(); }
-        errEl.textContent = err.message || "Import failed";
-        errEl.hidden = false;
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = "Import";
-      }
-    });
-  }
-
 
   /* ---------- ACTIVE NOW ---------- */
+
   let activeRefreshIntervalId = null;
   let activeMetaIntervalId = null;
   let activeLastUpdatedAt = 0;
@@ -1073,7 +533,6 @@
     if (loading) loading.hidden = false;
     if (empty) empty.hidden = true;
     list.hidden = true; list.innerHTML = "";
-
     try {
       const res = await api.listOwn();
       state.tests = Array.isArray(res.tests) ? res.tests : [];
@@ -1090,63 +549,37 @@
     const empty = $id("testsEmpty");
     const list = $id("testsList");
     if (!list) return;
-
     const query = state.searchQuery.trim().toLowerCase();
-
     const filtered = query
       ? state.tests.filter(function (test) {
-          const haystack = [
-            test.title || "",
-            test.publisherName || "",
-            test.status || ""
-          ].join(" ").toLowerCase();
+          const haystack = [test.title || "", test.publisherName || "", test.status || ""].join(" ").toLowerCase();
           return haystack.indexOf(query) !== -1;
         })
       : state.tests;
-
     const totalPages = Math.max(1, Math.ceil(filtered.length / ADMIN_PAGE_SIZE));
-
     if (state.testsPage >= totalPages) state.testsPage = totalPages - 1;
     if (state.testsPage < 0) state.testsPage = 0;
-
     const startIdx = state.testsPage * ADMIN_PAGE_SIZE;
     const endIdx = startIdx + ADMIN_PAGE_SIZE;
     const pageSlice = filtered.slice(startIdx, endIdx);
-
     list.replaceChildren();
-
     if (filtered.length === 0) {
       list.hidden = true;
       if (empty) {
         empty.hidden = false;
-        if (state.tests.length === 0) {
-          empty.textContent = t("noTests");
-        } else if (query) {
-          empty.textContent = "No tests match \"" + state.searchQuery + "\"";
-        } else {
-          empty.textContent = t("noTests");
-        }
+        if (state.tests.length === 0) empty.textContent = t("noTests");
+        else if (query) empty.textContent = "No tests match \"" + state.searchQuery + "\"";
+        else empty.textContent = t("noTests");
       }
     } else {
       list.hidden = false;
       if (empty) empty.hidden = true;
-      pageSlice.forEach(function (test) {
-        list.appendChild(renderTestCard(test));
-      });
+      pageSlice.forEach(function (test) { list.appendChild(renderTestCard(test)); });
     }
-
-    if (testsPagination) {
-      testsPagination.hidden = filtered.length <= ADMIN_PAGE_SIZE;
-    }
-    if (testsPageInfo) {
-      testsPageInfo.textContent = "Page " + (state.testsPage + 1) + " of " + totalPages;
-    }
-    if (testsPrevBtn) {
-      testsPrevBtn.disabled = state.testsPage === 0;
-    }
-    if (testsNextBtn) {
-      testsNextBtn.disabled = state.testsPage >= totalPages - 1;
-    }
+    if (testsPagination) testsPagination.hidden = filtered.length <= ADMIN_PAGE_SIZE;
+    if (testsPageInfo) testsPageInfo.textContent = "Page " + (state.testsPage + 1) + " of " + totalPages;
+    if (testsPrevBtn) testsPrevBtn.disabled = state.testsPage === 0;
+    if (testsNextBtn) testsNextBtn.disabled = state.testsPage >= totalPages - 1;
   }
 
   function renderTestCard(test) {
@@ -1163,7 +596,6 @@
         "</div>" +
       "</div>" +
       '<div class="admin-test-actions"></div>';
-
     const actions = card.querySelector(".admin-test-actions");
 
     const subsBtn = document.createElement("button");
@@ -1222,6 +654,373 @@
     return card;
   }
 
+  /* ---------- QUESTION BANK ---------- */
+
+  async function loadSubjects() {
+    const loading = $id("subjectsLoading");
+    const empty = $id("subjectsEmpty");
+    const list = $id("subjectsList");
+    if (!list) return;
+
+    if (loading) loading.hidden = false;
+    if (empty) empty.hidden = true;
+    list.hidden = true;
+    list.innerHTML = "";
+
+    try {
+      const res = await api.listSubjects();
+      const subjects = Array.isArray(res.subjects) ? res.subjects : [];
+      if (loading) loading.hidden = true;
+      if (subjects.length === 0) { if (empty) empty.hidden = false; return; }
+      list.hidden = false;
+      subjects.forEach(function (s) { list.appendChild(renderSubjectCard(s)); });
+    } catch (err) {
+      if (loading) loading.hidden = true;
+      if (err && err.status === 401) return showLogin();
+      if (empty) { empty.hidden = false; empty.textContent = "Could not load subjects: " + (err.message || "Error"); }
+    }
+  }
+
+  function renderSubjectCard(subject) {
+    const card = document.createElement("div");
+    card.className = "admin-test-card";
+    const isActive = subject.active !== false;
+    const qCount = Number(subject.questionCount) || 0;
+    card.innerHTML =
+      '<div class="admin-test-info">' +
+        '<p class="admin-test-title">' + esc(subject.name) + '</p>' +
+        '<div class="admin-test-meta">' +
+          '<span class="status-badge ' + (isActive ? "published" : "draft") + '">' + (isActive ? "Active" : "Inactive") + '</span>' +
+          '<span>' + qCount + ' questions</span>' +
+          (subject.category ? '<span>' + esc(subject.category) + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="admin-test-actions"></div>';
+    const actions = card.querySelector(".admin-test-actions");
+
+    const editBtn = document.createElement("button");
+    editBtn.type = "button"; editBtn.className = "btn btn-sm"; editBtn.textContent = "Edit";
+    editBtn.addEventListener("click", function () { openSubjectEditor(subject); });
+    actions.appendChild(editBtn);
+
+    const questionsBtn = document.createElement("button");
+    questionsBtn.type = "button"; questionsBtn.className = "btn btn-sm"; questionsBtn.textContent = "Questions (" + qCount + ")";
+    questionsBtn.addEventListener("click", function () { openQuestionsViewer(subject); });
+    actions.appendChild(questionsBtn);
+
+    const toggleBtn = document.createElement("button");
+    toggleBtn.type = "button";
+    toggleBtn.className = "btn btn-sm" + (isActive ? "" : " btn-primary");
+    toggleBtn.textContent = isActive ? "Deactivate" : "Activate";
+    toggleBtn.addEventListener("click", async function () {
+      if (isActive && !window.confirm("Deactivate this subject? Its questions will be kept but not used for daily quizzes.")) return;
+      toggleBtn.disabled = true;
+      try {
+        await api.updateSubject(subject.id, { active: !isActive });
+        toast(isActive ? "Subject deactivated" : "Subject activated", "success");
+        await loadSubjects();
+      } catch (err) {
+        if (err && err.status === 401) return showLogin();
+        toast(err.message || "Error", "error");
+      } finally { toggleBtn.disabled = false; }
+    });
+    actions.appendChild(toggleBtn);
+
+    return card;
+  }
+
+  function openSubjectEditor(subject) {
+    const isEdit = !!subject;
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.hidden = false;
+    overlay.classList.add("open");
+    overlay.innerHTML =
+      '<div class="modal" style="max-width: 420px;">' +
+        '<h2>' + (isEdit ? "Edit Subject" : "Add Subject") + '</h2>' +
+        '<div class="form-field">' +
+          '<label class="form-label">Name *</label>' +
+          '<input type="text" class="form-input" id="subjectNameInput" maxlength="60" value="' + esc(subject ? subject.name : "") + '" placeholder="e.g. Assam GK">' +
+        '</div>' +
+        '<div class="form-field">' +
+          '<label class="form-label">Category (optional)</label>' +
+          '<input type="text" class="form-input" id="subjectCategoryInput" maxlength="40" value="' + esc(subject ? (subject.category || "") : "") + '" placeholder="e.g. GK, Math, Reasoning">' +
+        '</div>' +
+        '<div class="form-field">' +
+          '<label class="form-label">Order (optional)</label>' +
+          '<input type="number" class="form-input" id="subjectOrderInput" min="0" value="' + (subject ? (subject.order || 0) : 0) + '">' +
+          '<p class="form-hint">Lower number appears first.</p>' +
+        '</div>' +
+        '<p class="form-error" id="subjectEditorError" hidden></p>' +
+        '<div class="modal-actions">' +
+          '<button type="button" class="btn btn-sm" id="subjectEditorCancel">Cancel</button>' +
+          '<button type="button" class="btn btn-primary btn-sm" id="subjectEditorSave">' + (isEdit ? "Save" : "Create") + '</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    const nameInput = overlay.querySelector("#subjectNameInput");
+    const catInput = overlay.querySelector("#subjectCategoryInput");
+    const orderInput = overlay.querySelector("#subjectOrderInput");
+    const errEl = overlay.querySelector("#subjectEditorError");
+    const saveBtn = overlay.querySelector("#subjectEditorSave");
+    const cancelBtn = overlay.querySelector("#subjectEditorCancel");
+
+    function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+    cancelBtn.addEventListener("click", close);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
+    document.addEventListener("keydown", function handler(e) {
+      if (e.key === "Escape") { close(); document.removeEventListener("keydown", handler); }
+    });
+
+    saveBtn.addEventListener("click", async function () {
+      errEl.hidden = true;
+      const name = nameInput.value.trim();
+      if (!name || name.length < 2) { errEl.textContent = "Name must be at least 2 characters"; errEl.hidden = false; return; }
+      if (name.length > 60) { errEl.textContent = "Name too long"; errEl.hidden = false; return; }
+      saveBtn.disabled = true;
+      try {
+        const payload = { name: name, category: catInput.value.trim(), order: Number(orderInput.value) || 0 };
+        if (isEdit) { await api.updateSubject(subject.id, payload); toast("Subject updated", "success"); }
+        else { await api.createSubject(payload); toast("Subject created", "success"); }
+        close();
+        await loadSubjects();
+      } catch (err) {
+        if (err && err.status === 401) { close(); return showLogin(); }
+        errEl.textContent = err.message || "Save failed";
+        errEl.hidden = false;
+      } finally { saveBtn.disabled = false; }
+    });
+
+    setTimeout(function () { nameInput.focus(); }, 60);
+  }
+
+  async function openQuestionsViewer(subject) {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.hidden = false;
+    overlay.classList.add("open");
+    overlay.innerHTML =
+      '<div class="modal" style="max-width: 720px; padding: 0;">' +
+        '<div class="submission-detail-head" style="padding: 18px 20px 14px;">' +
+          '<div>' +
+            '<h2 style="margin: 0 0 3px; font-size: 16px;">' + esc(subject.name) + '</h2>' +
+            '<p style="margin: 0; color: var(--muted); font-size: 12px;">Questions bank</p>' +
+          '</div>' +
+          '<button type="button" class="submission-detail-close" id="qvClose" aria-label="Close">' +
+            '<svg viewBox="0 0 24 24"><path d="m6 6 12 12"></path><path d="M18 6 6 18"></path></svg>' +
+          '</button>' +
+        '</div>' +
+        '<div style="padding: 14px 20px; display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--border);">' +
+          '<button class="btn btn-primary btn-sm" id="qvImportBtn" type="button">+ Import JSON</button>' +
+          '<div class="search-input-wrap" style="flex: 1; min-width: 160px; height: 38px;">' +
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 4.5 4.5"></path></svg>' +
+            '<input type="search" id="qvSearch" placeholder="Search questions..." autocomplete="off" style="height: 36px;">' +
+          '</div>' +
+        '</div>' +
+        '<div id="qvList" style="padding: 14px 20px; max-height: 500px; overflow-y: auto;">' +
+          '<div class="loading-state"><div class="spinner"></div><span>Loading…</span></div>' +
+        '</div>' +
+        '<div style="padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">' +
+          '<span id="qvCount" style="font-size: 12px; color: var(--muted);">—</span>' +
+          '<div style="display: flex; gap: 6px;">' +
+            '<button class="btn btn-sm" id="qvPrev" type="button" disabled>← Prev</button>' +
+            '<button class="btn btn-sm" id="qvNext" type="button" disabled>Next →</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    const listEl = overlay.querySelector("#qvList");
+    const countEl = overlay.querySelector("#qvCount");
+    const prevBtn = overlay.querySelector("#qvPrev");
+    const nextBtn = overlay.querySelector("#qvNext");
+    const searchEl = overlay.querySelector("#qvSearch");
+    const importBtn = overlay.querySelector("#qvImportBtn");
+    const closeBtn = overlay.querySelector("#qvClose");
+
+    const PAGE_SIZE = 20;
+    const qState = { offset: 0, search: "", total: 0 };
+
+    function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+    closeBtn.addEventListener("click", close);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
+    document.addEventListener("keydown", function handler(e) {
+      if (e.key === "Escape") { close(); document.removeEventListener("keydown", handler); }
+    });
+
+    async function loadPage() {
+      listEl.innerHTML = '<div class="loading-state"><div class="spinner"></div><span>Loading…</span></div>';
+      try {
+        const res = await api.listQuestions(subject.id, { limit: PAGE_SIZE, offset: qState.offset, search: qState.search });
+        const questions = Array.isArray(res.questions) ? res.questions : [];
+        qState.total = Number(res.total) || 0;
+        if (questions.length === 0) {
+          listEl.innerHTML = '<div class="empty-state" style="padding: 30px 16px;">' +
+            (qState.search ? 'No questions match "' + esc(qState.search) + '"' : 'No questions yet. Click "Import JSON" to add.') +
+            '</div>';
+        } else {
+          listEl.innerHTML = "";
+          questions.forEach(function (q, idx) {
+            const card = document.createElement("div");
+            card.style.cssText = "padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 8px; background: #ffffff;";
+            const num = qState.offset + idx + 1;
+            card.innerHTML =
+              '<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px;">' +
+                '<div style="font-size: 13px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere;">' +
+                  '<span style="color: var(--muted); margin-right: 6px;">Q' + num + '.</span>' + esc(q.q) +
+                '</div>' +
+                '<button class="btn btn-sm" type="button" data-del="' + esc(q.id) + '" style="color: #b91c1c; flex-shrink: 0;">Delete</button>' +
+              '</div>' +
+              '<div style="font-size: 11px; color: var(--muted);">' +
+                (Array.isArray(q.options) ? q.options.map(function (o, i) {
+                  var cls = i === q.answer ? "color: #15803d; font-weight: 600;" : "";
+                  return '<div style="' + cls + '">' + String.fromCharCode(65 + i) + '. ' + esc(o) + (i === q.answer ? ' ✓' : '') + '</div>';
+                }).join("") : '') +
+              '</div>';
+            const delBtn = card.querySelector("[data-del]");
+            delBtn.addEventListener("click", async function () {
+              if (!window.confirm("Delete this question? This cannot be undone.")) return;
+              delBtn.disabled = true;
+              try {
+                await api.deleteQuestion(subject.id, q.id);
+                toast("Question deleted", "success");
+                await loadPage();
+              } catch (err) {
+                if (err && err.status === 401) return showLogin();
+                toast(err.message || "Delete failed", "error");
+                delBtn.disabled = false;
+              }
+            });
+            listEl.appendChild(card);
+          });
+        }
+        const start = qState.total === 0 ? 0 : qState.offset + 1;
+        const end = Math.min(qState.offset + questions.length, qState.total);
+        countEl.textContent = qState.total === 0 ? "No questions" : "Showing " + start + "–" + end + " of " + qState.total;
+        prevBtn.disabled = qState.offset === 0;
+        nextBtn.disabled = qState.offset + PAGE_SIZE >= qState.total;
+      } catch (err) {
+        if (err && err.status === 401) { close(); return showLogin(); }
+        listEl.innerHTML = '<div class="empty-state" style="padding: 30px 16px;">' + esc(err.message || "Failed to load questions") + '</div>';
+      }
+    }
+
+    prevBtn.addEventListener("click", function () {
+      if (qState.offset === 0) return;
+      qState.offset = Math.max(0, qState.offset - PAGE_SIZE);
+      loadPage();
+    });
+    nextBtn.addEventListener("click", function () {
+      if (qState.offset + PAGE_SIZE >= qState.total) return;
+      qState.offset += PAGE_SIZE;
+      loadPage();
+    });
+
+    let searchTimer = null;
+    searchEl.addEventListener("input", function () {
+      if (searchTimer) clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        qState.search = searchEl.value;
+        qState.offset = 0;
+        loadPage();
+      }, 300);
+    });
+
+    importBtn.addEventListener("click", function () {
+      openBankImportModal(subject, function () { qState.offset = 0; loadPage(); });
+    });
+
+    await loadPage();
+  }
+
+  function openBankImportModal(subject, onDone) {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.hidden = false;
+    overlay.classList.add("open");
+    overlay.style.zIndex = "260";
+    overlay.innerHTML =
+      '<div class="modal" style="max-width: 640px;">' +
+        '<h2>Import questions</h2>' +
+        '<p style="margin: 0 0 12px; color: var(--muted); font-size: 13px;">Paste JSON array of questions for <strong>' + esc(subject.name) + '</strong>.</p>' +
+        '<details style="margin-bottom: 12px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); font-size: 12px;">' +
+          '<summary style="cursor: pointer; font-weight: 600; color: var(--muted);">Format example</summary>' +
+          '<pre style="margin: 8px 0 0; padding: 10px; background: #fff; border-radius: 4px; border: 1px solid var(--border); font-size: 11px; overflow-x: auto;">' +
+          '[{ "q": "Question text", "options": ["A", "B", "C", "D"], "answer": 0, "type": "mcq" }]' +
+          '</pre>' +
+        '</details>' +
+        '<textarea id="impTa" class="import-textarea" placeholder="Paste JSON here..." style="min-height: 220px;"></textarea>' +
+        '<p class="form-error" id="impErr" hidden></p>' +
+        '<div class="modal-actions" style="margin-top: 14px;">' +
+          '<button class="btn btn-sm" id="impCancel" type="button">Cancel</button>' +
+          '<button class="btn btn-primary btn-sm" id="impConfirm" type="button">Import</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    const ta = overlay.querySelector("#impTa");
+    const errEl = overlay.querySelector("#impErr");
+    const confirmBtn = overlay.querySelector("#impConfirm");
+    const cancelBtn = overlay.querySelector("#impCancel");
+
+    function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+    cancelBtn.addEventListener("click", close);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
+    document.addEventListener("keydown", function handler(e) {
+      if (e.key === "Escape") { close(); document.removeEventListener("keydown", handler); }
+    });
+    setTimeout(function () { ta.focus(); }, 80);
+
+    confirmBtn.addEventListener("click", async function () {
+      errEl.hidden = true;
+      const raw = ta.value.trim();
+      if (!raw) { errEl.textContent = "Paste JSON first"; errEl.hidden = false; return; }
+      let parsed;
+      try { parsed = JSON.parse(raw); }
+      catch (e) { errEl.textContent = "Invalid JSON: " + e.message; errEl.hidden = false; return; }
+      const questions = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.questions) ? parsed.questions : null);
+      if (!questions || questions.length === 0) {
+        errEl.textContent = "JSON must be an array of questions";
+        errEl.hidden = false;
+        return;
+      }
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = "Importing…";
+      try {
+        const res = await api.importQuestions(subject.id, { questions: questions });
+        const added = Number(res.added) || 0;
+        const skipped = Number(res.skipped) || 0;
+        const errors = Array.isArray(res.errors) ? res.errors : [];
+        let msg = "Imported " + added + " question(s).";
+        if (skipped > 0) msg += " " + skipped + " duplicate(s) skipped.";
+        if (errors.length > 0) msg += " " + errors.length + " error(s).";
+        toast(msg, added > 0 ? "success" : "error");
+        if (errors.length > 0) {
+          errEl.innerHTML = "<strong>Errors:</strong><br>" + errors.slice(0, 5).map(esc).join("<br>");
+          errEl.hidden = false;
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = "Import";
+          if (added > 0 && typeof onDone === "function") onDone();
+          return;
+        }
+        close();
+        if (typeof onDone === "function") onDone();
+      } catch (err) {
+        if (err && err.status === 401) { close(); return showLogin(); }
+        errEl.textContent = err.message || "Import failed";
+        errEl.hidden = false;
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = "Import";
+      }
+    });
+  }
+
+  const newSubjectBtn = $id("newSubjectBtn");
+  if (newSubjectBtn) {
+    newSubjectBtn.addEventListener("click", function () { openSubjectEditor(null); });
+  }
+
   /* ---------- SUBMISSIONS ---------- */
 
   async function openSubmissions(testId) {
@@ -1237,7 +1036,6 @@
     if (emptyEl) emptyEl.hidden = true;
     if (bodyEl) bodyEl.hidden = true;
     if (listEl) listEl.innerHTML = "";
-
     if (window.PKLoader) window.PKLoader.show();
     try {
       const res = await api.getSubmissions(testId);
@@ -1440,11 +1238,7 @@
         if (a < 0 || a >= (q.options || []).length) { info.unattempted += 1; return; }
         info.optionCounts[a] = (info.optionCounts[a] || 0) + 1;
         if (a === q.answer) info.correctCount += 1;
-        else {
-          info.wrongCount += 1;
-          info.wrongUsers.push({ name: s.userName || "—", chosen: a });
-          totalWrong += 1;
-        }
+        else { info.wrongCount += 1; info.wrongUsers.push({ name: s.userName || "—", chosen: a }); totalWrong += 1; }
       });
     });
     perQ.forEach(function (info) {
@@ -1868,7 +1662,6 @@
       const block = document.createElement("div");
       block.className = "editor-question";
 
-      // HEAD
       const head = document.createElement("div");
       head.className = "editor-question-head";
       const numWrap = document.createElement("div");
@@ -1891,7 +1684,6 @@
       });
       head.appendChild(numWrap); head.appendChild(removeBtn); block.appendChild(head);
 
-      // TYPE SELECTOR
       const typeRow = document.createElement("div");
       typeRow.className = "form-field";
       const typeLabel = document.createElement("label");
@@ -1912,7 +1704,6 @@
       typeRow.appendChild(typeLabel); typeRow.appendChild(typeSelect);
       block.appendChild(typeRow);
 
-      // QUESTION TEXT
       const qField = document.createElement("div");
       qField.className = "form-field";
       const qLabel = document.createElement("label");
@@ -1925,7 +1716,6 @@
       qInput.addEventListener("input", function () { question.q = qInput.value; });
       qField.appendChild(qLabel); qField.appendChild(qInput); block.appendChild(qField);
 
-      // LATEX (optional)
       const latexField = document.createElement("div");
       latexField.className = "form-field";
       const latexLabel = document.createElement("label");
@@ -1939,7 +1729,6 @@
       latexInput.addEventListener("input", function () { question.latex = latexInput.value; });
       latexField.appendChild(latexLabel); latexField.appendChild(latexInput); block.appendChild(latexField);
 
-      // QUESTION IMAGE (optional)
       const imgField = document.createElement("div");
       imgField.className = "form-field";
       const imgLabel = document.createElement("label");
@@ -1972,9 +1761,7 @@
       imgActions.appendChild(imgChooseBtn);
       if (question.imageBase64) {
         const rmImg = document.createElement("button");
-        rmImg.type = "button";
-        rmImg.className = "btn btn-sm";
-        rmImg.textContent = "Remove";
+        rmImg.type = "button"; rmImg.className = "btn btn-sm"; rmImg.textContent = "Remove";
         rmImg.addEventListener("click", function () { question.imageBase64 = ""; renderQuestionsList(); });
         imgActions.appendChild(rmImg);
       }
@@ -1988,9 +1775,7 @@
       }
       block.appendChild(imgField);
 
-      // OPTIONS or NUMERIC
       if (question.type === "math") {
-        /* Sub-mode selector */
         const modeRow = document.createElement("div");
         modeRow.className = "form-field";
         const modeLabel = document.createElement("label");
@@ -2027,7 +1812,6 @@
         block.appendChild(modeRow);
 
         if ((question.mathMode || "options") === "options") {
-          /* Options mode — 4 text inputs + radio */
           const optLabel = document.createElement("div");
           optLabel.className = "form-label";
           optLabel.style.marginTop = "14px";
@@ -2040,7 +1824,6 @@
           question.options.forEach(function (_, oi) {
             const row = document.createElement("div");
             row.className = "editor-option" + (question.answer === oi ? " is-answer" : "");
-
             const radio = document.createElement("input");
             radio.type = "radio";
             radio.name = "answer-q" + qi;
@@ -2051,25 +1834,20 @@
               question.answer = oi;
               block.querySelectorAll(".editor-option").forEach(function (r, idx) { r.classList.toggle("is-answer", idx === oi); });
             });
-
             const key = document.createElement("span");
             key.className = "editor-option-key";
             key.textContent = "ABCD".charAt(oi);
-
             const input = document.createElement("input");
             input.type = "text";
             input.className = "editor-option-input";
             input.placeholder = "Option " + "ABCD".charAt(oi) + " (number or value)";
             input.value = question.options[oi];
             input.addEventListener("input", function () { question.options[oi] = input.value; });
-
             row.appendChild(radio); row.appendChild(key); row.appendChild(input);
             optWrap.appendChild(row);
           });
-
           block.appendChild(optWrap);
         } else {
-          /* Keypad mode — numeric answer + tolerance */
           const numField = document.createElement("div");
           numField.className = "form-field";
           const numLabel = document.createElement("label");
@@ -2105,14 +1883,11 @@
         optLabel.style.marginTop = "14px";
         optLabel.textContent = "Options — click the circle to mark the correct answer";
         block.appendChild(optLabel);
-
         const optWrap = document.createElement("div");
         optWrap.className = "editor-options";
-
         question.options.forEach(function (_, oi) {
           const row = document.createElement("div");
           row.className = "editor-option" + (question.answer === oi ? " is-answer" : "");
-
           const radio = document.createElement("input");
           radio.type = "radio";
           radio.name = "answer-q" + qi;
@@ -2123,30 +1898,24 @@
             question.answer = oi;
             block.querySelectorAll(".editor-option").forEach(function (r, idx) { r.classList.toggle("is-answer", idx === oi); });
           });
-
           const key = document.createElement("span");
           key.className = "editor-option-key";
           key.textContent = "ABCD".charAt(oi);
-
           const input = document.createElement("input");
           input.type = "text";
           input.className = "editor-option-input";
           input.placeholder = "Option " + "ABCD".charAt(oi);
           input.value = question.options[oi];
           input.addEventListener("input", function () { question.options[oi] = input.value; });
-
           row.appendChild(radio); row.appendChild(key); row.appendChild(input);
           optWrap.appendChild(row);
         });
-
         block.appendChild(optWrap);
       }
 
-      // EXPLANATION (optional, all types)
       const expWrapper = document.createElement("div");
       expWrapper.className = "editor-fields";
       expWrapper.innerHTML = '<span class="editor-fields-label">Explanation (optional)</span>';
-
       const expText = document.createElement("textarea");
       expText.className = "form-textarea";
       expText.rows = 2;
@@ -2154,7 +1923,6 @@
       expText.value = question.explanation || "";
       expText.addEventListener("input", function () { question.explanation = expText.value; });
       expWrapper.appendChild(expText);
-
       const expLatexRow = document.createElement("div");
       expLatexRow.className = "editor-row";
       expLatexRow.style.marginTop = "8px";
@@ -2167,48 +1935,7 @@
       expLatexInput.addEventListener("input", function () { question.explanationLatex = expLatexInput.value; });
       expLatexRow.appendChild(expLatexLabel); expLatexRow.appendChild(expLatexInput);
       expWrapper.appendChild(expLatexRow);
-
-      const expImgActions = document.createElement("div");
-      expImgActions.className = "editor-img-actions";
-      expImgActions.style.marginTop = "8px";
-      const expFile = document.createElement("input");
-      expFile.type = "file";
-      expFile.accept = "image/*";
-      expFile.style.display = "none";
-      const expChooseBtn = document.createElement("button");
-      expChooseBtn.type = "button";
-      expChooseBtn.className = "btn btn-sm";
-      expChooseBtn.textContent = question.explanationImageBase64 ? "Change explanation image" : "Add explanation image";
-      expChooseBtn.addEventListener("click", function () { expFile.click(); });
-      expFile.addEventListener("change", async function () {
-        const f = expFile.files && expFile.files[0];
-        if (!f) return;
-        if (f.size > 500 * 1024) { toast("Image too large (max 500KB)", "error"); return; }
-        try {
-          const b64 = await fileToBase64(f);
-          if (b64.length > MAX_IMAGE_CHARS) { toast("Image too large after encoding", "error"); return; }
-          question.explanationImageBase64 = b64;
-          renderQuestionsList();
-        } catch (e) { toast("Failed to read image", "error"); }
-      });
-      expImgActions.appendChild(expChooseBtn);
-      if (question.explanationImageBase64) {
-        const rm = document.createElement("button");
-        rm.type = "button"; rm.className = "btn btn-sm"; rm.textContent = "Remove";
-        rm.addEventListener("click", function () { question.explanationImageBase64 = ""; renderQuestionsList(); });
-        expImgActions.appendChild(rm);
-      }
-      expImgActions.appendChild(expFile);
-      expWrapper.appendChild(expImgActions);
-
-      if (question.explanationImageBase64) {
-        const preview = document.createElement("img");
-        preview.src = question.explanationImageBase64;
-        preview.className = "editor-img-preview";
-        expWrapper.appendChild(preview);
-      }
       block.appendChild(expWrapper);
-
       container.appendChild(block);
     });
   }
@@ -2233,7 +1960,7 @@
     }
   }
 
-  function ensureImportModal() {
+  function ensureEditorImportModal() {
     let overlay = $id("importModalOverlay");
     if (overlay) return overlay;
     overlay = document.createElement("div");
@@ -2272,47 +1999,28 @@
         if (typeof rq.q !== "string" || !rq.q.trim()) { errEl.textContent = "Question " + n + ": missing q"; errEl.hidden = false; return; }
         const type = getQuestionType(rq);
         const obj = {
-          type: type,
-          q: rq.q.trim(),
-          latex: rq.latex || "",
-          imageBase64: rq.imageBase64 || "",
-          options: ["", "", "", ""],
-          optionImages: ["", "", "", ""],
-          answer: 0,
-          numericAnswer: "",
-          tolerance: 0,
-          explanation: rq.explanation || "",
-          explanationLatex: rq.explanationLatex || "",
+          type: type, q: rq.q.trim(), latex: rq.latex || "", imageBase64: rq.imageBase64 || "",
+          options: ["", "", "", ""], optionImages: ["", "", "", ""], answer: 0,
+          numericAnswer: "", tolerance: 0,
+          explanation: rq.explanation || "", explanationLatex: rq.explanationLatex || "",
           explanationImageBase64: rq.explanationImageBase64 || ""
         };
-if (type === "math") {
-  const hasOptions = Array.isArray(rq.options) && rq.options.length === 4 && typeof rq.answer === "number";
-  const hasNumeric = typeof rq.numericAnswer === "number" && isFinite(rq.numericAnswer);
-  if (!hasOptions && !hasNumeric) {
-    errEl.textContent = "Question " + n + ": math needs 4 options + answer, or numericAnswer";
-    errEl.hidden = false;
-    return;
-  }
-  if (hasOptions) {
-    for (let j = 0; j < 4; j++) {
-      if (typeof rq.options[j] !== "string" || !rq.options[j].trim()) {
-        errEl.textContent = "Question " + n + ": option " + (j + 1) + " empty";
-        errEl.hidden = false;
-        return;
-      }
-    }
-    if (rq.answer < 0 || rq.answer > 3) {
-      errEl.textContent = "Question " + n + ": answer must be 0-3";
-      errEl.hidden = false;
-      return;
-    }
-    obj.options = rq.options.map(function (o) { return o.trim(); });
-    obj.answer = rq.answer;
-  } else {
-    obj.numericAnswer = rq.numericAnswer;
-    obj.tolerance = (typeof rq.tolerance === "number" && rq.tolerance >= 0) ? rq.tolerance : 0;
-  }
-} else {
+        if (type === "math") {
+          const hasOptions = Array.isArray(rq.options) && rq.options.length === 4 && typeof rq.answer === "number";
+          const hasNumeric = typeof rq.numericAnswer === "number" && isFinite(rq.numericAnswer);
+          if (!hasOptions && !hasNumeric) { errEl.textContent = "Question " + n + ": math needs 4 options + answer, or numericAnswer"; errEl.hidden = false; return; }
+          if (hasOptions) {
+            for (let j = 0; j < 4; j++) {
+              if (typeof rq.options[j] !== "string" || !rq.options[j].trim()) { errEl.textContent = "Question " + n + ": option " + (j + 1) + " empty"; errEl.hidden = false; return; }
+            }
+            if (rq.answer < 0 || rq.answer > 3) { errEl.textContent = "Question " + n + ": answer must be 0-3"; errEl.hidden = false; return; }
+            obj.options = rq.options.map(function (o) { return o.trim(); });
+            obj.answer = rq.answer;
+          } else {
+            obj.numericAnswer = rq.numericAnswer;
+            obj.tolerance = (typeof rq.tolerance === "number" && rq.tolerance >= 0) ? rq.tolerance : 0;
+          }
+        } else {
           if (!Array.isArray(rq.options) || rq.options.length !== 4) { errEl.textContent = "Question " + n + ": 4 options required"; errEl.hidden = false; return; }
           for (let j = 0; j < 4; j++) { if (typeof rq.options[j] !== "string" || !rq.options[j].trim()) { errEl.textContent = "Question " + n + ": option " + (j + 1) + " empty"; errEl.hidden = false; return; } }
           if (typeof rq.answer !== "number" || rq.answer < 0 || rq.answer > 3) { errEl.textContent = "Question " + n + ": answer must be 0-3"; errEl.hidden = false; return; }
@@ -2340,9 +2048,9 @@ if (type === "math") {
     return overlay;
   }
 
-  function openImportModal() {
+  function openEditorImportModal() {
     if (!state.editing) return;
-    const overlay = ensureImportModal();
+    const overlay = ensureEditorImportModal();
     overlay.hidden = false;
     const ta = overlay.querySelector("#importTextarea");
     setTimeout(function () { if (ta) ta.focus(); }, 50);
@@ -2353,21 +2061,18 @@ if (type === "math") {
     const minutes = Number($id("editorMinutes").value);
     if (!title) return { error: "Test title is required" };
     if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) return { error: "Duration must be between 1 and 180 minutes" };
-
     const questions = [];
     for (let i = 0; i < state.editing.questions.length; i++) {
       const raw = state.editing.questions[i];
       const n = i + 1;
       const type = getQuestionType(raw);
       if (!raw.q || !raw.q.trim()) return { error: "Question " + n + ": text is required" };
-
       const out = { type: type, q: raw.q.trim() };
       if (raw.latex && raw.latex.trim()) out.latex = raw.latex.trim();
       if (raw.imageBase64) out.imageBase64 = raw.imageBase64;
       if (raw.explanation && raw.explanation.trim()) out.explanation = raw.explanation.trim();
       if (raw.explanationLatex && raw.explanationLatex.trim()) out.explanationLatex = raw.explanationLatex.trim();
       if (raw.explanationImageBase64) out.explanationImageBase64 = raw.explanationImageBase64;
-
       if (type === "math") {
         const mode = raw.mathMode || "options";
         if (mode === "options") {
@@ -2451,9 +2156,7 @@ if (type === "math") {
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeMenu(); });
 
   document.addEventListener("pk:langchange", function () {
-    if (screens.dashboard && !screens.dashboard.hidden && state.tests.length) {
-      renderTestsList();
-    }
+    if (screens.dashboard && !screens.dashboard.hidden && state.tests.length) renderTestsList();
     if (state.editing && screens.editor && !screens.editor.hidden) renderEditor();
     if (state.submissionsTestId && screens.submissions && !screens.submissions.hidden) openSubmissions(state.submissionsTestId);
   });
