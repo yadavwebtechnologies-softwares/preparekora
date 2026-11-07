@@ -177,6 +177,32 @@
       }
     });
   }
+    function bindTabs() {
+    const tabs = {
+      quizzes: { tab: $id("tabQuizzes"), panel: $id("panelQuizzes") },
+      settings: { tab: $id("tabSettings"), panel: $id("panelSettings") },
+      help: { tab: $id("tabHelp"), panel: $id("panelHelp") },
+      purchase: { tab: $id("tabPurchase"), panel: $id("panelPurchase") }
+    };
+
+    function activate(name) {
+      Object.keys(tabs).forEach(function (k) {
+        const t = tabs[k];
+        if (!t.tab || !t.panel) return;
+        const isActive = (k === name);
+        t.tab.classList.toggle("is-active", isActive);
+        t.tab.setAttribute("aria-selected", String(isActive));
+        t.panel.hidden = !isActive;
+      });
+    }
+
+    Object.keys(tabs).forEach(function (k) {
+      const t = tabs[k];
+      if (!t.tab) return;
+      t.tab.addEventListener("click", function () { activate(k); });
+    });
+  }
+
 
   /* ---------- Init ---------- */
 
@@ -186,9 +212,7 @@
 
     // Sign out triggers
     const topBtn = $id("signOutBtn");
-    const bottomBtn = $id("signOutBottomBtn");
     if (topBtn) topBtn.addEventListener("click", openSignOutModal);
-    if (bottomBtn) bottomBtn.addEventListener("click", openSignOutModal);
 
     // Sign out modal
     const overlay = $id("signOutOverlay");
@@ -211,6 +235,7 @@
     });
 
     bindSettings();
+        bindTabs();
 
     // Load profile
     const token = getToken();
