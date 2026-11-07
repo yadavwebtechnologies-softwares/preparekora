@@ -539,9 +539,7 @@
 
     const questionsBtn = document.createElement("button");
     questionsBtn.type = "button"; questionsBtn.className = "btn btn-sm"; questionsBtn.textContent = "Questions (" + qCount + ")";
-    questionsBtn.addEventListener("click", function () { toast("Phase 2.5 me aayega"); });
-    questionsBtn.disabled = true;
-    questionsBtn.title = "Coming in Phase 2.5";
+    questionsBtn.addEventListener("click", function () { openQuestionsViewer(subject); });
     actions.appendChild(questionsBtn);
 
     const toggleBtn = document.createElement("button");
@@ -655,6 +653,266 @@
   if (newSubjectBtn) {
     newSubjectBtn.addEventListener("click", function () { openSubjectEditor(null); });
   }
+    /* ---------- Questions Viewer ---------- */
+
+  async function openQuestionsViewer(subject) {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.hidden = false;
+    overlay.classList.add("open");
+    overlay.innerHTML =
+      '<div class="modal" style="max-width: 720px; padding: 0;">' +
+        '<div class="submission-detail-head" style="padding: 18px 20px 14px;">' +
+          '<div>' +
+            '<h2 style="margin: 0 0 3px; font-size: 16px;">' + esc(subject.name) + '</h2>' +
+            '<p style="margin: 0; color: var(--muted); font-size: 12px;">Questions bank</p>' +
+          '</div>' +
+          '<button type="button" class="submission-detail-close" id="qvClose" aria-label="Close">' +
+            '<svg viewBox="0 0 24 24"><path d="m6 6 12 12"></path><path d="M18 6 6 18"></path></svg>' +
+          '</button>' +
+        '</div>' +
+        '<div style="padding: 14px 20px; display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--border);">' +
+          '<button class="btn btn-primary btn-sm" id="qvImportBtn" type="button">+ Import JSON</button>' +
+          '<div class="search-input-wrap" style="flex: 1; min-width: 160px; height: 38px;">' +
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 4.5 4.5"></path></svg>' +
+            '<input type="search" id="qvSearch" placeholder="Search questions..." autocomplete="off" style="height: 36px;">' +
+          '</div>' +
+        '</div>' +
+        '<div id="qvList" style="padding: 14px 20px; max-height: 500px; overflow-y: auto;">' +
+          '<div class="loading-state"><div class="spinner"></div><span>Loading…</span></div>' +
+        '</div>' +
+        '<div style="padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">' +
+          '<span id="qvCount" style="font-size: 12px; color: var(--muted);">—</span>' +
+          '<div style="display: flex; gap: 6px;">' +
+            '<button class="btn btn-sm" id="qvPrev" type="button" disabled>← Prev</button>' +
+            '<button class="btn btn-sm" id="qvNext" type="button" disabled>Next →</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    const listEl = overlay.querySelector("#qvList");
+    const countEl = overlay.querySelector("#qvCount");
+    const prevBtn = overlay.querySelector("#qvPrev");
+    const nextBtn = overlay.querySelector("#qvNext");
+    const searchEl = overlay.querySelector("#qvSearch");
+    const importBtn = overlay.querySelector("#qvImportBtn");
+    const closeBtn = overlay.querySelector("#qvClose");
+
+    const PAGE_SIZE = 20;
+    const qState = { offset: 0, search: "", total: 0 };
+
+    function close() {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }
+
+    closeBtn.addEventListener("click", close);
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) close();
+    });
+    document.addEventListener("keydown", function handler(e) {
+      if (e.key === "Escape") { close(); document.removeEventListener("keydown", handler); }
+    });
+
+    async function loadPage() {
+      listEl.innerHTML = '<div class="loading-state"><div class="spinner"></div><span>Loading…</span></div>';
+      try {
+        const res = await api.listQuestions(subject.id, {
+          limit: PAGE_SIZE,
+          offset: qState.offset,
+          search: qState.search
+        });
+        const questions = Array.isArray(res.questions) ? res.questions : [];
+        qState.total = Number(res.total) || 0;
+
+        if (questions.length === 0) {
+          listEl.innerHTML = '<div class="empty-state" style="padding: 30px 16px;">' +
+            (qState.search ? 'No questions match "' + esc(qState.search) + '"' : 'No questions yet. Click "Import JSON" to add.') +
+            '</div>';
+        } else {
+          listEl.innerHTML = "";
+          questions.forEach(function (q, idx) {
+            const card = document.createElement("div");
+            card.style.cssText = "padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 8px; background: #ffffff;";
+            const num = qState.offset + idx + 1;
+            card.innerHTML =
+              '<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px;">' +
+                '<div style="font-size: 13px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere;">' +
+                  '<span style="color: var(--muted); margin-right: 6px;">Q' + num + '.</span>' + esc(q.q) +
+                '</div>' +
+                '<button class="btn btn-sm" type="button" data-del="' + esc(q.id) + '" style="color: #b91c1c; flex-shrink: 0;">Delete</button>' +
+              '</div>' +
+              '<div style="font-size: 11px; color: var(--muted);">' +
+                (Array.isArray(q.options) ? q.options.map(function (o, i) {
+                  var cls = i === q.answer ? "color: #15803d; font-weight: 600;" : "";
+                  return '<div style="' + cls + '">' + String.fromCharCode(65 + i) + '. ' + esc(o) + (i === q.answer ? ' ✓' : '') + '</div>';
+                }).join("") : '') +
+              '</div>';
+
+            const delBtn = card.querySelector("[data-del]");
+            delBtn.addEventListener("click", async function () {
+              if (!window.confirm("Delete this question? This cannot be undone.")) return;
+              delBtn.disabled = true;
+              try {
+                await api.deleteQuestion(subject.id, q.id);
+                toast("Question deleted", "success");
+                await loadPage();
+              } catch (err) {
+                if (err && err.status === 401) return showLogin();
+                toast(err.message || "Delete failed", "error");
+                delBtn.disabled = false;
+              }
+            });
+
+            listEl.appendChild(card);
+          });
+        }
+
+        const start = qState.total === 0 ? 0 : qState.offset + 1;
+        const end = Math.min(qState.offset + questions.length, qState.total);
+        countEl.textContent = qState.total === 0 ? "No questions" : "Showing " + start + "–" + end + " of " + qState.total;
+        prevBtn.disabled = qState.offset === 0;
+        nextBtn.disabled = qState.offset + PAGE_SIZE >= qState.total;
+      } catch (err) {
+        if (err && err.status === 401) { close(); return showLogin(); }
+        listEl.innerHTML = '<div class="empty-state" style="padding: 30px 16px;">' +
+          esc(err.message || "Failed to load questions") +
+          '</div>';
+      }
+    }
+
+    prevBtn.addEventListener("click", function () {
+      if (qState.offset === 0) return;
+      qState.offset = Math.max(0, qState.offset - PAGE_SIZE);
+      loadPage();
+    });
+
+    nextBtn.addEventListener("click", function () {
+      if (qState.offset + PAGE_SIZE >= qState.total) return;
+      qState.offset += PAGE_SIZE;
+      loadPage();
+    });
+
+    let searchTimer = null;
+    searchEl.addEventListener("input", function () {
+      if (searchTimer) clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        qState.search = searchEl.value;
+        qState.offset = 0;
+        loadPage();
+      }, 300);
+    });
+
+    importBtn.addEventListener("click", function () {
+      openImportModal(subject, function () {
+        qState.offset = 0;
+        loadPage();
+      });
+    });
+
+    await loadPage();
+  }
+
+  /* ---------- Import JSON modal ---------- */
+
+  function openImportModal(subject, onDone) {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.hidden = false;
+    overlay.classList.add("open");
+    overlay.style.zIndex = "260";
+    overlay.innerHTML =
+      '<div class="modal" style="max-width: 640px;">' +
+        '<h2>Import questions</h2>' +
+        '<p style="margin: 0 0 12px; color: var(--muted); font-size: 13px;">Paste JSON array of questions for <strong>' + esc(subject.name) + '</strong>.</p>' +
+        '<details style="margin-bottom: 12px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); font-size: 12px;">' +
+          '<summary style="cursor: pointer; font-weight: 600; color: var(--muted);">Format example</summary>' +
+          '<pre style="margin: 8px 0 0; padding: 10px; background: #fff; border-radius: 4px; border: 1px solid var(--border); font-size: 11px; overflow-x: auto;">' +
+          '[{ "q": "Question text", "options": ["A", "B", "C", "D"], "answer": 0, "type": "mcq" }]' +
+          '</pre>' +
+        '</details>' +
+        '<textarea id="impTa" class="import-textarea" placeholder=\'Paste JSON here...\' style="min-height: 220px;"></textarea>' +
+        '<p class="form-error" id="impErr" hidden></p>' +
+        '<div class="modal-actions" style="margin-top: 14px;">' +
+          '<button class="btn btn-sm" id="impCancel" type="button">Cancel</button>' +
+          '<button class="btn btn-primary btn-sm" id="impConfirm" type="button">Import</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    const ta = overlay.querySelector("#impTa");
+    const errEl = overlay.querySelector("#impErr");
+    const confirmBtn = overlay.querySelector("#impConfirm");
+    const cancelBtn = overlay.querySelector("#impCancel");
+
+    function close() {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }
+
+    cancelBtn.addEventListener("click", close);
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) close();
+    });
+    document.addEventListener("keydown", function handler(e) {
+      if (e.key === "Escape") { close(); document.removeEventListener("keydown", handler); }
+    });
+
+    setTimeout(function () { ta.focus(); }, 80);
+
+    confirmBtn.addEventListener("click", async function () {
+      errEl.hidden = true;
+      const raw = ta.value.trim();
+      if (!raw) { errEl.textContent = "Paste JSON first"; errEl.hidden = false; return; }
+
+      let parsed;
+      try { parsed = JSON.parse(raw); }
+      catch (e) { errEl.textContent = "Invalid JSON: " + e.message; errEl.hidden = false; return; }
+
+      const questions = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.questions) ? parsed.questions : null);
+      if (!questions || questions.length === 0) {
+        errEl.textContent = "JSON must be an array of questions";
+        errEl.hidden = false;
+        return;
+      }
+
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = "Importing…";
+
+      try {
+        const res = await api.importQuestions(subject.id, { questions: questions });
+
+        const added = Number(res.added) || 0;
+        const skipped = Number(res.skipped) || 0;
+        const errors = Array.isArray(res.errors) ? res.errors : [];
+
+        let msg = "Imported " + added + " question(s).";
+        if (skipped > 0) msg += " " + skipped + " duplicate(s) skipped.";
+        if (errors.length > 0) msg += " " + errors.length + " error(s).";
+        toast(msg, added > 0 ? "success" : "error");
+
+        if (errors.length > 0) {
+          errEl.innerHTML = "<strong>Errors:</strong><br>" + errors.slice(0, 5).map(esc).join("<br>");
+          errEl.hidden = false;
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = "Import";
+          if (added > 0 && typeof onDone === "function") onDone();
+          return;
+        }
+
+        close();
+        if (typeof onDone === "function") onDone();
+      } catch (err) {
+        if (err && err.status === 401) { close(); return showLogin(); }
+        errEl.textContent = err.message || "Import failed";
+        errEl.hidden = false;
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = "Import";
+      }
+    });
+  }
+
 
   /* ---------- ACTIVE NOW ---------- */
   let activeRefreshIntervalId = null;
