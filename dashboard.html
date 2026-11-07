@@ -8,6 +8,14 @@
   <title>Dashboard — PrepareKora</title>
   <link rel="stylesheet" href="style.css">
   <style>
+    :root {
+      --dash-space-xs: 8px;
+      --dash-space-sm: 12px;
+      --dash-space-md: 16px;
+      --dash-space-lg: 24px;
+      --dash-space-xl: 32px;
+    }
+
     .dash-loading {
       min-height: 60vh;
       display: flex;
@@ -24,24 +32,40 @@
     }
     @keyframes pk-spin { to { transform: rotate(360deg); } }
 
-    .dash-header {
+    .dash-section {
+      margin-bottom: var(--dash-space-xl);
+    }
+    .dash-section-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-bottom: 24px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--border);
+      gap: var(--dash-space-sm);
+      margin-bottom: var(--dash-space-md);
     }
-    .dash-user {
+    .dash-section-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      color: var(--text);
+    }
+
+    .dash-panel {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--dash-space-lg);
+    }
+
+    .profile-row {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: var(--dash-space-md);
+      flex-wrap: wrap;
     }
-    .dash-avatar {
-      width: 52px;
-      height: 52px;
+    .profile-avatar {
+      width: 56px;
+      height: 56px;
       border-radius: 50%;
       background: var(--surface);
       border: 1px solid var(--border);
@@ -49,71 +73,132 @@
       place-items: center;
       overflow: hidden;
       flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(163, 177, 198, 0.35);
     }
-    .dash-avatar img {
+    .profile-avatar img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-    .dash-avatar-fallback {
+    .profile-avatar-fallback {
       font-size: 20px;
       font-weight: 600;
       color: var(--accent);
     }
-    .dash-name {
-      margin: 0;
-      font-size: 20px;
-      font-weight: 600;
-      letter-spacing: -0.4px;
-      line-height: 1.2;
+    .profile-info {
+      flex: 1;
+      min-width: 0;
     }
-    .dash-email {
+    .profile-name {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+    .profile-email {
       margin: 3px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+    .profile-meta {
+      margin: var(--dash-space-md) 0 0;
+      padding-top: var(--dash-space-md);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--dash-space-sm) var(--dash-space-lg);
       font-size: 12px;
       color: var(--muted);
     }
-    .dash-empty {
-      padding: 60px 20px;
+    .profile-meta span strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .empty-quizzes {
+      padding: var(--dash-space-xl) var(--dash-space-md);
       text-align: center;
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+    }
+    .empty-quizzes p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .settings-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--dash-space-md);
+    }
+    .settings-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--dash-space-xs);
+    }
+
+    .signout-row {
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    /* Modal (admin jaisa) */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(26, 29, 35, 0.35);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      width: 100%;
+      max-width: 400px;
+      padding: 24px;
       background: #ffffff;
       border: 1px solid rgba(216, 222, 232, 0.6);
       border-radius: var(--radius);
-      box-shadow: 0 8px 20px rgba(163, 177, 198, 0.35);
+      box-shadow: 0 20px 50px rgba(163, 177, 198, 0.55);
+      animation: modalIn 0.25s ease;
     }
-    .dash-empty h2 {
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal h2 {
       margin: 0 0 10px;
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 600;
+      letter-spacing: -0.3px;
     }
-    .dash-empty p {
-      margin: 0;
+    .modal p {
+      margin: 0 0 20px;
       color: var(--muted);
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.6;
     }
-    .signout-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xs);
-      background: #ffffff;
-      color: var(--text);
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      box-shadow: 0 2px 6px rgba(163, 177, 198, 0.35);
-      transition: box-shadow 0.15s ease, transform 0.15s ease;
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
     }
-    .signout-btn:hover {
-      box-shadow: 0 4px 12px rgba(163, 177, 198, 0.45);
-      transform: translateY(-1px);
-    }
-    .signout-btn:active {
-      transform: translateY(0);
-      box-shadow: 0 2px 6px rgba(163, 177, 198, 0.4);
+
+    @media (max-width: 560px) {
+      .profile-row { gap: var(--dash-space-sm); }
+      .profile-avatar { width: 48px; height: 48px; }
+      .profile-name { font-size: 16px; }
+      .dash-panel { padding: var(--dash-space-md); }
+      .dash-section { margin-bottom: var(--dash-space-lg); }
     }
   </style>
 </head>
@@ -125,32 +210,84 @@
       <a class="brand" href="index.html" aria-label="PrepareKora home">
         <span class="brand-main">preparekora</span><span class="brand-in">.in</span>
       </a>
-      <button class="signout-btn" id="signOutBtn" type="button">
+      <button class="btn btn-sm" id="signOutBtn" type="button">
         Sign out
       </button>
     </div>
   </header>
 
   <main class="page-container">
+
     <div id="dashLoading" class="dash-loading">
       <div class="spinner"></div>
     </div>
 
     <div id="dashContent" hidden>
-      <div class="dash-header">
-        <div class="dash-user">
-          <div class="dash-avatar" id="dashAvatar"></div>
-          <div>
-            <h1 class="dash-name" id="dashName">Welcome</h1>
-            <p class="dash-email" id="dashEmail"></p>
-          </div>
-        </div>
-      </div>
 
-      <div class="dash-empty">
-        <h2>Your daily quizzes will appear here</h2>
-        <p>We're setting things up. Please check back soon.</p>
-      </div>
+      <!-- PROFILE -->
+      <section class="dash-section">
+        <div class="dash-section-head">
+          <h2 class="dash-section-title">Profile</h2>
+        </div>
+        <div class="dash-panel">
+          <div class="profile-row">
+            <div class="profile-avatar" id="dashAvatar"></div>
+            <div class="profile-info">
+              <h1 class="profile-name" id="dashName">—</h1>
+              <p class="profile-email" id="dashEmail"></p>
+            </div>
+          </div>
+          <div class="profile-meta" id="profileMeta"></div>
+        </div>
+      </section>
+
+      <!-- DAILY QUIZZES (placeholder) -->
+      <section class="dash-section">
+        <div class="dash-section-head">
+          <h2 class="dash-section-title">Daily Quizzes</h2>
+        </div>
+        <div class="empty-quizzes">
+          <p>Your daily quizzes will appear here. Check back soon.</p>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="dash-section">
+        <div class="dash-section-head">
+          <h2 class="dash-section-title">Settings</h2>
+        </div>
+        <div class="dash-panel">
+          <form id="settingsForm" class="settings-form" novalidate>
+            <div class="form-field" style="margin-bottom: 0;">
+              <label for="displayNameInput" class="form-label">Display name</label>
+              <input
+                id="displayNameInput"
+                type="text"
+                class="form-input"
+                maxlength="60"
+                autocomplete="name"
+              >
+              <p class="form-hint">This name appears on your dashboard and shared results.</p>
+              <p class="form-error" id="displayNameError" hidden></p>
+            </div>
+            <div class="settings-actions">
+              <button class="btn btn-primary btn-sm" id="saveNameBtn" type="submit">
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- SIGN OUT -->
+      <section class="dash-section">
+        <div class="signout-row">
+          <button class="btn btn-sm" id="signOutBottomBtn" type="button">
+            Sign out
+          </button>
+        </div>
+      </section>
+
     </div>
   </main>
 
@@ -164,6 +301,18 @@
       </nav>
     </div>
   </footer>
+
+  <!-- Sign out confirmation modal -->
+  <div class="modal-overlay" id="signOutOverlay" hidden>
+    <div class="modal">
+      <h2>Sign out?</h2>
+      <p>You will need to sign in again to access your dashboard.</p>
+      <div class="modal-actions">
+        <button class="btn btn-sm" id="signOutCancelBtn" type="button">Stay signed in</button>
+        <button class="btn btn-primary btn-sm" id="signOutConfirmBtn" type="button">Sign out</button>
+      </div>
+    </div>
+  </div>
 
   <script src="js/dashboard.js"></script>
 
