@@ -3569,3 +3569,8 @@ img { max-width: 100%; height: auto; }
     transparent 100%
   );
 }
+@media (max-width: 560px) {
+  #authActionBtn {
+    display: none !important;
+  }
+}
