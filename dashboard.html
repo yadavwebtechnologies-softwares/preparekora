@@ -210,8 +210,12 @@
       <a class="brand" href="index.html" aria-label="PrepareKora home">
         <span class="brand-main">preparekora</span><span class="brand-in">.in</span>
       </a>
-      <button class="btn btn-sm" id="signOutBtn" type="button">
-        Sign out
+      <button class="icon-button" id="signOutBtn" type="button" aria-label="Sign out" title="Sign out">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
       </button>
     </div>
   </header>
@@ -241,21 +245,31 @@
         </div>
       </section>
 
-      <!-- DAILY QUIZZES (placeholder) -->
-      <section class="dash-section">
-        <div class="dash-section-head">
-          <h2 class="dash-section-title">Daily Quizzes</h2>
-        </div>
+      <!-- TABS -->
+      <div class="admin-tabs" role="tablist" style="margin-bottom: 20px;">
+        <button class="admin-tab is-active" id="tabQuizzes" type="button" role="tab" aria-selected="true">
+          Daily Quizzes
+        </button>
+        <button class="admin-tab" id="tabSettings" type="button" role="tab" aria-selected="false">
+          Settings
+        </button>
+        <button class="admin-tab" id="tabHelp" type="button" role="tab" aria-selected="false">
+          Help
+        </button>
+        <button class="admin-tab" id="tabPurchase" type="button" role="tab" aria-selected="false">
+          Purchase
+        </button>
+      </div>
+
+      <!-- QUIZZES PANEL -->
+      <div id="panelQuizzes">
         <div class="empty-quizzes">
           <p>Your daily quizzes will appear here. Check back soon.</p>
         </div>
-      </section>
+      </div>
 
-      <!-- SETTINGS -->
-      <section class="dash-section">
-        <div class="dash-section-head">
-          <h2 class="dash-section-title">Settings</h2>
-        </div>
+      <!-- SETTINGS PANEL -->
+      <div id="panelSettings" hidden>
         <div class="dash-panel">
           <form id="settingsForm" class="settings-form" novalidate>
             <div class="form-field" style="margin-bottom: 0;">
@@ -277,16 +291,32 @@
             </div>
           </form>
         </div>
-      </section>
+      </div>
 
-      <!-- SIGN OUT -->
-      <section class="dash-section">
-        <div class="signout-row">
-          <button class="btn btn-sm" id="signOutBottomBtn" type="button">
-            Sign out
-          </button>
+      <!-- HELP PANEL -->
+      <div id="panelHelp" hidden>
+        <div class="dash-panel">
+          <p class="muted-text" style="margin: 0 0 14px;">Need help? We're here for you.</p>
+          <ul style="margin: 0; padding-left: 20px; color: var(--text); font-size: 14px; line-height: 1.9;">
+            <li>Login / sign-in problems</li>
+            <li>Test or quiz issues</li>
+            <li>Report a wrong question</li>
+            <li>Account or profile questions</li>
+          </ul>
+          <p class="muted-text" style="margin: 14px 0 0;">
+            Contact: <a href="find-us.html" style="color: var(--accent); text-decoration: underline;">Find us</a>
+          </p>
         </div>
-      </section>
+      </div>
+
+      <!-- PURCHASE PANEL -->
+      <div id="panelPurchase" hidden>
+        <div class="dash-panel">
+          <div class="empty-quizzes" style="padding: 40px 20px;">
+            <p><strong style="color: var(--text); display: block; margin-bottom: 8px;">Coming soon</strong>Purchases will be available here in the future.</p>
+          </div>
+        </div>
+      </div>
 
     </div>
   </main>
