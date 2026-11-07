@@ -3458,3 +3458,114 @@ img { max-width: 100%; height: auto; }
   .db-item-actions .btn { flex: 1; }
   .db-modal-wide { max-width: 100%; }
 }
+/* =========================================================
+   === WATERDROP RIPPLE (click/tap feedback) ===
+   ========================================================= */
+
+/* Ripple keyframe — expanding + fading circle */
+@keyframes pk-ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+  60% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* Container: overflow hidden + relative (ripple ko andar rakhne ke liye) */
+.btn,
+.start-button,
+.icon-button,
+.option,
+.palette-btn,
+.keypad-btn,
+.test-card,
+.admin-test-card,
+.submission-row,
+.admin-tab,
+.db-item-card,
+.card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate; /* stacking context so ripple stays inside */
+}
+
+/* Ripple circle — pseudo-element, center se expand hota hai */
+.btn::after,
+.start-button::after,
+.icon-button::after,
+.option::after,
+.palette-btn::after,
+.keypad-btn::after,
+.test-card::after,
+.admin-test-card::after,
+.submission-row::after,
+.admin-tab::after,
+.db-item-card::after,
+.card::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px; /* center align */
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(74, 111, 165, 0.45) 0%,
+    rgba(74, 111, 165, 0.15) 60%,
+    transparent 100%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0);
+  z-index: -1;
+}
+
+/* Active (press/tap) — ripple trigger */
+.btn:active::after,
+.start-button:active::after,
+.icon-button:active::after,
+.option:active::after,
+.palette-btn:active::after,
+.keypad-btn:active::after,
+.test-card:active::after,
+.admin-test-card:active::after,
+.submission-row:active::after,
+.admin-tab:active::after,
+.db-item-card:active::after,
+.card:active::after {
+  animation: pk-ripple 0.55s ease-out;
+}
+
+/* Primary buttons — ripple in white for contrast on blue bg */
+.btn-primary::after,
+.btn-primary:active::after {
+  background: radial-gradient(circle,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.25) 60%,
+    transparent 100%
+  );
+}
+
+/* Selected/answered states — accent ripple visible */
+.option.is-selected::after {
+  background: radial-gradient(circle,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.15) 60%,
+    transparent 100%
+  );
+}
+
+.palette-btn.is-answered::after {
+  background: radial-gradient(circle,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0.2) 60%,
+    transparent 100%
+  );
+}
