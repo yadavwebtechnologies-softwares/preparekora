@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Daily Quiz — PrepareKora</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a class="brand" href="index.html" aria-label="PrepareKora home">
+        <span class="brand-main">preparekora</span><span class="brand-in">.in</span>
+      </a>
+      <a class="btn btn-sm" href="dashboard.html">Exit</a>
+    </div>
+  </header>
+
+  <main class="page-container">
+
+    <!-- LOADING -->
+    <section id="quizLoading">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <span>Loading quiz…</span>
+      </div>
+    </section>
+
+    <!-- ERROR -->
+    <section id="quizError" hidden>
+      <div class="card start-card">
+        <p class="eyebrow">Oops</p>
+        <h1 id="quizErrorTitle">Could not load quiz</h1>
+        <p class="muted-text" id="quizErrorMessage">Please try again.</p>
+        <div class="form-actions">
+          <a class="btn btn-primary" href="dashboard.html">Back to dashboard</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- QUIZ -->
+    <section id="quizScreen" hidden>
+
+      <div class="exam-bar">
+        <div class="exam-bar-left">
+          <p class="exam-title" id="quizSubjectName">—</p>
+          <p class="exam-sub" id="quizProgress">—</p>
+        </div>
+        <div class="exam-bar-right">
+          <button class="btn btn-primary btn-sm" id="submitQuizBtn" type="button">
+            Submit Quiz
+          </button>
+        </div>
+      </div>
+
+      <div class="question-panel">
+        <div class="q-head">
+          <span class="q-number" id="qNumber">—</span>
+          <span class="q-status" id="qStatus">—</span>
+        </div>
+
+        <h2 class="q-text" id="qText">—</h2>
+
+        <fieldset class="options" id="optionsFieldset">
+          <legend class="sr-only">Answer options</legend>
+        </fieldset>
+
+        <div class="q-actions">
+          <button class="btn btn-sm" id="prevBtn" type="button">Previous</button>
+          <span class="spacer"></span>
+          <button class="btn btn-primary btn-sm" id="nextBtn" type="button">Next</button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- CONFIRM SUBMIT MODAL -->
+  <div class="modal-overlay" id="confirmOverlay" hidden>
+    <div class="modal">
+      <h2>Submit quiz?</h2>
+      <div class="modal-stats">
+        <div class="modal-stat">
+          <strong id="confirmAnswered">0</strong>
+          <span>Answered</span>
+        </div>
+        <div class="modal-stat">
+          <strong id="confirmUnanswered">0</strong>
+          <span>Unanswered</span>
+        </div>
+      </div>
+      <p class="muted-text" style="margin: 0 0 16px;">You cannot re-attempt this quiz today after submitting.</p>
+      <div class="modal-actions">
+        <button class="btn btn-sm" id="confirmCancel" type="button">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="confirmSubmit" type="button">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/quiz.js"></script>
+
+</body>
+</html>
