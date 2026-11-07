@@ -258,6 +258,16 @@
         loadingEl.style.display = "none";
         googleBtn.style.display = "inline-flex";
 
+                // 3.5 Check logout flag — force Firebase signOut before redirect
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get("logout") === "1") {
+          try {
+            const { signOut } = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js");
+            await signOut(auth);
+          } catch (e) {}
+          window.history.replaceState({}, "", window.location.pathname);
+        }
+
         // 4. If already signed in → redirect to dashboard
         onAuthStateChanged(auth, async (user) => {
           if (user) {
