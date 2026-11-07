@@ -10,6 +10,7 @@
 
   const TOKEN_KEY = "pk_user_id_token";
   const EXPIRES_KEY = "pk_user_expires_at";
+  const INACTIVITY_MS = 10 * 1000;
 
   const $id = (id) => document.getElementById(id);
 
@@ -25,6 +26,7 @@
   }
 
   function redirectToLogin() {
+    if (typeof stopInactivityTimer === "function") stopInactivityTimer();
     clearTokens();
     window.location.replace("login.html");
   }
@@ -265,6 +267,70 @@
       if (e.key === "Escape") closeMenu();
     });
   }
+    /* ---------- INACTIVITY AUTO-LOGOUT ---------- */
+
+  let inactivityTimerId = null;
+
+  function resetInactivityTimer() {
+    if (inactivityTimerId) clearTimeout(inactivityTimerId);
+    if (!getToken()) return;
+    inactivityTimerId = setTimeout(handleInactivityTimeout, INACTIVITY_MS);
+  }
+
+  function startInactivityTimer() {
+    resetInactivityTimer();
+    ["click", "keydown", "scroll", "touchstart", "mousemove"].forEach(function (ev) {
+      document.addEventListener(ev, resetInactivityTimer, { passive: true });
+    });
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "visible") resetInactivityTimer();
+    });
+  }
+
+  function stopInactivityTimer() {
+    if (inactivityTimerId) {
+      clearTimeout(inactivityTimerId);
+      inactivityTimerId = null;
+    }
+  }
+
+  function handleInactivityTimeout() {
+    stopInactivityTimer();
+    openSessionTimeoutModal();
+  }
+
+  /* ---------- SESSION TIMEOUT MODAL ---------- */
+
+  function openSessionTimeoutModal() {
+    let overlay = $id("sessionTimeoutOverlay");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "sessionTimeoutOverlay";
+      overlay.className = "modal-overlay";
+      overlay.hidden = true;
+      overlay.innerHTML =
+        '<div class="modal">' +
+          '<h2>Session timed out</h2>' +
+          '<p class="muted-text" style="margin-bottom: 20px;">Your session has expired due to inactivity. Please sign in again to continue.</p>' +
+          '<div class="modal-actions">' +
+            '<button type="button" class="btn btn-primary" id="sessionTimeoutLoginBtn">Go to login</button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(overlay);
+      overlay.querySelector("#sessionTimeoutLoginBtn").addEventListener("click", function () {
+        overlay.hidden = true;
+        overlay.classList.remove("open");
+        redirectToLogin();
+      });
+    }
+    overlay.hidden = false;
+    overlay.classList.add("open");
+    setTimeout(function () {
+      const b = overlay.querySelector("#sessionTimeoutLoginBtn");
+      if (b) b.focus();
+    }, 40);
+  }
+
 
   /* ---------- INIT ---------- */
 
@@ -303,6 +369,7 @@
     // Load profile
     const token = getToken();
     if (!token) { redirectToLogin(); return; }
+        startInactivityTimer();
 
     try {
       const profile = await fetchProfile(token);
