@@ -648,6 +648,103 @@
 
     setTimeout(function () { nameInput.focus(); }, 60);
   }
+    function openImportModal(subject, onDone) {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.hidden = false;
+    overlay.classList.add("open");
+    overlay.style.zIndex = "260";
+    overlay.innerHTML =
+      '<div class="modal" style="max-width: 640px;">' +
+        '<h2>Import questions</h2>' +
+        '<p style="margin: 0 0 12px; color: var(--muted); font-size: 13px;">Paste JSON array of questions for <strong>' + esc(subject.name) + '</strong>.</p>' +
+        '<details style="margin-bottom: 12px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); font-size: 12px;">' +
+          '<summary style="cursor: pointer; font-weight: 600; color: var(--muted);">Format example</summary>' +
+          '<pre style="margin: 8px 0 0; padding: 10px; background: #fff; border-radius: 4px; border: 1px solid var(--border); font-size: 11px; overflow-x: auto;">' +
+          '[{ "q": "Question text", "options": ["A", "B", "C", "D"], "answer": 0, "type": "mcq" }]' +
+          '</pre>' +
+        '</details>' +
+        '<textarea id="impTa" class="import-textarea" placeholder=\'Paste JSON here...\' style="min-height: 220px;"></textarea>' +
+        '<p class="form-error" id="impErr" hidden></p>' +
+        '<div class="modal-actions" style="margin-top: 14px;">' +
+          '<button class="btn btn-sm" id="impCancel" type="button">Cancel</button>' +
+          '<button class="btn btn-primary btn-sm" id="impConfirm" type="button">Import</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    const ta = overlay.querySelector("#impTa");
+    const errEl = overlay.querySelector("#impErr");
+    const confirmBtn = overlay.querySelector("#impConfirm");
+    const cancelBtn = overlay.querySelector("#impCancel");
+
+    function close() {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }
+
+    cancelBtn.addEventListener("click", close);
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) close();
+    });
+    document.addEventListener("keydown", function handler(e) {
+      if (e.key === "Escape") { close(); document.removeEventListener("keydown", handler); }
+    });
+
+    setTimeout(function () { ta.focus(); }, 80);
+
+    confirmBtn.addEventListener("click", async function () {
+      errEl.hidden = true;
+      const raw = ta.value.trim();
+      if (!raw) { errEl.textContent = "Paste JSON first"; errEl.hidden = false; return; }
+
+      let parsed;
+      try { parsed = JSON.parse(raw); }
+      catch (e) { errEl.textContent = "Invalid JSON: " + e.message; errEl.hidden = false; return; }
+
+      const questions = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.questions) ? parsed.questions : null);
+      if (!questions || questions.length === 0) {
+        errEl.textContent = "JSON must be an array of questions";
+        errEl.hidden = false;
+        return;
+      }
+
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = "Importing…";
+
+      try {
+        const res = await api.importQuestions(subject.id, { questions: questions });
+
+        const added = Number(res.added) || 0;
+        const skipped = Number(res.skipped) || 0;
+        const errors = Array.isArray(res.errors) ? res.errors : [];
+
+        let msg = "Imported " + added + " question(s).";
+        if (skipped > 0) msg += " " + skipped + " duplicate(s) skipped.";
+        if (errors.length > 0) msg += " " + errors.length + " error(s).";
+        toast(msg, added > 0 ? "success" : "error");
+
+        if (errors.length > 0) {
+          errEl.innerHTML = "<strong>Errors:</strong><br>" + errors.slice(0, 5).map(esc).join("<br>");
+          errEl.hidden = false;
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = "Import";
+          if (added > 0 && typeof onDone === "function") onDone();
+          return;
+        }
+
+        close();
+        if (typeof onDone === "function") onDone();
+      } catch (err) {
+        if (err && err.status === 401) { close(); return showLogin(); }
+        errEl.textContent = err.message || "Import failed";
+        errEl.hidden = false;
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = "Import";
+      }
+    });
+  }
+
 
   const newSubjectBtn = $id("newSubjectBtn");
   if (newSubjectBtn) {
@@ -805,7 +902,7 @@
     });
 
     importBtn.addEventListener("click", function () {
-      openImportModal(subject, function () {
+      openBankImportModal(subject, function () {
         qState.offset = 0;
         loadPage();
       });
@@ -816,7 +913,7 @@
 
   /* ---------- Import JSON modal ---------- */
 
-  function openImportModal(subject, onDone) {
+  function openBankImportModal(subject, onDone) {
     const overlay = document.createElement("div");
     overlay.className = "modal-overlay";
     overlay.hidden = false;
@@ -2131,7 +2228,7 @@
       importBtn.type = "button";
       importBtn.className = "btn btn-sm";
       importBtn.textContent = "Import JSON";
-      importBtn.addEventListener("click", openImportModal);
+      importBtn.addEventListener("click", openEditorImportModal);
       addQuestionBtn.parentNode.insertBefore(importBtn, addQuestionBtn);
     }
   }
