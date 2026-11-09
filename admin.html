@@ -321,6 +321,59 @@
   </footer>
 
   <div class="toast-container" id="toastContainer"></div>
+  <!-- JSON IMPORT MODAL -->
+<div
+  class="modal-overlay"
+  id="importOverlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="importTitle"
+  aria-hidden="true"
+>
+  <div class="modal import-modal">
+
+    <h2 id="importTitle">Import questions from JSON</h2>
+
+    <p class="muted-text">
+      Paste a question array or a full test object. Every entry is validated before import.
+    </p>
+
+    <details class="import-format" open>
+      <summary>JSON format</summary>
+
+      <pre class="import-format-code">General MCQ
+{ "q": "Capital of Assam?", "options": ["Guwahati", "Dispur", "Jorhat", "Tezpur"], "answer": 1 }
+
+Full test wrapper (optional)
+{ "title": "Mock Test 1", "minutes": 30, "questions": [ ... ] }</pre>
+
+      <ul class="import-rules">
+        <li>q — required, English text</li>
+        <li>options — exactly 4 strings</li>
+        <li>answer — 0 to 3 (A=0, B=1, C=2, D=3)</li>
+      </ul>
+    </details>
+
+    <div class="form-field" style="margin-top: 16px;">
+      <label for="importInput" class="form-label">JSON</label>
+      <textarea
+        id="importInput"
+        class="import-textarea"
+        rows="8"
+        spellcheck="false"
+        autocomplete="off"
+        placeholder='[ { "q": "...", "options": ["","","",""], "answer": 0 } ]'
+      ></textarea>
+      <p class="form-error" id="importError" hidden></p>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" id="importCancel" type="button">Cancel</button>
+      <button class="btn btn-primary" id="importConfirm" type="button">Import</button>
+    </div>
+
+  </div>
+</div>
 
   <script src="js/translation.js"></script>
   <script src="js/admin.js"></script>
