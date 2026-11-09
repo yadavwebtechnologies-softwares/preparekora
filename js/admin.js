@@ -168,13 +168,14 @@
     loading: $id("adminLoading"),
     login: $id("loginScreen"),
     dashboard: $id("dashboardScreen"),
-    editor: $id("editorScreen")
+    editor: $id("editorScreen"),
+    submissions: $id("submissionsScreen")
   };
 
   function showScreen(name) {
     Object.keys(screens).forEach(function (k) { if (screens[k]) screens[k].hidden = (k !== name); });
     window.scrollTo({ top: 0, behavior: "auto" });
-    if (name === "editor") stopLivePolling();
+    if (name === "editor" || name === "submissions") stopLivePolling();
     else if (name === "dashboard" && state.admin) startLivePolling();
   }
 
@@ -302,6 +303,13 @@
     editBtn.type = "button"; editBtn.className = "btn btn-sm"; editBtn.textContent = t("edit");
     editBtn.addEventListener("click", function () { openEditor(test.id); });
     actions.appendChild(editBtn);
+
+    const subsBtn = document.createElement("button");
+    subsBtn.type = "button";
+    subsBtn.className = "btn btn-sm";
+    subsBtn.textContent = "Submissions";
+    subsBtn.addEventListener("click", function () { openSubmissions(test.id); });
+    actions.appendChild(subsBtn);
 
     const pubBtn = document.createElement("button");
     pubBtn.type = "button";
@@ -947,5 +955,137 @@
     }
     showLogin();
   })();
+
+  /* ---------- SUBMISSIONS MODULE ---------- */
+
+  let currentSubmissionsTestId = null;
+
+  function formatDuration(sec) {
+    sec = Math.max(0, Math.round(Number(sec) || 0));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+  }
+
+  function formatDate(ts) {
+    if (!ts) return "—";
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return "—";
+    const day = String(d.getDate()).padStart(2, "0");
+    const mon = d.toLocaleString("en-IN", { month: "short" });
+    const yr = d.getFullYear();
+    const hr = String(d.getHours()).padStart(2, "0");
+    const mn = String(d.getMinutes()).padStart(2, "0");
+    return day + " " + mon + " " + yr + " " + hr + ":" + mn;
+  }
+
+  function setSubmissionsTab(tab) {
+    const tabSubmitted = $id("tabSubmitted");
+    const tabPending = $id("tabPending");
+    const panelSubmitted = $id("panelSubmitted");
+    const panelPending = $id("panelPending");
+    if (tabSubmitted) { const a = tab === "submitted"; tabSubmitted.classList.toggle("is-active", a); tabSubmitted.setAttribute("aria-selected", String(a)); }
+    if (tabPending) { const a = tab === "pending"; tabPending.classList.toggle("is-active", a); tabPending.setAttribute("aria-selected", String(a)); }
+    if (panelSubmitted) panelSubmitted.hidden = tab !== "submitted";
+    if (panelPending) panelPending.hidden = tab !== "pending";
+  }
+
+  async function openSubmissions(id) {
+    currentSubmissionsTestId = id;
+    const heading = $id("submissionsHeading");
+    const test = state.tests.find(function (t) { return t.id === id; });
+    if (heading) heading.textContent = test ? ("Submissions — " + test.title) : "Submissions";
+    showScreen("submissions");
+    setSubmissionsTab("submitted");
+    await Promise.all([loadSubmitted(), loadPending()]);
+  }
+
+  async function loadSubmitted() {
+    const loading = $id("submittedLoading");
+    const empty = $id("submittedEmpty");
+    const wrap = $id("submittedTableWrap");
+    const body = $id("submittedTableBody");
+    if (!body) return;
+    if (loading) loading.hidden = false;
+    if (empty) empty.hidden = true;
+    if (wrap) wrap.hidden = true;
+    body.innerHTML = "";
+
+    try {
+      const res = await request("/admin/tests/" + encodeURIComponent(currentSubmissionsTestId) + "/submissions");
+      const list = (res && Array.isArray(res.submissions)) ? res.submissions : [];
+      if (loading) loading.hidden = true;
+      if (list.length === 0) { if (empty) empty.hidden = false; return; }
+      if (wrap) wrap.hidden = false;
+      list.forEach(function (sub) { body.appendChild(renderSubmissionRow(sub)); });
+    } catch (err) {
+      if (loading) loading.hidden = true;
+      if (err.status === 401) return showLogin();
+      if (empty) { empty.hidden = false; empty.textContent = err.message || "Failed to load"; }
+    }
+  }
+
+  function renderSubmissionRow(sub) {
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      '<td>' + esc(sub.userName || "—") + '</td>' +
+      '<td>' + (Number(sub.correct) || 0) + ' / ' + (Number(sub.total) || 0) + '</td>' +
+      '<td>' + (Number(sub.percent) || 0) + '%</td>' +
+      '<td>' + esc(formatDuration(sub.timeTaken)) + '</td>' +
+      '<td>' + esc(formatDate(sub.submittedAt)) + '</td>';
+    return tr;
+  }
+
+  async function loadPending() {
+    const loading = $id("pendingLoading");
+    const empty = $id("pendingEmpty");
+    const wrap = $id("pendingTableWrap");
+    const body = $id("pendingTableBody");
+    if (!body) return;
+    if (loading) loading.hidden = false;
+    if (empty) empty.hidden = true;
+    if (wrap) wrap.hidden = true;
+    body.innerHTML = "";
+
+    try {
+      const res = await request("/admin/tests/" + encodeURIComponent(currentSubmissionsTestId) + "/pending");
+      const list = (res && Array.isArray(res.pending)) ? res.pending : [];
+      if (loading) loading.hidden = true;
+      if (list.length === 0) { if (empty) empty.hidden = false; return; }
+      if (wrap) wrap.hidden = false;
+      list.forEach(function (p) { body.appendChild(renderPendingRow(p)); });
+    } catch (err) {
+      if (loading) loading.hidden = true;
+      if (err.status === 401) return showLogin();
+      if (empty) { empty.hidden = false; empty.textContent = err.message || "Failed to load"; }
+    }
+  }
+
+  function renderPendingRow(p) {
+    const tr = document.createElement("tr");
+    const isLive = p.status === "live";
+    const statusHtml = '<span class="sub-status-badge ' + (isLive ? "live" : "left") + '">' +
+      (isLive ? "In test" : "Left") + '</span>';
+    tr.innerHTML =
+      '<td>' + esc(p.userName || "—") + '</td>' +
+      '<td>' + statusHtml + '</td>' +
+      '<td>' + esc(formatDate(p.startedAt)) + '</td>' +
+      '<td>' + esc(formatDuration(p.elapsedSeconds)) + '</td>';
+    return tr;
+  }
+
+  const submissionsBackBtn = $id("submissionsBackBtn");
+  if (submissionsBackBtn) {
+    submissionsBackBtn.addEventListener("click", function () {
+      currentSubmissionsTestId = null;
+      showScreen("dashboard");
+      loadTests();
+    });
+  }
+
+  const tabSubmitted = $id("tabSubmitted");
+  const tabPending = $id("tabPending");
+  if (tabSubmitted) tabSubmitted.addEventListener("click", function () { setSubmissionsTab("submitted"); });
+  if (tabPending) tabPending.addEventListener("click", function () { setSubmissionsTab("pending"); });
 
 })();
