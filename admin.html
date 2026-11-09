@@ -308,6 +308,66 @@
 
     </section>
 
+    <!-- SUBMISSIONS -->
+    <section id="submissionsScreen" hidden>
+
+      <div class="admin-header">
+        <h1 id="submissionsHeading">Submissions</h1>
+        <div class="admin-header-actions">
+          <button class="btn btn-sm" id="submissionsBackBtn" type="button">
+            Back to tests
+          </button>
+        </div>
+      </div>
+
+      <div class="admin-tabs" role="tablist">
+        <button class="admin-tab is-active" id="tabSubmitted" type="button" role="tab" aria-selected="true">
+          Submitted
+        </button>
+        <button class="admin-tab" id="tabPending" type="button" role="tab" aria-selected="false">
+          Pending
+        </button>
+      </div>
+
+      <div id="panelSubmitted">
+        <div class="empty-state" id="submittedLoading">Loading…</div>
+        <div class="empty-state" id="submittedEmpty" hidden>No submissions yet.</div>
+        <div class="submissions-table-wrap" id="submittedTableWrap" hidden>
+          <table class="submissions-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Score</th>
+                <th>%</th>
+                <th>Time</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="submittedTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="panelPending" hidden>
+        <div class="empty-state" id="pendingLoading">Loading…</div>
+        <div class="empty-state" id="pendingEmpty" hidden>No pending attempts.</div>
+        <div class="submissions-table-wrap" id="pendingTableWrap" hidden>
+          <table class="submissions-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Started</th>
+                <th>Elapsed</th>
+              </tr>
+            </thead>
+            <tbody id="pendingTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
   </main>
 
   <footer class="footer">
