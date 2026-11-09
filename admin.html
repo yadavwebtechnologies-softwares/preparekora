@@ -260,13 +260,17 @@
           </div>
         </div>
 
-        <div class="editor-card">
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px;">
-            <h2 style="margin: 0;">Questions</h2>
-            <button class="btn btn-sm" id="addQuestionBtn" type="button" data-i18n="addQuestion">
-              Add question
-            </button>
-          </div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
+  <h2 style="margin: 0;">Questions</h2>
+  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <button class="btn btn-sm" id="importJsonBtn" type="button" data-i18n="importJson">
+      Import JSON
+    </button>
+    <button class="btn btn-sm" id="addQuestionBtn" type="button" data-i18n="addQuestion">
+      Add question
+    </button>
+  </div>
+</div>
 
           <div id="questionsContainer"></div>
 
@@ -304,6 +308,70 @@
   </footer>
 
   <div class="toast-container" id="toastContainer"></div>
+  <!-- JSON IMPORT MODAL -->
+<div
+  class="modal-overlay"
+  id="importOverlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="importTitle"
+  aria-hidden="true"
+>
+  <div class="modal import-modal">
+
+    <h2 id="importTitle" data-i18n="importTitle">Import questions from JSON</h2>
+
+    <p class="muted-text" data-i18n="importHelp">
+      Paste a question array or a full test object. Every entry is validated before import.
+    </p>
+
+    <details class="import-format" open>
+      <summary data-i18n="importFormatToggle">JSON format</summary>
+
+      <pre class="import-format-code">General MCQ
+{ "q": "Capital of Assam?", "options": ["Guwahati", "Dispur", "Jorhat", "Tezpur"], "answer": 1 }
+
+Math (optional)
+{ "type": "math", "q": "Find SI...", "latex": "SI=\\frac{P\\times R\\times T}{100}", "options": ["1000","1100","1200","1300"], "answer": 2 }
+
+Reasoning (optional)
+{ "type": "reasoning", "q": "Next: 2,4,8,16,?", "options": ["20","24","32","40"], "answer": 2 }
+
+Full test wrapper (optional)
+{ "title": "Mock Test 1", "minutes": 30, "questions": [ ... ] }</pre>
+
+      <ul class="import-rules">
+        <li data-i18n="importRuleQ">q — required, English text</li>
+        <li data-i18n="importRuleOptions">options — exactly 4 strings</li>
+        <li data-i18n="importRuleAnswer">answer — 0 to 3 (A=0, B=1, C=2, D=3)</li>
+        <li data-i18n="importRuleType">type — optional: "math" or "reasoning"</li>
+        <li data-i18n="importRuleLatex">latex — optional, math only</li>
+        <li data-i18n="importRuleImage">imageBase64 — optional, data:image/... (max ~500KB)</li>
+      </ul>
+    </details>
+
+    <div class="form-field" style="margin-top: 16px;">
+      <label for="importInput" class="form-label" data-i18n="importPasteLabel">JSON</label>
+      <textarea
+        id="importInput"
+        class="import-textarea"
+        rows="8"
+        spellcheck="false"
+        autocomplete="off"
+        placeholder='[ { "q": "...", "options": ["","","",""], "answer": 0 } ]'
+      ></textarea>
+      <p class="form-error" id="importError" hidden></p>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" id="importCancel" type="button" data-i18n="cancel">Cancel</button>
+      <button class="btn btn-primary" id="importConfirm" type="button" data-i18n="importConfirmBtn">
+        Import
+      </button>
+    </div>
+
+  </div>
+</div>
 
   <script src="js/translation.js"></script>
   <script src="js/admin.js"></script>
