@@ -404,9 +404,15 @@
         status: res.test.status,
         title: res.test.title,
         minutes: res.test.minutes,
-        questions: (res.test.questions || []).map(function (q) {
-          return { q: q.q, options: q.options.slice(), answer: q.answer };
-        })
+questions: (res.test.questions || []).map(function (q) {
+  const out = { q: q.q, options: q.options.slice(), answer: q.answer };
+  if (q.type === "math" || q.type === "reasoning") out.type = q.type;
+  if (typeof q.latex === "string" && q.latex.length) out.latex = q.latex;
+  if (typeof q.imageBase64 === "string" && q.imageBase64.indexOf("data:image/") === 0) {
+    out.imageBase64 = q.imageBase64;
+  }
+  return out;
+})
       };
       renderEditor();
       showScreen("editor");
@@ -566,11 +572,17 @@
     const questions = [];
     for (let i = 0; i < state.editing.questions.length; i++) {
       const raw = state.editing.questions[i];
-      const cleaned = { q: raw.q.trim(), options: raw.options.map(function (o) { return o.trim(); }), answer: raw.answer };
-      if (!cleaned.q) return { error: "Question " + (i + 1) + ": text is required" };
-      if (cleaned.options.some(function (o) { return !o; })) return { error: "Question " + (i + 1) + ": all 4 options are required" };
-      if (typeof cleaned.answer !== "number" || cleaned.answer < 0 || cleaned.answer > 3) return { error: "Question " + (i + 1) + ": select the correct answer" };
-      questions.push(cleaned);
+const cleaned = { q: raw.q.trim(), options: raw.options.map(function (o) { return o.trim(); }), answer: raw.answer };
+if (!cleaned.q) return { error: "Question " + (i + 1) + ": text is required" };
+if (cleaned.options.some(function (o) { return !o; })) return { error: "Question " + (i + 1) + ": all 4 options are required" };
+if (typeof cleaned.answer !== "number" || cleaned.answer < 0 || cleaned.answer > 3) return { error: "Question " + (i + 1) + ": select the correct answer" };
+// Preserve optional fields if present (backward compatible)
+if (raw.type === "math" || raw.type === "reasoning") cleaned.type = raw.type;
+if (typeof raw.latex === "string" && raw.latex.length) cleaned.latex = raw.latex;
+if (typeof raw.imageBase64 === "string" && raw.imageBase64.indexOf("data:image/") === 0) {
+  cleaned.imageBase64 = raw.imageBase64;
+}
+questions.push(cleaned);
     }
     if (questions.length === 0) return { error: "Add at least one question" };
     return { payload: { title: title, minutes: minutes, questions: questions } };
