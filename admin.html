@@ -278,12 +278,17 @@
         </div>
 
         <div class="editor-card">
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px;">
-            <h2 style="margin: 0;">Questions</h2>
-            <button class="btn btn-sm" id="addQuestionBtn" type="button" data-i18n="addQuestion">
-              Add question
-            </button>
-          </div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
+  <h2 style="margin: 0;">Questions</h2>
+  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <button class="btn btn-sm" id="importJsonBtn" type="button">
+      Import JSON
+    </button>
+    <button class="btn btn-sm" id="addQuestionBtn" type="button" data-i18n="addQuestion">
+      Add question
+    </button>
+  </div>
+</div>
 
           <div id="questionsContainer"></div>
 
