@@ -164,7 +164,9 @@
     userWhatsApp: "",
     translatedTitle: "",
     translatedPublisher: "",
-    settings: { enabled: true, duration: 5 }
+    settings: { enabled: true, duration: 5 },
+    sessionId: null,
+    sessionPingId: null
   };
 
   /* ---------- Interruption ---------- */
@@ -391,6 +393,61 @@
     });
   }
 
+  /* ---------- Session heartbeat (live tracker) ---------- */
+
+  async function startSession() {
+    if (!state.publicTest || state.sessionId) return;
+    try {
+      const res = await fetch(API_BASE + "/sessions/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          testId: testId,
+          testTitle: state.publicTest.title,
+          userName: state.userName
+        })
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && data.sessionId) {
+        state.sessionId = data.sessionId;
+        startSessionPing();
+      }
+    } catch (e) { /* silent */ }
+  }
+
+  function startSessionPing() {
+    if (state.sessionPingId) clearInterval(state.sessionPingId);
+    state.sessionPingId = setInterval(function () {
+      if (!state.sessionId || !state.started || state.finished) return;
+      fetch(API_BASE + "/sessions/ping", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: state.sessionId, testId: testId })
+      }).catch(function () {});
+    }, 20000);
+  }
+
+  function endSession(keepalive) {
+    if (!state.sessionId) return;
+    if (state.sessionPingId) { clearInterval(state.sessionPingId); state.sessionPingId = null; }
+    const body = JSON.stringify({ sessionId: state.sessionId, testId: testId });
+    state.sessionId = null;
+    try {
+      if (keepalive && navigator.sendBeacon) {
+        navigator.sendBeacon(API_BASE + "/sessions/end",
+          new Blob([body], { type: "application/json" }));
+      } else {
+        fetch(API_BASE + "/sessions/end", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: body,
+          keepalive: true
+        }).catch(function () {});
+      }
+    } catch (e) {}
+  }
+
   /* ---------- Begin test ---------- */
 
   function beginTest() {
@@ -419,6 +476,7 @@
 
     announce(t("questionOf", { n: 1, total: state.publicTest.questions.length }));
     if (nextBtn) nextBtn.focus();
+    startSession();
   }
 
   /* ---------- Question rendering ---------- */
@@ -613,6 +671,7 @@
 
   async function submitTest() {
     if (state.finished || state.submitting) return;
+    endSession(false);
     state.submitting = true;
     state.finished = true;
 
@@ -770,6 +829,7 @@
     if (state.finished) return;
     state.finished = true;
     state.submitting = true;
+    endSession(false);
     if (state.timerId) { window.clearInterval(state.timerId); state.timerId = null; }
     hideInterruptModal();
     closePalette();
@@ -831,7 +891,7 @@
     }
   });
 
-  /* ---------- Result PNG (unchanged) ---------- */
+  /* ---------- Result PNG ---------- */
 
   function roundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
@@ -1033,6 +1093,10 @@
   });
 
   window.addEventListener("resize", function () { if (window.innerWidth > 860) closePalette(); });
+
+  window.addEventListener("beforeunload", function () {
+    if (state.started && !state.finished) endSession(true);
+  });
 
   /* ---------- Mobile menu ---------- */
 
