@@ -291,6 +291,25 @@
 
   <div class="toast-container" id="toastContainer"></div>
 
+  <!-- LOGOUT CONFIRM MODAL -->
+  <div
+    class="modal-overlay"
+    id="logoutOverlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="logoutTitle"
+    aria-hidden="true"
+  >
+    <div class="modal">
+      <h2 id="logoutTitle">Sign out?</h2>
+      <p class="muted-text">Are you sure you want to sign out of the admin panel?</p>
+      <div class="modal-actions">
+        <button class="btn" id="logoutCancel" type="button">Cancel</button>
+        <button class="btn btn-primary" id="logoutConfirm" type="button">Sign out</button>
+      </div>
+    </div>
+  </div>
+
   <!-- JSON IMPORT MODAL -->
   <div
     class="modal-overlay"
