@@ -174,9 +174,12 @@
   function showScreen(name) {
     Object.keys(screens).forEach(function (k) { if (screens[k]) screens[k].hidden = (k !== name); });
     window.scrollTo({ top: 0, behavior: "auto" });
+    if (name === "editor") stopLivePolling();
+    else if (name === "dashboard" && state.admin) startLivePolling();
   }
 
   function showLogin() {
+    stopLivePolling();
     state.admin = null; state.tests = []; state.editing = null;
     const u = $id("loginUser"), p = $id("loginPass"), e = $id("loginError");
     if (u) u.value = ""; if (p) p.value = ""; if (e) e.hidden = true;
@@ -256,6 +259,7 @@
       if (state.tests.length === 0) { if (empty) empty.hidden = false; return; }
       list.hidden = false;
       state.tests.forEach(function (test) { list.appendChild(renderTestCard(test)); });
+      if (liveLastData) updateTestCardBadges();
     } catch (err) {
       if (loading) loading.hidden = true;
       if (err.status === 401) { showLogin(); return; }
@@ -266,6 +270,7 @@
   function renderTestCard(test) {
     const card = document.createElement("div");
     card.className = "admin-test-card";
+    card.setAttribute("data-test-id", test.id);
     const isPublished = test.status === "published";
 
     card.innerHTML =
@@ -404,15 +409,15 @@
         status: res.test.status,
         title: res.test.title,
         minutes: res.test.minutes,
-questions: (res.test.questions || []).map(function (q) {
-  const out = { q: q.q, options: q.options.slice(), answer: q.answer };
-  if (q.type === "math" || q.type === "reasoning") out.type = q.type;
-  if (typeof q.latex === "string" && q.latex.length) out.latex = q.latex;
-  if (typeof q.imageBase64 === "string" && q.imageBase64.indexOf("data:image/") === 0) {
-    out.imageBase64 = q.imageBase64;
-  }
-  return out;
-})
+        questions: (res.test.questions || []).map(function (q) {
+          const out = { q: q.q, options: q.options.slice(), answer: q.answer };
+          if (q.type === "math" || q.type === "reasoning") out.type = q.type;
+          if (typeof q.latex === "string" && q.latex.length) out.latex = q.latex;
+          if (typeof q.imageBase64 === "string" && q.imageBase64.indexOf("data:image/") === 0) {
+            out.imageBase64 = q.imageBase64;
+          }
+          return out;
+        })
       };
       renderEditor();
       showScreen("editor");
@@ -560,164 +565,6 @@ questions: (res.test.questions || []).map(function (q) {
       }
     });
   }
-    /* ---------- JSON IMPORT ---------- */
-
-  const importOverlay = $id("importOverlay");
-  const importInput   = $id("importInput");
-  const importError   = $id("importError");
-  const importConfirm = $id("importConfirm");
-  const importCancel  = $id("importCancel");
-  const importJsonBtn = $id("importJsonBtn");
-
-  const BANNED_KEYS = [
-    "numericAnswer", "tolerance",
-    "explanation", "explanationLatex", "explanationImageBase64",
-    "qAs", "optionsAs"
-  ];
-  const ALLOWED_TYPES = ["math", "reasoning"];
-
-  function setImportError(msg) {
-    if (!importError) return;
-    if (!msg) { importError.hidden = true; importError.textContent = ""; return; }
-    importError.textContent = msg;
-    importError.hidden = false;
-  }
-
-  function openImportModal() {
-    if (!importOverlay) return;
-    if (importInput) importInput.value = "";
-    setImportError(null);
-    importOverlay.classList.add("open");
-    importOverlay.setAttribute("aria-hidden", "false");
-    setTimeout(function () { if (importInput) importInput.focus(); }, 40);
-  }
-
-  function closeImportModal() {
-    if (!importOverlay) return;
-    importOverlay.classList.remove("open");
-    importOverlay.setAttribute("aria-hidden", "true");
-  }
-
-  function validateImportQuestion(raw, index) {
-    const where = "Question " + (index + 1) + ": ";
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-      return { error: where + "must be an object" };
-    }
-
-    BANNED_KEYS.forEach(function (k) {
-      if (Object.prototype.hasOwnProperty.call(raw, k)) delete raw[k];
-    });
-
-    const q = typeof raw.q === "string" ? raw.q.trim() : "";
-    if (!q) return { error: where + "text is required" };
-
-    if (!Array.isArray(raw.options) || raw.options.length !== 4) {
-      return { error: where + "exactly 4 options required" };
-    }
-    const options = raw.options.map(function (o) {
-      return (typeof o === "string") ? o.trim() : String(o == null ? "" : o).trim();
-    });
-    if (options.some(function (o) { return !o; })) {
-      return { error: where + "all 4 options must be non-empty" };
-    }
-
-    const answer = raw.answer;
-    if (typeof answer !== "number" || !Number.isInteger(answer) || answer < 0 || answer > 3) {
-      return { error: where + "answer must be 0, 1, 2, or 3" };
-    }
-
-    const cleaned = { q: q, options: options, answer: answer };
-
-    if (raw.type != null) {
-      if (ALLOWED_TYPES.indexOf(raw.type) === -1) {
-        return { error: where + 'type must be "math" or "reasoning"' };
-      }
-      cleaned.type = raw.type;
-    }
-    if (raw.latex != null) {
-      if (typeof raw.latex !== "string") return { error: where + "latex must be a string" };
-      if (raw.latex.length) cleaned.latex = raw.latex;
-    }
-    if (raw.imageBase64 != null) {
-      if (typeof raw.imageBase64 !== "string" || raw.imageBase64.indexOf("data:image/") !== 0) {
-        return { error: where + "imageBase64 must be a data:image/... string" };
-      }
-      if (raw.imageBase64.length > 700 * 1024) {
-        return { error: where + "imageBase64 is too large (max ~500KB)" };
-      }
-      cleaned.imageBase64 = raw.imageBase64;
-    }
-
-    return { question: cleaned };
-  }
-
-  function handleImport() {
-    if (!state.editing) return;
-    setImportError(null);
-
-    const rawText = importInput ? importInput.value.trim() : "";
-    if (!rawText) return setImportError(t("importEmpty"));
-
-    let parsed;
-    try { parsed = JSON.parse(rawText); }
-    catch (e) { return setImportError(t("importInvalid")); }
-
-    let questions = null, title = null, minutes = null;
-
-    if (Array.isArray(parsed)) {
-      questions = parsed;
-    } else if (parsed && typeof parsed === "object" && Array.isArray(parsed.questions)) {
-      questions = parsed.questions;
-      if (typeof parsed.title === "string") title = parsed.title.trim();
-      if (parsed.minutes != null) {
-        const m = Number(parsed.minutes);
-        if (Number.isInteger(m) && m >= 1 && m <= 180) minutes = m;
-      }
-    } else {
-      return setImportError(t("importInvalidShape"));
-    }
-
-    if (!questions.length) return setImportError(t("importNoQuestions"));
-
-    const cleaned = [];
-    for (let i = 0; i < questions.length; i++) {
-      const res = validateImportQuestion(questions[i], i);
-      if (res.error) return setImportError(res.error);
-      cleaned.push(res.question);
-    }
-
-    const isFullTest = (title !== null) || (minutes !== null);
-
-    if (isFullTest) {
-      if (title !== null) $id("editorTitle").value = title;
-      if (minutes !== null) $id("editorMinutes").value = minutes;
-      state.editing.questions = cleaned;
-    } else {
-      const onlyOne = state.editing.questions.length === 1;
-      const blank = onlyOne && state.editing.questions[0];
-      const isBlank = blank && !blank.q && blank.options.every(function (o) { return !o; });
-      state.editing.questions = isBlank
-        ? cleaned
-        : state.editing.questions.concat(cleaned);
-    }
-
-    renderQuestionsList();
-    closeImportModal();
-    toast(t("importSuccess", { n: cleaned.length }), "success");
-  }
-
-  if (importJsonBtn) importJsonBtn.addEventListener("click", openImportModal);
-  if (importCancel)  importCancel.addEventListener("click", closeImportModal);
-  if (importConfirm) importConfirm.addEventListener("click", handleImport);
-
-  if (importOverlay) {
-    importOverlay.addEventListener("click", function (e) {
-      if (e.target === importOverlay) closeImportModal();
-    });
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && importOverlay.classList.contains("open")) closeImportModal();
-    });
-  }
 
   /* ---------- VALIDATION + SAVE ---------- */
 
@@ -730,17 +577,16 @@ questions: (res.test.questions || []).map(function (q) {
     const questions = [];
     for (let i = 0; i < state.editing.questions.length; i++) {
       const raw = state.editing.questions[i];
-const cleaned = { q: raw.q.trim(), options: raw.options.map(function (o) { return o.trim(); }), answer: raw.answer };
-if (!cleaned.q) return { error: "Question " + (i + 1) + ": text is required" };
-if (cleaned.options.some(function (o) { return !o; })) return { error: "Question " + (i + 1) + ": all 4 options are required" };
-if (typeof cleaned.answer !== "number" || cleaned.answer < 0 || cleaned.answer > 3) return { error: "Question " + (i + 1) + ": select the correct answer" };
-// Preserve optional fields if present (backward compatible)
-if (raw.type === "math" || raw.type === "reasoning") cleaned.type = raw.type;
-if (typeof raw.latex === "string" && raw.latex.length) cleaned.latex = raw.latex;
-if (typeof raw.imageBase64 === "string" && raw.imageBase64.indexOf("data:image/") === 0) {
-  cleaned.imageBase64 = raw.imageBase64;
-}
-questions.push(cleaned);
+      const cleaned = { q: raw.q.trim(), options: raw.options.map(function (o) { return o.trim(); }), answer: raw.answer };
+      if (!cleaned.q) return { error: "Question " + (i + 1) + ": text is required" };
+      if (cleaned.options.some(function (o) { return !o; })) return { error: "Question " + (i + 1) + ": all 4 options are required" };
+      if (typeof cleaned.answer !== "number" || cleaned.answer < 0 || cleaned.answer > 3) return { error: "Question " + (i + 1) + ": select the correct answer" };
+      if (raw.type === "math" || raw.type === "reasoning") cleaned.type = raw.type;
+      if (typeof raw.latex === "string" && raw.latex.length) cleaned.latex = raw.latex;
+      if (typeof raw.imageBase64 === "string" && raw.imageBase64.indexOf("data:image/") === 0) {
+        cleaned.imageBase64 = raw.imageBase64;
+      }
+      questions.push(cleaned);
     }
     if (questions.length === 0) return { error: "Add at least one question" };
     return { payload: { title: title, minutes: minutes, questions: questions } };
@@ -795,6 +641,125 @@ questions.push(cleaned);
     });
   }
 
+  /* ---------- LIVE TRACKER ---------- */
+
+  const LIVE_POLL_MS = 30000;
+  let livePollId = null;
+  let liveTickerId = null;
+  let liveLastUpdated = 0;
+  let liveLastData = null;
+
+  async function fetchLiveSessions() {
+    try {
+      const res = await request("/admin/sessions/active");
+      liveLastData = (res && typeof res === "object") ? res : { total: 0, sessions: [] };
+      liveLastUpdated = Date.now();
+      renderLivePill(false);
+      updateTestCardBadges();
+      return true;
+    } catch (err) {
+      if (err.status === 401) { stopLivePolling(); showLogin(); return false; }
+      renderLivePill(true);
+      return false;
+    }
+  }
+
+  function startLivePolling() {
+    if (livePollId) return;
+    if (!state.admin) return;
+    fetchLiveSessions();
+    livePollId = setInterval(function () {
+      if (document.hidden) return;
+      if (screens.editor && !screens.editor.hidden) return;
+      fetchLiveSessions();
+    }, LIVE_POLL_MS);
+    if (!liveTickerId) {
+      liveTickerId = setInterval(function () {
+        if (!liveLastUpdated) return;
+        const pill = $id("livePill");
+        if (!pill) return;
+        const el = pill.querySelector(".live-updated");
+        if (!el) return;
+        const secs = Math.max(0, Math.round((Date.now() - liveLastUpdated) / 1000));
+        el.textContent = "Updated " + secs + "s ago";
+      }, 1000);
+    }
+  }
+
+  function stopLivePolling() {
+    if (livePollId) { clearInterval(livePollId); livePollId = null; }
+    if (liveTickerId) { clearInterval(liveTickerId); liveTickerId = null; }
+  }
+
+  function renderLivePill(failed) {
+    const pill = $id("livePill");
+    if (!pill) return;
+    const dot = pill.querySelector(".live-dot");
+    const countEl = pill.querySelector(".live-count");
+    const updatedEl = pill.querySelector(".live-updated");
+
+    if (failed) {
+      pill.classList.add("is-failed");
+      if (dot) dot.classList.add("is-idle");
+      if (countEl) countEl.textContent = "Live count unavailable";
+      if (updatedEl) updatedEl.textContent = "";
+      return;
+    }
+
+    pill.classList.remove("is-failed");
+    const total = liveLastData ? (Number(liveLastData.total) || 0) : 0;
+    if (dot) dot.classList.toggle("is-idle", total === 0);
+    if (countEl) countEl.textContent = total === 1 ? "1 live now" : total + " live now";
+    if (updatedEl && liveLastUpdated) {
+      const secs = Math.max(0, Math.round((Date.now() - liveLastUpdated) / 1000));
+      updatedEl.textContent = "Updated " + secs + "s ago";
+    }
+  }
+
+  function updateTestCardBadges() {
+    if (!liveLastData || !Array.isArray(liveLastData.sessions)) return;
+    const map = {};
+    liveLastData.sessions.forEach(function (s) {
+      if (s && s.testId) map[s.testId] = Number(s.activeCount) || 0;
+    });
+
+    const list = $id("testsList");
+    if (!list) return;
+
+    list.querySelectorAll(".admin-test-card").forEach(function (card) {
+      const testId = card.getAttribute("data-test-id");
+      if (!testId) return;
+      const count = map[testId] || 0;
+
+      let badge = card.querySelector(".live-badge");
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.className = "live-badge";
+        badge.innerHTML = '<span class="live-dot"></span><span class="live-badge-text"></span>';
+        const info = card.querySelector(".admin-test-info");
+        if (info) info.appendChild(badge);
+      }
+      const dot = badge.querySelector(".live-dot");
+      const text = badge.querySelector(".live-badge-text");
+      if (dot) dot.classList.toggle("is-idle", count === 0);
+      if (text) text.textContent = count + " live";
+    });
+  }
+
+  const liveRefreshBtn = $id("liveRefreshBtn");
+  if (liveRefreshBtn) {
+    liveRefreshBtn.addEventListener("click", function () {
+      liveRefreshBtn.disabled = true;
+      fetchLiveSessions().finally(function () { liveRefreshBtn.disabled = false; });
+    });
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && state.admin && screens.dashboard && !screens.dashboard.hidden) {
+      fetchLiveSessions();
+    }
+  });
+
   /* ---------- MOBILE MENU ---------- */
 
   const menuToggle = $id("menuToggle"), menuPanel = $id("menuPanel"), menuIcon = $id("menuIcon");
@@ -825,7 +790,7 @@ questions.push(cleaned);
   document.addEventListener("pk:langchange", function () {
     if (screens.dashboard && !screens.dashboard.hidden && state.tests.length) {
       const list = $id("testsList");
-      if (list) { list.innerHTML = ""; state.tests.forEach(function (test) { list.appendChild(renderTestCard(test)); }); }
+      if (list) { list.innerHTML = ""; state.tests.forEach(function (test) { list.appendChild(renderTestCard(test)); }); if (liveLastData) updateTestCardBadges(); }
     }
     if (state.editing && screens.editor && !screens.editor.hidden) renderEditor();
   });
