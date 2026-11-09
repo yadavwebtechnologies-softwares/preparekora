@@ -166,7 +166,8 @@
     translatedPublisher: "",
     settings: { enabled: true, duration: 5 },
     sessionId: null,
-    sessionPingId: null
+    sessionPingId: null,
+    reviewVisible: false
   };
 
   /* ---------- Interruption ---------- */
@@ -732,6 +733,11 @@
     statWrong.textContent = String(r.wrong);
     statUnattempted.textContent = String(r.unattempted);
     statTime.textContent = formatClock(state.elapsed);
+
+    if (reviewBtn) reviewBtn.hidden = !(r && r.correctAnswers);
+    if (reviewContainer) { reviewContainer.hidden = true; reviewContainer.innerHTML = ""; }
+    state.reviewVisible = false;
+    if (reviewBtn) reviewBtn.textContent = t("reviewAnswers");
   }
 
   /* ---------- Confirm modal ---------- */
@@ -1052,6 +1058,200 @@
     }
   }
 
+  /* ---------- Review module ---------- */
+
+  const reviewBtn = document.getElementById("reviewBtn");
+  const reviewContainer = document.getElementById("reviewContainer");
+  const EXPLAIN_CACHE_PREFIX = "pke_v1_";
+  const EXPLAIN_BATCH = 3;
+
+  function hashString(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+    return Math.abs(h).toString(36);
+  }
+
+  function explainCacheKey(index, question, correctIndex) {
+    const testId = state.publicTest ? state.publicTest.id : "unknown";
+    return EXPLAIN_CACHE_PREFIX + testId + "_" + index + "_" + hashString(question + "|" + correctIndex);
+  }
+
+  function buildReview() {
+    if (!reviewContainer) return;
+    reviewContainer.innerHTML = "";
+
+    if (!state.publicTest || !state.result || !state.result.correctAnswers) {
+      reviewContainer.hidden = false;
+      const err = document.createElement("div");
+      err.className = "empty-state";
+      err.textContent = "Review unavailable.";
+      reviewContainer.appendChild(err);
+      return;
+    }
+
+    const questions = state.publicTest.questions;
+    const correctAnswers = state.result.correctAnswers;
+    const letters = ["A", "B", "C", "D"];
+    const tasks = [];
+
+    questions.forEach(function (q, i) {
+      const correctIdx = Number(correctAnswers[String(i)]);
+      const userIdx = Object.prototype.hasOwnProperty.call(state.answers, i) ? Number(state.answers[i]) : null;
+
+      const item = document.createElement("div");
+      item.className = "review-item";
+
+      const head = document.createElement("div");
+      head.className = "review-head";
+
+      const num = document.createElement("span");
+      num.className = "review-num";
+      num.textContent = "Q" + (i + 1);
+
+      let badgeClass, badgeText;
+      if (userIdx === null) { badgeClass = "skipped"; badgeText = t("statusNotAnswered"); }
+      else if (userIdx === correctIdx) { badgeClass = "correct"; badgeText = t("correct"); }
+      else { badgeClass = "wrong"; badgeText = t("wrong"); }
+
+      const badge = document.createElement("span");
+      badge.className = "review-badge " + badgeClass;
+      badge.textContent = badgeText;
+
+      head.appendChild(num);
+      head.appendChild(badge);
+      item.appendChild(head);
+
+      const qText = document.createElement("div");
+      qText.className = "review-q";
+      qText.textContent = q.q;
+      item.appendChild(qText);
+
+      const optsWrap = document.createElement("div");
+      optsWrap.className = "review-options";
+
+      q.options.forEach(function (optText, oi) {
+        const opt = document.createElement("div");
+        opt.className = "review-option";
+        if (oi === correctIdx) opt.classList.add("is-correct");
+        if (oi === userIdx && userIdx !== correctIdx) opt.classList.add("is-wrong");
+
+        const key = document.createElement("span");
+        key.className = "review-option-key";
+        key.textContent = letters[oi];
+
+        const txt = document.createElement("span");
+        txt.className = "review-option-text";
+        txt.textContent = optText;
+
+        opt.appendChild(key);
+        opt.appendChild(txt);
+
+        if (oi === correctIdx) {
+          const tag = document.createElement("span");
+          tag.className = "review-tag correct-tag";
+          tag.textContent = t("reviewCorrectAnswer");
+          opt.appendChild(tag);
+        } else if (oi === userIdx) {
+          const tag = document.createElement("span");
+          tag.className = "review-tag wrong-tag";
+          tag.textContent = t("reviewYourAnswer");
+          opt.appendChild(tag);
+        }
+
+        optsWrap.appendChild(opt);
+      });
+
+      item.appendChild(optsWrap);
+
+      const expl = document.createElement("div");
+      expl.className = "review-explanation";
+
+      const explLabel = document.createElement("div");
+      explLabel.className = "review-explanation-label";
+      explLabel.textContent = t("reviewExplanation");
+
+      const explText = document.createElement("div");
+      explText.className = "review-explanation-text";
+      explText.textContent = t("reviewExplanationLoading");
+
+      expl.appendChild(explLabel);
+      expl.appendChild(explText);
+      item.appendChild(expl);
+
+      reviewContainer.appendChild(item);
+
+      tasks.push({
+        index: i,
+        question: q.q,
+        options: q.options,
+        correctIdx: correctIdx,
+        userIdx: userIdx,
+        el: explText
+      });
+    });
+
+    reviewContainer.hidden = false;
+    runExplanationBatches(tasks);
+  }
+
+  async function runExplanationBatches(tasks) {
+    for (let i = 0; i < tasks.length; i += EXPLAIN_BATCH) {
+      await Promise.all(tasks.slice(i, i + EXPLAIN_BATCH).map(fetchExplanation));
+    }
+  }
+
+  async function fetchExplanation(task) {
+    const cacheKey = explainCacheKey(task.index, task.question, task.correctIdx);
+
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) { task.el.textContent = cached; return; }
+    } catch (e) {}
+
+    try {
+      const res = await fetch(API_BASE + "/explain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: task.question,
+          options: task.options,
+          correctIndex: task.correctIdx,
+          userAnswer: task.userIdx
+        })
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      const text = (data && data.explanation) || "";
+      if (text) {
+        task.el.textContent = text;
+        try { localStorage.setItem(cacheKey, text); } catch (e) {}
+      } else {
+        task.el.textContent = t("reviewExplanationFailed");
+      }
+    } catch (err) {
+      task.el.textContent = t("reviewExplanationFailed");
+    }
+  }
+
+  function showReview() {
+    state.reviewVisible = true;
+    if (reviewBtn) reviewBtn.textContent = t("reviewHide");
+    buildReview();
+  }
+
+  function hideReview() {
+    state.reviewVisible = false;
+    if (reviewBtn) reviewBtn.textContent = t("reviewAnswers");
+    if (reviewContainer) { reviewContainer.hidden = true; reviewContainer.innerHTML = ""; }
+  }
+
+  if (reviewBtn) {
+    reviewBtn.addEventListener("click", function () {
+      if (state.reviewVisible) hideReview();
+      else showReview();
+    });
+  }
+
   /* ---------- Event wiring ---------- */
 
   if (prevBtn) prevBtn.addEventListener("click", function () { goTo(state.index - 1); });
@@ -1130,10 +1330,14 @@
   }
 
   /* ---------- Language change ---------- */
-
   document.addEventListener("pk:langchange", async function () {
     if (!state.publicTest) return;
-    if (state.finished) { await translateStartIfNeeded(); renderResult(); return; }
+    if (state.finished) {
+      if (state.reviewVisible) hideReview();
+      await translateStartIfNeeded();
+      renderResult();
+      return;
+    }
     if (state.started) {
       examTitle.textContent = state.translatedTitle || state.publicTest.title;
       renderQuestion(false);
