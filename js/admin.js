@@ -759,6 +759,143 @@
       fetchLiveSessions();
     }
   });
+    /* ---------- JSON IMPORT ---------- */
+
+  const importOverlay = $id("importOverlay");
+  const importInput   = $id("importInput");
+  const importError   = $id("importError");
+  const importConfirm = $id("importConfirm");
+  const importCancel  = $id("importCancel");
+  const importJsonBtn = $id("importJsonBtn");
+
+  const BANNED_KEYS = [
+    "numericAnswer", "tolerance",
+    "explanation", "explanationLatex", "explanationImageBase64",
+    "qAs", "optionsAs"
+  ];
+
+  function setImportError(msg) {
+    if (!importError) return;
+    if (!msg) { importError.hidden = true; importError.textContent = ""; return; }
+    importError.textContent = msg;
+    importError.hidden = false;
+  }
+
+  function openImportModal() {
+    if (!importOverlay) return;
+    if (!state.editing) { toast("Open a test first", "error"); return; }
+    if (importInput) importInput.value = "";
+    setImportError(null);
+    importOverlay.classList.add("open");
+    importOverlay.setAttribute("aria-hidden", "false");
+    setTimeout(function () { if (importInput) importInput.focus(); }, 40);
+  }
+
+  function closeImportModal() {
+    if (!importOverlay) return;
+    importOverlay.classList.remove("open");
+    importOverlay.setAttribute("aria-hidden", "true");
+  }
+
+  function validateImportQuestion(raw, index) {
+    const where = "Question " + (index + 1) + ": ";
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      return { error: where + "must be an object" };
+    }
+    BANNED_KEYS.forEach(function (k) {
+      if (Object.prototype.hasOwnProperty.call(raw, k)) delete raw[k];
+    });
+    const q = typeof raw.q === "string" ? raw.q.trim() : "";
+    if (!q) return { error: where + "text is required" };
+    if (!Array.isArray(raw.options) || raw.options.length !== 4) {
+      return { error: where + "exactly 4 options required" };
+    }
+    const options = raw.options.map(function (o) {
+      return (typeof o === "string") ? o.trim() : String(o == null ? "" : o).trim();
+    });
+    if (options.some(function (o) { return !o; })) {
+      return { error: where + "all 4 options must be non-empty" };
+    }
+    const answer = raw.answer;
+    if (typeof answer !== "number" || !Number.isInteger(answer) || answer < 0 || answer > 3) {
+      return { error: where + "answer must be 0, 1, 2, or 3" };
+    }
+    const cleaned = { q: q, options: options, answer: answer };
+    if (raw.type === "math" || raw.type === "reasoning") cleaned.type = raw.type;
+    if (typeof raw.latex === "string" && raw.latex.length) cleaned.latex = raw.latex;
+    if (typeof raw.imageBase64 === "string" && raw.imageBase64.indexOf("data:image/") === 0) {
+      cleaned.imageBase64 = raw.imageBase64;
+    }
+    return { question: cleaned };
+  }
+
+  function handleImport() {
+    if (!state.editing) return;
+    setImportError(null);
+    const rawText = importInput ? importInput.value.trim() : "";
+    if (!rawText) return setImportError("Paste JSON first.");
+
+    let parsed;
+    try { parsed = JSON.parse(rawText); }
+    catch (e) { return setImportError("Invalid JSON — check the syntax and try again."); }
+
+    let questions = null, title = null, minutes = null;
+
+    if (Array.isArray(parsed)) {
+      questions = parsed;
+    } else if (parsed && typeof parsed === "object" && Array.isArray(parsed.questions)) {
+      questions = parsed.questions;
+      if (typeof parsed.title === "string") title = parsed.title.trim();
+      if (parsed.minutes != null) {
+        const m = Number(parsed.minutes);
+        if (Number.isInteger(m) && m >= 1 && m <= 180) minutes = m;
+      }
+    } else {
+      return setImportError("Provide a question array or a test object with a questions array.");
+    }
+
+    if (!questions.length) return setImportError("No questions found in the JSON.");
+
+    const cleaned = [];
+    for (let i = 0; i < questions.length; i++) {
+      const res = validateImportQuestion(questions[i], i);
+      if (res.error) return setImportError(res.error);
+      cleaned.push(res.question);
+    }
+
+    const isFullTest = (title !== null) || (minutes !== null);
+
+    if (isFullTest) {
+      if (title !== null) $id("editorTitle").value = title;
+      if (minutes !== null) $id("editorMinutes").value = minutes;
+      state.editing.questions = cleaned;
+    } else {
+      const onlyOne = state.editing.questions.length === 1;
+      const blank = onlyOne && state.editing.questions[0];
+      const isBlank = blank && !blank.q && blank.options.every(function (o) { return !o; });
+      state.editing.questions = isBlank ? cleaned : state.editing.questions.concat(cleaned);
+    }
+
+    renderQuestionsList();
+    closeImportModal();
+    toast("Imported " + cleaned.length + " question(s).", "success");
+  }
+
+  if (importJsonBtn) importJsonBtn.addEventListener("click", openImportModal);
+  if (importCancel)  importCancel.addEventListener("click", closeImportModal);
+  if (importConfirm) importConfirm.addEventListener("click", handleImport);
+
+  if (importOverlay) {
+    importOverlay.addEventListener("click", function (e) {
+      if (e.target === importOverlay) closeImportModal();
+    });
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && importOverlay && importOverlay.classList.contains("open")) {
+      closeImportModal();
+    }
+  });
 
   /* ---------- MOBILE MENU ---------- */
 
