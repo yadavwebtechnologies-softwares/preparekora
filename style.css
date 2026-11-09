@@ -2030,6 +2030,108 @@ input:focus-visible {
   .submissions-table thead th,
   .submissions-table tbody td { padding: 10px 8px; }
 }
+
+/* === JSON import module (append at end) === */
+.import-modal { max-width: 640px; }
+
+.import-format {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.import-format summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  list-style: none;
+}
+
+.import-format summary::-webkit-details-marker { display: none; }
+
+.import-format summary::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 1.5px solid var(--muted);
+  border-bottom: 1.5px solid var(--muted);
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.import-format[open] summary::before { transform: rotate(45deg); }
+
+.import-format-code {
+  margin: 10px 0 0;
+  padding: 0;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.import-rules {
+  margin: 12px 0 0;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--border);
+  list-style: none;
+}
+
+.import-rules li {
+  padding: 3px 0 3px 14px;
+  position: relative;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.import-rules li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.import-textarea {
+  width: 100%;
+  min-height: 160px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--text);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.import-textarea:hover { border-color: #bdbdbd; }
+.import-textarea:focus { border-color: #555; }
+.import-textarea::placeholder { color: #a3a3a3; }
+
+@media (max-width: 560px) {
+  .import-modal { padding: 18px; }
+  .import-format-code { font-size: 10px; }
+  .import-rules li { font-size: 10.5px; }
+  .import-textarea { font-size: 11px; min-height: 140px; }
+}
 /* === Modal icon SVG size fix (append only) === */
 .modal-icon svg {
   width: 22px;
