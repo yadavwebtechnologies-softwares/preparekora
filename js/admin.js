@@ -220,7 +220,38 @@
   }
 
   const signOutBtn = $id("signOutBtn");
-  if (signOutBtn) signOutBtn.addEventListener("click", function () { clearTokens(); showLogin(); });
+  const logoutOverlay = $id("logoutOverlay");
+  const logoutCancel = $id("logoutCancel");
+  const logoutConfirm = $id("logoutConfirm");
+
+  function openLogoutModal() {
+    if (!logoutOverlay) { clearTokens(); showLogin(); return; }
+    logoutOverlay.classList.add("open");
+    logoutOverlay.setAttribute("aria-hidden", "false");
+    setTimeout(function () { if (logoutCancel) logoutCancel.focus(); }, 40);
+  }
+
+  function closeLogoutModal() {
+    if (!logoutOverlay) return;
+    logoutOverlay.classList.remove("open");
+    logoutOverlay.setAttribute("aria-hidden", "true");
+  }
+
+  if (signOutBtn) signOutBtn.addEventListener("click", openLogoutModal);
+
+  if (logoutCancel) logoutCancel.addEventListener("click", closeLogoutModal);
+
+  if (logoutConfirm) logoutConfirm.addEventListener("click", function () {
+    closeLogoutModal();
+    clearTokens();
+    showLogin();
+  });
+
+  if (logoutOverlay) {
+    logoutOverlay.addEventListener("click", function (e) {
+      if (e.target === logoutOverlay) closeLogoutModal();
+    });
+  }
 
   /* ---------- TABS ---------- */
 
@@ -1064,9 +1095,9 @@
     if (e.key === "Escape") {
       closeMenu();
       if (importOverlay && importOverlay.classList.contains("open")) closeImportModal();
+      if (logoutOverlay && logoutOverlay.classList.contains("open")) closeLogoutModal();
     }
   });
-
   /* ---------- LANGUAGE CHANGE ---------- */
 
   document.addEventListener("pk:langchange", function () {
