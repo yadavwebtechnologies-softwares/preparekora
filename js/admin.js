@@ -136,14 +136,18 @@
     unpublish: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/unpublish", { method: "POST" }); }
   };
 
+  /* ---------- Helpers ---------- */
+
   function t(key, vars) { return (window.PK && window.PK.t) ? window.PK.t(key, vars) : key; }
   function esc(v) { return String(v).replace(/[&<>"']/g, function (c) { const m = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }; return m[c]; }); }
   function $id(id) { return document.getElementById(id); }
+
   function showOverlay(el) {
     if (!el) return;
     el.classList.remove("is-hidden");
     el.setAttribute("aria-hidden", "false");
   }
+
   function hideOverlay(el) {
     if (!el) return;
     el.classList.add("is-hidden");
@@ -175,12 +179,36 @@
     return base + "mock-test.html?test=" + encodeURIComponent(id);
   }
 
-  /* ---------- STATE ---------- */
+  function formatDuration(sec) {
+    sec = Math.max(0, Math.round(Number(sec) || 0));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+  }
+
+  function formatDate(ts) {
+    if (!ts) return "—";
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return "—";
+    const day = String(d.getDate()).padStart(2, "0");
+    const mon = d.toLocaleString("en-IN", { month: "short" });
+    const yr = d.getFullYear();
+    const hr = String(d.getHours()).padStart(2, "0");
+    const mn = String(d.getMinutes()).padStart(2, "0");
+    return day + " " + mon + " " + yr + " " + hr + ":" + mn;
+  }
+
+  function csvEsc(v) {
+    const s = String(v == null ? "" : v);
+    if (s.indexOf(",") !== -1 || s.indexOf('"') !== -1 || s.indexOf("\n") !== -1) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
+  /* ---------- State ---------- */
+
   const state = { admin: null, tests: [], editing: null, currentTab: "tests" };
-  const TESTS_PAGE_SIZE = 5;
-  let testsCurrentPage = 1;
-  let testsSearchQuery = "";
-  let testsFilteredList = [];
   const screens = {
     loading: $id("adminLoading"),
     login: $id("loginScreen"),
@@ -205,7 +233,7 @@
     showScreen("login");
   }
 
-  /* ---------- LOGIN ---------- */
+  /* ---------- Login ---------- */
 
   const loginForm = $id("loginForm");
   if (loginForm) {
@@ -233,6 +261,8 @@
     });
   }
 
+  /* ---------- Sign out (with confirmation) ---------- */
+
   const signOutBtn = $id("signOutBtn");
   const logoutOverlay = $id("logoutOverlay");
   const logoutCancel = $id("logoutCancel");
@@ -252,22 +282,19 @@
   }
 
   if (signOutBtn) signOutBtn.addEventListener("click", openLogoutModal);
-
   if (logoutCancel) logoutCancel.addEventListener("click", closeLogoutModal);
-
   if (logoutConfirm) logoutConfirm.addEventListener("click", function () {
     closeLogoutModal();
     clearTokens();
     showLogin();
   });
-
   if (logoutOverlay) {
     logoutOverlay.addEventListener("click", function (e) {
       if (e.target === logoutOverlay) closeLogoutModal();
     });
   }
 
-  /* ---------- TABS ---------- */
+  /* ---------- Tabs ---------- */
 
   const tabTests = $id("tabTests"), tabSettings = $id("tabSettings");
   const panelTests = $id("panelTests"), panelSettings = $id("panelSettings");
@@ -284,7 +311,12 @@
   if (tabTests) tabTests.addEventListener("click", function () { setTab("tests"); });
   if (tabSettings) tabSettings.addEventListener("click", function () { setTab("settings"); });
 
-  /* ---------- DASHBOARD ---------- */
+  /* ---------- Dashboard + Tests ---------- */
+
+  const TESTS_PAGE_SIZE = 5;
+  let testsCurrentPage = 1;
+  let testsSearchQuery = "";
+  let testsFilteredList = [];
 
   async function enterDashboard() {
     if (!state.admin) return;
@@ -459,11 +491,36 @@
     return card;
   }
 
-  /* ---------- SETTINGS ---------- */
+  const testsSearchInput = $id("testsSearchInput");
+  if (testsSearchInput) {
+    testsSearchInput.addEventListener("input", function () {
+      testsSearchQuery = testsSearchInput.value;
+      testsCurrentPage = 1;
+      renderTestsPage();
+    });
+  }
+
+  const testsPrev = $id("testsPrev");
+  if (testsPrev) {
+    testsPrev.addEventListener("click", function () {
+      if (testsCurrentPage > 1) { testsCurrentPage--; renderTestsPage(); }
+    });
+  }
+  const testsNext = $id("testsNext");
+  if (testsNext) {
+    testsNext.addEventListener("click", function () {
+      const totalPages = Math.max(1, Math.ceil(testsFilteredList.length / TESTS_PAGE_SIZE));
+      if (testsCurrentPage < totalPages) { testsCurrentPage++; renderTestsPage(); }
+    });
+  }
+
+  /* ---------- Settings ---------- */
+
   async function loadSettings() {
     const input = $id("displayNameInput");
     if (!input) return;
-    showOverlay($id("settingsLoading"));
+    const loading = $id("settingsLoading");
+    showOverlay(loading);
     try {
       const me = await api.me();
       state.admin = me;
@@ -471,9 +528,9 @@
       if (nameEl) nameEl.textContent = me.displayName || "";
       input.value = me.displayName || "";
       const errEl = $id("displayNameError"); if (errEl) errEl.hidden = true;
-      hideOverlay($id("settingsLoading"));
+      hideOverlay(loading);
     } catch (err) {
-      hideOverlay($id("settingsLoading"));
+      hideOverlay(loading);
       if (err.status === 401) showLogin();
     }
   }
@@ -503,7 +560,7 @@
     });
   }
 
-  /* ---------- EDITOR ---------- */
+  /* ---------- Editor ---------- */
 
   const newTestBtn = $id("newTestBtn");
   if (newTestBtn) {
@@ -689,7 +746,7 @@
     });
   }
 
-  /* ---------- VALIDATION + SAVE ---------- */
+  /* ---------- Validation + Save ---------- */
 
   function collectEditor() {
     const title = $id("editorTitle").value.trim();
@@ -751,29 +808,6 @@
       errEl.scrollIntoView({ behavior: "smooth", block: "center" });
     } finally { saveDraftBtn.disabled = false; publishBtn.disabled = false; }
   }
-  const testsSearchInput = $id("testsSearchInput");
-  if (testsSearchInput) {
-    testsSearchInput.addEventListener("input", function () {
-      testsSearchQuery = testsSearchInput.value;
-      testsCurrentPage = 1;
-      renderTestsPage();
-    });
-  }
-
-  const testsPrev = $id("testsPrev");
-  if (testsPrev) {
-    testsPrev.addEventListener("click", function () {
-      if (testsCurrentPage > 1) { testsCurrentPage--; renderTestsPage(); }
-    });
-  }
-
-  const testsNext = $id("testsNext");
-  if (testsNext) {
-    testsNext.addEventListener("click", function () {
-      const totalPages = Math.max(1, Math.ceil(testsFilteredList.length / TESTS_PAGE_SIZE));
-      if (testsCurrentPage < totalPages) { testsCurrentPage++; renderTestsPage(); }
-    });
-  }
 
   const saveDraftBtn = $id("saveDraftBtn");
   if (saveDraftBtn) saveDraftBtn.addEventListener("click", function () { saveEditor("save"); });
@@ -787,7 +821,7 @@
     });
   }
 
-  /* ---------- LIVE TRACKER ---------- */
+  /* ---------- Live Tracker ---------- */
 
   const LIVE_POLL_MS = 30000;
   let livePollId = null;
@@ -818,6 +852,7 @@
       if (document.hidden) return;
       if (screens.editor && !screens.editor.hidden) return;
       if (screens.submissions && !screens.submissions.hidden) return;
+      if (screens.analysis && !screens.analysis.hidden) return;
       fetchLiveSessions();
     }, LIVE_POLL_MS);
     if (!liveTickerId) {
@@ -907,32 +942,14 @@
     }
   });
 
-  /* ---------- SUBMISSIONS MODULE ---------- */
+  /* ---------- Submissions Module ---------- */
+
   let currentSubmissionsTestId = null;
   const SUBMISSIONS_PAGE_SIZE = 10;
   let submittedAllRows = [];
   let submittedPage = 1;
   let pendingAllRows = [];
   let pendingPage = 1;
-
-  function formatDuration(sec) {
-    sec = Math.max(0, Math.round(Number(sec) || 0));
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
-  }
-
-  function formatDate(ts) {
-    if (!ts) return "—";
-    const d = new Date(ts);
-    if (isNaN(d.getTime())) return "—";
-    const day = String(d.getDate()).padStart(2, "0");
-    const mon = d.toLocaleString("en-IN", { month: "short" });
-    const yr = d.getFullYear();
-    const hr = String(d.getHours()).padStart(2, "0");
-    const mn = String(d.getMinutes()).padStart(2, "0");
-    return day + " " + mon + " " + yr + " " + hr + ":" + mn;
-  }
 
   function setSubmissionsTab(tab) {
     const tabSubmitted = $id("tabSubmitted");
@@ -982,6 +999,7 @@
       if (err.status === 401) return showLogin();
       if (empty) { empty.hidden = false; empty.textContent = err.message || "Failed to load"; }
     }
+  }
 
   function renderSubmittedPage() {
     const wrap = $id("submittedTableWrap");
@@ -1053,6 +1071,7 @@
       if (err.status === 401) return showLogin();
       if (empty) { empty.hidden = false; empty.textContent = err.message || "Failed to load"; }
     }
+  }
 
   function renderPendingPage() {
     const wrap = $id("pendingTableWrap");
@@ -1107,6 +1126,7 @@
       loadTests();
     });
   }
+
   const tabSubmittedEl = $id("tabSubmitted");
   const tabPendingEl = $id("tabPending");
   if (tabSubmittedEl) tabSubmittedEl.addEventListener("click", function () { setSubmissionsTab("submitted"); });
@@ -1140,197 +1160,7 @@
     });
   }
 
-  /* ---------- JSON IMPORT ---------- */
-
-  const importOverlay = $id("importOverlay");
-  const importInput = $id("importInput");
-  const importError = $id("importError");
-  const importConfirm = $id("importConfirm");
-  const importCancel = $id("importCancel");
-  const importJsonBtn = $id("importJsonBtn");
-
-  const BANNED_KEYS = [
-    "numericAnswer", "tolerance",
-    "explanation", "explanationLatex", "explanationImageBase64",
-    "qAs", "optionsAs"
-  ];
-
-  function setImportError(msg) {
-    if (!importError) return;
-    if (!msg) { importError.hidden = true; importError.textContent = ""; return; }
-    importError.textContent = msg;
-    importError.hidden = false;
-  }
-
-  function openImportModal() {
-    if (!importOverlay) return;
-    if (!state.editing) { toast("Open a test first", "error"); return; }
-    if (importInput) importInput.value = "";
-    setImportError(null);
-    importOverlay.classList.add("open");
-    importOverlay.setAttribute("aria-hidden", "false");
-    setTimeout(function () { if (importInput) importInput.focus(); }, 40);
-  }
-
-  function closeImportModal() {
-    if (!importOverlay) return;
-    importOverlay.classList.remove("open");
-    importOverlay.setAttribute("aria-hidden", "true");
-  }
-
-  function validateImportQuestion(raw, index) {
-    const where = "Question " + (index + 1) + ": ";
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-      return { error: where + "must be an object" };
-    }
-    BANNED_KEYS.forEach(function (k) {
-      if (Object.prototype.hasOwnProperty.call(raw, k)) delete raw[k];
-    });
-    const q = typeof raw.q === "string" ? raw.q.trim() : "";
-    if (!q) return { error: where + "text is required" };
-    if (!Array.isArray(raw.options) || raw.options.length !== 4) {
-      return { error: where + "exactly 4 options required" };
-    }
-    const options = raw.options.map(function (o) {
-      return (typeof o === "string") ? o.trim() : String(o == null ? "" : o).trim();
-    });
-    if (options.some(function (o) { return !o; })) {
-      return { error: where + "all 4 options must be non-empty" };
-    }
-    const answer = raw.answer;
-    if (typeof answer !== "number" || !Number.isInteger(answer) || answer < 0 || answer > 3) {
-      return { error: where + "answer must be 0, 1, 2, or 3" };
-    }
-    const cleaned = { q: q, options: options, answer: answer };
-    if (raw.type === "math" || raw.type === "reasoning") cleaned.type = raw.type;
-    if (typeof raw.latex === "string" && raw.latex.length) cleaned.latex = raw.latex;
-    if (typeof raw.imageBase64 === "string" && raw.imageBase64.indexOf("data:image/") === 0) {
-      cleaned.imageBase64 = raw.imageBase64;
-    }
-    return { question: cleaned };
-  }
-
-  function handleImport() {
-    if (!state.editing) return;
-    setImportError(null);
-    const rawText = importInput ? importInput.value.trim() : "";
-    if (!rawText) return setImportError("Paste JSON first.");
-
-    let parsed;
-    try { parsed = JSON.parse(rawText); }
-    catch (e) { return setImportError("Invalid JSON — check the syntax and try again."); }
-
-    let questions = null, title = null, minutes = null;
-
-    if (Array.isArray(parsed)) {
-      questions = parsed;
-    } else if (parsed && typeof parsed === "object" && Array.isArray(parsed.questions)) {
-      questions = parsed.questions;
-      if (typeof parsed.title === "string") title = parsed.title.trim();
-      if (parsed.minutes != null) {
-        const m = Number(parsed.minutes);
-        if (Number.isInteger(m) && m >= 1 && m <= 180) minutes = m;
-      }
-    } else {
-      return setImportError("Provide a question array or a test object with a questions array.");
-    }
-
-    if (!questions.length) return setImportError("No questions found in the JSON.");
-
-    const cleaned = [];
-    for (let i = 0; i < questions.length; i++) {
-      const res = validateImportQuestion(questions[i], i);
-      if (res.error) return setImportError(res.error);
-      cleaned.push(res.question);
-    }
-
-    const isFullTest = (title !== null) || (minutes !== null);
-
-    if (isFullTest) {
-      if (title !== null) $id("editorTitle").value = title;
-      if (minutes !== null) $id("editorMinutes").value = minutes;
-      state.editing.questions = cleaned;
-    } else {
-      const onlyOne = state.editing.questions.length === 1;
-      const blank = onlyOne && state.editing.questions[0];
-      const isBlank = blank && !blank.q && blank.options.every(function (o) { return !o; });
-      state.editing.questions = isBlank ? cleaned : state.editing.questions.concat(cleaned);
-    }
-
-    renderQuestionsList();
-    closeImportModal();
-    toast("Imported " + cleaned.length + " question(s).", "success");
-  }
-
-  if (importJsonBtn) importJsonBtn.addEventListener("click", openImportModal);
-  if (importCancel)  importCancel.addEventListener("click", closeImportModal);
-  if (importConfirm) importConfirm.addEventListener("click", handleImport);
-
-  if (importOverlay) {
-    importOverlay.addEventListener("click", function (e) {
-      if (e.target === importOverlay) closeImportModal();
-    });
-  }
-
-  /* ---------- MOBILE MENU ---------- */
-
-  const menuToggle = $id("menuToggle"), menuPanel = $id("menuPanel"), menuIcon = $id("menuIcon");
-  const hamburgerSVG = '<path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path>';
-  const closeSVG = '<path d="m6 6 12 12"></path><path d="M18 6 6 18"></path>';
-
-  function closeMenu() {
-    if (!menuPanel || !menuToggle || !menuIcon) return;
-    menuPanel.classList.remove("open");
-    menuToggle.setAttribute("aria-expanded", "false");
-    menuIcon.innerHTML = hamburgerSVG;
-  }
-
-  if (menuToggle && menuPanel && menuIcon) {
-    menuToggle.addEventListener("click", function (e) {
-      e.stopPropagation();
-      if (menuPanel.classList.contains("open")) closeMenu();
-      else { menuPanel.classList.add("open"); menuToggle.setAttribute("aria-expanded", "true"); menuIcon.innerHTML = closeSVG; }
-    });
-    document.addEventListener("click", function (e) {
-      if (menuPanel.classList.contains("open") && !menuPanel.contains(e.target) && !menuToggle.contains(e.target)) closeMenu();
-    });
-    menuPanel.querySelectorAll("a").forEach(function (link) { link.addEventListener("click", closeMenu); });
-  }
-
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") {
-      closeMenu();
-      if (importOverlay && importOverlay.classList.contains("open")) closeImportModal();
-      if (logoutOverlay && logoutOverlay.classList.contains("open")) closeLogoutModal();
-    }
-  });
-  /* ---------- LANGUAGE CHANGE ---------- */
-  document.addEventListener("pk:langchange", function () {
-    if (screens.dashboard && !screens.dashboard.hidden && state.tests.length) {
-      renderTestsPage();
-    }
-    if (state.editing && screens.editor && !screens.editor.hidden) renderEditor();
-  });
-
-  /* ---------- INIT ---------- */
-
-  const yearEl = $id("currentYear");
-  if (yearEl) yearEl.textContent = new Date().getFullYear();
-
-  (async function init() {
-    showScreen("loading");
-    if (getIdToken() || getRefreshToken()) {
-      try {
-        const me = await api.me();
-        state.admin = me;
-        await enterDashboard();
-        return;
-      } catch (err) { clearTokens(); }
-    }
-    showLogin();
-  })();
-
-  /* ---------- ANALYSIS MODULE ---------- */
+  /* ---------- Analysis Module ---------- */
 
   const ANALYSIS_PAGE_SIZE = 10;
   let analysisTestId = null;
@@ -1561,8 +1391,6 @@
     return card;
   }
 
-  /* ---------- Who chose what modal ---------- */
-
   const analysisUsersOverlay = $id("analysisUsersOverlay");
   const analysisUsersBody = $id("analysisUsersBody");
   const analysisUsersSearch = $id("analysisUsersSearch");
@@ -1644,8 +1472,6 @@
     });
   }
 
-  /* ---------- Pagination + Back + Export ---------- */
-
   const analysisPrev = $id("analysisPrev");
   if (analysisPrev) analysisPrev.addEventListener("click", function () {
     if (analysisQuestionsPage > 1) { analysisQuestionsPage--; renderAnalysisQuestions(); }
@@ -1695,12 +1521,197 @@
     toast("CSV downloaded");
   });
 
-  function csvEsc(v) {
-    const s = String(v == null ? "" : v);
-    if (s.indexOf(",") !== -1 || s.indexOf('"') !== -1 || s.indexOf("\n") !== -1) {
-      return '"' + s.replace(/"/g, '""') + '"';
-    }
-    return s;
+  /* ---------- JSON Import ---------- */
+
+  const importOverlay = $id("importOverlay");
+  const importInput = $id("importInput");
+  const importError = $id("importError");
+  const importConfirm = $id("importConfirm");
+  const importCancel = $id("importCancel");
+  const importJsonBtn = $id("importJsonBtn");
+
+  const BANNED_KEYS = [
+    "numericAnswer", "tolerance",
+    "explanation", "explanationLatex", "explanationImageBase64",
+    "qAs", "optionsAs"
+  ];
+
+  function setImportError(msg) {
+    if (!importError) return;
+    if (!msg) { importError.hidden = true; importError.textContent = ""; return; }
+    importError.textContent = msg;
+    importError.hidden = false;
   }
+
+  function openImportModal() {
+    if (!importOverlay) return;
+    if (!state.editing) { toast("Open a test first", "error"); return; }
+    if (importInput) importInput.value = "";
+    setImportError(null);
+    importOverlay.classList.add("open");
+    importOverlay.setAttribute("aria-hidden", "false");
+    setTimeout(function () { if (importInput) importInput.focus(); }, 40);
+  }
+
+  function closeImportModal() {
+    if (!importOverlay) return;
+    importOverlay.classList.remove("open");
+    importOverlay.setAttribute("aria-hidden", "true");
+  }
+
+  function validateImportQuestion(raw, index) {
+    const where = "Question " + (index + 1) + ": ";
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      return { error: where + "must be an object" };
+    }
+    BANNED_KEYS.forEach(function (k) {
+      if (Object.prototype.hasOwnProperty.call(raw, k)) delete raw[k];
+    });
+    const q = typeof raw.q === "string" ? raw.q.trim() : "";
+    if (!q) return { error: where + "text is required" };
+    if (!Array.isArray(raw.options) || raw.options.length !== 4) {
+      return { error: where + "exactly 4 options required" };
+    }
+    const options = raw.options.map(function (o) {
+      return (typeof o === "string") ? o.trim() : String(o == null ? "" : o).trim();
+    });
+    if (options.some(function (o) { return !o; })) {
+      return { error: where + "all 4 options must be non-empty" };
+    }
+    const answer = raw.answer;
+    if (typeof answer !== "number" || !Number.isInteger(answer) || answer < 0 || answer > 3) {
+      return { error: where + "answer must be 0, 1, 2, or 3" };
+    }
+    const cleaned = { q: q, options: options, answer: answer };
+    if (raw.type === "math" || raw.type === "reasoning") cleaned.type = raw.type;
+    if (typeof raw.latex === "string" && raw.latex.length) cleaned.latex = raw.latex;
+    if (typeof raw.imageBase64 === "string" && raw.imageBase64.indexOf("data:image/") === 0) {
+      cleaned.imageBase64 = raw.imageBase64;
+    }
+    return { question: cleaned };
+  }
+
+  function handleImport() {
+    if (!state.editing) return;
+    setImportError(null);
+    const rawText = importInput ? importInput.value.trim() : "";
+    if (!rawText) return setImportError("Paste JSON first.");
+
+    let parsed;
+    try { parsed = JSON.parse(rawText); }
+    catch (e) { return setImportError("Invalid JSON — check the syntax and try again."); }
+
+    let questions = null, title = null, minutes = null;
+
+    if (Array.isArray(parsed)) {
+      questions = parsed;
+    } else if (parsed && typeof parsed === "object" && Array.isArray(parsed.questions)) {
+      questions = parsed.questions;
+      if (typeof parsed.title === "string") title = parsed.title.trim();
+      if (parsed.minutes != null) {
+        const m = Number(parsed.minutes);
+        if (Number.isInteger(m) && m >= 1 && m <= 180) minutes = m;
+      }
+    } else {
+      return setImportError("Provide a question array or a test object with a questions array.");
+    }
+
+    if (!questions.length) return setImportError("No questions found in the JSON.");
+
+    const cleaned = [];
+    for (let i = 0; i < questions.length; i++) {
+      const res = validateImportQuestion(questions[i], i);
+      if (res.error) return setImportError(res.error);
+      cleaned.push(res.question);
+    }
+
+    const isFullTest = (title !== null) || (minutes !== null);
+
+    if (isFullTest) {
+      if (title !== null) $id("editorTitle").value = title;
+      if (minutes !== null) $id("editorMinutes").value = minutes;
+      state.editing.questions = cleaned;
+    } else {
+      const onlyOne = state.editing.questions.length === 1;
+      const blank = onlyOne && state.editing.questions[0];
+      const isBlank = blank && !blank.q && blank.options.every(function (o) { return !o; });
+      state.editing.questions = isBlank ? cleaned : state.editing.questions.concat(cleaned);
+    }
+
+    renderQuestionsList();
+    closeImportModal();
+    toast("Imported " + cleaned.length + " question(s).", "success");
+  }
+
+  if (importJsonBtn) importJsonBtn.addEventListener("click", openImportModal);
+  if (importCancel)  importCancel.addEventListener("click", closeImportModal);
+  if (importConfirm) importConfirm.addEventListener("click", handleImport);
+
+  if (importOverlay) {
+    importOverlay.addEventListener("click", function (e) {
+      if (e.target === importOverlay) closeImportModal();
+    });
+  }
+
+  /* ---------- Mobile Menu ---------- */
+
+  const menuToggle = $id("menuToggle"), menuPanel = $id("menuPanel"), menuIcon = $id("menuIcon");
+  const hamburgerSVG = '<path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path>';
+  const closeSVG = '<path d="m6 6 12 12"></path><path d="M18 6 6 18"></path>';
+
+  function closeMenu() {
+    if (!menuPanel || !menuToggle || !menuIcon) return;
+    menuPanel.classList.remove("open");
+    menuToggle.setAttribute("aria-expanded", "false");
+    menuIcon.innerHTML = hamburgerSVG;
+  }
+
+  if (menuToggle && menuPanel && menuIcon) {
+    menuToggle.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (menuPanel.classList.contains("open")) closeMenu();
+      else { menuPanel.classList.add("open"); menuToggle.setAttribute("aria-expanded", "true"); menuIcon.innerHTML = closeSVG; }
+    });
+    document.addEventListener("click", function (e) {
+      if (menuPanel.classList.contains("open") && !menuPanel.contains(e.target) && !menuToggle.contains(e.target)) closeMenu();
+    });
+    menuPanel.querySelectorAll("a").forEach(function (link) { link.addEventListener("click", closeMenu); });
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      closeMenu();
+      if (importOverlay && importOverlay.classList.contains("open")) closeImportModal();
+      if (logoutOverlay && logoutOverlay.classList.contains("open")) closeLogoutModal();
+      if (analysisUsersOverlay && analysisUsersOverlay.classList.contains("open")) closeAnalysisUsers();
+    }
+  });
+
+  /* ---------- Language Change ---------- */
+
+  document.addEventListener("pk:langchange", function () {
+    if (screens.dashboard && !screens.dashboard.hidden && state.tests.length) {
+      renderTestsPage();
+    }
+    if (state.editing && screens.editor && !screens.editor.hidden) renderEditor();
+  });
+
+  /* ---------- Init ---------- */
+
+  const yearEl = $id("currentYear");
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  (async function init() {
+    showScreen("loading");
+    if (getIdToken() || getRefreshToken()) {
+      try {
+        const me = await api.me();
+        state.admin = me;
+        await enterDashboard();
+        return;
+      } catch (err) { clearTokens(); }
+    }
+    showLogin();
+  })();
 
 })();
