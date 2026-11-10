@@ -176,13 +176,14 @@
     login: $id("loginScreen"),
     dashboard: $id("dashboardScreen"),
     editor: $id("editorScreen"),
-    submissions: $id("submissionsScreen")
+    submissions: $id("submissionsScreen"),
+    analysis: $id("analysisScreen")
   };
 
   function showScreen(name) {
     Object.keys(screens).forEach(function (k) { if (screens[k]) screens[k].hidden = (k !== name); });
     window.scrollTo({ top: 0, behavior: "auto" });
-    if (name === "editor" || name === "submissions") stopLivePolling();
+    if (name === "editor" || name === "submissions" || name === "analysis") stopLivePolling();
     else if (name === "dashboard" && state.admin) startLivePolling();
   }
 
@@ -405,6 +406,11 @@
     subsBtn.type = "button"; subsBtn.className = "btn btn-sm"; subsBtn.textContent = "Submissions";
     subsBtn.addEventListener("click", function () { openSubmissions(test.id); });
     actions.appendChild(subsBtn);
+
+    const analysisBtn = document.createElement("button");
+    analysisBtn.type = "button"; analysisBtn.className = "btn btn-sm"; analysisBtn.textContent = "Analysis";
+    analysisBtn.addEventListener("click", function () { openAnalysis(test.id); });
+    actions.appendChild(analysisBtn);
 
     const pubBtn = document.createElement("button");
     pubBtn.type = "button";
@@ -1311,5 +1317,379 @@
     }
     showLogin();
   })();
+
+  /* ---------- ANALYSIS MODULE ---------- */
+
+  const ANALYSIS_PAGE_SIZE = 10;
+  let analysisTestId = null;
+  let analysisData = null;
+  let analysisQuestionsPage = 1;
+
+  function formatClock(sec) {
+    sec = Math.max(0, Math.round(Number(sec) || 0));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+  }
+
+  function difficultyLabel(d) {
+    if (d === "easy") return "Easy";
+    if (d === "medium") return "Medium";
+    return "Hard";
+  }
+
+  async function openAnalysis(id) {
+    analysisTestId = id;
+    analysisData = null;
+    analysisQuestionsPage = 1;
+    const heading = $id("analysisHeading");
+    const test = state.tests.find(function (t) { return t.id === id; });
+    if (heading) heading.textContent = test ? ("Analysis — " + test.title) : "Analysis";
+    showScreen("analysis");
+    const overview = $id("analysisOverview");
+    if (overview) overview.style.opacity = "0.5";
+    try {
+      const res = await request("/admin/tests/" + encodeURIComponent(id) + "/analysis");
+      analysisData = res || null;
+      renderAnalysis();
+    } catch (err) {
+      if (err.status === 401) return showLogin();
+      toast(err.message || "Failed to load analysis", "error");
+    } finally {
+      if (overview) overview.style.opacity = "1";
+    }
+  }
+
+  function renderAnalysis() {
+    if (!analysisData) return;
+    renderAnalysisOverview();
+    renderAnalysisBuckets();
+    renderAnalysisTopPerformers();
+    renderAnalysisToughest();
+    renderAnalysisQuestions();
+  }
+
+  function renderAnalysisOverview() {
+    const d = analysisData;
+    const s1 = $id("anStatSubs"); if (s1) s1.textContent = String(d.totalSubmissions || 0);
+    const s2 = $id("anStatAvg"); if (s2) s2.textContent = (d.avgPercent || 0) + "%";
+    const s3 = $id("anStatPass"); if (s3) s3.textContent = (d.passRate || 0) + "%";
+    const s4 = $id("anStatTime"); if (s4) s4.textContent = formatClock(d.avgTime || 0);
+  }
+
+  function renderAnalysisBuckets() {
+    const wrap = $id("analysisBuckets");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    const labels = ["0–20%", "21–40%", "41–60%", "61–80%", "81–100%"];
+    const buckets = Array.isArray(analysisData.scoreBuckets) ? analysisData.scoreBuckets : [0,0,0,0,0];
+    const maxCount = Math.max.apply(null, buckets.concat([1]));
+
+    buckets.forEach(function (count, i) {
+      const row = document.createElement("div");
+      row.className = "analysis-bucket";
+      row.innerHTML =
+        '<span class="analysis-bucket-label">' + labels[i] + '</span>' +
+        '<div class="analysis-bucket-bar"><span style="width:' + Math.round((count / maxCount) * 100) + '%"></span></div>' +
+        '<span class="analysis-bucket-count">' + count + ' student' + (count === 1 ? "" : "s") + '</span>';
+      wrap.appendChild(row);
+    });
+  }
+
+  function renderAnalysisTopPerformers() {
+    const wrap = $id("analysisTopPerformers");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    const list = Array.isArray(analysisData.topPerformers) ? analysisData.topPerformers : [];
+    if (list.length === 0) { wrap.innerHTML = '<div class="empty-state">No submissions yet.</div>'; return; }
+
+    list.forEach(function (p, i) {
+      const row = document.createElement("div");
+      row.className = "analysis-performer";
+      row.innerHTML =
+        '<span class="analysis-performer-rank">#' + (i + 1) + '</span>' +
+        '<span class="analysis-performer-name">' + esc(p.name) + '</span>' +
+        '<span class="analysis-performer-score">' + p.percent + '%</span>' +
+        '<span class="analysis-performer-time">' + esc(formatClock(p.time)) + '</span>';
+      wrap.appendChild(row);
+    });
+  }
+
+  function renderAnalysisToughest() {
+    const wrap = $id("analysisToughest");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    const list = Array.isArray(analysisData.toughest) ? analysisData.toughest : [];
+    if (list.length === 0) { wrap.innerHTML = '<div class="empty-state">No data yet.</div>'; return; }
+
+    list.forEach(function (t, i) {
+      const row = document.createElement("div");
+      row.className = "analysis-tough";
+      row.innerHTML =
+        '<div class="analysis-tough-head">' +
+          '<span class="analysis-tough-rank">#' + (i + 1) + ' · Q' + (t.index + 1) + '</span>' +
+          '<span class="analysis-badge ' + t.difficulty + '">' + difficultyLabel(t.difficulty) + '</span>' +
+          '<span class="analysis-tough-pct">' + t.wrongPercent + '% wrong</span>' +
+        '</div>' +
+        '<div class="analysis-tough-q">' + esc(t.q) + '</div>' +
+        '<div class="analysis-tough-bar"><span style="width:' + t.wrongPercent + '%"></span></div>';
+      row.addEventListener("click", function () {
+        analysisQuestionsPage = Math.floor(t.index / ANALYSIS_PAGE_SIZE) + 1;
+        renderAnalysisQuestions();
+        const target = document.querySelector('[data-an-qindex="' + t.index + '"]');
+        if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      wrap.appendChild(row);
+    });
+  }
+
+  function renderAnalysisQuestions() {
+    const wrap = $id("analysisQuestions");
+    const pagination = $id("analysisPagination");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    const all = Array.isArray(analysisData.questions) ? analysisData.questions : [];
+    if (all.length === 0) {
+      wrap.innerHTML = '<div class="empty-state">No questions.</div>';
+      if (pagination) pagination.hidden = true;
+      return;
+    }
+
+    const totalPages = Math.max(1, Math.ceil(all.length / ANALYSIS_PAGE_SIZE));
+    if (analysisQuestionsPage > totalPages) analysisQuestionsPage = totalPages;
+    if (analysisQuestionsPage < 1) analysisQuestionsPage = 1;
+    const start = (analysisQuestionsPage - 1) * ANALYSIS_PAGE_SIZE;
+    const pageItems = all.slice(start, start + ANALYSIS_PAGE_SIZE);
+
+    pageItems.forEach(function (q) { wrap.appendChild(renderAnalysisQuestionCard(q)); });
+
+    if (pagination) {
+      if (totalPages <= 1) { pagination.hidden = true; }
+      else {
+        pagination.hidden = false;
+        const info = $id("analysisPageInfo");
+        if (info) info.textContent = "Page " + analysisQuestionsPage + " of " + totalPages;
+        const prev = $id("analysisPrev");
+        const next = $id("analysisNext");
+        if (prev) prev.disabled = analysisQuestionsPage <= 1;
+        if (next) next.disabled = analysisQuestionsPage >= totalPages;
+      }
+    }
+  }
+
+  function renderAnalysisQuestionCard(q) {
+    const card = document.createElement("div");
+    card.className = "analysis-q-card";
+    card.setAttribute("data-an-qindex", q.index);
+
+    const letters = ["A", "B", "C", "D"];
+    const statsLine = q.correctPercent + "% correct · " + q.wrongPercent + "% wrong · " + q.skippedPercent + "% skipped";
+
+    const head = document.createElement("div");
+    head.className = "analysis-q-head";
+    head.innerHTML =
+      '<span class="analysis-q-num">Q' + (q.index + 1) + '</span>' +
+      '<span class="analysis-badge ' + q.difficulty + '">' + difficultyLabel(q.difficulty) + '</span>' +
+      '<span class="analysis-q-stats">' + statsLine + '</span>';
+    card.appendChild(head);
+
+    const qText = document.createElement("div");
+    qText.className = "analysis-q-text";
+    qText.textContent = q.q;
+    card.appendChild(qText);
+
+    const opts = document.createElement("div");
+    opts.className = "analysis-options";
+    const totalAns = (q.correct + q.wrong + q.skipped) || 1;
+
+    q.options.forEach(function (optText, oi) {
+      const count = q.counts[oi] || 0;
+      const pct = Math.round((count / totalAns) * 100);
+      const row = document.createElement("div");
+      row.className = "analysis-option";
+      if (oi === q.correctIndex) row.classList.add("is-correct");
+      if (oi === q.trapIndex && q.trapIndex !== q.correctIndex) row.classList.add("is-trap");
+
+      let tag = "";
+      if (oi === q.correctIndex) tag = '<span class="analysis-opt-tag correct">CORRECT</span>';
+      else if (oi === q.trapIndex) tag = '<span class="analysis-opt-tag trap">TRAP</span>';
+
+      row.innerHTML =
+        '<span class="analysis-opt-key">' + letters[oi] + '</span>' +
+        '<span class="analysis-opt-text">' + esc(optText) + '</span>' +
+        tag +
+        '<span class="analysis-opt-count">' + count + ' (' + pct + '%)</span>' +
+        '<div class="analysis-opt-bar"><span style="width:' + pct + '%"></span></div>';
+      opts.appendChild(row);
+    });
+
+    if (q.skipped > 0) {
+      const skippedRow = document.createElement("div");
+      skippedRow.className = "analysis-option is-skipped";
+      const pct = Math.round((q.skipped / totalAns) * 100);
+      skippedRow.innerHTML =
+        '<span class="analysis-opt-key">—</span>' +
+        '<span class="analysis-opt-text">Not answered</span>' +
+        '<span class="analysis-opt-count">' + q.skipped + ' (' + pct + '%)</span>' +
+        '<div class="analysis-opt-bar"><span style="width:' + pct + '%"></span></div>';
+      opts.appendChild(skippedRow);
+    }
+
+    card.appendChild(opts);
+
+    const actions = document.createElement("div");
+    actions.className = "analysis-q-actions";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn btn-sm";
+    btn.textContent = "Who chose what";
+    btn.addEventListener("click", function () { openAnalysisUsers(q.index); });
+    actions.appendChild(btn);
+    card.appendChild(actions);
+
+    return card;
+  }
+
+  /* ---------- Who chose what modal ---------- */
+
+  const analysisUsersOverlay = $id("analysisUsersOverlay");
+  const analysisUsersBody = $id("analysisUsersBody");
+  const analysisUsersSearch = $id("analysisUsersSearch");
+  const analysisUsersClose = $id("analysisUsersClose");
+  const analysisUsersSub = $id("analysisUsersSub");
+  let analysisUsersCache = null;
+
+  async function openAnalysisUsers(qIndex) {
+    if (!analysisUsersOverlay) return;
+    if (analysisUsersSub) analysisUsersSub.textContent = "Loading…";
+    if (analysisUsersBody) analysisUsersBody.innerHTML = "";
+    if (analysisUsersSearch) analysisUsersSearch.value = "";
+    analysisUsersOverlay.classList.add("open");
+    analysisUsersOverlay.setAttribute("aria-hidden", "false");
+    try {
+      const res = await request("/admin/tests/" + encodeURIComponent(analysisTestId) + "/analysis/question/" + qIndex);
+      analysisUsersCache = res || null;
+      if (analysisUsersSub) analysisUsersSub.textContent = res ? ("Q" + (qIndex + 1) + " — " + res.question) : "";
+      renderAnalysisUsers("");
+    } catch (err) {
+      if (err.status === 401) { closeAnalysisUsers(); return showLogin(); }
+      if (analysisUsersSub) analysisUsersSub.textContent = err.message || "Failed to load";
+    }
+  }
+
+  function closeAnalysisUsers() {
+    if (!analysisUsersOverlay) return;
+    analysisUsersOverlay.classList.remove("open");
+    analysisUsersOverlay.setAttribute("aria-hidden", "true");
+    analysisUsersCache = null;
+  }
+
+  function renderAnalysisUsers(query) {
+    if (!analysisUsersBody || !analysisUsersCache) return;
+    const q = (query || "").trim().toLowerCase();
+    analysisUsersBody.innerHTML = "";
+    const letters = ["A", "B", "C", "D"];
+    const correct = analysisUsersCache.correctIndex;
+
+    function renderGroup(label, users, isCorrect) {
+      const filtered = q ? users.filter(function (u) { return u.toLowerCase().indexOf(q) !== -1; }) : users;
+      if (q && filtered.length === 0) return;
+      const group = document.createElement("div");
+      group.className = "analysis-users-group";
+      if (isCorrect) group.classList.add("is-correct");
+      const head = document.createElement("div");
+      head.className = "analysis-users-group-head";
+      head.innerHTML = '<strong>' + esc(label) + '</strong> · ' + filtered.length + ' user' + (filtered.length === 1 ? "" : "s");
+      group.appendChild(head);
+      if (filtered.length > 0) {
+        const list = document.createElement("div");
+        list.className = "analysis-users-list";
+        filtered.forEach(function (u) {
+          const chip = document.createElement("span");
+          chip.className = "analysis-user-chip";
+          chip.textContent = u;
+          list.appendChild(chip);
+        });
+        group.appendChild(list);
+      }
+      analysisUsersBody.appendChild(group);
+    }
+
+    analysisUsersCache.grouped.forEach(function (g) {
+      renderGroup(letters[g.index] + ". " + analysisUsersCache.options[g.index], g.users, g.index === correct);
+    });
+    renderGroup("Not answered", analysisUsersCache.notAnswered, false);
+  }
+
+  if (analysisUsersSearch) {
+    analysisUsersSearch.addEventListener("input", function () {
+      renderAnalysisUsers(analysisUsersSearch.value);
+    });
+  }
+  if (analysisUsersClose) analysisUsersClose.addEventListener("click", closeAnalysisUsers);
+  if (analysisUsersOverlay) {
+    analysisUsersOverlay.addEventListener("click", function (e) {
+      if (e.target === analysisUsersOverlay) closeAnalysisUsers();
+    });
+  }
+
+  /* ---------- Pagination + Back + Export ---------- */
+
+  const analysisPrev = $id("analysisPrev");
+  if (analysisPrev) analysisPrev.addEventListener("click", function () {
+    if (analysisQuestionsPage > 1) { analysisQuestionsPage--; renderAnalysisQuestions(); }
+  });
+  const analysisNext = $id("analysisNext");
+  if (analysisNext) analysisNext.addEventListener("click", function () {
+    const all = analysisData && Array.isArray(analysisData.questions) ? analysisData.questions : [];
+    const totalPages = Math.max(1, Math.ceil(all.length / ANALYSIS_PAGE_SIZE));
+    if (analysisQuestionsPage < totalPages) { analysisQuestionsPage++; renderAnalysisQuestions(); }
+  });
+
+  const analysisBackBtn = $id("analysisBackBtn");
+  if (analysisBackBtn) analysisBackBtn.addEventListener("click", function () {
+    analysisTestId = null;
+    analysisData = null;
+    showScreen("dashboard");
+    loadTests();
+  });
+
+  const analysisExportBtn = $id("analysisExportBtn");
+  if (analysisExportBtn) analysisExportBtn.addEventListener("click", function () {
+    if (!analysisData || !Array.isArray(analysisData.questions)) { toast("Nothing to export", "error"); return; }
+    const rows = ["Q#,Question,A,B,C,D,Correct,Correct %,Wrong,Skipped,Difficulty"];
+    analysisData.questions.forEach(function (q) {
+      const o = q.options || ["", "", "", ""];
+      const row = [
+        "Q" + (q.index + 1),
+        csvEsc(q.q),
+        csvEsc(o[0]), csvEsc(o[1]), csvEsc(o[2]), csvEsc(o[3]),
+        csvEsc(o[q.correctIndex]),
+        q.correctPercent + "%",
+        q.wrongPercent + "%",
+        q.skippedPercent + "%",
+        q.difficulty
+      ].join(",");
+      rows.push(row);
+    });
+    const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "analysis-" + (analysisTestId || "test") + "-" + new Date().toISOString().slice(0, 10) + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+    toast("CSV downloaded");
+  });
+
+  function csvEsc(v) {
+    const s = String(v == null ? "" : v);
+    if (s.indexOf(",") !== -1 || s.indexOf('"') !== -1 || s.indexOf("\n") !== -1) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
 
 })();
