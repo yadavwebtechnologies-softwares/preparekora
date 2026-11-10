@@ -1959,8 +1959,28 @@ input:focus-visible {
 
 @media (max-width: 560px) {
   .live-pill-row { justify-content: stretch; }
-  .live-pill { width: 100%; font-size: 11px; padding: 7px 10px; gap: 8px; flex-wrap: wrap; }
-  .live-updated { width: 100%; }
+  .live-pill {
+    width: 100%;
+    font-size: 11px;
+    padding: 7px 10px;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+  .live-updated {
+    width: auto;
+    white-space: nowrap;
+    margin-left: auto;
+  }
+  .live-refresh {
+    flex-shrink: 0;
+    padding: 4px 8px;
+    font-size: 11px;
+    gap: 4px;
+  }
+  .live-refresh svg {
+    width: 13px;
+    height: 13px;
+  }
 }
 
 /* === Submissions module (append at end) === */
