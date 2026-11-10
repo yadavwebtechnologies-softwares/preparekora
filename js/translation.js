@@ -170,7 +170,33 @@
       terms212Title: "2.12 Contact for Complaints",
       terms212Body: '<p>For any privacy-related complaint or data deletion request:</p><p><strong>Email:</strong> <a href="mailto:contact@preparekora.in">contact@preparekora.in</a><br><strong>Prepared by:</strong> PrepareKora.in · Yadav Web Technologies</p>',
 
-      termsFooterConfirm: "By using PrepareKora.in, you confirm that you have read and understood these Terms of Service and Privacy Policy."
+      termsFooterConfirm: "By using PrepareKora.in, you confirm that you have read and understood these Terms of Service and Privacy Policy.",
+
+      importJson: "Import JSON",
+      importTitle: "Import questions from JSON",
+      importHelp: "Paste a question array or a full test object. Every entry is validated before import.",
+      importFormatToggle: "JSON format",
+      importPasteLabel: "JSON",
+      importConfirmBtn: "Import",
+      importEmpty: "Paste JSON first.",
+      importInvalid: "Invalid JSON — check the syntax and try again.",
+      importInvalidShape: "Provide a question array or a test object with a questions array.",
+      importNoQuestions: "No questions found in the JSON.",
+      importSuccess: "Imported {n} question(s).",
+      importRuleQ: "q — required, English text",
+      importRuleOptions: "options — exactly 4 strings",
+      importRuleAnswer: "answer — 0 to 3 (A=0, B=1, C=2, D=3)",
+      importRuleType: 'type — optional: "math" or "reasoning"',
+      importRuleLatex: "latex — optional, math only",
+      importRuleImage: "imageBase64 — optional, data:image/... (max ~500KB)",
+
+      reviewAnswers: "Review Answers",
+      reviewHide: "Hide Review",
+      reviewCorrectAnswer: "Correct answer",
+      reviewYourAnswer: "Your answer",
+      reviewExplanation: "Explanation",
+      reviewExplanationLoading: "Generating explanation…",
+      reviewExplanationFailed: "Explanation unavailable."
     },
 
     as: {
@@ -345,7 +371,33 @@
       terms212Title: "২.১২ অভিযোগৰ বাবে যোগাযোগ",
       terms212Body: '<p>কোনো গোপনীয়তা-সম্পৰ্কীয় অভিযোগ বা তথ্য মচাৰ অনুৰোধৰ বাবে:</p><p><strong>ইমেইল:</strong> <a href="mailto:contact@preparekora.in">contact@preparekora.in</a><br><strong>প্ৰস্তুতকৰ্তা:</strong> PrepareKora.in · Yadav Web Technologies</p>',
 
-      termsFooterConfirm: "PrepareKora.in ব্যৱহাৰ কৰি, আপুনি নিশ্চিত কৰে যে আপুনি এই সেৱাৰ চৰ্তাৱলী আৰু গোপনীয়তা নীতি পঢ়িছে আৰু বুজিছে।"
+      termsFooterConfirm: "PrepareKora.in ব্যৱহাৰ কৰি, আপুনি নিশ্চিত কৰে যে আপুনি এই সেৱাৰ চৰ্তাৱলী আৰু গোপনীয়তা নীতি পঢ়িছে আৰু বুজিছে।",
+
+      importJson: "JSON আমদানি কৰক",
+      importTitle: "JSON ৰ পৰা প্ৰশ্ন আমদানি কৰক",
+      importHelp: "এটা প্ৰশ্ন তালিকা বা সম্পূৰ্ণ টেষ্ট অবজেক্ট পেষ্ট কৰক। আমদানিৰ আগতে প্ৰতিটো যাচাই কৰা হয়।",
+      importFormatToggle: "JSON ৰূপ",
+      importPasteLabel: "JSON",
+      importConfirmBtn: "আমদানি কৰক",
+      importEmpty: "প্ৰথমে JSON পেষ্ট কৰক।",
+      importInvalid: "অবৈধ JSON — বানান পৰীক্ষা কৰি পুনৰ চেষ্টা কৰক।",
+      importInvalidShape: "এটা প্ৰশ্ন তালিকা বা questions থকা টেষ্ট অবজেক্ট দিয়ক।",
+      importNoQuestions: "JSON-ত কোনো প্ৰশ্ন পোৱা নগ'ল।",
+      importSuccess: "{n} টা প্ৰশ্ন আমদানি কৰা হ'ল।",
+      importRuleQ: "q — প্ৰয়োজনীয়, ইংৰাজী লিখনী",
+      importRuleOptions: "options — ঠিক 4 টা ষ্ট্ৰিং",
+      importRuleAnswer: "answer — 0 ৰ পৰা 3 (A=0, B=1, C=2, D=3)",
+      importRuleType: 'type — ঐচ্ছিক: "math" বা "reasoning"',
+      importRuleLatex: "latex — ঐচ্ছিক, কেৱল math ৰ বাবে",
+      importRuleImage: "imageBase64 — ঐচ্ছিক, data:image/... (সৰ্বোচ্চ ~500KB)",
+
+      reviewAnswers: "উত্তৰসমূহ পৰ্যালোচনা কৰক",
+      reviewHide: "পৰ্যালোচনা লুকুওৱা",
+      reviewCorrectAnswer: "শুদ্ধ উত্তৰ",
+      reviewYourAnswer: "আপোনাৰ উত্তৰ",
+      reviewExplanation: "ব্যাখ্যা",
+      reviewExplanationLoading: "ব্যাখ্যা প্ৰস্তুত হৈ আছে…",
+      reviewExplanationFailed: "ব্যাখ্যা উপলব্ধ নহয়।"
     }
   };
 
