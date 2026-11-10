@@ -888,8 +888,12 @@
   });
 
   /* ---------- SUBMISSIONS MODULE ---------- */
-
   let currentSubmissionsTestId = null;
+  const SUBMISSIONS_PAGE_SIZE = 10;
+  let submittedAllRows = [];
+  let submittedPage = 1;
+  let pendingAllRows = [];
+  let pendingPage = 1;
 
   function formatDuration(sec) {
     sec = Math.max(0, Math.round(Number(sec) || 0));
@@ -936,23 +940,59 @@
     const empty = $id("submittedEmpty");
     const wrap = $id("submittedTableWrap");
     const body = $id("submittedTableBody");
+    const pagination = $id("submittedPagination");
     if (!body) return;
     if (loading) loading.hidden = false;
     if (empty) empty.hidden = true;
     if (wrap) wrap.hidden = true;
+    if (pagination) pagination.hidden = true;
     body.innerHTML = "";
+    submittedAllRows = [];
+    submittedPage = 1;
 
     try {
       const res = await request("/admin/tests/" + encodeURIComponent(currentSubmissionsTestId) + "/submissions");
       const list = (res && Array.isArray(res.submissions)) ? res.submissions : [];
       if (loading) loading.hidden = true;
+      submittedAllRows = list;
       if (list.length === 0) { if (empty) empty.hidden = false; return; }
-      if (wrap) wrap.hidden = false;
-      list.forEach(function (sub) { body.appendChild(renderSubmissionRow(sub)); });
+      renderSubmittedPage();
     } catch (err) {
       if (loading) loading.hidden = true;
       if (err.status === 401) return showLogin();
       if (empty) { empty.hidden = false; empty.textContent = err.message || "Failed to load"; }
+    }
+  }
+
+  function renderSubmittedPage() {
+    const wrap = $id("submittedTableWrap");
+    const body = $id("submittedTableBody");
+    const pagination = $id("submittedPagination");
+    if (!body) return;
+
+    const totalPages = Math.max(1, Math.ceil(submittedAllRows.length / SUBMISSIONS_PAGE_SIZE));
+    if (submittedPage > totalPages) submittedPage = totalPages;
+    if (submittedPage < 1) submittedPage = 1;
+
+    const start = (submittedPage - 1) * SUBMISSIONS_PAGE_SIZE;
+    const pageRows = submittedAllRows.slice(start, start + SUBMISSIONS_PAGE_SIZE);
+
+    body.innerHTML = "";
+    pageRows.forEach(function (sub) { body.appendChild(renderSubmissionRow(sub)); });
+    if (wrap) wrap.hidden = false;
+
+    if (pagination) {
+      if (totalPages <= 1) {
+        pagination.hidden = true;
+      } else {
+        pagination.hidden = false;
+        const info = $id("submittedPageInfo");
+        if (info) info.textContent = t("pageOf", { a: submittedPage, b: totalPages });
+        const prev = $id("submittedPrev");
+        const next = $id("submittedNext");
+        if (prev) prev.disabled = submittedPage <= 1;
+        if (next) next.disabled = submittedPage >= totalPages;
+      }
     }
   }
 
@@ -972,23 +1012,59 @@
     const empty = $id("pendingEmpty");
     const wrap = $id("pendingTableWrap");
     const body = $id("pendingTableBody");
+    const pagination = $id("pendingPagination");
     if (!body) return;
     if (loading) loading.hidden = false;
     if (empty) empty.hidden = true;
     if (wrap) wrap.hidden = true;
+    if (pagination) pagination.hidden = true;
     body.innerHTML = "";
+    pendingAllRows = [];
+    pendingPage = 1;
 
     try {
       const res = await request("/admin/tests/" + encodeURIComponent(currentSubmissionsTestId) + "/pending");
       const list = (res && Array.isArray(res.pending)) ? res.pending : [];
       if (loading) loading.hidden = true;
+      pendingAllRows = list;
       if (list.length === 0) { if (empty) empty.hidden = false; return; }
-      if (wrap) wrap.hidden = false;
-      list.forEach(function (p) { body.appendChild(renderPendingRow(p)); });
+      renderPendingPage();
     } catch (err) {
       if (loading) loading.hidden = true;
       if (err.status === 401) return showLogin();
       if (empty) { empty.hidden = false; empty.textContent = err.message || "Failed to load"; }
+    }
+  }
+
+  function renderPendingPage() {
+    const wrap = $id("pendingTableWrap");
+    const body = $id("pendingTableBody");
+    const pagination = $id("pendingPagination");
+    if (!body) return;
+
+    const totalPages = Math.max(1, Math.ceil(pendingAllRows.length / SUBMISSIONS_PAGE_SIZE));
+    if (pendingPage > totalPages) pendingPage = totalPages;
+    if (pendingPage < 1) pendingPage = 1;
+
+    const start = (pendingPage - 1) * SUBMISSIONS_PAGE_SIZE;
+    const pageRows = pendingAllRows.slice(start, start + SUBMISSIONS_PAGE_SIZE);
+
+    body.innerHTML = "";
+    pageRows.forEach(function (p) { body.appendChild(renderPendingRow(p)); });
+    if (wrap) wrap.hidden = false;
+
+    if (pagination) {
+      if (totalPages <= 1) {
+        pagination.hidden = true;
+      } else {
+        pagination.hidden = false;
+        const info = $id("pendingPageInfo");
+        if (info) info.textContent = t("pageOf", { a: pendingPage, b: totalPages });
+        const prev = $id("pendingPrev");
+        const next = $id("pendingNext");
+        if (prev) prev.disabled = pendingPage <= 1;
+        if (next) next.disabled = pendingPage >= totalPages;
+      }
     }
   }
 
@@ -1013,11 +1089,38 @@
       loadTests();
     });
   }
-
   const tabSubmittedEl = $id("tabSubmitted");
   const tabPendingEl = $id("tabPending");
   if (tabSubmittedEl) tabSubmittedEl.addEventListener("click", function () { setSubmissionsTab("submitted"); });
   if (tabPendingEl) tabPendingEl.addEventListener("click", function () { setSubmissionsTab("pending"); });
+
+  const submittedPrev = $id("submittedPrev");
+  if (submittedPrev) {
+    submittedPrev.addEventListener("click", function () {
+      if (submittedPage > 1) { submittedPage--; renderSubmittedPage(); }
+    });
+  }
+  const submittedNext = $id("submittedNext");
+  if (submittedNext) {
+    submittedNext.addEventListener("click", function () {
+      const totalPages = Math.max(1, Math.ceil(submittedAllRows.length / SUBMISSIONS_PAGE_SIZE));
+      if (submittedPage < totalPages) { submittedPage++; renderSubmittedPage(); }
+    });
+  }
+
+  const pendingPrev = $id("pendingPrev");
+  if (pendingPrev) {
+    pendingPrev.addEventListener("click", function () {
+      if (pendingPage > 1) { pendingPage--; renderPendingPage(); }
+    });
+  }
+  const pendingNext = $id("pendingNext");
+  if (pendingNext) {
+    pendingNext.addEventListener("click", function () {
+      const totalPages = Math.max(1, Math.ceil(pendingAllRows.length / SUBMISSIONS_PAGE_SIZE));
+      if (pendingPage < totalPages) { pendingPage++; renderPendingPage(); }
+    });
+  }
 
   /* ---------- JSON IMPORT ---------- */
 
