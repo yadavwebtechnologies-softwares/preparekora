@@ -166,8 +166,11 @@
   }
 
   /* ---------- STATE ---------- */
-
   const state = { admin: null, tests: [], editing: null, currentTab: "tests" };
+  const TESTS_PAGE_SIZE = 5;
+  let testsCurrentPage = 1;
+  let testsSearchQuery = "";
+  let testsFilteredList = [];
   const screens = {
     loading: $id("adminLoading"),
     login: $id("loginScreen"),
@@ -287,19 +290,78 @@
     if (loading) loading.hidden = false;
     if (empty) empty.hidden = true;
     list.hidden = true; list.innerHTML = "";
+    const pagination = $id("testsPagination");
+    if (pagination) pagination.hidden = true;
 
     try {
       const res = await api.listOwn();
       state.tests = Array.isArray(res.tests) ? res.tests : [];
       if (loading) loading.hidden = true;
       if (state.tests.length === 0) { if (empty) empty.hidden = false; return; }
-      list.hidden = false;
-      state.tests.forEach(function (test) { list.appendChild(renderTestCard(test)); });
-      if (liveLastData) updateTestCardBadges();
+      renderTestsPage();
     } catch (err) {
       if (loading) loading.hidden = true;
       if (err.status === 401) { showLogin(); return; }
       if (empty) { empty.hidden = false; empty.textContent = err.message || t("loadFailed"); }
+    }
+  }
+
+  function renderTestsPage() {
+    const list = $id("testsList");
+    const empty = $id("testsEmpty");
+    const pagination = $id("testsPagination");
+    if (!list) return;
+
+    const q = testsSearchQuery.trim().toLowerCase();
+    testsFilteredList = q
+      ? state.tests.filter(function (test) {
+          const hay = [
+            test.title || "",
+            test.status || "",
+            String(test.questionCount || ""),
+            String(test.minutes || "")
+          ].join(" ").toLowerCase();
+          return hay.indexOf(q) !== -1;
+        })
+      : state.tests.slice();
+
+    list.innerHTML = "";
+    list.hidden = false;
+
+    if (testsFilteredList.length === 0) {
+      list.hidden = true;
+      if (empty) {
+        empty.hidden = false;
+        empty.textContent = q ? t("noMatches") : t("noTests");
+      }
+      if (pagination) pagination.hidden = true;
+      return;
+    }
+
+    if (empty) empty.hidden = true;
+
+    const totalPages = Math.max(1, Math.ceil(testsFilteredList.length / TESTS_PAGE_SIZE));
+    if (testsCurrentPage > totalPages) testsCurrentPage = totalPages;
+    if (testsCurrentPage < 1) testsCurrentPage = 1;
+
+    const start = (testsCurrentPage - 1) * TESTS_PAGE_SIZE;
+    const pageItems = testsFilteredList.slice(start, start + TESTS_PAGE_SIZE);
+
+    pageItems.forEach(function (test) { list.appendChild(renderTestCard(test)); });
+    if (liveLastData) updateTestCardBadges();
+
+    if (pagination) {
+      if (totalPages <= 1) {
+        pagination.hidden = true;
+      } else {
+        pagination.hidden = false;
+        const info = $id("testsPageInfo");
+        if (info) info.textContent = t("pageOf", { a: testsCurrentPage, b: totalPages });
+        const prev = $id("testsPrev");
+        const next = $id("testsNext");
+        if (prev) prev.disabled = testsCurrentPage <= 1;
+        if (next) next.disabled = testsCurrentPage >= totalPages;
+      }
     }
   }
 
@@ -668,6 +730,29 @@
       errEl.hidden = false;
       errEl.scrollIntoView({ behavior: "smooth", block: "center" });
     } finally { saveDraftBtn.disabled = false; publishBtn.disabled = false; }
+  }
+  const testsSearchInput = $id("testsSearchInput");
+  if (testsSearchInput) {
+    testsSearchInput.addEventListener("input", function () {
+      testsSearchQuery = testsSearchInput.value;
+      testsCurrentPage = 1;
+      renderTestsPage();
+    });
+  }
+
+  const testsPrev = $id("testsPrev");
+  if (testsPrev) {
+    testsPrev.addEventListener("click", function () {
+      if (testsCurrentPage > 1) { testsCurrentPage--; renderTestsPage(); }
+    });
+  }
+
+  const testsNext = $id("testsNext");
+  if (testsNext) {
+    testsNext.addEventListener("click", function () {
+      const totalPages = Math.max(1, Math.ceil(testsFilteredList.length / TESTS_PAGE_SIZE));
+      if (testsCurrentPage < totalPages) { testsCurrentPage++; renderTestsPage(); }
+    });
   }
 
   const saveDraftBtn = $id("saveDraftBtn");
@@ -1099,15 +1184,9 @@
     }
   });
   /* ---------- LANGUAGE CHANGE ---------- */
-
   document.addEventListener("pk:langchange", function () {
     if (screens.dashboard && !screens.dashboard.hidden && state.tests.length) {
-      const list = $id("testsList");
-      if (list) {
-        list.innerHTML = "";
-        state.tests.forEach(function (test) { list.appendChild(renderTestCard(test)); });
-        if (liveLastData) updateTestCardBadges();
-      }
+      renderTestsPage();
     }
     if (state.editing && screens.editor && !screens.editor.hidden) renderEditor();
   });
