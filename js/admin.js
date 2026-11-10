@@ -139,6 +139,16 @@
   function t(key, vars) { return (window.PK && window.PK.t) ? window.PK.t(key, vars) : key; }
   function esc(v) { return String(v).replace(/[&<>"']/g, function (c) { const m = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }; return m[c]; }); }
   function $id(id) { return document.getElementById(id); }
+  function showOverlay(el) {
+    if (!el) return;
+    el.classList.remove("is-hidden");
+    el.setAttribute("aria-hidden", "false");
+  }
+  function hideOverlay(el) {
+    if (!el) return;
+    el.classList.add("is-hidden");
+    el.setAttribute("aria-hidden", "true");
+  }
 
   function toast(message, kind) {
     const container = $id("toastContainer");
@@ -288,7 +298,7 @@
   async function loadTests() {
     const loading = $id("testsLoading"), empty = $id("testsEmpty"), list = $id("testsList");
     if (!list) return;
-    if (loading) loading.hidden = false;
+    showOverlay(loading);
     if (empty) empty.hidden = true;
     list.hidden = true; list.innerHTML = "";
     const pagination = $id("testsPagination");
@@ -297,11 +307,11 @@
     try {
       const res = await api.listOwn();
       state.tests = Array.isArray(res.tests) ? res.tests : [];
-      if (loading) loading.hidden = true;
+      hideOverlay(loading);
       if (state.tests.length === 0) { if (empty) empty.hidden = false; return; }
       renderTestsPage();
     } catch (err) {
-      if (loading) loading.hidden = true;
+      hideOverlay(loading);
       if (err.status === 401) { showLogin(); return; }
       if (empty) { empty.hidden = false; empty.textContent = err.message || t("loadFailed"); }
     }
@@ -450,10 +460,10 @@
   }
 
   /* ---------- SETTINGS ---------- */
-
   async function loadSettings() {
     const input = $id("displayNameInput");
     if (!input) return;
+    showOverlay($id("settingsLoading"));
     try {
       const me = await api.me();
       state.admin = me;
@@ -461,7 +471,11 @@
       if (nameEl) nameEl.textContent = me.displayName || "";
       input.value = me.displayName || "";
       const errEl = $id("displayNameError"); if (errEl) errEl.hidden = true;
-    } catch (err) { if (err.status === 401) showLogin(); }
+      hideOverlay($id("settingsLoading"));
+    } catch (err) {
+      hideOverlay($id("settingsLoading"));
+      if (err.status === 401) showLogin();
+    }
   }
 
   const settingsForm = $id("settingsForm");
@@ -948,7 +962,7 @@
     const body = $id("submittedTableBody");
     const pagination = $id("submittedPagination");
     if (!body) return;
-    if (loading) loading.hidden = false;
+    showOverlay(loading);
     if (empty) empty.hidden = true;
     if (wrap) wrap.hidden = true;
     if (pagination) pagination.hidden = true;
@@ -959,16 +973,15 @@
     try {
       const res = await request("/admin/tests/" + encodeURIComponent(currentSubmissionsTestId) + "/submissions");
       const list = (res && Array.isArray(res.submissions)) ? res.submissions : [];
-      if (loading) loading.hidden = true;
+      hideOverlay(loading);
       submittedAllRows = list;
       if (list.length === 0) { if (empty) empty.hidden = false; return; }
       renderSubmittedPage();
     } catch (err) {
-      if (loading) loading.hidden = true;
+      hideOverlay(loading);
       if (err.status === 401) return showLogin();
       if (empty) { empty.hidden = false; empty.textContent = err.message || "Failed to load"; }
     }
-  }
 
   function renderSubmittedPage() {
     const wrap = $id("submittedTableWrap");
@@ -1020,7 +1033,7 @@
     const body = $id("pendingTableBody");
     const pagination = $id("pendingPagination");
     if (!body) return;
-    if (loading) loading.hidden = false;
+    showOverlay(loading);
     if (empty) empty.hidden = true;
     if (wrap) wrap.hidden = true;
     if (pagination) pagination.hidden = true;
@@ -1031,16 +1044,15 @@
     try {
       const res = await request("/admin/tests/" + encodeURIComponent(currentSubmissionsTestId) + "/pending");
       const list = (res && Array.isArray(res.pending)) ? res.pending : [];
-      if (loading) loading.hidden = true;
+      hideOverlay(loading);
       pendingAllRows = list;
       if (list.length === 0) { if (empty) empty.hidden = false; return; }
       renderPendingPage();
     } catch (err) {
-      if (loading) loading.hidden = true;
+      hideOverlay(loading);
       if (err.status === 401) return showLogin();
       if (empty) { empty.hidden = false; empty.textContent = err.message || "Failed to load"; }
     }
-  }
 
   function renderPendingPage() {
     const wrap = $id("pendingTableWrap");
@@ -1346,8 +1358,7 @@
     const test = state.tests.find(function (t) { return t.id === id; });
     if (heading) heading.textContent = test ? ("Analysis — " + test.title) : "Analysis";
     showScreen("analysis");
-    const overview = $id("analysisOverview");
-    if (overview) overview.style.opacity = "0.5";
+    showOverlay($id("analysisLoading"));
     try {
       const res = await request("/admin/tests/" + encodeURIComponent(id) + "/analysis");
       analysisData = res || null;
@@ -1356,7 +1367,7 @@
       if (err.status === 401) return showLogin();
       toast(err.message || "Failed to load analysis", "error");
     } finally {
-      if (overview) overview.style.opacity = "1";
+      hideOverlay($id("analysisLoading"));
     }
   }
 
