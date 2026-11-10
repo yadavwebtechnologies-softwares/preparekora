@@ -37,11 +37,14 @@
   }
 
   /* ---------- State ---------- */
-
   const state = {
     tests: [],
-    loaded: false
+    loaded: false,
+    earlierPage: 1,
+    earlierTotalPages: 1
   };
+
+  const EARLIER_PAGE_SIZE = 5;
 
   /* ---------- DOM ---------- */
 
@@ -59,6 +62,11 @@
   const searchOverlay = document.getElementById("searchOverlay");
   const searchInput = document.getElementById("searchInput");
   const searchResults = document.getElementById("searchResults");
+
+  const earlierPagination = document.getElementById("earlierPagination");
+  const earlierPrev = document.getElementById("earlierPrev");
+  const earlierNext = document.getElementById("earlierNext");
+  const earlierPageInfo = document.getElementById("earlierPageInfo");
 
   /* ---------- Utilities ---------- */
 
@@ -134,6 +142,24 @@
   }
 
   /* ---------- Render ---------- */
+  function renderEarlierPagination(totalItems) {
+    if (!earlierPagination) return;
+    const totalPages = Math.max(1, Math.ceil(totalItems / EARLIER_PAGE_SIZE));
+    state.earlierTotalPages = totalPages;
+    if (state.earlierPage > totalPages) state.earlierPage = totalPages;
+    if (state.earlierPage < 1) state.earlierPage = 1;
+
+    if (totalPages <= 1) {
+      earlierPagination.hidden = true;
+      return;
+    }
+    earlierPagination.hidden = false;
+    if (earlierPageInfo) {
+      earlierPageInfo.textContent = t("pageOf", { a: state.earlierPage, b: totalPages });
+    }
+    if (earlierPrev) earlierPrev.disabled = state.earlierPage <= 1;
+    if (earlierNext) earlierNext.disabled = state.earlierPage >= totalPages;
+  }
 
   function render() {
     if (!state.loaded) {
@@ -145,6 +171,7 @@
         }
       });
       if (emptyState) emptyState.hidden = true;
+      if (earlierPagination) earlierPagination.hidden = true;
       return;
     }
 
@@ -153,16 +180,12 @@
       groups[groupFor(test.createdAt)].push(test);
     });
 
-    const mapping = {
-      today: todayList,
-      yesterday: yesterdayList,
-      earlier: earlierList
-    };
-
     let total = 0;
 
-    Object.keys(mapping).forEach(function (key) {
-      const container = mapping[key];
+    // Today + Yesterday — all tests
+    const allMapping = { today: todayList, yesterday: yesterdayList };
+    Object.keys(allMapping).forEach(function (key) {
+      const container = allMapping[key];
       if (!container) return;
       container.replaceChildren();
       groups[key]
@@ -173,12 +196,30 @@
         });
     });
 
+    // Earlier — paginated
+    groups.earlier.sort(function (a, b) { return b.createdAt - a.createdAt; });
+    const totalPages = Math.max(1, Math.ceil(groups.earlier.length / EARLIER_PAGE_SIZE));
+    if (state.earlierPage > totalPages) state.earlierPage = totalPages;
+    if (state.earlierPage < 1) state.earlierPage = 1;
+
+    const start = (state.earlierPage - 1) * EARLIER_PAGE_SIZE;
+    const pageItems = groups.earlier.slice(start, start + EARLIER_PAGE_SIZE);
+
+    if (earlierList) {
+      earlierList.replaceChildren();
+      pageItems.forEach(function (test) {
+        earlierList.appendChild(buildCard(test));
+        total++;
+      });
+    }
+
     document.querySelectorAll(".archive-section").forEach(function (section) {
       const list = section.querySelector(".test-list");
       section.hidden = !list || list.children.length === 0;
     });
 
     if (emptyState) emptyState.hidden = total !== 0;
+    renderEarlierPagination(groups.earlier.length);
   }
 
   /* ---------- Fetch ---------- */
@@ -343,6 +384,28 @@
       renderSearchResults(searchInput ? searchInput.value : "");
     }
   });
+
+    /* ---------- Earlier pagination ---------- */
+
+  if (earlierPrev) {
+    earlierPrev.addEventListener("click", function () {
+      if (state.earlierPage > 1) {
+        state.earlierPage--;
+        render();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    });
+  }
+
+  if (earlierNext) {
+    earlierNext.addEventListener("click", function () {
+      if (state.earlierPage < state.earlierTotalPages) {
+        state.earlierPage++;
+        render();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    });
+  }
 
   /* ---------- Init ---------- */
 
