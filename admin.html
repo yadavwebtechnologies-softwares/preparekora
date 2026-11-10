@@ -69,7 +69,6 @@
     <section id="adminLoading">
       <div class="loading-state">
         <div class="spinner"></div>
-        <span data-i18n="loading">Loading…</span>
       </div>
     </section>
 
@@ -146,9 +145,8 @@
           <button class="btn btn-primary btn-sm" id="newTestBtn" type="button" data-i18n="newTest">New test</button>
         </div>
 
-        <div id="testsLoading" class="loading-state">
+        <div id="testsLoading" class="loading-overlay is-hidden" aria-hidden="true">
           <div class="spinner"></div>
-          <span data-i18n="loading">Loading…</span>
         </div>
 
         <div id="testsEmpty" class="empty-state" hidden data-i18n="noTests">No tests yet. Create your first test.</div>
@@ -162,8 +160,10 @@
         </nav>
 
       </div>
-
       <div id="panelSettings" hidden>
+        <div class="loading-overlay is-hidden" id="settingsLoading" aria-hidden="true">
+          <div class="spinner"></div>
+        </div>
         <div class="card" style="max-width: 480px;">
           <h2 style="margin: 0 0 16px; font-size: 15px; font-weight: 600;">
             <span data-i18n="displayName">Display name</span>
@@ -249,9 +249,10 @@
         <button class="admin-tab is-active" id="tabSubmitted" type="button" role="tab" aria-selected="true">Submitted</button>
         <button class="admin-tab" id="tabPending" type="button" role="tab" aria-selected="false">Pending</button>
       </div>
-
       <div id="panelSubmitted">
-        <div class="empty-state" id="submittedLoading">Loading…</div>
+        <div class="loading-overlay is-hidden" id="submittedLoading" aria-hidden="true">
+          <div class="spinner"></div>
+        </div>
         <div class="empty-state" id="submittedEmpty" hidden>No submissions yet.</div>
         <div class="submissions-table-wrap" id="submittedTableWrap" hidden>
           <table class="submissions-table">
@@ -273,9 +274,10 @@
           <button class="pagination-btn" id="submittedNext" type="button" data-i18n="nextPage">Next</button>
         </nav>
       </div>
-
       <div id="panelPending" hidden>
-        <div class="empty-state" id="pendingLoading">Loading…</div>
+        <div class="loading-overlay is-hidden" id="pendingLoading" aria-hidden="true">
+          <div class="spinner"></div>
+        </div>
         <div class="empty-state" id="pendingEmpty" hidden>No pending attempts.</div>
         <div class="submissions-table-wrap" id="pendingTableWrap" hidden>
           <table class="submissions-table">
@@ -300,7 +302,11 @@
     </section>
 
     <!-- ANALYSIS -->
-    <section id="analysisScreen" hidden>
+        <section id="analysisScreen" hidden>
+
+      <div class="loading-overlay is-hidden" id="analysisLoading" aria-hidden="true">
+        <div class="spinner"></div>
+      </div>
 
       <div class="admin-header">
         <h1 id="analysisHeading">Analysis</h1>
