@@ -299,6 +299,51 @@
 
     </section>
 
+    <!-- ANALYSIS -->
+    <section id="analysisScreen" hidden>
+
+      <div class="admin-header">
+        <h1 id="analysisHeading">Analysis</h1>
+        <div class="admin-header-actions">
+          <button class="btn btn-sm" id="analysisExportBtn" type="button">Download CSV</button>
+          <button class="btn btn-sm" id="analysisBackBtn" type="button">Back to tests</button>
+        </div>
+      </div>
+
+      <div class="analysis-overview" id="analysisOverview">
+        <div class="analysis-stat"><strong id="anStatSubs">0</strong><span>Submissions</span></div>
+        <div class="analysis-stat"><strong id="anStatAvg">0%</strong><span>Avg score</span></div>
+        <div class="analysis-stat"><strong id="anStatPass">0%</strong><span>Pass rate</span></div>
+        <div class="analysis-stat"><strong id="anStatTime">00:00</strong><span>Avg time</span></div>
+      </div>
+
+      <div class="analysis-section">
+        <h2 class="analysis-section-title">Score distribution</h2>
+        <div id="analysisBuckets"></div>
+      </div>
+
+      <div class="analysis-section">
+        <h2 class="analysis-section-title">Top performers</h2>
+        <div id="analysisTopPerformers"></div>
+      </div>
+
+      <div class="analysis-section">
+        <h2 class="analysis-section-title">Toughest 5 questions</h2>
+        <div id="analysisToughest"></div>
+      </div>
+
+      <div class="analysis-section">
+        <h2 class="analysis-section-title">All questions</h2>
+        <div id="analysisQuestions"></div>
+        <nav class="pagination" id="analysisPagination" aria-label="Questions pages" hidden>
+          <button class="pagination-btn" id="analysisPrev" type="button">Previous</button>
+          <span class="pagination-info" id="analysisPageInfo"></span>
+          <button class="pagination-btn" id="analysisNext" type="button">Next</button>
+        </nav>
+      </div>
+
+    </section>
+
   </main>
 
   <footer class="footer">
@@ -329,6 +374,30 @@
       <div class="modal-actions">
         <button class="btn" id="logoutCancel" type="button">Cancel</button>
         <button class="btn btn-primary" id="logoutConfirm" type="button">Sign out</button>
+      </div>
+    </div>
+  </div>
+  <!-- WHO CHOSE WHAT MODAL -->
+  <div
+    class="modal-overlay"
+    id="analysisUsersOverlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="analysisUsersTitle"
+    aria-hidden="true"
+  >
+    <div class="modal analysis-users-modal">
+      <h2 id="analysisUsersTitle">Who chose what</h2>
+      <p class="muted-text" id="analysisUsersSub"></p>
+
+      <div class="form-field" style="margin-top: 12px;">
+        <input type="search" id="analysisUsersSearch" class="form-input" placeholder="Search name..." autocomplete="off">
+      </div>
+
+      <div id="analysisUsersBody" class="analysis-users-body"></div>
+
+      <div class="modal-actions">
+        <button class="btn" id="analysisUsersClose" type="button">Close</button>
       </div>
     </div>
   </div>
