@@ -67,11 +67,22 @@
   const earlierPrev = document.getElementById("earlierPrev");
   const earlierNext = document.getElementById("earlierNext");
   const earlierPageInfo = document.getElementById("earlierPageInfo");
+  const homeLoading = document.getElementById("homeLoading");
 
   /* ---------- Utilities ---------- */
 
   function t(key, vars) {
     return (window.PK && window.PK.t) ? window.PK.t(key, vars) : key;
+  }
+  function showOverlay(el) {
+    if (!el) return;
+    el.classList.remove("is-hidden");
+    el.setAttribute("aria-hidden", "false");
+  }
+  function hideOverlay(el) {
+    if (!el) return;
+    el.classList.add("is-hidden");
+    el.setAttribute("aria-hidden", "true");
   }
 
   function escapeHTML(value) {
@@ -163,17 +174,12 @@
 
   function render() {
     if (!state.loaded) {
-      [todayList, yesterdayList, earlierList].forEach(function (el) {
-        if (el) {
-          el.innerHTML =
-            '<div class="loading-state"><div class="spinner"></div>' +
-            '<span>' + escapeHTML(t("loading")) + '</span></div>';
-        }
-      });
+      showOverlay(homeLoading);
       if (emptyState) emptyState.hidden = true;
       if (earlierPagination) earlierPagination.hidden = true;
       return;
     }
+    hideOverlay(homeLoading);
 
     const groups = { today: [], yesterday: [], earlier: [] };
     state.tests.forEach(function (test) {
@@ -223,8 +229,8 @@
   }
 
   /* ---------- Fetch ---------- */
-
   async function loadTests() {
+    showOverlay(homeLoading);
     try {
       const res = await apiFetch("/tests");
       state.tests = Array.isArray(res.tests) ? res.tests : [];
