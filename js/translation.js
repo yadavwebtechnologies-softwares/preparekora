@@ -196,7 +196,11 @@
       reviewYourAnswer: "Your answer",
       reviewExplanation: "Explanation",
       reviewExplanationLoading: "Generating explanation…",
-      reviewExplanationFailed: "Explanation unavailable."
+      reviewExplanationFailed: "Explanation unavailable.",
+
+      prevPage: "Previous",
+      nextPage: "Next",
+      pageOf: "Page {a} of {b}"
     },
 
     as: {
@@ -397,7 +401,11 @@
       reviewYourAnswer: "আপোনাৰ উত্তৰ",
       reviewExplanation: "ব্যাখ্যা",
       reviewExplanationLoading: "ব্যাখ্যা প্ৰস্তুত হৈ আছে…",
-      reviewExplanationFailed: "ব্যাখ্যা উপলব্ধ নহয়।"
+      reviewExplanationFailed: "ব্যাখ্যা উপলব্ধ নহয়।",
+
+      prevPage: "পূৰ্বৱৰ্তী",
+      nextPage: "পৰৱৰ্তী",
+      pageOf: "পৃষ্ঠা {a} / {b}"
     }
   };
 
