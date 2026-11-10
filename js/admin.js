@@ -163,6 +163,36 @@
     container.appendChild(el);
     setTimeout(function () { el.remove(); }, 3200);
   }
+  let confirmCallback = null;
+
+  function openConfirmModal(opts) {
+    const overlay = $id("confirmOverlay");
+    if (!overlay) {
+      if (window.confirm(opts.message || "Are you sure?")) {
+        if (typeof opts.onConfirm === "function") opts.onConfirm();
+      }
+      return;
+    }
+    if (overlay.classList.contains("open")) return;
+    const title = $id("confirmTitle");
+    const msg = $id("confirmMessage");
+    const okBtn = $id("confirmOk");
+    if (title) title.textContent = opts.title || "Are you sure?";
+    if (msg) msg.textContent = opts.message || "";
+    if (okBtn) okBtn.textContent = opts.confirmLabel || "Confirm";
+    confirmCallback = typeof opts.onConfirm === "function" ? opts.onConfirm : null;
+    overlay.classList.add("open");
+    overlay.setAttribute("aria-hidden", "false");
+    setTimeout(function () { const c = $id("confirmCancel"); if (c) c.focus(); }, 40);
+  }
+
+  function closeConfirmModal() {
+    const overlay = $id("confirmOverlay");
+    if (!overlay) return;
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+    confirmCallback = null;
+  }
 
   function copyText(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
@@ -291,6 +321,26 @@
   if (logoutOverlay) {
     logoutOverlay.addEventListener("click", function (e) {
       if (e.target === logoutOverlay) closeLogoutModal();
+    });
+  }
+
+  /* ---------- Generic confirm modal wiring ---------- */
+
+  const confirmOverlay = $id("confirmOverlay");
+  const confirmCancel = $id("confirmCancel");
+  const confirmOk = $id("confirmOk");
+
+  if (confirmCancel) confirmCancel.addEventListener("click", closeConfirmModal);
+  if (confirmOk) {
+    confirmOk.addEventListener("click", function () {
+      const cb = confirmCallback;
+      closeConfirmModal();
+      if (cb) cb();
+    });
+  }
+  if (confirmOverlay) {
+    confirmOverlay.addEventListener("click", function (e) {
+      if (e.target === confirmOverlay) closeConfirmModal();
     });
   }
 
@@ -458,33 +508,51 @@
     pubBtn.type = "button";
     pubBtn.className = "btn btn-sm" + (isPublished ? "" : " btn-primary");
     pubBtn.textContent = isPublished ? t("unpublish") : t("publish");
-    pubBtn.addEventListener("click", async function () {
-      pubBtn.disabled = true;
-      try {
-        if (isPublished) await api.unpublish(test.id);
-        else await api.publish(test.id);
-        toast(isPublished ? t("testUnpublished") : t("testPublished"), "success");
-        await loadTests();
-      } catch (err) {
-        if (err.status === 401) return showLogin();
-        toast(err.message || "Error", "error");
-      } finally { pubBtn.disabled = false; }
+    pubBtn.addEventListener("click", function () {
+      const doAction = async function () {
+        pubBtn.disabled = true;
+        try {
+          if (isPublished) await api.unpublish(test.id);
+          else await api.publish(test.id);
+          toast(isPublished ? t("testUnpublished") : t("testPublished"), "success");
+          await loadTests();
+        } catch (err) {
+          if (err.status === 401) return showLogin();
+          toast(err.message || "Error", "error");
+        } finally { pubBtn.disabled = false; }
+      };
+      if (isPublished) {
+        openConfirmModal({
+          title: "Unpublish test?",
+          message: t("confirmUnpublish"),
+          confirmLabel: t("unpublish"),
+          onConfirm: doAction
+        });
+      } else {
+        doAction();
+      }
     });
     actions.appendChild(pubBtn);
 
     const delBtn = document.createElement("button");
     delBtn.type = "button"; delBtn.className = "btn btn-sm"; delBtn.textContent = t("delete");
-    delBtn.addEventListener("click", async function () {
-      if (!window.confirm(t("confirmDelete"))) return;
-      delBtn.disabled = true;
-      try {
-        await api.deleteTest(test.id);
-        toast(t("testDeleted"));
-        await loadTests();
-      } catch (err) {
-        if (err.status === 401) return showLogin();
-        toast(err.message || "Error", "error");
-      } finally { delBtn.disabled = false; }
+    delBtn.addEventListener("click", function () {
+      openConfirmModal({
+        title: "Delete test?",
+        message: t("confirmDelete"),
+        confirmLabel: t("delete"),
+        onConfirm: async function () {
+          delBtn.disabled = true;
+          try {
+            await api.deleteTest(test.id);
+            toast(t("testDeleted"));
+            await loadTests();
+          } catch (err) {
+            if (err.status === 401) return showLogin();
+            toast(err.message || "Error", "error");
+          } finally { delBtn.disabled = false; }
+        }
+      });
     });
     actions.appendChild(delBtn);
 
@@ -816,8 +884,17 @@
   if (publishBtn) {
     publishBtn.addEventListener("click", function () {
       const isPublished = state.editing && state.editing.status === "published";
-      if (isPublished) { if (!window.confirm("Unpublish this test?")) return; saveEditor("unpublish"); }
-      else { if (!window.confirm(t("confirmPublish"))) return; saveEditor("publish"); }
+      if (isPublished) {
+        openConfirmModal({
+          title: "Unpublish test?",
+          message: t("confirmUnpublish"),
+          confirmLabel: t("unpublish"),
+          onConfirm: function () { saveEditor("unpublish"); }
+        });
+      } else {
+        if (!window.confirm(t("confirmPublish"))) return;
+        saveEditor("publish");
+      }
     });
   }
 
@@ -1684,6 +1761,7 @@
       if (importOverlay && importOverlay.classList.contains("open")) closeImportModal();
       if (logoutOverlay && logoutOverlay.classList.contains("open")) closeLogoutModal();
       if (analysisUsersOverlay && analysisUsersOverlay.classList.contains("open")) closeAnalysisUsers();
+      if (confirmOverlay && confirmOverlay.classList.contains("open")) closeConfirmModal();
     }
   });
 
