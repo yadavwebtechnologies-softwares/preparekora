@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Find Us — PrepareKora.in WhatsApp community.">
+  <meta name="description" content="PrepareKora.in — Contact and community.">
   <title>Find Us — PrepareKora.in</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -18,29 +18,33 @@
         <span class="brand-main">preparekora</span><span class="brand-in">.in</span>
       </a>
 
-  <nav class="desktop-nav" aria-label="Desktop navigation">
-      <div class="nav-actions">
+      <nav class="desktop-nav" aria-label="Desktop navigation">
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-toggle" id="desktopAboutToggle" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="desktopAboutMenu">
+            <span data-i18n="navAbout">About</span>
+            <svg class="nav-dropdown-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+          </button>
+          <div class="nav-dropdown-menu" id="desktopAboutMenu" aria-hidden="true">
+            <a href="about.html" data-i18n="navAbout">About</a>
+            <a href="privacy.html">Privacy</a>
+            <a href="terms.html">Terms</a>
+            <a href="disclaimer.html">Disclaimer</a>
+            <a href="find-us.html" data-i18n="navFindUs">Find Us</a>
+          </div>
+        </div>
+        <a href="admin.html">Administrator</a>
+      </nav>
 
+      <div class="nav-actions">
         <div class="lang-switch" role="group" aria-label="Language">
           <button class="lang-btn is-active" type="button" data-lang="en" aria-pressed="true">EN</button>
           <button class="lang-btn" type="button" data-lang="as" aria-pressed="false">অসমীয়া</button>
         </div>
-
-        <button
-          class="icon-button"
-          id="menuToggle"
-          type="button"
-          aria-label="Open navigation menu"
-          aria-expanded="false"
-          aria-controls="menuPanel"
-        >
+        <button class="icon-button" id="menuToggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="menuPanel">
           <svg id="menuIcon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 7h16"></path>
-            <path d="M4 12h16"></path>
-            <path d="M4 17h16"></path>
+            <path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path>
           </svg>
         </button>
-
       </div>
 
       <nav class="menu-panel" id="menuPanel" aria-label="Mobile navigation">
@@ -68,48 +72,98 @@
     </div>
   </header>
 
-  <main class="page-container">
+  <main class="page-container legal-content">
 
     <section class="page-heading">
       <h1>Find Us</h1>
-      <p>Join our WhatsApp channel to stay updated.</p>
+      <p>Connect with us — we reply as fast as we can.</p>
     </section>
 
-    <article class="card" style="max-width: 640px;">
-
-      <p class="eyebrow">WhatsApp Channel</p>
-
-      <h2 style="margin: 0 0 8px; font-size: 20px; font-weight: 600; letter-spacing: -0.4px; line-height: 1.35;">
-        Assam Police Exam Preparation ASS
-      </h2>
-
-      <p class="muted-text" style="margin-bottom: 20px;">
-        Both in Assamese and English — exam updates, mock tests,
-        and preparation notes.
+    <div class="card" style="margin-bottom: 16px;">
+      <p class="eyebrow">Email</p>
+      <h2 style="margin: 8px 0 12px; font-size: 15px; font-weight: 600;">Write to us</h2>
+      <p class="muted-text">
+        Best for detailed messages — bug reports, content errors, privacy requests, or collaboration ideas.
       </p>
+      <p class="muted-text" style="margin-top: 10px;">
+        <strong><a href="mailto:yadavwebdeveloper@gmail.com">yadavwebdeveloper@gmail.com</a></strong>
+      </p>
+      <div class="form-actions" style="margin-top: 14px;">
+        <a class="btn btn-primary" href="mailto:yadavwebdeveloper@gmail.com">Send email</a>
+      </div>
+    </div>
 
-      <a
-        class="btn btn-primary"
-        href="https://chat.whatsapp.com/DLrcA98MrlYKOeZ5DMeN5Z"
-        target="_blank"
-        rel="noopener noreferrer"
-        style="display: inline-flex; width: 100%;"
-      >
-        Join now
-      </a>
+    <div class="card" style="margin-bottom: 16px;">
+      <p class="eyebrow">WhatsApp</p>
+      <h2 style="margin: 8px 0 12px; font-size: 15px; font-weight: 600;">Quick questions</h2>
+      <p class="muted-text">
+        For short questions or urgent matters, message us on WhatsApp. We respond during working hours.
+      </p>
+      <div class="form-actions" style="margin-top: 14px;">
+        <a class="btn btn-primary" href="https://wa.me/910000000000" target="_blank" rel="noopener">Open WhatsApp</a>
+      </div>
+      <p class="form-hint" style="margin-top: 8px;">Replace the number in the link with the actual WhatsApp number.</p>
+    </div>
 
-    </article>
+    <div class="card" style="margin-bottom: 16px;">
+      <p class="eyebrow">Community</p>
+      <h2 style="margin: 8px 0 12px; font-size: 15px; font-weight: 600;">Join other aspirants</h2>
+      <p class="muted-text">
+        We run a WhatsApp community where new tests are announced, questions are discussed, and students help each other. It's free to join.
+      </p>
+      <div class="form-actions" style="margin-top: 14px;">
+        <a class="btn btn-primary" href="https://chat.whatsapp.com/" target="_blank" rel="noopener">Join community</a>
+      </div>
+      <p class="form-hint" style="margin-top: 8px;">Replace with your actual community invite link.</p>
+    </div>
+
+    <div class="card" style="margin-bottom: 16px;">
+      <p class="eyebrow">For teachers</p>
+      <h2 style="margin: 8px 0 12px; font-size: 15px; font-weight: 600;">Publish your own mock tests</h2>
+      <p class="muted-text">
+        Are you a teacher or subject expert who wants to publish mock tests for Assam's students? Get in touch — we're always looking for quality contributors.
+      </p>
+      <div class="form-actions" style="margin-top: 14px;">
+        <a class="btn btn-primary" href="mailto:yadavwebdeveloper@gmail.com?subject=Teacher%20application">Contact for access</a>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 16px;">
+      <p class="eyebrow">Report an issue</p>
+      <h2 style="margin: 8px 0 12px; font-size: 15px; font-weight: 600;">Spotted a wrong question?</h2>
+      <p class="muted-text">
+        If a question or answer is incorrect, outdated, or misleading, email us with:
+      </p>
+      <ul class="rules" style="margin: 8px 0 0; padding-left: 18px;">
+        <li>Test title</li>
+        <li>Question number (or copy the question)</li>
+        <li>What you believe is correct, and why</li>
+      </ul>
+      <p class="muted-text" style="margin-top: 10px;">
+        We forward verified reports to the Publisher and update the test where confirmed.
+      </p>
+      <div class="form-actions" style="margin-top: 14px;">
+        <a class="btn btn-primary" href="mailto:yadavwebdeveloper@gmail.com?subject=Content%20error%20report">Report issue</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="eyebrow">Location</p>
+      <h2 style="margin: 8px 0 12px; font-size: 15px; font-weight: 600;">Based in Assam, India</h2>
+      <p class="muted-text">
+        PrepareKora.in is built and maintained from Assam. We don't operate a physical office — email is the fastest way to reach us.
+      </p>
+      <p class="muted-text" style="margin-top: 8px;">
+        <strong>Prepared by:</strong> PrepareKora.in · Yadav Web Technologies
+      </p>
+    </div>
 
   </main>
 
   <footer class="footer">
     <div class="footer-inner">
       <a href="index.html" class="footer-brand">PrepareKora.in</a>
-
-      <div class="footer-copy">
-        © <span id="currentYear"></span> PrepareKora.in
-      </div>
-
+      <div class="footer-copy">© <span id="currentYear"></span> PrepareKora.in</div>
       <nav class="footer-links" aria-label="Footer navigation">
         <a href="about.html" data-i18n="navAbout">About</a>
         <a href="find-us.html" data-i18n="navFindUs">Find Us</a>
@@ -118,8 +172,36 @@
   </footer>
 
   <script src="js/translation.js"></script>
-  <script src="js/main.js"></script>
   <script src="js/nav-dropdown.js"></script>
+  <script>
+    (function () {
+      const y = document.getElementById("currentYear");
+      if (y) y.textContent = new Date().getFullYear();
+      const menuToggle = document.getElementById("menuToggle");
+      const menuPanel = document.getElementById("menuPanel");
+      const menuIcon = document.getElementById("menuIcon");
+      const hamburgerSVG = '<path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path>';
+      const closeSVG = '<path d="m6 6 12 12"></path><path d="M18 6 6 18"></path>';
+      function closeMenu() {
+        if (!menuPanel || !menuToggle || !menuIcon) return;
+        menuPanel.classList.remove("open");
+        menuToggle.setAttribute("aria-expanded", "false");
+        menuIcon.innerHTML = hamburgerSVG;
+      }
+      if (menuToggle && menuPanel && menuIcon) {
+        menuToggle.addEventListener("click", function (e) {
+          e.stopPropagation();
+          if (menuPanel.classList.contains("open")) closeMenu();
+          else { menuPanel.classList.add("open"); menuToggle.setAttribute("aria-expanded", "true"); menuIcon.innerHTML = closeSVG; }
+        });
+        document.addEventListener("click", function (e) {
+          if (menuPanel.classList.contains("open") && !menuPanel.contains(e.target) && !menuToggle.contains(e.target)) closeMenu();
+        });
+        menuPanel.querySelectorAll("a").forEach(function (link) { link.addEventListener("click", closeMenu); });
+      }
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeMenu(); });
+    })();
+  </script>
 
 </body>
 </html>
