@@ -2953,6 +2953,47 @@ input:focus-visible {
   background: transparent;
   color: var(--text);
 }
+
+/* === Hint block (append at end) === */
+
+.hint-block {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.hint-btn-row {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.hint-content {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.hint-en,
+.hint-as {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.hint-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 10px 0;
+}
+
+.hint-loading-text {
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+}
 /* === Justify legal/content pages (append at end) === */
 
 .legal-content p,
