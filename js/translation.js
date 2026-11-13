@@ -200,7 +200,10 @@
 
       prevPage: "Previous",
       nextPage: "Next",
-      pageOf: "Page {a} of {b}"
+      pageOf: "Page {a} of {b}",
+
+      showHint: "Show Hint",
+      hintLoading: "Getting hint…"
     },
 
     as: {
@@ -405,7 +408,10 @@
 
       prevPage: "পূৰ্বৱৰ্তী",
       nextPage: "পৰৱৰ্তী",
-      pageOf: "পৃষ্ঠা {a} / {b}"
+      pageOf: "পৃষ্ঠা {a} / {b}",
+
+      showHint: "সূত্ৰ দেখুৱাওক",
+      hintLoading: "সূত্ৰ প্ৰস্তুত হৈ আছে…"
     }
   };
 
