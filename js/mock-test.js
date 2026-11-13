@@ -142,6 +142,13 @@
   const menuPanel       = document.getElementById("menuPanel");
   const menuIcon        = document.getElementById("menuIcon");
 
+  const hintBlock       = document.getElementById("hintBlock");
+  const hintBtn         = document.getElementById("hintBtn");
+  const hintContent     = document.getElementById("hintContent");
+  const hintEn          = document.getElementById("hintEn");
+  const hintAs          = document.getElementById("hintAs");
+  const hintDivider     = document.getElementById("hintDivider");
+
   /* ---------- State ---------- */
 
   const state = {
@@ -167,9 +174,10 @@
     settings: { enabled: true, duration: 5 },
     sessionId: null,
     sessionPingId: null,
-    reviewVisible: false
+    reviewVisible: false,
+    hintTimerId: null,
+    hintQIndex: -1
   };
-
   /* ---------- Interruption ---------- */
 
   const MAX_INTERRUPTIONS = 5;
@@ -480,6 +488,113 @@
     startSession();
   }
 
+  /* ---------- Hint (20s per question) ---------- */
+
+  const HINT_DELAY_MS = 20000;
+  const HINT_CACHE_PREFIX = "pkh_v1_";
+
+  function hintCacheKey(qIndex) {
+    const testId = state.publicTest ? state.publicTest.id : "unknown";
+    return HINT_CACHE_PREFIX + testId + "_" + qIndex;
+  }
+
+  function clearHintTimer() {
+    if (state.hintTimerId) {
+      window.clearTimeout(state.hintTimerId);
+      state.hintTimerId = null;
+    }
+  }
+
+  function resetHintForQuestion() {
+    clearHintTimer();
+    state.hintQIndex = state.index;
+    if (hintBlock) hintBlock.hidden = true;
+    if (hintContent) hintContent.hidden = true;
+    if (hintEn) hintEn.textContent = "";
+    if (hintAs) hintAs.textContent = "";
+    if (hintBtn) { hintBtn.disabled = false; hintBtn.textContent = t("showHint"); }
+  }
+
+  function startHintTimer() {
+    clearHintTimer();
+    state.hintTimerId = window.setTimeout(function () {
+      state.hintTimerId = null;
+      if (!state.started || state.finished) return;
+      if (state.hintQIndex !== state.index) return;
+      if (hintBlock) hintBlock.hidden = false;
+    }, HINT_DELAY_MS);
+  }
+
+  async function loadHint() {
+    if (!state.publicTest) return;
+    const qIndex = state.index;
+    const cacheKey = hintCacheKey(qIndex);
+
+    let cached = null;
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) cached = JSON.parse(raw);
+    } catch (e) {}
+
+    if (cached && cached.hintEn) {
+      renderHintContent(cached.hintEn, cached.hintAs || "");
+      return;
+    }
+
+    if (hintBtn) { hintBtn.disabled = true; hintBtn.textContent = t("hintLoading"); }
+    if (hintContent) hintContent.hidden = false;
+    if (hintEn) hintEn.innerHTML = '<span class="hint-loading-text">' + escapeHTMLLocal(t("hintLoading")) + '</span>';
+    if (hintAs) hintAs.textContent = "";
+    if (hintDivider) hintDivider.style.display = "none";
+
+    try {
+      const res = await fetch(API_BASE + "/hint", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ testId: state.publicTest.id, questionIndex: qIndex })
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      const en = (data && data.hintEn) || "";
+      const as = (data && data.hintAs) || "";
+      if (!en) throw new Error("Empty hint");
+      try { localStorage.setItem(cacheKey, JSON.stringify({ hintEn: en, hintAs: as })); } catch (e) {}
+      renderHintContent(en, as);
+    } catch (err) {
+      if (hintBtn) { hintBtn.disabled = false; hintBtn.textContent = t("showHint"); }
+      if (hintEn) hintEn.textContent = "Hint unavailable. Try eliminating wrong options.";
+      if (hintAs) hintAs.textContent = "";
+      if (hintDivider) hintDivider.style.display = "none";
+    }
+  }
+
+  function renderHintContent(en, as) {
+    if (hintContent) hintContent.hidden = false;
+    if (hintEn) hintEn.textContent = en;
+    if (as && String(as).trim()) {
+      if (hintAs) hintAs.textContent = as;
+      if (hintDivider) hintDivider.style.display = "";
+    } else {
+      if (hintAs) hintAs.textContent = "";
+      if (hintDivider) hintDivider.style.display = "none";
+    }
+    if (hintBtn) { hintBtn.disabled = true; hintBtn.textContent = t("showHint"); }
+  }
+
+  function escapeHTMLLocal(v) {
+    return String(v).replace(/[&<>"']/g, function (c) {
+      const m = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
+      return m[c];
+    });
+  }
+
+  if (hintBtn) {
+    hintBtn.addEventListener("click", function () {
+      if (hintBtn.disabled) return;
+      loadHint();
+    });
+  }
+
   /* ---------- Question rendering ---------- */
 
   async function renderQuestion(markVisited) {
@@ -490,6 +605,11 @@
     if (!question) return;
 
     if (markVisited !== false) state.visited.add(index);
+
+    if (state.hintQIndex !== index) {
+      resetHintForQuestion();
+      startHintTimer();
+    }
 
     qNumber.textContent = t("questionOf", { n: index + 1, total: pt.questions.length });
     qStatus.textContent = statusFor(index);
@@ -669,12 +789,11 @@
   }
 
   /* ---------- Submit ---------- */
-
   async function submitTest() {
     if (state.finished || state.submitting) return;
     endSession(false);
+    clearHintTimer();
     state.submitting = true;
-    state.finished = true;
 
     if (state.timerId) { window.clearInterval(state.timerId); state.timerId = null; }
     closePalette();
@@ -836,6 +955,7 @@
     state.finished = true;
     state.submitting = true;
     endSession(false);
+    clearHintTimer();
     if (state.timerId) { window.clearInterval(state.timerId); state.timerId = null; }
     hideInterruptModal();
     closePalette();
