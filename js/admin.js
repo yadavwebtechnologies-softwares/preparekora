@@ -658,7 +658,8 @@
         title: res.test.title,
         minutes: res.test.minutes,
         questions: (res.test.questions || []).map(function (q) {
-          const out = { q: q.q, options: q.options.slice(), answer: q.answer };
+          const out = { q: q.q, options: q.options.slice(), answer: q.answer, hint: "" };
+          if (typeof q.hint === "string" && q.hint.trim()) out.hint = q.hint;
           if (q.type === "math" || q.type === "reasoning") out.type = q.type;
           if (typeof q.latex === "string" && q.latex.length) out.latex = q.latex;
           if (typeof q.imageBase64 === "string" && q.imageBase64.indexOf("data:image/") === 0) {
@@ -676,7 +677,7 @@
   }
 
   function blankQuestion() {
-    return { q: "", options: ["", "", "", ""], answer: 0 };
+    return { q: "", options: ["", "", "", ""], answer: 0, hint: "" };
   }
 
   function renderEditor() {
@@ -797,6 +798,27 @@
       });
 
       block.appendChild(optWrap);
+
+      const hintField = document.createElement("div");
+      hintField.className = "form-field";
+      hintField.style.marginTop = "14px";
+
+      const hintLabel = document.createElement("label");
+      hintLabel.className = "form-label";
+      hintLabel.textContent = "Hint (optional — English, auto-translated to Assamese)";
+
+      const hintInput = document.createElement("textarea");
+      hintInput.className = "form-textarea";
+      hintInput.rows = 2;
+      hintInput.maxLength = 500;
+      hintInput.placeholder = "One-line conceptual hint. Do not reveal the answer.";
+      hintInput.value = question.hint || "";
+      hintInput.addEventListener("input", function () { question.hint = hintInput.value; });
+
+      hintField.appendChild(hintLabel);
+      hintField.appendChild(hintInput);
+      block.appendChild(hintField);
+
       container.appendChild(block);
     });
   }
@@ -833,6 +855,10 @@
       if (typeof raw.latex === "string" && raw.latex.length) cleaned.latex = raw.latex;
       if (typeof raw.imageBase64 === "string" && raw.imageBase64.indexOf("data:image/") === 0) {
         cleaned.imageBase64 = raw.imageBase64;
+      }
+      if (typeof raw.hint === "string" && raw.hint.trim()) {
+        if (raw.hint.trim().length > 500) return { error: "Question " + (i + 1) + ": hint too long (max 500 chars)" };
+        cleaned.hint = raw.hint.trim();
       }
       questions.push(cleaned);
     }
@@ -1664,6 +1690,11 @@
     if (typeof raw.latex === "string" && raw.latex.length) cleaned.latex = raw.latex;
     if (typeof raw.imageBase64 === "string" && raw.imageBase64.indexOf("data:image/") === 0) {
       cleaned.imageBase64 = raw.imageBase64;
+    }
+    if (raw.hint != null) {
+      if (typeof raw.hint !== "string") return { error: where + "hint must be a string" };
+      if (raw.hint.trim().length > 500) return { error: where + "hint too long (max 500 chars)" };
+      if (raw.hint.trim()) cleaned.hint = raw.hint.trim();
     }
     return { question: cleaned };
   }
