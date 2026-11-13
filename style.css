@@ -2953,3 +2953,12 @@ input:focus-visible {
   background: transparent;
   color: var(--text);
 }
+/* === Justify legal/content pages (append at end) === */
+
+.legal-content p,
+.legal-content .muted-text {
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
