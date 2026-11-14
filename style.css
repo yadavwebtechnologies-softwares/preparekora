@@ -476,3 +476,7 @@
   .dash-tab { padding: 9px 12px; font-size: 12px; }
   .dash-premium-banner { padding: 12px; gap: 10px; }
 }
+/*======OVERFLOW=====*/
+.submissions-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) { .submissions-table { min-width: 640px; } }
+/*======END====*/
