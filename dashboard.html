@@ -266,6 +266,65 @@
 
   <div class="toast-container" id="toastContainer"></div>
 
+  <!-- LOGOUT CONFIRM -->
+  <div class="modal-overlay" id="dashLogoutOverlay" role="dialog" aria-modal="true" aria-labelledby="dashLogoutTitle" aria-hidden="true">
+    <div class="modal">
+      <h2 id="dashLogoutTitle">Sign out?</h2>
+      <p class="muted-text">You'll need to sign in again to access your dashboard.</p>
+      <div class="modal-actions">
+        <button class="btn" id="dashLogoutCancel" type="button">Cancel</button>
+        <button class="btn btn-primary" id="dashLogoutConfirm" type="button">Sign out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHANGE PASSWORD MODAL -->
+  <div class="modal-overlay" id="dashChangePassOverlay" role="dialog" aria-modal="true" aria-labelledby="dashChangePassTitle" aria-hidden="true">
+    <div class="modal">
+      <h2 id="dashChangePassTitle">Change Password</h2>
+      <p class="muted-text">Enter your current password, then choose a new one.</p>
+      <form id="dashChangePassForm" novalidate>
+        <div class="form-field">
+          <label class="form-label" for="dashCurrentPass">Current password</label>
+          <input class="form-input" id="dashCurrentPass" type="password" autocomplete="current-password">
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="dashNewPass">New password</label>
+          <input class="form-input" id="dashNewPass" type="password" autocomplete="new-password">
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="dashConfirmPass">Confirm new password</label>
+          <input class="form-input" id="dashConfirmPass" type="password" autocomplete="new-password">
+        </div>
+        <p class="form-error" id="dashChangePassError" hidden></p>
+        <div class="modal-actions">
+          <button class="btn" id="dashChangePassCancel" type="button">Cancel</button>
+          <button class="btn btn-primary" id="dashChangePassSubmit" type="submit">Update password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- DELETE ACCOUNT MODAL -->
+  <div class="modal-overlay" id="dashDeleteOverlay" role="dialog" aria-modal="true" aria-labelledby="dashDeleteTitle" aria-hidden="true">
+    <div class="modal">
+      <h2 id="dashDeleteTitle">Delete account?</h2>
+      <p class="muted-text">This removes your account, profile, quiz history, and login activity. Cannot be undone.</p>
+      <p class="muted-text" style="margin-top: 8px;" id="dashDeleteInstructions">Enter your current password to confirm.</p>
+      <form id="dashDeleteForm" novalidate>
+        <div class="form-field" id="dashDeletePasswordField">
+          <label class="form-label" for="dashDeletePassword">Current password</label>
+          <input class="form-input" id="dashDeletePassword" type="password" autocomplete="current-password">
+        </div>
+        <p class="form-error" id="dashDeleteError" hidden></p>
+        <div class="modal-actions">
+          <button class="btn" id="dashDeleteCancel" type="button">Cancel</button>
+          <button class="btn btn-danger" id="dashDeleteConfirm" type="submit">Delete permanently</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="js/translation.js"></script>
   <script src="js/nav-dropdown.js"></script>
   <script src="js/firebase-loader.js"></script>
