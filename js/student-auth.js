@@ -322,7 +322,15 @@
         const a = document.createElement("a");
         a.href = it.href;
         a.setAttribute("data-pk-injected", "true");
-        a.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + it.icon + '</svg>' + it.label;
+        a.innerHTML =
+          '<svg viewBox="0 0 24 24" aria-hidden="true" ' +
+            'width="16" height="16" ' +
+            'fill="none" stroke="currentColor" stroke-width="1.8" ' +
+            'stroke-linecap="round" stroke-linejoin="round" ' +
+            'style="width:16px;height:16px;flex-shrink:0;">' +
+            it.icon +
+          '</svg>' +
+          '<span>' + it.label + '</span>';
         if (insertBefore) panel.insertBefore(a, insertBefore);
         else panel.appendChild(a);
       });
