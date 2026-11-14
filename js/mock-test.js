@@ -411,18 +411,25 @@
 
   if (startBtn) {
     startBtn.addEventListener("click", function () {
-      showScreen("name");
-      if (userNameInput) {
-        try {
-          const logged = window.PK_STUDENT && window.PK_STUDENT.isLoggedIn();
-          if (logged) {
-            const profile = window.PK_STUDENT.getProfile() || {};
-            const user = window.PK_STUDENT.getUser() || {};
-            const nameToFill = profile.name || user.displayName || "";
-            if (nameToFill && !userNameInput.value) userNameInput.value = nameToFill;
+      // If logged in with a profile name, skip the name form entirely
+      try {
+        const logged = window.PK_STUDENT && window.PK_STUDENT.isLoggedIn();
+        if (logged) {
+          const profile = window.PK_STUDENT.getProfile() || {};
+          const user = window.PK_STUDENT.getUser() || {};
+          const accountName = String(profile.name || user.displayName || "").trim();
+          const accountWa = String(profile.whatsapp || "").trim();
+          if (accountName.length >= 2) {
+            state.userName = accountName;
+            state.userWhatsApp = accountWa;
+            beginTest();
+            return;
           }
-        } catch (e) {}
-      }
+        }
+      } catch (e) {}
+
+      // Fall back to name form for anonymous users or missing profile
+      showScreen("name");
       setTimeout(function () { if (userNameInput) userNameInput.focus(); }, 60);
     });
   }
