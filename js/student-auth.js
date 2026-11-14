@@ -551,6 +551,24 @@
         renderHeader();
         fireAuthChanged();
 
+        try {
+          const sessUid = sessionStorage.getItem("pk_login_session_uid");
+          if (sessUid !== fbUser.uid) {
+            sessionStorage.setItem("pk_login_session_uid", fbUser.uid);
+            const token = await fbUser.getIdToken();
+            const providerId = (Array.isArray(fbUser.providerData) && fbUser.providerData[0])
+              ? fbUser.providerData[0].providerId : "";
+            fetch(API_BASE + "/students/me/login-event", {
+              method: "POST",
+              headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                provider: providerId || "",
+                userAgent: (navigator.userAgent || "").slice(0, 200)
+              })
+            }).catch(function () {});
+          }
+        } catch (e) {}
+
         const providers = Array.isArray(fbUser.providerData) ? fbUser.providerData : [];
         const isGoogleUser = providers.some(function (p) { return p && p.providerId === "google.com"; });
 
@@ -559,6 +577,7 @@
           setTimeout(openCompleteProfileModal, 300);
         }
       } else {
+        try { sessionStorage.removeItem("pk_login_session_uid"); } catch (e) {}
         PK_STUDENT.user = null;
         PK_STUDENT.profile = null;
         storeUser(null);
