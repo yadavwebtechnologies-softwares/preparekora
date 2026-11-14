@@ -583,7 +583,6 @@
   }
 
   /* ---------- Settings ---------- */
-
   async function loadSettings() {
     const input = $id("displayNameInput");
     if (!input) return;
@@ -596,10 +595,111 @@
       if (nameEl) nameEl.textContent = me.displayName || "";
       input.value = me.displayName || "";
       const errEl = $id("displayNameError"); if (errEl) errEl.hidden = true;
-      hideOverlay(loading);
+      await loadFreeTestsSettings();
     } catch (err) {
-      hideOverlay(loading);
       if (err.status === 401) showLogin();
+    } finally {
+      hideOverlay(loading);
+    }
+  }
+
+  async function loadFreeTestsSettings() {
+    const panel = $id("panelSettings");
+    if (!panel) return;
+
+    let published = [];
+    try {
+      const listRes = await api.listOwn();
+      published = (Array.isArray(listRes.tests) ? listRes.tests : [])
+        .filter(function (t) { return t.status === "published"; });
+    } catch (e) { published = []; }
+
+    let freeTestIds = [];
+    let gatingEnabled = false;
+    try {
+      const res = await fetch(API_BASE + "/settings", { headers: { Accept: "application/json" } });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.freeTestIds)) freeTestIds = data.freeTestIds;
+        if (data.gatingEnabled === true) gatingEnabled = true;
+      }
+    } catch (e) {}
+
+    let card = $id("freeTestsCard");
+    if (!card) {
+      card = document.createElement("div");
+      card.className = "card";
+      card.id = "freeTestsCard";
+      card.style.maxWidth = "480px";
+      card.style.marginTop = "16px";
+      panel.appendChild(card);
+    }
+
+    let html = '<h2 style="margin: 0 0 16px; font-size: 15px; font-weight: 600;">Free tests</h2>';
+    html += '<p class="form-hint" style="margin: 0 0 14px;">Select which published tests can be taken without login.</p>';
+
+    if (published.length === 0) {
+      html += '<div class="empty-state" style="padding: 16px; font-size: 12px;">No published tests yet. Publish a test first.</div>';
+    } else {
+      html += '<div id="freeTestsList" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">';
+      published.forEach(function (t) {
+        const checked = freeTestIds.indexOf(t.id) !== -1 ? " checked" : "";
+        html += '<label class="editor-option" style="cursor: pointer;">' +
+          '<input type="checkbox" class="freeTestCheckbox" value="' + escapeHTML(t.id) + '"' + checked + ' style="width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer;">' +
+          '<span class="editor-option-text" style="font-size: 13px;">' + escapeHTML(t.title) + '</span>' +
+        '</label>';
+      });
+      html += '</div>';
+    }
+
+    html += '<label style="display: flex; align-items: center; gap: 10px; padding: 12px 0; border-top: 1px solid var(--border); cursor: pointer;">' +
+      '<input type="checkbox" id="gatingEnabledCheckbox"' + (gatingEnabled ? " checked" : "") + ' style="width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer;">' +
+      '<span style="font-size: 13px; font-weight: 500;">Require login for non-free tests</span>' +
+    '</label>';
+
+    html += '<p class="form-hint" style="margin: 0 0 12px;">When OFF, all tests are free (default). When ON, only checked tests are free — others require sign-in.</p>';
+    html += '<div class="form-error" id="freeTestsError" hidden></div>';
+    html += '<div class="form-actions" style="margin-top: 12px;">' +
+      '<button class="btn btn-primary" id="saveFreeTestsBtn" type="button">Save</button>' +
+    '</div>';
+
+    card.innerHTML = html;
+
+    const saveBtn = $id("saveFreeTestsBtn");
+    if (saveBtn) saveBtn.addEventListener("click", saveFreeTestsSettings);
+  }
+
+  async function saveFreeTestsSettings() {
+    const errEl = $id("freeTestsError");
+    if (errEl) errEl.hidden = true;
+
+    const checkboxes = document.querySelectorAll(".freeTestCheckbox");
+    const freeTestIds = [];
+    checkboxes.forEach(function (cb) { if (cb.checked) freeTestIds.push(cb.value); });
+
+    const gatingEl = $id("gatingEnabledCheckbox");
+    const gatingEnabled = !!(gatingEl && gatingEl.checked);
+
+    const saveBtn = $id("saveFreeTestsBtn");
+    if (saveBtn) saveBtn.disabled = true;
+
+    try {
+      const token = getIdToken();
+      const res = await fetch(API_BASE + "/settings", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ freeTestIds: freeTestIds, gatingEnabled: gatingEnabled })
+      });
+      const data = await res.json().catch(function () { return null; });
+      if (!res.ok) throw new Error((data && data.error) || ("HTTP " + res.status));
+      toast("Free test settings saved", "success");
+    } catch (err) {
+      if (errEl) { errEl.textContent = err.message || "Save failed"; errEl.hidden = false; }
+    } finally {
+      if (saveBtn) saveBtn.disabled = false;
     }
   }
 
