@@ -332,5 +332,57 @@
   <script src="js/login-modal.js"></script>
   <script src="js/student-dashboard.js"></script>
 
+  <script>
+    (function () {
+      const y = document.getElementById("currentYear");
+      if (y && !y.textContent) y.textContent = new Date().getFullYear();
+
+      const menuToggle = document.getElementById("menuToggle");
+      const menuPanel = document.getElementById("menuPanel");
+      const menuIcon = document.getElementById("menuIcon");
+      const hamburgerSVG = '<path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path>';
+      const closeSVG = '<path d="m6 6 12 12"></path><path d="M18 6 6 18"></path>';
+
+      function closeMenu() {
+        if (!menuPanel || !menuToggle || !menuIcon) return;
+        menuPanel.classList.remove("open");
+        menuToggle.setAttribute("aria-expanded", "false");
+        menuIcon.innerHTML = hamburgerSVG;
+      }
+
+      function openMenu() {
+        if (!menuPanel || !menuToggle || !menuIcon) return;
+        menuPanel.classList.add("open");
+        menuToggle.setAttribute("aria-expanded", "true");
+        menuIcon.innerHTML = closeSVG;
+      }
+
+      if (menuToggle && menuPanel && menuIcon) {
+        menuToggle.addEventListener("click", function (e) {
+          e.stopPropagation();
+          if (menuPanel.classList.contains("open")) closeMenu();
+          else openMenu();
+        });
+
+        document.addEventListener("click", function (e) {
+          if (menuPanel.classList.contains("open") &&
+              !menuPanel.contains(e.target) &&
+              !menuToggle.contains(e.target)) {
+            closeMenu();
+          }
+        });
+
+        // Handle clicks on static + dynamically injected links
+        menuPanel.addEventListener("click", function (e) {
+          if (e.target.closest("a")) closeMenu();
+        });
+      }
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") closeMenu();
+      });
+    })();
+  </script>
+
 </body>
 </html>
