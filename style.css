@@ -486,3 +486,25 @@
 /* Sign in button black in mobile menu */
 #menuPanel .nav-signin-btn{background:var(--accent) !important;color:#ffffff !important;border-color:var(--accent) !important}#menuPanel .nav-signin-btn svg{stroke:#ffffff !important}
 /* end of Sign in button black in mobile menu */
+/* === Exam badge (append) === */
+
+.exam-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .exam-badge {
+    font-size: 8px;
+    padding: 2px 6px;
+  }
+}
