@@ -581,6 +581,18 @@
     });
   }
 
+  // Instant header from localStorage cache — before Firebase loads.
+  // Firebase will reconcile and re-render if state differs.
+  try {
+    const cu = localStorage.getItem("pk_student_user");
+    if (cu) {
+      PK_STUDENT.user = JSON.parse(cu);
+      const cp = localStorage.getItem("pk_student_profile");
+      PK_STUDENT.profile = cp ? JSON.parse(cp) : null;
+    }
+  } catch (e) {}
+  renderHeader();
+
   PK_STUDENT.ready = init();
 
 })();
