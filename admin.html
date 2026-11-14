@@ -113,6 +113,7 @@
       <div class="admin-tabs" role="tablist">
         <button class="admin-tab is-active" id="tabTests" type="button" role="tab" aria-selected="true" data-i18n="myTests">My tests</button>
         <button class="admin-tab" id="tabUsers" type="button" role="tab" aria-selected="false">Users</button>
+        <button class="admin-tab" id="tabLive" type="button" role="tab" aria-selected="false">Live</button>
         <button class="admin-tab" id="tabSettings" type="button" role="tab" aria-selected="false" data-i18n="settings">Settings</button>
       </div>
 
@@ -160,6 +161,67 @@
           <span class="pagination-info" id="testsPageInfo"></span>
           <button class="pagination-btn" id="testsNext" type="button" data-i18n="nextPage">Next</button>
         </nav>
+
+      </div>
+
+      <!-- LIVE ANALYTICS PANEL -->
+      <div id="panelLive" hidden>
+
+        <div class="live-pill-row">
+          <div class="live-pill" id="anPill">
+            <span class="live-dot is-idle" aria-hidden="true"></span>
+            <span class="live-count" id="anLiveCount">0 live tabs</span>
+            <span class="live-updated" id="anUpdated"></span>
+            <button class="btn btn-sm live-refresh" id="anRefreshBtn" type="button" aria-label="Refresh analytics">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"></path>
+                <path d="M21 3v5h-5"></path>
+                <path d="M21 12a9 9 0 0 1-15.5 6.3L3 16"></path>
+                <path d="M3 21v-5h5"></path>
+              </svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="loading-overlay is-hidden" id="anLoading" aria-hidden="true">
+          <div class="spinner"></div>
+        </div>
+
+        <div class="an-grid">
+          <div class="card">
+            <div class="card-head"><h2 class="card-title">Active pages</h2></div>
+            <div id="anPages"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h2 class="card-title">Devices</h2></div>
+            <div id="anDevices"></div>
+          </div>
+        </div>
+
+        <div class="an-grid">
+          <div class="card">
+            <div class="card-head"><h2 class="card-title">Language</h2></div>
+            <div id="anLanguages"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h2 class="card-title">Recent events</h2></div>
+            <div id="anEvents"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 16px;">
+          <div class="card-head">
+            <h2 class="card-title">Today</h2>
+            <p class="card-sub" id="anTodaySub">—</p>
+          </div>
+          <div class="an-today-row" id="anToday"></div>
+          <div class="an-chart-wrap">
+            <canvas class="an-chart-canvas" id="anChartCanvas" width="800" height="120"></canvas>
+          </div>
+        </div>
 
       </div>
 
