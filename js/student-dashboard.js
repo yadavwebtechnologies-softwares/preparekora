@@ -15,6 +15,33 @@
       : "https://preparekora-api.yadavsubba2003.workers.dev/api";
   })();
 
+  const DASH_CACHE_KEY = "pk_dash_cache_v1";
+
+  function readDashCache() {
+    try {
+      const raw = sessionStorage.getItem(DASH_CACHE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  function writeDashCache(data) {
+    try { sessionStorage.setItem(DASH_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+  }
+
+  function readCachedProfile() {
+    try {
+      const raw = localStorage.getItem("pk_student_profile");
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  function readCachedUser() {
+    try {
+      const raw = localStorage.getItem("pk_student_user");
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
   const sections = {
     loading: document.getElementById("dashLoading"),
     authRequired: document.getElementById("dashAuthRequired"),
@@ -50,6 +77,7 @@
   const dashDeleteAccountBtn = document.getElementById("dashDeleteAccountBtn");
 
   const state = { user: null, profile: null, stats: null };
+
   let loadingInProgress = false;
   let lastAuthUid = null;
   let hasRenderedOnce = false;
@@ -98,8 +126,6 @@
     return String(name || email || "U").trim().charAt(0).toUpperCase();
   }
 
-  /* ---------- Modals helper ---------- */
-
   function openOverlay(id) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -129,8 +155,6 @@
     }
   });
 
-  /* ---------- Tabs ---------- */
-
   const tabs = document.querySelectorAll(".dash-tab");
   const panels = document.querySelectorAll(".dash-panel");
 
@@ -150,8 +174,6 @@
   });
 
   if (dashEditBtn) dashEditBtn.addEventListener("click", function () { setTab("settings"); });
-
-  /* ---------- Render ---------- */
 
   function renderProfile() {
     const user = state.user || {};
@@ -269,62 +291,106 @@
     });
   }
 
-  async function fetchDashboardData(token) {
-    try {
-      const res = await fetch(API_BASE + "/students/me/dashboard", {
+  async function fetchAllData(token) {
+    const [pr, dr] = await Promise.all([
+      fetch(API_BASE + "/students/me", {
         headers: { Authorization: "Bearer " + token, Accept: "application/json" }
-      });
-      if (!res.ok) return null;
-      return await res.json();
-    } catch (e) { return null; }
+      }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+      fetch(API_BASE + "/students/me/dashboard", {
+        headers: { Authorization: "Bearer " + token, Accept: "application/json" }
+      }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+    ]);
+    return { profile: pr, dashboard: dr };
   }
 
   async function loadAll(force) {
     if (loadingInProgress) return;
+
+    const cachedUser = readCachedUser();
+    const cachedProfile = readCachedProfile();
+    const cachedDash = readDashCache();
+
+    // Fast path — render from cache instantly
+    if (cachedUser && cachedProfile && cachedDash && !force) {
+      state.user = cachedUser;
+      state.profile = cachedProfile;
+      state.stats = cachedDash;
+      showSection("main");
+      renderProfile();
+      renderStats();
+      updateProviderUI();
+      hasRenderedOnce = true;
+      lastAuthUid = cachedUser.uid || "unknown";
+    }
+
+    // Wait for auth
     try { await window.PK_STUDENT.ready; }
-    catch (e) { showSection("authRequired"); return; }
+    catch (e) {
+      if (!hasRenderedOnce) showSection("authRequired");
+      return;
+    }
 
     const loggedIn = window.PK_STUDENT.isLoggedIn();
     const currentUid = loggedIn ? ((window.PK_STUDENT.getUser() || {}).uid || "unknown") : null;
-    if (!force && hasRenderedOnce && lastAuthUid === currentUid) return;
+
+    if (!loggedIn) {
+      try { sessionStorage.removeItem(DASH_CACHE_KEY); } catch (e) {}
+      showSection("authRequired");
+      lastAuthUid = null;
+      hasRenderedOnce = true;
+      return;
+    }
+
+    // Same user + already rendered → background refresh only
+    const sameUser = hasRenderedOnce && lastAuthUid === currentUid;
 
     loadingInProgress = true;
     try {
-      if (!loggedIn) {
-        showSection("authRequired");
-        lastAuthUid = null; hasRenderedOnce = true;
-        return;
-      }
+      if (!hasRenderedOnce) showSection("loading");
+
       const token = await window.PK_STUDENT.getToken();
       if (!token) {
         showSection("authRequired");
-        lastAuthUid = null; hasRenderedOnce = true;
+        lastAuthUid = null;
+        hasRenderedOnce = true;
         return;
       }
-      if (!hasRenderedOnce) showSection("loading");
 
       state.user = window.PK_STUDENT.getUser() || {};
       state.profile = window.PK_STUDENT.getProfile() || {};
 
-      try {
-        const pr = await fetch(API_BASE + "/students/me", { headers: { Authorization: "Bearer " + token } });
-        if (pr.ok) {
-          const fresh = await pr.json();
-          state.profile = fresh;
-          try { localStorage.setItem("pk_student_profile", JSON.stringify(fresh)); } catch (e) {}
-        }
-      } catch (e) {}
+      // Show main immediately with whatever profile we have
+      if (!hasRenderedOnce) {
+        showSection("main");
+        renderProfile();
+        updateProviderUI();
+      }
+
+      // Parallel fetch profile + dashboard
+      const { profile, dashboard } = await fetchAllData(token);
+
+      if (profile) {
+        state.profile = profile;
+        try { localStorage.setItem("pk_student_profile", JSON.stringify(profile)); } catch (e) {}
+      }
+
+      if (dashboard) {
+        state.stats = dashboard;
+        writeDashCache(dashboard);
+      } else {
+        state.stats = state.stats || { totalTests: 0, avgPercent: 0, bestPercent: 0, totalQuestions: 0, scoreTrend: [], subjects: [], recentSubmissions: [] };
+      }
 
       showSection("main");
       renderProfile();
+      renderStats();
       updateProviderUI();
 
-      const data = await fetchDashboardData(token);
-      state.stats = data || { totalTests: 0, avgPercent: 0, bestPercent: 0, totalQuestions: 0, scoreTrend: [], subjects: [], recentSubmissions: [] };
-      renderStats();
-
-      lastAuthUid = currentUid; hasRenderedOnce = true;
-    } finally { loadingInProgress = false; }
+      lastAuthUid = currentUid;
+      hasRenderedOnce = true;
+    } finally {
+      loadingInProgress = false;
+    }
   }
 
   if (dashSignInBtn) {
@@ -332,8 +398,6 @@
       document.dispatchEvent(new CustomEvent("pk:open-login-modal"));
     });
   }
-
-  /* ---------- Provider detection ---------- */
 
   function currentFirebaseUser() {
     try { return window.PK_FIREBASE && window.PK_FIREBASE.auth ? window.PK_FIREBASE.auth.currentUser : null; }
@@ -367,19 +431,16 @@
         dashChangePasswordBtn.disabled = false;
       }
     }
+    const dashDeletePasswordField = document.getElementById("dashDeletePasswordField");
+    const dashDeleteInstructions = document.getElementById("dashDeleteInstructions");
     if (dashDeleteInstructions) {
       if (hasPass) dashDeleteInstructions.textContent = "Enter your current password to confirm.";
       else if (userHasGoogle()) dashDeleteInstructions.textContent = "You'll be asked to re-confirm with Google before deletion.";
       else dashDeleteInstructions.textContent = "This cannot be undone.";
     }
-    if (dashDeletePasswordField) {
-      dashDeletePasswordField.style.display = hasPass ? "" : "none";
-    }
+    if (dashDeletePasswordField) dashDeletePasswordField.style.display = hasPass ? "" : "none";
   }
 
-  /* ---------- Change password ---------- */
-
-  const dashChangePassOverlay = document.getElementById("dashChangePassOverlay");
   const dashChangePassForm = document.getElementById("dashChangePassForm");
   const dashCurrentPass = document.getElementById("dashCurrentPass");
   const dashNewPass = document.getElementById("dashNewPass");
@@ -461,16 +522,11 @@
     });
   }
 
-  /* ---------- Logout with confirmation ---------- */
-
-  const dashLogoutOverlay = document.getElementById("dashLogoutOverlay");
   const dashLogoutCancel = document.getElementById("dashLogoutCancel");
   const dashLogoutConfirm = document.getElementById("dashLogoutConfirm");
 
   if (dashLogoutBtn) {
-    dashLogoutBtn.addEventListener("click", function () {
-      openOverlay("dashLogoutOverlay");
-    });
+    dashLogoutBtn.addEventListener("click", function () { openOverlay("dashLogoutOverlay"); });
   }
 
   if (dashLogoutCancel) {
@@ -485,15 +541,12 @@
     });
   }
 
-  /* ---------- Delete account ---------- */
-
-  const dashDeleteOverlay = document.getElementById("dashDeleteOverlay");
   const dashDeleteForm = document.getElementById("dashDeleteForm");
-  const dashDeletePasswordField = document.getElementById("dashDeletePasswordField");
   const dashDeletePassword = document.getElementById("dashDeletePassword");
   const dashDeleteError = document.getElementById("dashDeleteError");
   const dashDeleteCancel = document.getElementById("dashDeleteCancel");
   const dashDeleteConfirm = document.getElementById("dashDeleteConfirm");
+  const dashDeletePasswordField = document.getElementById("dashDeletePasswordField");
   const dashDeleteInstructions = document.getElementById("dashDeleteInstructions");
 
   function deleteError(msg) {
@@ -567,8 +620,6 @@
     });
   }
 
-  /* ---------- Settings save ---------- */
-
   if (dashSettingsForm) {
     dashSettingsForm.addEventListener("submit", async function (e) {
       e.preventDefault();
@@ -604,8 +655,6 @@
       }
     });
   }
-
-  /* ---------- Auth listener ---------- */
 
   document.addEventListener("pk:student-auth-changed", function () { loadAll(false); });
 
