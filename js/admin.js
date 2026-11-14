@@ -2237,7 +2237,9 @@
   /* ---------- LIVE ANALYTICS MODULE ---------- */
 
   const AN_POLL_MS = 10000;
+  const AN_TODAY_MS = 60000;
   let anPollId = null;
+  let anTodayId = null;
   let anTickerId = null;
   let anLastUpdated = 0;
   let anRefreshInFlight = false;
@@ -2279,6 +2281,12 @@
       if (state.currentTab !== "live") return;
       fetchAnalyticsLive();
     }, AN_POLL_MS);
+    anTodayId = setInterval(function () {
+      if (document.hidden) return;
+      if (!screens.dashboard || screens.dashboard.hidden) return;
+      if (state.currentTab !== "live") return;
+      fetchAnalyticsToday();
+    }, AN_TODAY_MS);
     if (!anTickerId) {
       anTickerId = setInterval(function () {
         if (!anLastUpdated) return;
@@ -2292,6 +2300,7 @@
 
   function stopAnalyticsPolling() {
     if (anPollId) { clearInterval(anPollId); anPollId = null; }
+    if (anTodayId) { clearInterval(anTodayId); anTodayId = null; }
     if (anTickerId) { clearInterval(anTickerId); anTickerId = null; }
   }
 
