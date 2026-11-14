@@ -508,3 +508,60 @@
     padding: 2px 6px;
   }
 }
+/* === Analytics panel (append) === */
+
+.an-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.an-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.an-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.an-row:first-child { padding-top: 0; }
+
+.an-row-key {
+  color: var(--text);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.an-row-val {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.an-today-row {
+  margin-bottom: 14px;
+}
+
+.an-chart-wrap {
+  height: 120px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  overflow: hidden;
+  padding: 4px;
+}
+
+.an-chart-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .an-grid { grid-template-columns: 1fr; }
+}
