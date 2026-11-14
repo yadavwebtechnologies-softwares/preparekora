@@ -15,6 +15,19 @@
       : "https://preparekora-api.yadavsubba2003.workers.dev/api";
   })();
 
+  const TESTS_CACHE_KEY = "pk_tests_cache_v1";
+
+  function readTestsCache() {
+    try {
+      const raw = sessionStorage.getItem(TESTS_CACHE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  function writeTestsCache(data) {
+    try { sessionStorage.setItem(TESTS_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+  }
+
   async function apiFetch(path) {
     const res = await fetch(API_BASE + path, {
       method: "GET",
@@ -272,20 +285,34 @@
   }
 
   async function loadTests() {
-    showOverlay(homeLoading);
+    // Render from cache first — instant cards, no spinner
+    const cached = readTestsCache();
+    if (cached && Array.isArray(cached.tests)) {
+      state.tests = cached.tests;
+      state.gatingEnabled = cached.gatingEnabled === true;
+      state.loaded = true;
+      render();
+    } else {
+      showOverlay(homeLoading);
+    }
+
+    // Background refresh — update silently
     try {
       const res = await apiFetch("/tests");
       state.tests = Array.isArray(res.tests) ? res.tests : [];
       state.gatingEnabled = res.gatingEnabled === true;
       state.loaded = true;
+      writeTestsCache({ tests: state.tests, gatingEnabled: state.gatingEnabled });
       render();
     } catch (err) {
-      state.tests = [];
-      state.loaded = true;
-      render();
-      if (emptyState) {
-        emptyState.hidden = false;
-        emptyState.textContent = t("loadFailed");
+      if (!cached) {
+        state.tests = [];
+        state.loaded = true;
+        render();
+        if (emptyState) {
+          emptyState.hidden = false;
+          emptyState.textContent = t("loadFailed");
+        }
       }
     }
   }
