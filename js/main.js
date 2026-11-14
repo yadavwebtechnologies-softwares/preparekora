@@ -2,8 +2,6 @@
 
 /*
   PrepareKora — Homepage logic (self-contained).
-  Loads only translation.js. API client inlined here so
-  no extra scripts are required in index.html.
 */
 
 (function () {
@@ -41,7 +39,8 @@
     tests: [],
     loaded: false,
     earlierPage: 1,
-    earlierTotalPages: 1
+    earlierTotalPages: 1,
+    gatingEnabled: false
   };
 
   const EARLIER_PAGE_SIZE = 5;
@@ -52,6 +51,9 @@
   const yesterdayList = document.getElementById("yesterdayTests");
   const earlierList = document.getElementById("earlierTests");
   const emptyState = document.getElementById("archiveEmpty");
+
+  const freeTestsList = document.getElementById("freeTests");
+  const freeTestsSection = freeTestsList ? freeTestsList.closest(".archive-section") : null;
 
   const menuToggle = document.getElementById("menuToggle");
   const menuPanel = document.getElementById("menuPanel");
@@ -74,11 +76,13 @@
   function t(key, vars) {
     return (window.PK && window.PK.t) ? window.PK.t(key, vars) : key;
   }
+
   function showOverlay(el) {
     if (!el) return;
     el.classList.remove("is-hidden");
     el.setAttribute("aria-hidden", "false");
   }
+
   function hideOverlay(el) {
     if (!el) return;
     el.classList.add("is-hidden");
@@ -118,12 +122,45 @@
     return "earlier";
   }
 
+  function isLoggedIn() {
+    try {
+      return !!(window.PK_STUDENT && typeof window.PK_STUDENT.isLoggedIn === "function" && window.PK_STUDENT.isLoggedIn());
+    } catch (e) { return false; }
+  }
+
+  function isTestFree(test) {
+    return state.gatingEnabled && test && test.isFree === true;
+  }
+
+  function isTestGated(test) {
+    if (!state.gatingEnabled) return false;
+    if (!test) return false;
+    if (test.isFree === true) return false;
+    return !isLoggedIn();
+  }
+
   /* ---------- Card builder ---------- */
 
   function buildCard(test) {
     const dateParts = formatBadgeDate(test.createdAt);
     const card = document.createElement("article");
     card.className = "test-card";
+
+    const isFree = isTestFree(test);
+    const gated = isTestGated(test);
+
+    if (gated) card.classList.add("is-gated");
+
+    const freeChip = isFree
+      ? '<span class="free-chip">' + escapeHTML(t("freeTest")) + '</span>'
+      : "";
+
+    const gatedChip = gated
+      ? '<span class="gated-chip"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' + escapeHTML(t("signInRequired")) + '</span>'
+      : "";
+
+    const startLabel = gated ? t("signInRequired") : t("start");
+    const startHref = gated ? "#" : "mock-test.html?test=" + encodeURIComponent(test.id);
 
     card.innerHTML = `
       <div class="date-badge" aria-hidden="true">
@@ -137,17 +174,29 @@
           t("byLine", { name: test.publisherName || "—" })
         )}</p>
         <div class="test-meta">
+          ${freeChip}
+          ${gatedChip}
           <span>${Number(test.questionCount) || 0} ${escapeHTML(t("questionsUnit"))}</span>
           <span>${Number(test.minutes) || 0} ${escapeHTML(t("minutesUnit"))}</span>
         </div>
       </div>
 
       <a class="start-button"
-         href="mock-test.html?test=${encodeURIComponent(test.id)}"
-         aria-label="${escapeHTML(t("start"))} ${escapeHTML(test.title)}">
-        ${escapeHTML(t("start"))}
+         href="${startHref}"
+         aria-label="${escapeHTML(startLabel)} ${escapeHTML(test.title)}">
+        ${escapeHTML(startLabel)}
       </a>
     `;
+
+    if (gated) {
+      const startBtn = card.querySelector(".start-button");
+      if (startBtn) {
+        startBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          document.dispatchEvent(new CustomEvent("pk:open-login-modal"));
+        });
+      }
+    }
 
     return card;
   }
@@ -177,18 +226,38 @@
       showOverlay(homeLoading);
       if (emptyState) emptyState.hidden = true;
       if (earlierPagination) earlierPagination.hidden = true;
+      if (freeTestsSection) freeTestsSection.hidden = true;
       return;
     }
     hideOverlay(homeLoading);
 
-    const groups = { today: [], yesterday: [], earlier: [] };
+    const freeArr = [];
+    const nonFreeTests = [];
     state.tests.forEach(function (test) {
+      if (state.gatingEnabled && test.isFree === true) freeArr.push(test);
+      else nonFreeTests.push(test);
+    });
+
+    // Free section
+    if (freeTestsList) {
+      freeTestsList.replaceChildren();
+      freeArr
+        .sort(function (a, b) { return b.createdAt - a.createdAt; })
+        .forEach(function (test) {
+          freeTestsList.appendChild(buildCard(test));
+        });
+    }
+    if (freeTestsSection) freeTestsSection.hidden = freeArr.length === 0;
+
+    // Groups from non-free tests only
+    const groups = { today: [], yesterday: [], earlier: [] };
+    nonFreeTests.forEach(function (test) {
       groups[groupFor(test.createdAt)].push(test);
     });
 
-    let total = 0;
+    let total = freeArr.length;
 
-    // Today + Yesterday — all tests
+    // Today + Yesterday — all non-free tests
     const allMapping = { today: todayList, yesterday: yesterdayList };
     Object.keys(allMapping).forEach(function (key) {
       const container = allMapping[key];
@@ -234,6 +303,7 @@
     try {
       const res = await apiFetch("/tests");
       state.tests = Array.isArray(res.tests) ? res.tests : [];
+      state.gatingEnabled = res.gatingEnabled === true;
       state.loaded = true;
       render();
     } catch (err) {
@@ -341,9 +411,10 @@
     }
 
     matches.forEach(function (test) {
+      const gated = isTestGated(test);
       const a = document.createElement("a");
       a.className = "search-result";
-      a.href = "mock-test.html?test=" + encodeURIComponent(test.id);
+      a.href = gated ? "#" : ("mock-test.html?test=" + encodeURIComponent(test.id));
       a.innerHTML = `
         <div class="search-result-title">${escapeHTML(test.title)}</div>
         <div class="search-result-meta">
@@ -352,8 +423,15 @@
           ${Number(test.questionCount) || 0} ${escapeHTML(t("questionsUnit"))}
           &nbsp;·&nbsp;
           ${Number(test.minutes) || 0} ${escapeHTML(t("minutesUnit"))}
+          ${gated ? '&nbsp;·&nbsp;<strong>' + escapeHTML(t("signInRequired")) + '</strong>' : ''}
         </div>
       `;
+      if (gated) {
+        a.addEventListener("click", function (e) {
+          e.preventDefault();
+          document.dispatchEvent(new CustomEvent("pk:open-login-modal"));
+        });
+      }
       searchResults.appendChild(a);
     });
   }
@@ -391,7 +469,16 @@
     }
   });
 
-    /* ---------- Earlier pagination ---------- */
+  /* ---------- Auth change ---------- */
+
+  document.addEventListener("pk:student-auth-changed", function () {
+    render();
+    if (searchOverlay && searchOverlay.classList.contains("open")) {
+      renderSearchResults(searchInput ? searchInput.value : "");
+    }
+  });
+
+  /* ---------- Earlier pagination ---------- */
 
   if (earlierPrev) {
     earlierPrev.addEventListener("click", function () {
