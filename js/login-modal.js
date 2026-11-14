@@ -95,12 +95,16 @@
   }
 
   /* ---------- open / close ---------- */
+
+  let currentMode = "signin";
+  let modeTimeoutId = null;
+
   function openModal(mode) {
     mountModal();
     wire();
     const overlay = document.getElementById("studentLoginOverlay");
     if (!overlay) return;
-    setMode(mode || "signin");
+    applyModeSync(mode || "signin");
     clearErrors();
     overlay.classList.add("open");
     overlay.setAttribute("aria-hidden", "false");
@@ -113,15 +117,18 @@
   function closeModal() {
     const overlay = document.getElementById("studentLoginOverlay");
     if (!overlay) return;
+    const focused = document.activeElement;
+    if (focused && overlay.contains(focused) && typeof focused.blur === "function") {
+      focused.blur();
+    }
     overlay.classList.remove("open");
     overlay.setAttribute("aria-hidden", "true");
     clearErrors();
     setLoading(false);
   }
-
   /* ---------- mode switching ---------- */
-
-  function setMode(mode) {
+  function applyModeSync(mode) {
+    currentMode = mode;
     const signinForm = document.getElementById("studentSigninForm");
     const signupForm = document.getElementById("studentSignupForm");
     const title = document.getElementById("studentLoginTitle");
@@ -145,7 +152,47 @@
       if (title) title.textContent = "Welcome back";
       if (sub) sub.textContent = "Sign in to take tests and track your progress.";
     }
+    if (title) title.style.opacity = "1";
+    if (sub) sub.style.opacity = "1";
+  }
+
+  function setMode(mode) {
+    if (mode === currentMode) return;
+    currentMode = mode;
+
+    const signinForm = document.getElementById("studentSigninForm");
+    const signupForm = document.getElementById("studentSignupForm");
+    const title = document.getElementById("studentLoginTitle");
+    const sub = document.getElementById("studentLoginSub");
+    if (!signinForm || !signupForm) return;
+
+    document.querySelectorAll("#studentLoginOverlay .auth-tab").forEach(function (t) {
+      const active = t.dataset.mode === mode;
+      t.classList.toggle("is-active", active);
+      t.setAttribute("aria-selected", String(active));
+    });
+
+    if (modeTimeoutId) { clearTimeout(modeTimeoutId); modeTimeoutId = null; }
+
+    if (title) title.style.opacity = "0";
+    if (sub) sub.style.opacity = "0";
+
+    if (mode === "signup") {
+      signinForm.classList.add("is-hidden");
+      signupForm.classList.remove("is-hidden");
+    } else {
+      signupForm.classList.add("is-hidden");
+      signinForm.classList.remove("is-hidden");
+    }
     clearErrors();
+
+    modeTimeoutId = setTimeout(function () {
+      modeTimeoutId = null;
+      if (title) title.textContent = mode === "signup" ? "Create your account" : "Welcome back";
+      if (sub) sub.textContent = mode === "signup" ? "Free forever. No credit card required." : "Sign in to take tests and track your progress.";
+      if (title) title.style.opacity = "1";
+      if (sub) sub.style.opacity = "1";
+    }, 150);
   }
 
   function clearErrors() {
