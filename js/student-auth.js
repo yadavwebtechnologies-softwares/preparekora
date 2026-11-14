@@ -551,7 +551,10 @@
         renderHeader();
         fireAuthChanged();
 
-        if (profile && profile.profileCompleted === false && !completeProfileShownThisSession) {
+        const providers = Array.isArray(fbUser.providerData) ? fbUser.providerData : [];
+        const isGoogleUser = providers.some(function (p) { return p && p.providerId === "google.com"; });
+
+        if (isGoogleUser && profile && profile.profileCompleted === false && !completeProfileShownThisSession) {
           completeProfileShownThisSession = true;
           setTimeout(openCompleteProfileModal, 300);
         }
