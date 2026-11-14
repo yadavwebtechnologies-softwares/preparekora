@@ -148,6 +148,10 @@
     const card = document.createElement("article");
     card.className = "test-card";
 
+    const examBadge = (test && typeof test.exam === "string" && test.exam.trim())
+      ? '<span class="exam-badge">' + escapeHTML(test.exam.trim()) + '</span>'
+      : "";
+
     const freeChip = isTestFree(test)
       ? '<span class="free-chip">' + escapeHTML(t("freeTest")) + '</span>'
       : "";
@@ -167,6 +171,7 @@
           t("byLine", { name: test.publisherName || "—" })
         )}</p>
         <div class="test-meta">
+          ${examBadge}
           ${freeChip}
           <span>${Number(test.questionCount) || 0} ${escapeHTML(t("questionsUnit"))}</span>
           <span>${Number(test.minutes) || 0} ${escapeHTML(t("minutesUnit"))}</span>
