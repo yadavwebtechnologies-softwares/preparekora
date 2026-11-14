@@ -312,10 +312,10 @@
     const insertBefore = langSwitch || null;
 
     if (loggedIn) {
+      // Navigation only. Account actions (Settings, Log out) live in the profile dropdown.
       const items = [
         { href: "dashboard.html", label: "Dashboard", icon: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>' },
-        { href: "premium.html", label: "Premium", icon: '<path d="M12 2 15.09 8.26 22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01L12 2z"/>' },
-        { href: "dashboard.html#settings", label: "Settings", icon: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>' }
+        { href: "premium.html", label: "Premium", icon: '<path d="M12 2 15.09 8.26 22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01L12 2z"/>' }
       ];
 
       items.forEach(function (it) {
@@ -326,22 +326,6 @@
         if (insertBefore) panel.insertBefore(a, insertBefore);
         else panel.appendChild(a);
       });
-
-      const logoutBtn = document.createElement("button");
-      logoutBtn.type = "button";
-      logoutBtn.setAttribute("data-pk-injected", "true");
-      logoutBtn.style.color = "#b91c1c";
-      logoutBtn.innerHTML =
-        '<svg viewBox="0 0 24 24" aria-hidden="true" style="stroke:#b91c1c;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>Log out';
-      logoutBtn.addEventListener("click", function () {
-        const m = document.getElementById("menuPanel");
-        if (m) m.classList.remove("open");
-        const mb = document.getElementById("menuToggle");
-        if (mb) mb.setAttribute("aria-expanded", "false");
-        openSignOutModal();
-      });
-      if (insertBefore) panel.insertBefore(logoutBtn, insertBefore);
-      else panel.appendChild(logoutBtn);
     } else {
       const signinBtn = document.createElement("button");
       signinBtn.type = "button";
@@ -544,13 +528,6 @@
           storeToken(token);
         } catch (e) {}
 
-        const profile = await fetchProfile();
-        PK_STUDENT.profile = profile;
-        storeProfile(profile);
-
-        renderHeader();
-        fireAuthChanged();
-
         try {
           const sessUid = sessionStorage.getItem("pk_login_session_uid");
           if (sessUid !== fbUser.uid) {
@@ -571,6 +548,13 @@
 
         const providers = Array.isArray(fbUser.providerData) ? fbUser.providerData : [];
         const isGoogleUser = providers.some(function (p) { return p && p.providerId === "google.com"; });
+
+        const profile = await fetchProfile();
+        PK_STUDENT.profile = profile;
+        storeProfile(profile);
+
+        renderHeader();
+        fireAuthChanged();
 
         if (isGoogleUser && profile && profile.profileCompleted === false && !completeProfileShownThisSession) {
           completeProfileShownThisSession = true;
