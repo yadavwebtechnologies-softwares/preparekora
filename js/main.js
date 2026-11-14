@@ -147,20 +147,15 @@
     card.className = "test-card";
 
     const isFree = isTestFree(test);
-    const gated = isTestGated(test);
-
-    if (gated) card.classList.add("is-gated");
 
     const freeChip = isFree
       ? '<span class="free-chip">' + escapeHTML(t("freeTest")) + '</span>'
       : "";
 
-    const gatedChip = gated
-      ? '<span class="gated-chip"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' + escapeHTML(t("signInRequired")) + '</span>'
-      : "";
+    const gatedChip = "";
 
-    const startLabel = gated ? t("signInRequired") : t("start");
-    const startHref = gated ? "#" : "mock-test.html?test=" + encodeURIComponent(test.id);
+    const startLabel = t("start");
+    const startHref = "mock-test.html?test=" + encodeURIComponent(test.id);
 
     card.innerHTML = `
       <div class="date-badge" aria-hidden="true">
@@ -188,18 +183,7 @@
       </a>
     `;
 
-    if (gated) {
-      const startBtn = card.querySelector(".start-button");
-      if (startBtn) {
-        startBtn.addEventListener("click", function (e) {
-          e.preventDefault();
-          document.dispatchEvent(new CustomEvent("pk:open-login-modal"));
-        });
-      }
-    }
-
     return card;
-  }
 
   /* ---------- Render ---------- */
   function renderEarlierPagination(totalItems) {
@@ -411,10 +395,9 @@
     }
 
     matches.forEach(function (test) {
-      const gated = isTestGated(test);
       const a = document.createElement("a");
       a.className = "search-result";
-      a.href = gated ? "#" : ("mock-test.html?test=" + encodeURIComponent(test.id));
+      a.href = "mock-test.html?test=" + encodeURIComponent(test.id);
       a.innerHTML = `
         <div class="search-result-title">${escapeHTML(test.title)}</div>
         <div class="search-result-meta">
@@ -423,15 +406,8 @@
           ${Number(test.questionCount) || 0} ${escapeHTML(t("questionsUnit"))}
           &nbsp;·&nbsp;
           ${Number(test.minutes) || 0} ${escapeHTML(t("minutesUnit"))}
-          ${gated ? '&nbsp;·&nbsp;<strong>' + escapeHTML(t("signInRequired")) + '</strong>' : ''}
         </div>
       `;
-      if (gated) {
-        a.addEventListener("click", function (e) {
-          e.preventDefault();
-          document.dispatchEvent(new CustomEvent("pk:open-login-modal"));
-        });
-      }
       searchResults.appendChild(a);
     });
   }
