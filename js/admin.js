@@ -722,7 +722,7 @@
   const newTestBtn = $id("newTestBtn");
   if (newTestBtn) {
     newTestBtn.addEventListener("click", function () {
-      state.editing = { id: null, status: "draft", title: "", minutes: 10, questions: [blankQuestion()] };
+      state.editing = { id: null, status: "draft", title: "", minutes: 10, exam: "", questions: [blankQuestion()] };
       renderEditor();
       showScreen("editor");
     });
@@ -746,6 +746,7 @@
         status: res.test.status,
         title: res.test.title,
         minutes: res.test.minutes,
+        exam: typeof res.test.exam === "string" ? res.test.exam : "",
         questions: (res.test.questions || []).map(function (q) {
           const out = { q: q.q, options: q.options.slice(), answer: q.answer, hint: "" };
           if (typeof q.hint === "string" && q.hint.trim()) out.hint = q.hint;
@@ -775,6 +776,8 @@
     $id("editorHeading").textContent = state.editing.id ? (isPublished ? "Edit test" : "Edit draft") : "New test";
     $id("editorTitle").value = state.editing.title || "";
     $id("editorMinutes").value = state.editing.minutes || 10;
+    const examEl = $id("editorExam");
+    if (examEl) examEl.value = state.editing.exam || "";
     $id("editorError").hidden = true;
     const saveDraftBtn = $id("saveDraftBtn");
     const publishBtn = $id("publishBtn");
@@ -925,11 +928,14 @@
     });
   }
 
-  function collectEditor() {
+    function collectEditor() {
     const title = $id("editorTitle").value.trim();
     const minutes = Number($id("editorMinutes").value);
+    const examEl = $id("editorExam");
+    const exam = examEl ? examEl.value.trim() : "";
     if (!title) return { error: "Test title is required" };
     if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) return { error: "Duration must be between 1 and 180 minutes" };
+    if (exam.length > 30) return { error: "Exam name too long (max 30 chars)" };
 
     const questions = [];
     for (let i = 0; i < state.editing.questions.length; i++) {
@@ -950,7 +956,7 @@
       questions.push(cleaned);
     }
     if (questions.length === 0) return { error: "Add at least one question" };
-    return { payload: { title: title, minutes: minutes, questions: questions } };
+    return { payload: { title: title, minutes: minutes, exam: exam, questions: questions } };
   }
 
   async function saveEditor(action) {
@@ -1788,13 +1794,19 @@
     try { parsed = JSON.parse(rawText); }
     catch (e) { return setImportError("Invalid JSON — check the syntax and try again."); }
 
-    let questions = null, title = null, minutes = null;
+    let questions = null, title = null, minutes = null, exam = null;
 
     if (Array.isArray(parsed)) {
       questions = parsed;
     } else if (parsed && typeof parsed === "object" && Array.isArray(parsed.questions)) {
       questions = parsed.questions;
       if (typeof parsed.title === "string") title = parsed.title.trim();
+      if (parsed.exam != null) {
+        if (typeof parsed.exam !== "string") return setImportError("exam must be a string");
+        const ex = parsed.exam.trim();
+        if (ex.length > 30) return setImportError("Exam name too long (max 30 chars)");
+        if (ex.length > 0) exam = ex;
+      }
       if (parsed.minutes != null) {
         const m = Number(parsed.minutes);
         if (Number.isInteger(m) && m >= 1 && m <= 180) minutes = m;
@@ -1812,11 +1824,15 @@
       cleaned.push(res.question);
     }
 
-    const isFullTest = (title !== null) || (minutes !== null);
+    const isFullTest = (title !== null) || (minutes !== null) || (exam !== null);
 
     if (isFullTest) {
       if (title !== null) $id("editorTitle").value = title;
       if (minutes !== null) $id("editorMinutes").value = minutes;
+      if (exam !== null) {
+        const examEl = $id("editorExam");
+        if (examEl) examEl.value = exam;
+      }
       state.editing.questions = cleaned;
     } else {
       const onlyOne = state.editing.questions.length === 1;
