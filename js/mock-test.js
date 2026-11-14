@@ -22,7 +22,12 @@
     if (window.PK_API && window.PK_API.getPublishedTest) {
       return window.PK_API.getPublishedTest(decodeURIComponent(path.replace("/tests/", "")));
     }
-    const res = await fetch(API_BASE + path, { headers: { Accept: "application/json" } });
+    const headers = { Accept: "application/json" };
+    try {
+      const token = (window.PK_STUDENT && window.PK_STUDENT.getToken) ? await window.PK_STUDENT.getToken() : null;
+      if (token) headers["Authorization"] = "Bearer " + token;
+    } catch (e) {}
+    const res = await fetch(API_BASE + path, { headers: headers });
     if (!res.ok) { const e = new Error("HTTP " + res.status); e.status = res.status; throw e; }
     return res.json();
   }
@@ -320,8 +325,43 @@
       showScreen("start");
       translateStartIfNeeded();
     } catch (err) {
+      if (err.status === 401) {
+        handleAuthRequired();
+        return;
+      }
       showScreen("notFound");
     }
+  }
+
+  function handleAuthRequired() {
+    const authScreen = document.getElementById("signInRequiredScreen");
+    if (authScreen) authScreen.hidden = true;
+
+    if (window.PK_STUDENT && window.PK_STUDENT.isLoggedIn()) {
+      if (authScreen) authScreen.hidden = false;
+      return;
+    }
+
+    try {
+      document.dispatchEvent(new CustomEvent("pk:open-login-modal"));
+    } catch (e) {}
+
+    const onAuthChange = function () {
+      if (window.PK_STUDENT && window.PK_STUDENT.isLoggedIn()) {
+        document.removeEventListener("pk:student-auth-changed", onAuthChange);
+        window.location.reload();
+      }
+    };
+    document.addEventListener("pk:student-auth-changed", onAuthChange);
+
+    setTimeout(function () {
+      const stillNotLoggedIn = !(window.PK_STUDENT && window.PK_STUDENT.isLoggedIn());
+      if (stillNotLoggedIn && authScreen) {
+        document.removeEventListener("pk:student-auth-changed", onAuthChange);
+        authScreen.hidden = false;
+        showScreen("loading");
+      }
+    }, 30000);
   }
 
   /* ---------- Start screen ---------- */
@@ -1479,6 +1519,19 @@
 
   const yearEl = document.getElementById("currentYear");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  const _retrySignInBtn = document.getElementById("retrySignInBtn");
+  if (_retrySignInBtn) {
+    _retrySignInBtn.addEventListener("click", function () {
+      document.dispatchEvent(new CustomEvent("pk:open-login-modal"));
+    });
+  }
+
+  document.addEventListener("pk:student-auth-changed", function () {
+    if (window.PK_STUDENT && window.PK_STUDENT.isLoggedIn()) {
+      window.location.reload();
+    }
+  });
 
   showScreen("loading");
   loadTest();
