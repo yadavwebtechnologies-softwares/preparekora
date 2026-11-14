@@ -480,3 +480,6 @@
 .submissions-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 @media (max-width: 640px) { .submissions-table { min-width: 640px; } }
 /*======END====*/
+/* === Mobile panel injected icon size guard === */
+#menuPanel [data-pk-injected="true"]{display:flex;align-items:center;gap:10px;width:100%;padding:12px;border-radius:5px;font-size:14px;color:var(--text)}#menuPanel [data-pk-injected="true"]:hover{background:var(--surface)}#menuPanel [data-pk-injected="true"] svg{width:16px !important;height:16px !important;min-width:16px !important;min-height:16px !important;max-width:16px !important;max-height:16px !important;flex-shrink:0 !important;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}#menuPanel [data-pk-injected="true"] span{flex:1}
+/* === end of Mobile panel injected icon size guard === */
