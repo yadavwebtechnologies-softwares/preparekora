@@ -115,6 +115,21 @@
     return state.gatingEnabled && test && test.isFree === true;
   }
 
+  function isTestGated(test) {
+    if (!state.gatingEnabled) return false;
+    if (!test) return false;
+    if (test.isFree === true) return false;
+    try {
+      return !(window.PK_STUDENT && typeof window.PK_STUDENT.isLoggedIn === "function" && window.PK_STUDENT.isLoggedIn());
+    } catch (e) { return true; }
+  }
+
+  function openLoginModal() {
+    try {
+      document.dispatchEvent(new CustomEvent("pk:open-login-modal"));
+    } catch (e) {}
+  }
+
   function buildCard(test) {
     const dateParts = formatBadgeDate(test.createdAt);
     const card = document.createElement("article");
@@ -151,6 +166,16 @@
         ${escapeHTML(startLabel)}
       </a>
     `;
+
+    if (isTestGated(test)) {
+      const startBtn = card.querySelector(".start-button");
+      if (startBtn) {
+        startBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          openLoginModal();
+        });
+      }
+    }
 
     return card;
   }
@@ -368,6 +393,12 @@
           ${Number(test.minutes) || 0} ${escapeHTML(t("minutesUnit"))}
         </div>
       `;
+      if (isTestGated(test)) {
+        a.addEventListener("click", function (e) {
+          e.preventDefault();
+          openLoginModal();
+        });
+      }
       searchResults.appendChild(a);
     });
   }
