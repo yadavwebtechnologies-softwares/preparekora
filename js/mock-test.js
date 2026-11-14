@@ -188,6 +188,7 @@
     hintTimerId: null,
     hintQIndex: -1
   };
+
   /* ---------- Interruption ---------- */
 
   const MAX_INTERRUPTIONS = 5;
@@ -287,6 +288,13 @@
 
   function publisherLine(name) {
     return t("byLine", { name: name || "—" });
+  }
+
+  function escapeHTMLLocal(v) {
+    return String(v).replace(/[&<>"']/g, function (c) {
+      const m = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
+      return m[c];
+    });
   }
 
   /* ---------- Load test ---------- */
@@ -397,6 +405,17 @@
   if (startBtn) {
     startBtn.addEventListener("click", function () {
       showScreen("name");
+      if (userNameInput) {
+        try {
+          const logged = window.PK_STUDENT && window.PK_STUDENT.isLoggedIn();
+          if (logged) {
+            const profile = window.PK_STUDENT.getProfile() || {};
+            const user = window.PK_STUDENT.getUser() || {};
+            const nameToFill = profile.name || user.displayName || "";
+            if (nameToFill && !userNameInput.value) userNameInput.value = nameToFill;
+          }
+        } catch (e) {}
+      }
       setTimeout(function () { if (userNameInput) userNameInput.focus(); }, 60);
     });
   }
@@ -447,7 +466,7 @@
     });
   }
 
-  /* ---------- Session heartbeat (live tracker) ---------- */
+  /* ---------- Session heartbeat ---------- */
 
   async function startSession() {
     if (!state.publicTest || state.sessionId) return;
@@ -502,45 +521,14 @@
     } catch (e) {}
   }
 
-  /* ---------- Begin test ---------- */
-
-  function beginTest() {
-    if (isSessionTerminated()) {
-      showScreen("test");
-      showTerminateModal();
-      return;
-    }
-
-    state.started = true;
-    state.index = 0;
-    state.answers = {};
-    state.marked.clear();
-    state.visited.clear();
-    state.finished = false;
-    state.submitting = false;
-
-    clearInterruptState();
-
-    showScreen("test");
-    examTitle.textContent = state.translatedTitle || state.publicTest.title;
-    renderQuestion(true);
-    renderPalette();
-    updateNavSummary();
-    startTimer();
-
-    announce(t("questionOf", { n: 1, total: state.publicTest.questions.length }));
-    if (nextBtn) nextBtn.focus();
-    startSession();
-  }
-
-  /* ---------- Hint (20s per question) ---------- */
+  /* ---------- Hint ---------- */
 
   const HINT_DELAY_MS = 20000;
   const HINT_CACHE_PREFIX = "pkh_v1_";
 
   function hintCacheKey(qIndex) {
-    const testId = state.publicTest ? state.publicTest.id : "unknown";
-    return HINT_CACHE_PREFIX + testId + "_" + qIndex;
+    const tid = state.publicTest ? state.publicTest.id : "unknown";
+    return HINT_CACHE_PREFIX + tid + "_" + qIndex;
   }
 
   function clearHintTimer() {
@@ -626,18 +614,42 @@
     if (hintBtn) { hintBtn.disabled = true; hintBtn.textContent = t("showHint"); }
   }
 
-  function escapeHTMLLocal(v) {
-    return String(v).replace(/[&<>"']/g, function (c) {
-      const m = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
-      return m[c];
-    });
-  }
-
   if (hintBtn) {
     hintBtn.addEventListener("click", function () {
       if (hintBtn.disabled) return;
       loadHint();
     });
+  }
+
+  /* ---------- Begin test ---------- */
+
+  function beginTest() {
+    if (isSessionTerminated()) {
+      showScreen("test");
+      showTerminateModal();
+      return;
+    }
+
+    state.started = true;
+    state.index = 0;
+    state.answers = {};
+    state.marked.clear();
+    state.visited.clear();
+    state.finished = false;
+    state.submitting = false;
+
+    clearInterruptState();
+
+    showScreen("test");
+    examTitle.textContent = state.translatedTitle || state.publicTest.title;
+    renderQuestion(true);
+    renderPalette();
+    updateNavSummary();
+    startTimer();
+
+    announce(t("questionOf", { n: 1, total: state.publicTest.questions.length }));
+    if (nextBtn) nextBtn.focus();
+    startSession();
   }
 
   /* ---------- Question rendering ---------- */
@@ -834,11 +846,13 @@
   }
 
   /* ---------- Submit ---------- */
+
   async function submitTest() {
     if (state.finished || state.submitting) return;
     endSession(false);
     clearHintTimer();
     state.submitting = true;
+    state.finished = true;
 
     if (state.timerId) { window.clearInterval(state.timerId); state.timerId = null; }
     closePalette();
@@ -898,10 +912,12 @@
     statUnattempted.textContent = String(r.unattempted);
     statTime.textContent = formatClock(state.elapsed);
 
-    if (reviewBtn) reviewBtn.hidden = !(r && r.correctAnswers);
-    if (reviewContainer) { reviewContainer.hidden = true; reviewContainer.innerHTML = ""; }
+    const reviewBtnEl = document.getElementById("reviewBtn");
+    const reviewContainerEl = document.getElementById("reviewContainer");
+    if (reviewBtnEl) reviewBtnEl.hidden = !(r && r.correctAnswers);
+    if (reviewContainerEl) { reviewContainerEl.hidden = true; reviewContainerEl.innerHTML = ""; }
     state.reviewVisible = false;
-    if (reviewBtn) reviewBtn.textContent = t("reviewAnswers");
+    if (reviewBtnEl) reviewBtnEl.textContent = t("reviewAnswers");
   }
 
   /* ---------- Confirm modal ---------- */
@@ -1237,8 +1253,8 @@
   }
 
   function explainCacheKey(index, question, correctIndex) {
-    const testId = state.publicTest ? state.publicTest.id : "unknown";
-    return EXPLAIN_CACHE_PREFIX + testId + "_" + index + "_" + hashString(question + "|" + correctIndex);
+    const tid = state.publicTest ? state.publicTest.id : "unknown";
+    return EXPLAIN_CACHE_PREFIX + tid + "_" + index + "_" + hashString(question + "|" + correctIndex);
   }
 
   function buildReview() {
@@ -1491,10 +1507,13 @@
     document.addEventListener("click", function (e) {
       if (menuPanel.classList.contains("open") && !menuPanel.contains(e.target) && !menuToggle.contains(e.target)) closeMenu();
     });
-    menuPanel.querySelectorAll("a").forEach(function (link) { link.addEventListener("click", closeMenu); });
+    menuPanel.addEventListener("click", function (e) {
+      if (e.target.closest("a")) closeMenu();
+    });
   }
 
   /* ---------- Language change ---------- */
+
   document.addEventListener("pk:langchange", async function () {
     if (!state.publicTest) return;
     if (state.finished) {
@@ -1517,9 +1536,6 @@
 
   /* ---------- Init ---------- */
 
-  const yearEl = document.getElementById("currentYear");
-  if (yearEl) yearEl.textContent = new Date().getFullYear();
-
   const _retrySignInBtn = document.getElementById("retrySignInBtn");
   if (_retrySignInBtn) {
     _retrySignInBtn.addEventListener("click", function () {
@@ -1529,9 +1545,12 @@
 
   document.addEventListener("pk:student-auth-changed", function () {
     if (window.PK_STUDENT && window.PK_STUDENT.isLoggedIn()) {
-      window.location.reload();
+      if (testId) window.location.reload();
     }
   });
+
+  const yearEl = document.getElementById("currentYear");
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
 
   showScreen("loading");
   loadTest();
