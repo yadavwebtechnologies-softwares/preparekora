@@ -337,16 +337,23 @@
   const panelTests = $id("panelTests"), panelSettings = $id("panelSettings");
   const panelUsers = $id("panelUsers");
 
+  const tabLiveEl = $id("tabLive");
+  const panelLive = $id("panelLive");
+
   function setTab(tab) {
     state.currentTab = tab;
     if (tabTests) { const a = tab === "tests"; tabTests.classList.toggle("is-active", a); tabTests.setAttribute("aria-selected", String(a)); }
     if (tabUsersEl) { const a = tab === "users"; tabUsersEl.classList.toggle("is-active", a); tabUsersEl.setAttribute("aria-selected", String(a)); }
+    if (tabLiveEl) { const a = tab === "live"; tabLiveEl.classList.toggle("is-active", a); tabLiveEl.setAttribute("aria-selected", String(a)); }
     if (tabSettings) { const a = tab === "settings"; tabSettings.classList.toggle("is-active", a); tabSettings.setAttribute("aria-selected", String(a)); }
     if (panelTests) panelTests.hidden = tab !== "tests";
     if (panelUsers) panelUsers.hidden = tab !== "users";
+    if (panelLive) panelLive.hidden = tab !== "live";
     if (panelSettings) panelSettings.hidden = tab !== "settings";
     if (tab === "settings") loadSettings();
     if (tab === "users") loadUsers();
+    if (tab === "live") startAnalyticsPolling();
+    if (tab !== "live") stopAnalyticsPolling();
     if (tab === "tests") startLivePolling();
     if (tab !== "tests") stopLivePolling();
   }
@@ -354,6 +361,7 @@
   if (tabTests) tabTests.addEventListener("click", function () { setTab("tests"); });
   if (tabSettings) tabSettings.addEventListener("click", function () { setTab("settings"); });
   if (tabUsersEl) tabUsersEl.addEventListener("click", function () { setTab("users"); });
+  if (tabLiveEl) tabLiveEl.addEventListener("click", function () { setTab("live"); });
 
   const TESTS_PAGE_SIZE = 5;
   let testsCurrentPage = 1;
@@ -2225,5 +2233,196 @@
     }
     showLogin();
   })();
+
+  /* ---------- LIVE ANALYTICS MODULE ---------- */
+
+  const AN_POLL_MS = 10000;
+  let anPollId = null;
+  let anTickerId = null;
+  let anLastUpdated = 0;
+  let anRefreshInFlight = false;
+
+  async function fetchAnalyticsLive() {
+    if (anRefreshInFlight) return;
+    anRefreshInFlight = true;
+    const loading = $id("anLoading");
+    showOverlay(loading);
+    try {
+      const data = await request("/admin/analytics/live");
+      anLastUpdated = Date.now();
+      renderAnalyticsLive(data || {});
+    } catch (err) {
+      if (err.status === 401) { stopAnalyticsPolling(); showLogin(); return; }
+      const countEl = $id("anLiveCount");
+      if (countEl) countEl.textContent = "Unavailable";
+    } finally {
+      hideOverlay(loading);
+      anRefreshInFlight = false;
+    }
+  }
+
+  async function fetchAnalyticsToday() {
+    try {
+      const data = await request("/admin/analytics/today");
+      renderAnalyticsToday(data || {});
+    } catch (e) {}
+  }
+
+  function startAnalyticsPolling() {
+    if (anPollId) return;
+    if (!state.admin) return;
+    fetchAnalyticsLive();
+    fetchAnalyticsToday();
+    anPollId = setInterval(function () {
+      if (document.hidden) return;
+      if (!screens.dashboard || screens.dashboard.hidden) return;
+      if (state.currentTab !== "live") return;
+      fetchAnalyticsLive();
+    }, AN_POLL_MS);
+    if (!anTickerId) {
+      anTickerId = setInterval(function () {
+        if (!anLastUpdated) return;
+        const el = $id("anUpdated");
+        if (!el) return;
+        const secs = Math.max(0, Math.round((Date.now() - anLastUpdated) / 1000));
+        el.textContent = "Updated " + secs + "s ago";
+      }, 1000);
+    }
+  }
+
+  function stopAnalyticsPolling() {
+    if (anPollId) { clearInterval(anPollId); anPollId = null; }
+    if (anTickerId) { clearInterval(anTickerId); anTickerId = null; }
+  }
+
+  function renderAnalyticsLive(d) {
+    const countEl = $id("anLiveCount");
+    const pill = $id("anPill");
+    const dot = pill ? pill.querySelector(".live-dot") : null;
+
+    const total = Number(d.liveCount) || 0;
+    if (countEl) countEl.textContent = total + (total === 1 ? " live tab" : " live tabs");
+    if (dot) dot.classList.toggle("is-idle", total === 0);
+    if (pill) pill.classList.remove("is-failed");
+
+    const pagesWrap = $id("anPages");
+    if (pagesWrap) {
+      const pages = Array.isArray(d.pages) ? d.pages : [];
+      if (pages.length === 0) {
+        pagesWrap.innerHTML = '<p class="muted-text" style="font-size: 12px;">No active pages.</p>';
+      } else {
+        pagesWrap.innerHTML = pages.map(function (p) {
+          return '<div class="an-row"><span class="an-row-key">' + esc(p.path) + '</span><span class="an-row-val">' + p.count + '</span></div>';
+        }).join("");
+      }
+    }
+
+    const devWrap = $id("anDevices");
+    if (devWrap) {
+      const dev = d.devices || {};
+      const m = Number(dev.mobile) || 0;
+      const ds = Number(dev.desktop) || 0;
+      devWrap.innerHTML =
+        '<div class="an-row"><span class="an-row-key">Mobile</span><span class="an-row-val">' + m + '</span></div>' +
+        '<div class="an-row"><span class="an-row-key">Desktop</span><span class="an-row-val">' + ds + '</span></div>';
+    }
+
+    const langWrap = $id("anLanguages");
+    if (langWrap) {
+      const l = d.languages || {};
+      const en = Number(l.en) || 0;
+      const as = Number(l.as) || 0;
+      langWrap.innerHTML =
+        '<div class="an-row"><span class="an-row-key">English</span><span class="an-row-val">' + en + '</span></div>' +
+        '<div class="an-row"><span class="an-row-key">অসমীয়া</span><span class="an-row-val">' + as + '</span></div>';
+    }
+
+    const evWrap = $id("anEvents");
+    if (evWrap) {
+      const events = Array.isArray(d.recentEvents) ? d.recentEvents.slice(0, 10) : [];
+      if (events.length === 0) {
+        evWrap.innerHTML = '<p class="muted-text" style="font-size: 12px;">No events yet.</p>';
+      } else {
+        const now = Date.now();
+        evWrap.innerHTML = events.map(function (e) {
+          const secs = Math.max(0, Math.round((now - (Number(e.at) || now)) / 1000));
+          const ago = secs < 60 ? secs + "s ago" : Math.round(secs / 60) + "m ago";
+          return '<div class="an-row"><span class="an-row-key">' + ago + ' · ' + esc(e.type || "event") + ' · ' + esc(e.page || "/") + '</span></div>';
+        }).join("");
+      }
+    }
+  }
+
+  function renderAnalyticsToday(d) {
+    const sub = $id("anTodaySub");
+    if (sub) {
+      const total = Number(d.totalViews) || 0;
+      const dev = d.byDevice || {};
+      const l = d.byLang || {};
+      const devTotal = (Number(dev.mobile) || 0) + (Number(dev.desktop) || 0);
+      const mobPct = devTotal > 0 ? Math.round(((Number(dev.mobile) || 0) / devTotal) * 100) : 0;
+      const langTotal = (Number(l.en) || 0) + (Number(l.as) || 0);
+      const enPct = langTotal > 0 ? Math.round(((Number(l.en) || 0) / langTotal) * 100) : 0;
+      sub.textContent = total + " views · " + mobPct + "% mobile · " + enPct + "% EN";
+    }
+
+    const wrap = $id("anToday");
+    if (wrap) {
+      const byPath = d.byPath || {};
+      const entries = Object.keys(byPath).map(function (k) { return { path: k, count: byPath[k] }; });
+      entries.sort(function (a, b) { return b.count - a.count; });
+      const top = entries.slice(0, 5);
+      if (top.length === 0) {
+        wrap.innerHTML = '<p class="muted-text" style="font-size: 12px;">No views today.</p>';
+      } else {
+        wrap.innerHTML = top.map(function (p) {
+          return '<div class="an-row"><span class="an-row-key">' + esc(p.path) + '</span><span class="an-row-val">' + p.count + '</span></div>';
+        }).join("");
+      }
+    }
+
+    renderTodayChart(d.byHour || []);
+  }
+
+  function renderTodayChart(byHour) {
+    const c = $id("anChartCanvas");
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    const W = c.width, H = c.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const hours = Array.isArray(byHour) ? byHour.slice(0, 24) : [];
+    const maxVal = Math.max.apply(null, hours.concat([1]));
+    const barW = W / 24;
+
+    hours.forEach(function (v, i) {
+      const h = Math.round((v / maxVal) * (H - 20));
+      const x = i * barW + 2;
+      const y = H - h - 4;
+      ctx.fillStyle = "#e7e7e7";
+      ctx.fillRect(x, 4, barW - 4, H - 8);
+      if (h > 0) {
+        ctx.fillStyle = "#222222";
+        ctx.fillRect(x, y, barW - 4, h);
+      }
+    });
+  }
+
+  const anRefreshBtn = $id("anRefreshBtn");
+  if (anRefreshBtn) {
+    anRefreshBtn.addEventListener("click", function () {
+      anRefreshBtn.disabled = true;
+      Promise.all([fetchAnalyticsLive(), fetchAnalyticsToday()]).finally(function () {
+        anRefreshBtn.disabled = false;
+      });
+    });
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && state.admin && state.currentTab === "live") {
+      fetchAnalyticsLive();
+    }
+  });
 
 })();
