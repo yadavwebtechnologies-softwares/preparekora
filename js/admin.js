@@ -2248,4 +2248,362 @@
     showLogin();
   })();
 
+  /* ---------- USERS MODULE ---------- */
+
+  const USERS_PAGE_SIZE = 20;
+  let allUsersCache = [];
+  let usersFiltered = [];
+  let usersCurrentPage = 1;
+  let usersSearchQuery = "";
+  let usersStatusFilter = "";
+
+  function setTabUsers() {
+    if (tabTests) { tabTests.classList.remove("is-active"); tabTests.setAttribute("aria-selected", "false"); }
+    if (tabUsersEl) { tabUsersEl.classList.add("is-active"); tabUsersEl.setAttribute("aria-selected", "true"); }
+    if (tabSettings) { tabSettings.classList.remove("is-active"); tabSettings.setAttribute("aria-selected", "false"); }
+    if (panelTests) panelTests.hidden = true;
+    if (panelUsers) panelUsers.hidden = false;
+    if (panelSettings) panelSettings.hidden = true;
+    state.currentTab = "users";
+    stopLivePolling();
+    loadUsers();
+  }
+
+  function normalizeSetTabOriginal() {
+    if (typeof setTab === "function") {
+      const orig = setTab;
+      return orig;
+    }
+    return null;
+  }
+
+  const tabUsersEl = $id("tabUsers");
+  const panelUsers = $id("panelUsers");
+
+  if (tabUsersEl) {
+    tabUsersEl.addEventListener("click", function () {
+      if (tabTests) { tabTests.classList.remove("is-active"); tabTests.setAttribute("aria-selected", "false"); }
+      tabUsersEl.classList.add("is-active");
+      tabUsersEl.setAttribute("aria-selected", "true");
+      if (tabSettings) { tabSettings.classList.remove("is-active"); tabSettings.setAttribute("aria-selected", "false"); }
+      if (panelTests) panelTests.hidden = true;
+      if (panelUsers) panelUsers.hidden = false;
+      if (panelSettings) panelSettings.hidden = true;
+      state.currentTab = "users";
+      stopLivePolling();
+      loadUsers();
+    });
+  }
+
+  function formatShortDate(ts) {
+    if (!ts) return "—";
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return "—";
+    const day = String(d.getDate()).padStart(2, "0");
+    const mon = d.toLocaleString("en-IN", { month: "short" });
+    return day + " " + mon + " " + d.getFullYear();
+  }
+
+  function formatDateTime(ts) {
+    if (!ts) return "—";
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return "—";
+    const day = String(d.getDate()).padStart(2, "0");
+    const mon = d.toLocaleString("en-IN", { month: "short" });
+    const hr = String(d.getHours()).padStart(2, "0");
+    const mn = String(d.getMinutes()).padStart(2, "0");
+    return day + " " + mon + " " + d.getFullYear() + " · " + hr + ":" + mn;
+  }
+
+  async function loadUsers() {
+    const loading = $id("usersLoading");
+    const empty = $id("usersEmpty");
+    const wrap = $id("usersTableWrap");
+    const tbody = $id("usersTableBody");
+    if (!tbody) return;
+
+    showOverlay(loading);
+    if (empty) empty.hidden = true;
+    if (wrap) wrap.hidden = true;
+    tbody.innerHTML = "";
+
+    try {
+      const res = await request("/admin/users");
+      allUsersCache = Array.isArray(res.users) ? res.users : [];
+      hideOverlay(loading);
+      renderUsers();
+    } catch (err) {
+      hideOverlay(loading);
+      if (err.status === 401) return showLogin();
+      if (empty) { empty.hidden = false; empty.textContent = err.message || "Failed to load users"; }
+    }
+  }
+
+  function renderUsers() {
+    const empty = $id("usersEmpty");
+    const wrap = $id("usersTableWrap");
+    const tbody = $id("usersTableBody");
+    const pagination = $id("usersPagination");
+    if (!tbody) return;
+
+    const q = usersSearchQuery.trim().toLowerCase();
+    const now = Date.now();
+    const NEW_MS = 24 * 60 * 60 * 1000;
+
+    usersFiltered = allUsersCache.filter(function (u) {
+      if (usersStatusFilter === "active" && u.disabled) return false;
+      if (usersStatusFilter === "disabled" && !u.disabled) return false;
+      if (usersStatusFilter === "new" && (now - u.createdAt) >= NEW_MS) return false;
+      if (q) {
+        const hay = [u.name, u.email, u.whatsapp].join(" ").toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+
+    if (usersFiltered.length === 0) {
+      if (empty) { empty.hidden = false; empty.textContent = allUsersCache.length === 0 ? "No users yet." : "No matching users."; }
+      if (wrap) wrap.hidden = true;
+      if (pagination) pagination.hidden = true;
+      return;
+    }
+
+    if (empty) empty.hidden = true;
+    if (wrap) wrap.hidden = false;
+
+    const totalPages = Math.max(1, Math.ceil(usersFiltered.length / USERS_PAGE_SIZE));
+    if (usersCurrentPage > totalPages) usersCurrentPage = totalPages;
+    if (usersCurrentPage < 1) usersCurrentPage = 1;
+    const start = (usersCurrentPage - 1) * USERS_PAGE_SIZE;
+    const pageItems = usersFiltered.slice(start, start + USERS_PAGE_SIZE);
+
+    tbody.innerHTML = "";
+    pageItems.forEach(function (u) {
+      const tr = document.createElement("tr");
+      const isNew = (now - u.createdAt) < NEW_MS;
+      const statusBadge = u.disabled
+        ? '<span class="user-status disabled">Disabled</span>'
+        : '<span class="user-status active">Active</span>';
+      const newBadge = isNew ? ' <span class="user-new-badge">NEW</span>' : "";
+      tr.innerHTML =
+        '<td>' + esc(u.name || "—") + newBadge + '</td>' +
+        '<td>' + esc(u.email || "—") + '</td>' +
+        '<td>' + esc(u.whatsapp || "—") + '</td>' +
+        '<td>' + esc(formatShortDate(u.createdAt)) + '</td>' +
+        '<td>' + statusBadge + '</td>' +
+        '<td><div class="user-action-row"></div></td>';
+      const actions = tr.querySelector(".user-action-row");
+
+      const viewBtn = document.createElement("button");
+      viewBtn.type = "button"; viewBtn.className = "btn btn-sm"; viewBtn.textContent = "View";
+      viewBtn.addEventListener("click", function () { openUserDetails(u.uid); });
+      actions.appendChild(viewBtn);
+
+      if (u.canResetPassword) {
+        const resetBtn = document.createElement("button");
+        resetBtn.type = "button"; resetBtn.className = "btn btn-sm"; resetBtn.textContent = "Reset";
+        resetBtn.addEventListener("click", function () { resetUserPassword(u); });
+        actions.appendChild(resetBtn);
+      }
+
+      const toggleBtn = document.createElement("button");
+      toggleBtn.type = "button"; toggleBtn.className = "btn btn-sm";
+      toggleBtn.textContent = u.disabled ? "Enable" : "Disable";
+      toggleBtn.addEventListener("click", function () { toggleUserStatus(u); });
+      actions.appendChild(toggleBtn);
+
+      const delBtn = document.createElement("button");
+      delBtn.type = "button"; delBtn.className = "btn btn-sm"; delBtn.textContent = "Delete";
+      delBtn.addEventListener("click", function () { deleteUserConfirm(u); });
+      actions.appendChild(delBtn);
+
+      tbody.appendChild(tr);
+    });
+
+    if (pagination) {
+      if (totalPages <= 1) pagination.hidden = true;
+      else {
+        pagination.hidden = false;
+        const info = $id("usersPageInfo");
+        if (info) info.textContent = "Page " + usersCurrentPage + " of " + totalPages;
+        const prev = $id("usersPrev");
+        const next = $id("usersNext");
+        if (prev) prev.disabled = usersCurrentPage <= 1;
+        if (next) next.disabled = usersCurrentPage >= totalPages;
+      }
+    }
+  }
+
+  async function resetUserPassword(u) {
+    openConfirmModal({
+      title: "Send password reset?",
+      message: "A reset link will be emailed to " + (u.email || "this user") + ".",
+      confirmLabel: "Send",
+      onConfirm: async function () {
+        try {
+          await request("/admin/users/" + encodeURIComponent(u.uid) + "/reset-password", { method: "POST" });
+          toast("Reset email sent to " + u.email, "success");
+        } catch (err) {
+          if (err.status === 401) return showLogin();
+          toast(err.message || "Failed to send reset email", "error");
+        }
+      }
+    });
+  }
+
+  async function toggleUserStatus(u) {
+    const willDisable = !u.disabled;
+    openConfirmModal({
+      title: willDisable ? "Disable this user?" : "Re-enable this user?",
+      message: willDisable
+        ? "They will not be able to sign in until re-enabled."
+        : "They will be able to sign in again.",
+      confirmLabel: willDisable ? "Disable" : "Enable",
+      onConfirm: async function () {
+        try {
+          await request("/admin/users/" + encodeURIComponent(u.uid) + "/status", {
+            method: "PUT",
+            body: JSON.stringify({ disabled: willDisable })
+          });
+          toast(willDisable ? "User disabled" : "User re-enabled", "success");
+          await loadUsers();
+        } catch (err) {
+          if (err.status === 401) return showLogin();
+          toast(err.message || "Failed to update user", "error");
+        }
+      }
+    });
+  }
+
+  function deleteUserConfirm(u) {
+    openConfirmModal({
+      title: "Delete this user permanently?",
+      message: "This removes their Firebase account, profile, and login history. Cannot be undone.",
+      confirmLabel: "Delete",
+      onConfirm: async function () {
+        try {
+          await request("/admin/users/" + encodeURIComponent(u.uid), { method: "DELETE" });
+          toast("User deleted", "success");
+          await loadUsers();
+        } catch (err) {
+          if (err.status === 401) return showLogin();
+          toast(err.message || "Failed to delete user", "error");
+        }
+      }
+    });
+  }
+
+  /* ---------- User details modal ---------- */
+
+  function ensureUserDetailsModal() {
+    if ($id("userDetailsOverlay")) return;
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.id = "userDetailsOverlay";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-labelledby", "userDetailsTitle");
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.innerHTML =
+      '<div class="modal user-details-modal">' +
+        '<h2 id="userDetailsTitle">User details</h2>' +
+        '<div id="userDetailsBody"></div>' +
+        '<div class="modal-actions" style="margin-top: 16px;">' +
+          '<button class="btn" id="userDetailsClose" type="button">Close</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    $id("userDetailsClose").addEventListener("click", function () {
+      overlay.classList.remove("open");
+      overlay.setAttribute("aria-hidden", "true");
+    });
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) {
+        overlay.classList.remove("open");
+        overlay.setAttribute("aria-hidden", "true");
+      }
+    });
+  }
+
+  async function openUserDetails(uid) {
+    ensureUserDetailsModal();
+    const overlay = $id("userDetailsOverlay");
+    const body = $id("userDetailsBody");
+    body.innerHTML = '<div class="loading-state"><div class="spinner"></div></div>';
+    overlay.classList.add("open");
+    overlay.setAttribute("aria-hidden", "false");
+
+    try {
+      const u = await request("/admin/users/" + encodeURIComponent(uid));
+      const providerLabel = u.provider === "google.com" ? "Google" : (u.provider === "password" ? "Email / Password" : (u.provider || "—"));
+      let html = '<div class="user-details-grid">';
+      html += '<div><span class="user-details-label">Name</span><span class="user-details-value">' + esc(u.name || "—") + '</span></div>';
+      html += '<div><span class="user-details-label">Email</span><span class="user-details-value">' + esc(u.email || "—") + '</span></div>';
+      html += '<div><span class="user-details-label">WhatsApp</span><span class="user-details-value">' + esc(u.whatsapp || "—") + '</span></div>';
+      html += '<div><span class="user-details-label">DOB</span><span class="user-details-value">' + esc(u.dob || "—") + '</span></div>';
+      html += '<div><span class="user-details-label">PIN Code</span><span class="user-details-value">' + esc(u.pincode || "—") + '</span></div>';
+      html += '<div><span class="user-details-label">Provider</span><span class="user-details-value">' + esc(providerLabel) + '</span></div>';
+      html += '<div><span class="user-details-label">Account Status</span><span class="user-details-value">' + (u.disabled ? '<span class="user-status disabled">Disabled</span>' : '<span class="user-status active">Active</span>') + '</span></div>';
+      html += '<div><span class="user-details-label">Email Verified</span><span class="user-details-value">' + (u.emailVerified ? "Yes" : "No") + '</span></div>';
+      html += '<div><span class="user-details-label">Registered</span><span class="user-details-value">' + esc(formatDateTime(u.createdAt)) + '</span></div>';
+      html += '<div><span class="user-details-label">Last Login</span><span class="user-details-value">' + esc(formatDateTime(u.lastLoginAt)) + '</span></div>';
+      html += '</div>';
+
+      html += '<h3 class="user-details-section-title">Login History</h3>';
+      if (!u.loginHistory || u.loginHistory.length === 0) {
+        html += '<p class="muted-text" style="font-size: 12px;">No login events recorded yet. Activity will appear here for future logins.</p>';
+      } else {
+        html += '<div class="user-login-history">';
+        u.loginHistory.forEach(function (ev) {
+          const prov = ev.provider === "google.com" ? "Google" : (ev.provider === "password" ? "Email" : (ev.provider || "—"));
+          html += '<div class="user-login-event">' +
+            '<span class="user-login-date">' + esc(formatDateTime(ev.at)) + '</span>' +
+            '<span class="user-login-provider">' + esc(prov) + '</span>' +
+          '</div>';
+        });
+        html += '</div>';
+      }
+
+      body.innerHTML = html;
+    } catch (err) {
+      if (err.status === 401) { overlay.classList.remove("open"); return showLogin(); }
+      body.innerHTML = '<p class="form-error">' + esc(err.message || "Failed to load user") + '</p>';
+    }
+  }
+
+  /* ---------- Users filters / pagination ---------- */
+
+  const usersSearchInput = $id("usersSearchInput");
+  if (usersSearchInput) {
+    usersSearchInput.addEventListener("input", function () {
+      usersSearchQuery = usersSearchInput.value;
+      usersCurrentPage = 1;
+      renderUsers();
+    });
+  }
+
+  const usersStatusFilterEl = $id("usersStatusFilter");
+  if (usersStatusFilterEl) {
+    usersStatusFilterEl.addEventListener("change", function () {
+      usersStatusFilter = usersStatusFilterEl.value;
+      usersCurrentPage = 1;
+      renderUsers();
+    });
+  }
+
+  const usersPrevEl = $id("usersPrev");
+  if (usersPrevEl) {
+    usersPrevEl.addEventListener("click", function () {
+      if (usersCurrentPage > 1) { usersCurrentPage--; renderUsers(); }
+    });
+  }
+
+  const usersNextEl = $id("usersNext");
+  if (usersNextEl) {
+    usersNextEl.addEventListener("click", function () {
+      const totalPages = Math.max(1, Math.ceil(usersFiltered.length / USERS_PAGE_SIZE));
+      if (usersCurrentPage < totalPages) { usersCurrentPage++; renderUsers(); }
+    });
+  }
+
 })();
