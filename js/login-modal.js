@@ -95,9 +95,9 @@
   }
 
   /* ---------- open / close ---------- */
-
   function openModal(mode) {
     mountModal();
+    wire();
     const overlay = document.getElementById("studentLoginOverlay");
     if (!overlay) return;
     setMode(mode || "signin");
@@ -276,13 +276,13 @@
   }
 
   /* ---------- wiring ---------- */
-
   function wire() {
     if (modalReady) return;
-    modalReady = true;
 
     const overlay = document.getElementById("studentLoginOverlay");
     if (!overlay) return;
+
+    modalReady = true;
 
     const closeBtn = document.getElementById("studentLoginClose");
     if (closeBtn) closeBtn.addEventListener("click", closeModal);
