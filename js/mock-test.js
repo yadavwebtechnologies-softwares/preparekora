@@ -305,40 +305,63 @@
   async function loadTest() {
     if (!testId) { showScreen("notFound"); return; }
 
-    try {
-      const settingsRes = await apiGetSettings();
-      if (settingsRes) {
-        state.settings = {
-          enabled: settingsRes.interruptionEnabled !== false,
-          duration: Number(settingsRes.interruptionDuration) || 5
-        };
-      }
-    } catch (e) { /* use defaults */ }
+    // Fire both fetches in parallel — settings never blocks test
+    let testRes = null;
+    let testErr = null;
+    const settingsPromise = apiGetSettings().catch(function () { return null; });
+    const testPromise = apiGet("/tests/" + encodeURIComponent(testId)).then(
+      function (r) { return r; },
+      function (e) { testErr = e; return null; }
+    );
 
-    try {
-      const res = await apiGet("/tests/" + encodeURIComponent(testId));
-      state.publicTest = res;
-      state.translatedTitle = res.title;
-      state.translatedPublisher = res.publisherName;
+    const results = await Promise.all([settingsPromise, testPromise]);
+    const settingsRes = results[0];
+    testRes = results[1];
 
-      if (isSessionTerminated()) {
-        renderStart();
-        showScreen("test");
-        showTerminateModal();
-        return;
-      }
+    // 401 → maybe token was stale (Firebase not ready yet). Retry after Firebase auth resolves.
+    if (testErr && testErr.status === 401) {
+      try {
+        if (window.PK_STUDENT && window.PK_STUDENT.ready) {
+          await window.PK_STUDENT.ready;
+        }
+        if (window.PK_STUDENT && window.PK_STUDENT.isLoggedIn()) {
+          testRes = await apiGet("/tests/" + encodeURIComponent(testId));
+          testErr = null;
+        }
+      } catch (e) {}
+    }
 
-      clearInterruptState();
-      renderStart();
-      showScreen("start");
-      translateStartIfNeeded();
-    } catch (err) {
-      if (err.status === 401) {
+    if (settingsRes) {
+      state.settings = {
+        enabled: settingsRes.interruptionEnabled !== false,
+        duration: Number(settingsRes.interruptionDuration) || 5
+      };
+    }
+
+    if (testErr || !testRes) {
+      if (testErr && testErr.status === 401) {
         handleAuthRequired();
         return;
       }
       showScreen("notFound");
+      return;
     }
+
+    state.publicTest = testRes;
+    state.translatedTitle = testRes.title;
+    state.translatedPublisher = testRes.publisherName;
+
+    if (isSessionTerminated()) {
+      renderStart();
+      showScreen("test");
+      showTerminateModal();
+      return;
+    }
+
+    clearInterruptState();
+    renderStart();
+    showScreen("start");
+    translateStartIfNeeded();
   }
 
   function handleAuthRequired() {
@@ -1562,11 +1585,6 @@
 
   (async function init() {
     showScreen("loading");
-    try {
-      if (window.PK_STUDENT && window.PK_STUDENT.ready) {
-        await window.PK_STUDENT.ready;
-      }
-    } catch (e) {}
     loadTest();
   })();
 
