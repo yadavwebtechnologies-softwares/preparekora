@@ -345,8 +345,11 @@
     const authScreen = document.getElementById("signInRequiredScreen");
     if (authScreen) authScreen.hidden = true;
 
-    if (window.PK_STUDENT && window.PK_STUDENT.isLoggedIn()) {
+    const loggedIn = (window.PK_STUDENT && window.PK_STUDENT.isLoggedIn());
+
+    if (loggedIn) {
       if (authScreen) authScreen.hidden = false;
+      showScreen("loading");
       return;
     }
 
@@ -354,8 +357,11 @@
       document.dispatchEvent(new CustomEvent("pk:open-login-modal"));
     } catch (e) {}
 
+    let handled = false;
     const onAuthChange = function () {
+      if (handled) return;
       if (window.PK_STUDENT && window.PK_STUDENT.isLoggedIn()) {
+        handled = true;
         document.removeEventListener("pk:student-auth-changed", onAuthChange);
         window.location.reload();
       }
@@ -363,6 +369,7 @@
     document.addEventListener("pk:student-auth-changed", onAuthChange);
 
     setTimeout(function () {
+      if (handled) return;
       const stillNotLoggedIn = !(window.PK_STUDENT && window.PK_STUDENT.isLoggedIn());
       if (stillNotLoggedIn && authScreen) {
         document.removeEventListener("pk:student-auth-changed", onAuthChange);
@@ -486,7 +493,7 @@
         state.sessionId = data.sessionId;
         startSessionPing();
       }
-    } catch (e) { /* silent */ }
+    } catch (e) {}
   }
 
   function startSessionPing() {
@@ -1543,16 +1550,17 @@
     });
   }
 
-  document.addEventListener("pk:student-auth-changed", function () {
-    if (window.PK_STUDENT && window.PK_STUDENT.isLoggedIn()) {
-      if (testId) window.location.reload();
-    }
-  });
-
   const yearEl = document.getElementById("currentYear");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  showScreen("loading");
-  loadTest();
+  (async function init() {
+    showScreen("loading");
+    try {
+      if (window.PK_STUDENT && window.PK_STUDENT.ready) {
+        await window.PK_STUDENT.ready;
+      }
+    } catch (e) {}
+    loadTest();
+  })();
 
 })();
