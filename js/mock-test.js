@@ -29,9 +29,14 @@
 
   async function apiSubmit(id, payload) {
     const url = API_BASE + "/tests/" + encodeURIComponent(id) + "/submit";
+    const headers = { "Content-Type": "application/json", Accept: "application/json" };
+    try {
+      const token = (window.PK_STUDENT && window.PK_STUDENT.getToken) ? await window.PK_STUDENT.getToken() : null;
+      if (token) headers["Authorization"] = "Bearer " + token;
+    } catch (e) {}
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: headers,
       body: JSON.stringify(payload)
     });
     if (!res.ok) {
