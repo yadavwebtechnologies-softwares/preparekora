@@ -1,12 +1,6 @@
 "use strict";
 
-/*
-  PrepareKora — Homepage logic (self-contained).
-*/
-
 (function () {
-
-  /* ---------- API (inline) ---------- */
 
   const API_BASE = (function () {
     const host = window.location.hostname;
@@ -34,7 +28,6 @@
     return res.json();
   }
 
-  /* ---------- State ---------- */
   const state = {
     tests: [],
     loaded: false,
@@ -44,8 +37,6 @@
   };
 
   const EARLIER_PAGE_SIZE = 5;
-
-  /* ---------- DOM ---------- */
 
   const todayList = document.getElementById("todayTests");
   const yesterdayList = document.getElementById("yesterdayTests");
@@ -70,8 +61,6 @@
   const earlierNext = document.getElementById("earlierNext");
   const earlierPageInfo = document.getElementById("earlierPageInfo");
   const homeLoading = document.getElementById("homeLoading");
-
-  /* ---------- Utilities ---------- */
 
   function t(key, vars) {
     return (window.PK && window.PK.t) ? window.PK.t(key, vars) : key;
@@ -122,37 +111,18 @@
     return "earlier";
   }
 
-  function isLoggedIn() {
-    try {
-      return !!(window.PK_STUDENT && typeof window.PK_STUDENT.isLoggedIn === "function" && window.PK_STUDENT.isLoggedIn());
-    } catch (e) { return false; }
-  }
-
   function isTestFree(test) {
     return state.gatingEnabled && test && test.isFree === true;
   }
-
-  function isTestGated(test) {
-    if (!state.gatingEnabled) return false;
-    if (!test) return false;
-    if (test.isFree === true) return false;
-    return !isLoggedIn();
-  }
-
-  /* ---------- Card builder ---------- */
 
   function buildCard(test) {
     const dateParts = formatBadgeDate(test.createdAt);
     const card = document.createElement("article");
     card.className = "test-card";
 
-    const isFree = isTestFree(test);
-
-    const freeChip = isFree
+    const freeChip = isTestFree(test)
       ? '<span class="free-chip">' + escapeHTML(t("freeTest")) + '</span>'
       : "";
-
-    const gatedChip = "";
 
     const startLabel = t("start");
     const startHref = "mock-test.html?test=" + encodeURIComponent(test.id);
@@ -170,7 +140,6 @@
         )}</p>
         <div class="test-meta">
           ${freeChip}
-          ${gatedChip}
           <span>${Number(test.questionCount) || 0} ${escapeHTML(t("questionsUnit"))}</span>
           <span>${Number(test.minutes) || 0} ${escapeHTML(t("minutesUnit"))}</span>
         </div>
@@ -184,8 +153,8 @@
     `;
 
     return card;
+  }
 
-  /* ---------- Render ---------- */
   function renderEarlierPagination(totalItems) {
     if (!earlierPagination) return;
     const totalPages = Math.max(1, Math.ceil(totalItems / EARLIER_PAGE_SIZE));
@@ -222,7 +191,6 @@
       else nonFreeTests.push(test);
     });
 
-    // Free section
     if (freeTestsList) {
       freeTestsList.replaceChildren();
       freeArr
@@ -233,7 +201,6 @@
     }
     if (freeTestsSection) freeTestsSection.hidden = freeArr.length === 0;
 
-    // Groups from non-free tests only
     const groups = { today: [], yesterday: [], earlier: [] };
     nonFreeTests.forEach(function (test) {
       groups[groupFor(test.createdAt)].push(test);
@@ -241,7 +208,6 @@
 
     let total = freeArr.length;
 
-    // Today + Yesterday — all non-free tests
     const allMapping = { today: todayList, yesterday: yesterdayList };
     Object.keys(allMapping).forEach(function (key) {
       const container = allMapping[key];
@@ -255,7 +221,6 @@
         });
     });
 
-    // Earlier — paginated
     groups.earlier.sort(function (a, b) { return b.createdAt - a.createdAt; });
     const totalPages = Math.max(1, Math.ceil(groups.earlier.length / EARLIER_PAGE_SIZE));
     if (state.earlierPage > totalPages) state.earlierPage = totalPages;
@@ -281,7 +246,6 @@
     renderEarlierPagination(groups.earlier.length);
   }
 
-  /* ---------- Fetch ---------- */
   async function loadTests() {
     showOverlay(homeLoading);
     try {
@@ -300,8 +264,6 @@
       }
     }
   }
-
-  /* ---------- Mobile menu ---------- */
 
   const hamburgerSVG =
     '<path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path>';
@@ -339,12 +301,10 @@
       }
     });
 
-    menuPanel.querySelectorAll("a").forEach(function (link) {
-      link.addEventListener("click", closeMenu);
+    menuPanel.addEventListener("click", function (e) {
+      if (e.target.closest("a")) closeMenu();
     });
   }
-
-  /* ---------- Search ---------- */
 
   function openSearch() {
     if (!searchOverlay) return;
@@ -436,8 +396,6 @@
     });
   }
 
-  /* ---------- Language change ---------- */
-
   document.addEventListener("pk:langchange", function () {
     render();
     if (searchOverlay && searchOverlay.classList.contains("open")) {
@@ -445,16 +403,12 @@
     }
   });
 
-  /* ---------- Auth change ---------- */
-
   document.addEventListener("pk:student-auth-changed", function () {
     render();
     if (searchOverlay && searchOverlay.classList.contains("open")) {
       renderSearchResults(searchInput ? searchInput.value : "");
     }
   });
-
-  /* ---------- Earlier pagination ---------- */
 
   if (earlierPrev) {
     earlierPrev.addEventListener("click", function () {
@@ -475,8 +429,6 @@
       }
     });
   }
-
-  /* ---------- Init ---------- */
 
   const yearEl = document.getElementById("currentYear");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
