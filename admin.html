@@ -112,27 +112,11 @@
 
       <div class="admin-tabs" role="tablist">
         <button class="admin-tab is-active" id="tabTests" type="button" role="tab" aria-selected="true" data-i18n="myTests">My tests</button>
-        <button
-          class="admin-tab"
-          id="tabUsers"
-          type="button"
-          role="tab"
-          aria-selected="false"
-        >
-          Users
-        </button>
-        <button
-          class="admin-tab"
-          id="tabSettings"
-          type="button"
-          role="tab"
-          aria-selected="false"
-          data-i18n="settings"
-        >
-          Settings
-        </button>
+        <button class="admin-tab" id="tabUsers" type="button" role="tab" aria-selected="false">Users</button>
+        <button class="admin-tab" id="tabSettings" type="button" role="tab" aria-selected="false" data-i18n="settings">Settings</button>
       </div>
 
+      <!-- MY TESTS PANEL -->
       <div id="panelTests">
 
         <div class="live-pill-row">
@@ -174,10 +158,11 @@
         <nav class="pagination" id="testsPagination" aria-label="Tests pages" hidden>
           <button class="pagination-btn" id="testsPrev" type="button" data-i18n="prevPage">Previous</button>
           <span class="pagination-info" id="testsPageInfo"></span>
-          <button class="pagination-btn" id="testsNext" type="button" data-i18n="Next">Next</button>
+          <button class="pagination-btn" id="testsNext" type="button" data-i18n="nextPage">Next</button>
         </nav>
 
       </div>
+
       <!-- USERS PANEL -->
       <div id="panelUsers" hidden>
 
@@ -317,6 +302,7 @@
         <button class="admin-tab is-active" id="tabSubmitted" type="button" role="tab" aria-selected="true">Submitted</button>
         <button class="admin-tab" id="tabPending" type="button" role="tab" aria-selected="false">Pending</button>
       </div>
+
       <div id="panelSubmitted">
         <div class="loading-overlay is-hidden" id="submittedLoading" aria-hidden="true">
           <div class="spinner"></div>
@@ -342,6 +328,7 @@
           <button class="pagination-btn" id="submittedNext" type="button" data-i18n="nextPage">Next</button>
         </nav>
       </div>
+
       <div id="panelPending" hidden>
         <div class="loading-overlay is-hidden" id="pendingLoading" aria-hidden="true">
           <div class="spinner"></div>
@@ -370,7 +357,7 @@
     </section>
 
     <!-- ANALYSIS -->
-        <section id="analysisScreen" hidden>
+    <section id="analysisScreen" hidden>
 
       <div class="loading-overlay is-hidden" id="analysisLoading" aria-hidden="true">
         <div class="spinner"></div>
@@ -451,6 +438,7 @@
       </div>
     </div>
   </div>
+
   <!-- WHO CHOSE WHAT MODAL -->
   <div
     class="modal-overlay"
@@ -475,6 +463,7 @@
       </div>
     </div>
   </div>
+
   <!-- GENERIC CONFIRM MODAL -->
   <div
     class="modal-overlay"
