@@ -112,7 +112,25 @@
 
       <div class="admin-tabs" role="tablist">
         <button class="admin-tab is-active" id="tabTests" type="button" role="tab" aria-selected="true" data-i18n="myTests">My tests</button>
-        <button class="admin-tab" id="tabSettings" type="button" role="tab" aria-selected="false" data-i18n="settings">Settings</button>
+        <button
+          class="admin-tab"
+          id="tabUsers"
+          type="button"
+          role="tab"
+          aria-selected="false"
+        >
+          Users
+        </button>
+        <button
+          class="admin-tab"
+          id="tabSettings"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          data-i18n="settings"
+        >
+          Settings
+        </button>
       </div>
 
       <div id="panelTests">
@@ -160,6 +178,56 @@
         </nav>
 
       </div>
+      <!-- USERS PANEL -->
+      <div id="panelUsers" hidden>
+
+        <div class="admin-header-actions" style="margin-bottom: 16px; gap: 8px; flex-wrap: wrap;">
+          <div class="search-input-wrap" style="flex: 1; min-width: 200px; max-width: 320px;">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="10.8" cy="10.8" r="6.8"></circle>
+              <path d="m16 16 4.5 4.5"></path>
+            </svg>
+            <input type="search" id="usersSearchInput" placeholder="Search by name, email, or WhatsApp" autocomplete="off" aria-label="Search users">
+          </div>
+          <select id="usersStatusFilter" class="form-input" style="max-width: 160px; height: 43px;">
+            <option value="">All users</option>
+            <option value="active">Active only</option>
+            <option value="disabled">Disabled only</option>
+            <option value="new">New (last 24h)</option>
+          </select>
+        </div>
+
+        <div class="loading-overlay is-hidden" id="usersLoading" aria-hidden="true">
+          <div class="spinner"></div>
+        </div>
+
+        <div class="empty-state" id="usersEmpty" hidden>No users yet.</div>
+
+        <div class="submissions-table-wrap" id="usersTableWrap" hidden>
+          <table class="submissions-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>WhatsApp</th>
+                <th>Joined</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+
+        <nav class="pagination" id="usersPagination" aria-label="Users pages" hidden>
+          <button class="pagination-btn" id="usersPrev" type="button">Previous</button>
+          <span class="pagination-info" id="usersPageInfo"></span>
+          <button class="pagination-btn" id="usersNext" type="button">Next</button>
+        </nav>
+
+      </div>
+
+      <!-- SETTINGS PANEL -->
       <div id="panelSettings" hidden>
         <div class="loading-overlay is-hidden" id="settingsLoading" aria-hidden="true">
           <div class="spinner"></div>
