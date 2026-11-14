@@ -122,8 +122,35 @@
 /* === Free tests chip + gated overlay === */
 .test-card{position:relative}.test-card .free-chip{position:absolute;top:10px;right:10px;display:inline-flex;align-items:center;padding:2px 8px;border:1px solid var(--accent);border-radius:999px;background:#ffffff;color:var(--accent);font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;pointer-events:none}.test-card.is-gated .start-button{opacity:.85}.test-card .gated-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--muted);font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-right:6px}.test-card .gated-chip svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 /* === Login modal === */
-.auth-modal{max-width:520px;padding:22px}.auth-modal h2{margin:0 0 6px;font-size:18px;font-weight:600;letter-spacing:-.3px;padding-right:28px}.auth-modal-sub{margin:0 0 20px;font-size:13px;color:var(--muted);line-height:1.5}.btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:44px;padding:0 16px;border:1px solid var(--border);border-radius:6px;background:#ffffff;color:var(--text);font-size:14px;font-weight:500;cursor:pointer;transition:background .15s ease,border-color .15s ease}.btn-google:hover{background:var(--surface);border-color:#bdbdbd}.btn-google svg{width:18px;height:18px;flex-shrink:0}.auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}.auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:var(--border)}.auth-tabs{display:flex;gap:4px;margin-bottom:18px;padding:4px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}.auth-tab{flex:1;padding:8px 12px;border:0;border-radius:4px;background:transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:background .15s ease,color .15s ease}.auth-tab:hover{color:var(--text)}.auth-tab.is-active{background:#ffffff;color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.06)}.auth-form-area{min-height:450px;position:relative}.auth-form{display:flex;flex-direction:column;gap:12px;min-height:450px}.auth-form.is-hidden{display:none}.auth-form .form-field{margin:0}#studentLoginTitle,#studentLoginSub{transition:opacity .15s ease}.auth-form .btn-block{display:flex;width:100%;height:44px;margin-top:auto}.auth-form-error{margin:4px 0 0;font-size:12px;color:#b91c1c;line-height:1.5}.auth-form-hint{margin:4px 0 0;font-size:11px;color:var(--muted);line-height:1.5;text-align:center}.auth-form-hint button{padding:0;border:0;background:transparent;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}.auth-form-hint a{color:var(--text);text-decoration:underline;text-underline-offset:2px}.auth-modal-close{position:absolute;top:14px;right:14px;width:32px;height:32px;display:grid;place-items:center;border:1px solid transparent;border-radius:6px;background:transparent;cursor:pointer;color:var(--muted);transition:background .15s ease,border-color .15s ease}.auth-modal-close:hover{background:var(--surface);border-color:var(--border);color:var(--text)}.auth-modal-close svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.auth-modal-wrap{position:relative}
-/* ===END=== */
+.auth-modal-wrap{position:relative;width:100%;max-width:520px}
+.auth-modal{width:100%;max-width:100%;padding:22px;display:flex;flex-direction:column;max-height:92vh}
+@media (min-width:561px){.auth-modal{min-height:520px}}
+.auth-modal h2{margin:0 0 6px;font-size:18px;font-weight:600;letter-spacing:-.3px;padding-right:28px}
+.auth-modal-sub{margin:0 0 20px;font-size:13px;color:var(--muted);line-height:1.5}
+.btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:44px;padding:0 16px;border:1px solid var(--border);border-radius:6px;background:#ffffff;color:var(--text);font-size:14px;font-weight:500;cursor:pointer;transition:background .15s ease,border-color .15s ease}
+.btn-google:hover{background:var(--surface);border-color:#bdbdbd}
+.btn-google svg{width:18px;height:18px;flex-shrink:0}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:var(--border)}
+.auth-tabs{display:flex;gap:4px;margin-bottom:18px;padding:4px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+.auth-tab{flex:1;padding:8px 12px;border:0;border-radius:4px;background:transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:background .15s ease,color .15s ease}
+.auth-tab:hover{color:var(--text)}
+.auth-tab.is-active{background:#ffffff;color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.auth-form-area{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+.auth-form{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:12px;overflow-y:auto;padding-right:2px}
+.auth-form.is-hidden{display:none}
+.auth-form .form-field{margin:0}
+#studentLoginTitle,#studentLoginSub{transition:opacity .15s ease}
+.auth-form .btn-block{display:flex;width:100%;height:44px;margin-top:auto;flex-shrink:0}
+.auth-form-error{margin:4px 0 0;font-size:12px;color:#b91c1c;line-height:1.5}
+.auth-form-hint{margin:4px 0 0;font-size:11px;color:var(--muted);line-height:1.5;text-align:center;flex-shrink:0}
+.auth-form-hint button{padding:0;border:0;background:transparent;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.auth-form-hint a{color:var(--text);text-decoration:underline;text-underline-offset:2px}
+.auth-modal-close{position:absolute;top:14px;right:14px;width:32px;height:32px;display:grid;place-items:center;border:1px solid transparent;border-radius:6px;background:transparent;cursor:pointer;color:var(--muted);transition:background .15s ease,border-color .15s ease;z-index:2}
+.auth-modal-close:hover{background:var(--surface);border-color:var(--border);color:var(--text)}
+.auth-modal-close svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:560px){.auth-modal-wrap{max-width:100%}.auth-modal{padding:18px;max-height:92vh;min-height:0}}
+/* === Complete profile modal === */
 /* === Complete profile modal === */
 .complete-profile-modal{max-width:420px}.complete-profile-modal h2{margin:0 0 6px;font-size:17px;font-weight:600;letter-spacing:-.3px}.complete-profile-sub{margin:0 0 18px;font-size:13px;color:var(--muted);line-height:1.5}.complete-profile-form{display:flex;flex-direction:column;gap:12px}.complete-profile-form .form-field{margin:0}.complete-profile-form .btn-block{display:flex;width:100%;height:44px;margin-top:8px}
 /* === Mobile === */
