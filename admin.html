@@ -263,6 +263,12 @@
               <input id="editorMinutes" type="number" class="form-input" min="1" max="180" step="1">
             </div>
           </div>
+
+          <div class="form-field" style="margin-top: 12px;">
+            <label for="editorExam" class="form-label">Exam (optional)</label>
+            <input id="editorExam" type="text" class="form-input" maxlength="30" placeholder="e.g. ADRE, APSC, Assam Police">
+            <p class="form-hint">Shown as a badge on the test card. Leave blank for no badge.</p>
+          </div>
         </div>
 
         <div class="editor-card">
@@ -504,13 +510,14 @@
 { "q": "Capital of Assam?", "options": ["Guwahati", "Dispur", "Jorhat", "Tezpur"], "answer": 1 }
 
 Full test wrapper (optional)
-{ "title": "Mock Test 1", "minutes": 30, "questions": [ ... ] }</pre>
+{ "title": "Mock Test 1", "exam": "ADRE", "minutes": 30, "questions": [ ... ] }</pre>
 
         <ul class="import-rules">
           <li>q — required, English text</li>
           <li>options — exactly 4 strings</li>
           <li>answer — 0 to 3 (A=0, B=1, C=2, D=3)</li>
           <li>hint — optional, English text (auto-translated to Assamese)</li>
+          <li>exam — optional (test wrapper only), e.g. ADRE, APSC, Assam Police</li>
         </ul>
       </details>
 
