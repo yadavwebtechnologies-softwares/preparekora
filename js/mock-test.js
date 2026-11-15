@@ -72,14 +72,14 @@
   }
 
   /* ---------- DOM ---------- */
-
   const screens = {
-    loading:  document.getElementById("loadingScreen"),
-    notFound: document.getElementById("notFoundScreen"),
-    start:    document.getElementById("startScreen"),
-    name:     document.getElementById("nameScreen"),
-    test:     document.getElementById("testScreen"),
-    result:   document.getElementById("resultScreen")
+    loading:   document.getElementById("loadingScreen"),
+    notFound:  document.getElementById("notFoundScreen"),
+    start:     document.getElementById("startScreen"),
+    name:      document.getElementById("nameScreen"),
+    test:      document.getElementById("testScreen"),
+    submitted: document.getElementById("submittedScreen"),
+    result:    document.getElementById("resultScreen")
   };
 
   const startTitle      = document.getElementById("startTitle");
@@ -948,9 +948,16 @@
       correctAnswers: (scored && scored.correctAnswers) ? scored.correctAnswers : null
     };
 
-    showScreen("result");
-    renderResult();
-    announce(t("resultEyebrow") + ". " + t("scoreOf", { a: state.result.correct, b: state.result.total }));
+    const hideResult = !!(state.publicTest && state.publicTest.hideResult === true);
+
+    if (hideResult) {
+      showScreen("submitted");
+      announce(t("submittedTitle") + ". " + t("submittedBody"));
+    } else {
+      showScreen("result");
+      renderResult();
+      announce(t("resultEyebrow") + ". " + t("scoreOf", { a: state.result.correct, b: state.result.total }));
+    }
   }
 
   function renderResult() {
@@ -1581,10 +1588,12 @@
   }
 
   /* ---------- Language change ---------- */
-
   document.addEventListener("pk:langchange", async function () {
     if (!state.publicTest) return;
     if (state.finished) {
+      if (state.publicTest.hideResult === true) {
+        return;
+      }
       if (state.reviewVisible) hideReview();
       await translateStartIfNeeded();
       renderResult();
