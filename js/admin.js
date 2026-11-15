@@ -730,7 +730,7 @@
   const newTestBtn = $id("newTestBtn");
   if (newTestBtn) {
     newTestBtn.addEventListener("click", function () {
-      state.editing = { id: null, status: "draft", title: "", minutes: 10, exam: "", questions: [blankQuestion()] };
+      state.editing = { id: null, status: "draft", title: "", minutes: 10, exam: "", hideResult: false, questions: [blankQuestion()] };
       renderEditor();
       showScreen("editor");
     });
@@ -755,7 +755,8 @@
         title: res.test.title,
         minutes: res.test.minutes,
         exam: typeof res.test.exam === "string" ? res.test.exam : "",
-      questions: (res.test.questions || []).map(function (q) {
+        hideResult: res.test.hideResult === true,
+        questions: (res.test.questions || []).map(function (q) {
         const out = { q: q.q, options: q.options.slice(), answer: q.answer, hint: "", direction: "" };
         if (typeof q.hint === "string" && q.hint.trim()) out.hint = q.hint;
         if (typeof q.direction === "string" && q.direction.trim()) out.direction = q.direction;
@@ -786,6 +787,8 @@
     $id("editorMinutes").value = state.editing.minutes || 10;
     const examEl = $id("editorExam");
     if (examEl) examEl.value = state.editing.exam || "";
+    const hideResultEl = $id("editorHideResult");
+    if (hideResultEl) hideResultEl.checked = state.editing.hideResult === true;
     $id("editorError").hidden = true;
     const saveDraftBtn = $id("saveDraftBtn");
     const publishBtn = $id("publishBtn");
@@ -960,6 +963,8 @@
     const minutes = Number($id("editorMinutes").value);
     const examEl = $id("editorExam");
     const exam = examEl ? examEl.value.trim() : "";
+    const hideResultEl = $id("editorHideResult");
+    const hideResult = !!(hideResultEl && hideResultEl.checked);
     if (!title) return { error: "Test title is required" };
     if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) return { error: "Duration must be between 1 and 180 minutes" };
     if (exam.length > 30) return { error: "Exam name too long (max 30 chars)" };
@@ -987,7 +992,7 @@
       questions.push(cleaned);
     }
     if (questions.length === 0) return { error: "Add at least one question" };
-    return { payload: { title: title, minutes: minutes, exam: exam, questions: questions } };
+    return { payload: { title: title, minutes: minutes, exam: exam, hideResult: hideResult, questions: questions } };
   }
 
   async function saveEditor(action) {
@@ -1830,7 +1835,7 @@
     try { parsed = JSON.parse(rawText); }
     catch (e) { return setImportError("Invalid JSON — check the syntax and try again."); }
 
-    let questions = null, title = null, minutes = null, exam = null;
+    let questions = null, title = null, minutes = null, exam = null, hideResult = null;
 
     if (Array.isArray(parsed)) {
       questions = parsed;
@@ -1842,6 +1847,10 @@
         const ex = parsed.exam.trim();
         if (ex.length > 30) return setImportError("Exam name too long (max 30 chars)");
         if (ex.length > 0) exam = ex;
+      }
+      if (parsed.hideResult != null) {
+        if (typeof parsed.hideResult !== "boolean") return setImportError("hideResult must be true or false");
+        hideResult = parsed.hideResult;
       }
       if (parsed.minutes != null) {
         const m = Number(parsed.minutes);
@@ -1860,7 +1869,7 @@
       cleaned.push(res.question);
     }
 
-    const isFullTest = (title !== null) || (minutes !== null) || (exam !== null);
+    const isFullTest = (title !== null) || (minutes !== null) || (exam !== null) || (hideResult !== null);
 
     if (isFullTest) {
       if (title !== null) $id("editorTitle").value = title;
@@ -1868,6 +1877,10 @@
       if (exam !== null) {
         const examEl = $id("editorExam");
         if (examEl) examEl.value = exam;
+      }
+      if (hideResult !== null) {
+        const hrEl = $id("editorHideResult");
+        if (hrEl) hrEl.checked = hideResult;
       }
       state.editing.questions = cleaned;
     } else {
