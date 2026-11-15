@@ -567,9 +567,11 @@
 
       <details class="import-format" open>
         <summary>JSON format</summary>
-
         <pre class="import-format-code">General MCQ
 { "q": "Capital of Assam?", "options": ["Guwahati", "Dispur", "Jorhat", "Tezpur"], "answer": 1 }
+
+With direction (optional)
+{ "direction": "Select the one-word substitute for the given expression.", "q": "A person who speaks many languages.", "options": ["Linguist", "Polyglot", "Orator", "Translator"], "answer": 1 }
 
 Full test wrapper (optional)
 { "title": "Mock Test 1", "exam": "ADRE", "minutes": 30, "questions": [ ... ] }</pre>
@@ -579,6 +581,7 @@ Full test wrapper (optional)
           <li>options — exactly 4 strings</li>
           <li>answer — 0 to 3 (A=0, B=1, C=2, D=3)</li>
           <li>hint — optional, English text (auto-translated to Assamese)</li>
+          <li>direction — optional, instruction shown above the question (max 500 chars)</li>
           <li>exam — optional (test wrapper only), e.g. ADRE, APSC, Assam Police</li>
         </ul>
       </details>
