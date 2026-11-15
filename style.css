@@ -602,3 +602,13 @@
     margin-bottom: 10px;
   }
 }
+/* === No-wrap table rows + tabs === */
+/* Table cells stay on one line; wrapper scrolls horizontally */
+.submissions-table thead th,.submissions-table tbody td{white-space:nowrap}
+/* Action buttons in Users table stay in one row */
+.user-action-row{flex-wrap:nowrap}.user-action-row .btn{white-space:nowrap}.user-status,.user-new-badge{white-space:nowrap}
+/* Admin tabs stay on one line, scroll on narrow screens */
+.admin-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}.admin-tab{white-space:nowrap;flex-shrink:0}
+/* Mobile: make sure table can grow to fit nowrap cells */
+@media (max-width:640px){.submissions-table{min-width:720px}}
+/* === end of No-wrap table rows + tabs === */
