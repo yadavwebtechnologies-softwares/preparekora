@@ -755,16 +755,17 @@
         title: res.test.title,
         minutes: res.test.minutes,
         exam: typeof res.test.exam === "string" ? res.test.exam : "",
-        questions: (res.test.questions || []).map(function (q) {
-          const out = { q: q.q, options: q.options.slice(), answer: q.answer, hint: "" };
-          if (typeof q.hint === "string" && q.hint.trim()) out.hint = q.hint;
-          if (q.type === "math" || q.type === "reasoning") out.type = q.type;
-          if (typeof q.latex === "string" && q.latex.length) out.latex = q.latex;
-          if (typeof q.imageBase64 === "string" && q.imageBase64.indexOf("data:image/") === 0) {
-            out.imageBase64 = q.imageBase64;
-          }
-          return out;
-        })
+      questions: (res.test.questions || []).map(function (q) {
+        const out = { q: q.q, options: q.options.slice(), answer: q.answer, hint: "", direction: "" };
+        if (typeof q.hint === "string" && q.hint.trim()) out.hint = q.hint;
+        if (typeof q.direction === "string" && q.direction.trim()) out.direction = q.direction;
+        if (q.type === "math" || q.type === "reasoning") out.type = q.type;
+        if (typeof q.latex === "string" && q.latex.length) out.latex = q.latex;
+        if (typeof q.imageBase64 === "string" && q.imageBase64.indexOf("data:image/") === 0) {
+          out.imageBase64 = q.imageBase64;
+        }
+        return out;
+      })
       };
       renderEditor();
       showScreen("editor");
@@ -773,9 +774,8 @@
       toast(err.message || "Error", "error");
     }
   }
-
   function blankQuestion() {
-    return { q: "", options: ["", "", "", ""], answer: 0, hint: "" };
+    return { q: "", options: ["", "", "", ""], answer: 0, hint: "", direction: "" };
   }
 
   function renderEditor() {
@@ -835,6 +835,25 @@
       head.appendChild(numWrap);
       head.appendChild(removeBtn);
       block.appendChild(head);
+
+            const dirField = document.createElement("div");
+      dirField.className = "form-field";
+
+      const dirLabel = document.createElement("label");
+      dirLabel.className = "form-label";
+      dirLabel.textContent = "Direction (optional — shown above the question)";
+
+      const dirInput = document.createElement("textarea");
+      dirInput.className = "form-textarea";
+      dirInput.rows = 2;
+      dirInput.maxLength = 500;
+      dirInput.placeholder = "e.g. Select the one-word substitute for the given expression.";
+      dirInput.value = question.direction || "";
+      dirInput.addEventListener("input", function () { question.direction = dirInput.value; });
+
+      dirField.appendChild(dirLabel);
+      dirField.appendChild(dirInput);
+      block.appendChild(dirField);
 
       const qField = document.createElement("div");
       qField.className = "form-field";
@@ -960,6 +979,10 @@
       if (typeof raw.hint === "string" && raw.hint.trim()) {
         if (raw.hint.trim().length > 500) return { error: "Question " + (i + 1) + ": hint too long (max 500 chars)" };
         cleaned.hint = raw.hint.trim();
+      }
+      if (typeof raw.direction === "string" && raw.direction.trim()) {
+        if (raw.direction.trim().length > 500) return { error: "Question " + (i + 1) + ": direction too long (max 500 chars)" };
+        cleaned.direction = raw.direction.trim();
       }
       questions.push(cleaned);
     }
@@ -1788,6 +1811,11 @@
       if (typeof raw.hint !== "string") return { error: where + "hint must be a string" };
       if (raw.hint.trim().length > 500) return { error: where + "hint too long (max 500 chars)" };
       if (raw.hint.trim()) cleaned.hint = raw.hint.trim();
+    }
+    if (raw.direction != null) {
+      if (typeof raw.direction !== "string") return { error: where + "direction must be a string" };
+      if (raw.direction.trim().length > 500) return { error: where + "direction too long (max 500 chars)" };
+      if (raw.direction.trim()) cleaned.direction = raw.direction.trim();
     }
     return { question: cleaned };
   }
