@@ -205,6 +205,10 @@
       showHint: "Show Hint",
       hintLoading: "Getting hint…",
 
+      submittedEyebrow: "Submitted",
+      submittedTitle: "Exam submitted",
+      submittedBody: "Your exam paper has been submitted. Kindly wait for your result in the concerned WhatsApp group.",
+
       navDashboard: "Dashboard",
       navPremium: "Premium",
       loginWelcomeBack: "Welcome back",
@@ -444,6 +448,10 @@
 
       showHint: "সূত্ৰ দেখুৱাওক",
       hintLoading: "সূত্ৰ প্ৰস্তুত হৈ আছে…",
+
+      submittedEyebrow: "জমা দিয়া হৈছে",
+      submittedTitle: "পৰীক্ষা জমা দিয়া হৈছে",
+      submittedBody: "আপোনাৰ পৰীক্ষা জমা দিয়া হৈছে। অনুগ্ৰহ কৰি সংশ্লিষ্ট হোৱাটছএপ গোটত ফলাফলৰ বাবে অপেক্ষা কৰক।",
 
       navDashboard: "ডেশব'ৰ্ড",
       navPremium: "প্ৰিমিয়াম",
