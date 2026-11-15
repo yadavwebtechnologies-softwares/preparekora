@@ -106,6 +106,7 @@
 
   const qNumber         = document.getElementById("qNumber");
   const qStatus         = document.getElementById("qStatus");
+  const qDirection      = document.getElementById("qDirection");
   const qText           = document.getElementById("qText");
   const optionsFieldset = document.getElementById("optionsFieldset");
   const optionsLegend   = document.getElementById("optionsLegend");
@@ -707,6 +708,18 @@
 
     qNumber.textContent = t("questionOf", { n: index + 1, total: pt.questions.length });
     qStatus.textContent = statusFor(index);
+
+    const hasDirection = !!(question.direction && String(question.direction).trim());
+    if (qDirection) {
+      if (hasDirection) {
+        qDirection.textContent = question.direction.trim();
+        qDirection.hidden = false;
+      } else {
+        qDirection.textContent = "";
+        qDirection.hidden = true;
+      }
+    }
+
     qText.textContent = question.q;
     optionsFieldset.replaceChildren();
 
@@ -750,11 +763,22 @@
 
     if (window.PK && PK.lang === "as") {
       try {
-        const translated = await apiTranslateMany([question.q].concat(question.options), "as");
-        if (translated && translated.length === question.options.length + 1) {
-          qText.textContent = translated[0];
+        const itemsToTranslate = [];
+        if (hasDirection) itemsToTranslate.push(question.direction.trim());
+        itemsToTranslate.push(question.q);
+        question.options.forEach(function (o) { itemsToTranslate.push(o); });
+
+        const translated = await apiTranslateMany(itemsToTranslate, "as");
+        if (translated && translated.length === itemsToTranslate.length) {
+          let offset = 0;
+          if (hasDirection) {
+            if (qDirection) qDirection.textContent = translated[0] || question.direction.trim();
+            offset = 1;
+          }
+          qText.textContent = translated[offset] || question.q;
+          const optsTranslated = translated.slice(offset + 1);
           optionsFieldset.replaceChildren();
-          buildOptions(translated.slice(1));
+          buildOptions(optsTranslated);
           prevBtn.disabled = index === 0;
           nextBtn.disabled = index === pt.questions.length - 1;
           updateMarkButton();
@@ -1338,6 +1362,13 @@
       head.appendChild(num);
       head.appendChild(badge);
       item.appendChild(head);
+
+      if (q.direction && String(q.direction).trim()) {
+        const dirEl = document.createElement("div");
+        dirEl.className = "q-direction";
+        dirEl.textContent = q.direction.trim();
+        item.appendChild(dirEl);
+      }
 
       const qText = document.createElement("div");
       qText.className = "review-q";
