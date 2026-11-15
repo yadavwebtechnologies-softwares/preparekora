@@ -612,3 +612,27 @@
 /* Mobile: make sure table can grow to fit nowrap cells */
 @media (max-width:640px){.submissions-table{min-width:720px}}
 /* === end of No-wrap table rows + tabs === */
+/* === Question direction box (append) === */
+
+.q-direction {
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted);
+  font-style: italic;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 560px) {
+  .q-direction {
+    font-size: 12px;
+    padding: 9px 10px;
+    margin-bottom: 10px;
+  }
+}
