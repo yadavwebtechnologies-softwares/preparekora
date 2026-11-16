@@ -164,28 +164,27 @@
 /* === end of Admin user management === */
 
 /* === Student dashboard (append) === */
-
 .dash-profile-head {
   display: flex;
   align-items: flex-start;
-  gap: 20px;
-  padding: 24px;
+  gap: 14px;
+  padding: 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: #ffffff;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 
 .dash-avatar {
-  width: 72px;
-  height: 72px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   display: grid;
   place-items: center;
   background: var(--accent);
   color: #ffffff;
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 600;
   flex-shrink: 0;
   text-transform: uppercase;
@@ -195,7 +194,7 @@
 
 .dash-profile-name {
   margin: 0 0 4px;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 600;
   letter-spacing: -0.4px;
 }
@@ -268,7 +267,7 @@
 }
 
 .stat-card {
-  padding: 16px;
+  padding: 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: #ffffff;
@@ -276,19 +275,19 @@
 }
 
 .stat-value {
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 700;
-  letter-spacing: -0.6px;
+  letter-spacing: -0.4px;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
 
 .stat-label {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-top: 4px;
+  margin-top: 3px;
   font-weight: 600;
 }
 
@@ -332,14 +331,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
 }
 
 .card-title {
   margin: 0;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: -0.2px;
 }
@@ -351,7 +350,7 @@
 }
 
 .dash-chart-wrap {
-  height: 160px;
+  height: 130px;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--surface);
@@ -385,7 +384,7 @@
 .dash-subject-row:last-child { border-bottom: 0; padding-bottom: 0; }
 .dash-subject-row:first-child { padding-top: 0; }
 
-.dash-subject-name { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.dash-subject-name { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; font-size: 12px; }
 
 .dash-subject-count {
   font-size: 11px;
@@ -419,6 +418,7 @@
   font-weight: 500;
   margin-bottom: 3px;
   overflow-wrap: anywhere;
+  font-size: 12px;
 }
 
 .dash-recent-meta {
@@ -465,16 +465,20 @@
   background: #fef2f2;
 }
 
-@media (max-width: 560px) {
-  .dash-profile-head { padding: 18px; gap: 14px; }
-  .dash-avatar { width: 56px; height: 56px; font-size: 22px; }
-  .dash-profile-name { font-size: 19px; }
-  .dash-stats-row { grid-template-columns: 1fr; }
-  .stat-value { font-size: 22px; }
-  .dash-chart-wrap { height: 140px; }
-  .dash-tabs { overflow-x: auto; }
-  .dash-tab { padding: 9px 12px; font-size: 12px; }
-  .dash-premium-banner { padding: 12px; gap: 10px; }
+@media (max-width: 640px) {
+  .dash-profile-head { padding: 12px; gap: 12px; margin-bottom: 12px; }
+  .dash-avatar { width: 44px; height: 44px; font-size: 16px; }
+  .dash-profile-name { font-size: 15px; }
+  .dash-stats-row { grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 14px; }
+  .stat-card { padding: 9px 4px; }
+  .stat-value { font-size: 17px; }
+  .stat-label { font-size: 9px; letter-spacing: 0.04em; }
+  .dash-chart-wrap { height: 120px; }
+  .dash-tabs { overflow-x: auto; margin-bottom: 14px; }
+  .dash-tab { padding: 8px 11px; font-size: 12px; }
+  .dash-premium-banner { padding: 10px 12px; gap: 8px; margin-bottom: 14px; }
+  .dash-premium-title { font-size: 12px; }
+  .dash-premium-sub { font-size: 11px; }
 }
 /*======OVERFLOW=====*/
 .submissions-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -653,4 +657,110 @@
   object-fit: cover;
   display: block;
   border-radius: 50%;
+}
+/* === Dashboard grid + recommended practice (append) === */
+
+.dash-panel-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.dash-panel-main,
+.dash-panel-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dash-panel-main .card,
+.dash-panel-side .card {
+  margin-bottom: 0;
+  padding: 16px;
+}
+
+.dash-panel-single {
+  max-width: 620px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dash-panel-single .card {
+  padding: 16px;
+}
+
+.dash-rec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dash-rec-card {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dash-rec-title {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+
+.dash-rec-meta {
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dash-rec-meta .meta-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--muted);
+  align-self: center;
+}
+
+.dash-rec-card .btn {
+  align-self: flex-start;
+  padding: 6px 12px;
+  font-size: 11px;
+}
+
+.dash-rec-empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+@media (min-width: 860px) {
+  .dash-panel-body {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dash-panel-single { max-width: 100%; }
+  .dash-panel-main .card,
+  .dash-panel-side .card,
+  .dash-panel-single .card { padding: 14px; }
+  .dash-rec-card { padding: 9px 10px; }
+  .dash-rec-title { font-size: 11px; }
+  .dash-rec-meta { font-size: 10px; }
 }
