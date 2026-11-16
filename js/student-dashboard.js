@@ -95,6 +95,15 @@
     });
   }
 
+  function initialsOf(name, email) {
+    const source = String(name || "").trim() || String(email || "").trim() || "U";
+    const parts = source.split(/\s+/).filter(function (p) { return p.length > 0; });
+    if (parts.length >= 2) {
+      return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+    }
+    return source.charAt(0).toUpperCase();
+  }
+
   function toast(message, kind) {
     const container = document.getElementById("toastContainer");
     if (!container) return;
@@ -180,8 +189,16 @@
     const profile = state.profile || {};
     const name = profile.name || user.displayName || (user.email ? user.email.split("@")[0] : "User");
     const email = user.email || profile.email || "";
+    const photoURL = user.photoURL || "";
+    const initials = initialsOf(name, email);
 
-    if (dashAvatar) dashAvatar.textContent = initialOf(name, email);
+    if (dashAvatar) {
+      if (photoURL && typeof photoURL === "string" && photoURL.length > 0) {
+        dashAvatar.innerHTML = '<img src="' + esc(photoURL) + '" alt="' + esc(initials) + '" loading="lazy" onerror="this.parentNode.textContent=this.alt;">';
+      } else {
+        dashAvatar.textContent = initials;
+      }
+    }
     if (dashName) dashName.textContent = name;
 
     const lines = [];
