@@ -1263,9 +1263,18 @@
 
   function renderSubmissionRow(sub) {
     const tr = document.createElement("tr");
+    const total = Number(sub.total) || 0;
+    const correct = Number(sub.correct) || 0;
+    const unattempted = Number(sub.unattempted) || 0;
+    const attempted = total - unattempted;
+    const scoreCell =
+      '<div class="sub-score-cell">' +
+        '<span class="sub-score-main">' + correct + ' / ' + total + '</span>' +
+        '<span class="sub-score-sub">' + attempted + ' / ' + total + ' att.</span>' +
+      '</div>';
     tr.innerHTML =
       '<td>' + esc(sub.userName || "—") + '</td>' +
-      '<td>' + (Number(sub.correct) || 0) + ' / ' + (Number(sub.total) || 0) + '</td>' +
+      '<td>' + scoreCell + '</td>' +
       '<td>' + (Number(sub.percent) || 0) + '%</td>' +
       '<td>' + esc(formatDuration(sub.timeTaken)) + '</td>' +
       '<td>' + esc(formatDate(sub.submittedAt)) + '</td>';
