@@ -634,7 +634,7 @@
         if (dashSettingsError) { dashSettingsError.textContent = "Name must be at least 2 characters"; dashSettingsError.hidden = false; }
         return;
       }
-      if (!/^[0-9]{10,15}$/.test(whatsapp)) {
+      if (whatsapp.length > 0 && !/^[0-9]{10,15}$/.test(whatsapp)) {
         if (dashSettingsError) { dashSettingsError.textContent = "Enter a valid WhatsApp number (10-15 digits)"; dashSettingsError.hidden = false; }
         return;
       }
