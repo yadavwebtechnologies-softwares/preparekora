@@ -783,3 +783,28 @@
   margin-left: 0;
   flex-shrink: 0;
 }
+/* === Submissions score cell: two-line (append) === */
+
+.sub-score-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.25;
+}
+
+.sub-score-main {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.sub-score-sub {
+  font-size: 10px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+@media (max-width: 560px) {
+  .sub-score-sub { font-size: 9px; }
+}
