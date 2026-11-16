@@ -2041,9 +2041,9 @@
       const statusBadge = u.disabled
         ? '<span class="user-status disabled">Disabled</span>'
         : '<span class="user-status active">Active</span>';
-      const newBadge = isNew ? ' <span class="user-new-badge">NEW</span>' : "";
+      const newBadge = isNew ? '<span class="user-new-badge">NEW</span>' : "";
       tr.innerHTML =
-        '<td>' + esc(u.name || "—") + newBadge + '</td>' +
+        '<td><div class="user-name-cell"><span class="user-name-text">' + esc(u.name || "—") + '</span>' + newBadge + '</div></td>' +
         '<td>' + esc(u.email || "—") + '</td>' +
         '<td>' + esc(u.whatsapp || "—") + '</td>' +
         '<td>' + esc(formatShortDate(u.createdAt)) + '</td>' +
