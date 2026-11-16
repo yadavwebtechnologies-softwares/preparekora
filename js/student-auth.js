@@ -31,11 +31,18 @@
   window.PK_STUDENT = PK_STUDENT;
 
   /* ---------- storage ---------- */
-
   function storeUser(user) {
     try {
-      if (user) localStorage.setItem(USER_KEY, JSON.stringify({ uid: user.uid, email: user.email || "" }));
-      else localStorage.removeItem(USER_KEY);
+      if (user) {
+        localStorage.setItem(USER_KEY, JSON.stringify({
+          uid: user.uid,
+          email: user.email || "",
+          displayName: user.displayName || "",
+          photoURL: user.photoURL || ""
+        }));
+      } else {
+        localStorage.removeItem(USER_KEY);
+      }
     } catch (e) {}
   }
 
@@ -223,9 +230,10 @@
     clearInjected(actions);
 
     const toggle = actions.querySelector("#menuToggle");
-    const displayName = (profile && profile.name) || (user && user.email ? user.email.split("@")[0] : "Account");
+    const displayName = (profile && profile.name) || (user && user.displayName) || (user && user.email ? user.email.split("@")[0] : "Account");
     const email = (user && user.email) || "";
-    const initial = (displayName || "U").trim().charAt(0).toUpperCase();
+    const photoURL = (user && user.photoURL) || "";
+    const initials = initialsOf(displayName, email);
 
     const wrap = document.createElement("div");
     wrap.style.position = "relative";
@@ -239,7 +247,7 @@
     btn.setAttribute("aria-expanded", "false");
     btn.setAttribute("aria-controls", "pkProfileDropdown");
     btn.innerHTML =
-      '<span class="profile-avatar">' + escapeHTML(initial) + '</span>' +
+      avatarHTML(photoURL, initials, "profile-avatar") +
       '<span class="profile-name">' + escapeHTML(displayName) + '</span>' +
       '<svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
 
@@ -532,6 +540,24 @@
     });
   }
 
+  function initialsOf(name, email) {
+    const source = String(name || "").trim() || String(email || "").trim() || "U";
+    const parts = source.split(/\s+/).filter(function (p) { return p.length > 0; });
+    if (parts.length >= 2) {
+      return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+    }
+    return source.charAt(0).toUpperCase();
+  }
+
+  function avatarHTML(photoURL, initials, sizeClass) {
+    const cls = sizeClass || "profile-avatar";
+    const safeInitials = escapeHTML(initials);
+    if (photoURL && typeof photoURL === "string" && photoURL.length > 0) {
+      return '<span class="' + cls + '"><img src="' + escapeHTML(photoURL) + '" alt="' + safeInitials + '" loading="lazy" onerror="this.parentNode.textContent=this.alt;"></span>';
+    }
+    return '<span class="' + cls + '">' + safeInitials + '</span>';
+  }
+
   /* ---------- auth bootstrap ---------- */
 
   async function init() {
@@ -548,7 +574,12 @@
 
     auth.onAuthStateChanged(async function (fbUser) {
       if (fbUser) {
-        PK_STUDENT.user = { uid: fbUser.uid, email: fbUser.email || "", displayName: fbUser.displayName || "" };
+        PK_STUDENT.user = {
+          uid: fbUser.uid,
+          email: fbUser.email || "",
+          displayName: fbUser.displayName || "",
+          photoURL: fbUser.photoURL || ""
+        };
         storeUser(PK_STUDENT.user);
         try {
           const token = await fbUser.getIdToken();
