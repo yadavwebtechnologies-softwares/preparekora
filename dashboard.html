@@ -149,44 +149,63 @@
       <!-- PERFORMANCE PANEL -->
       <section class="dash-panel is-active" data-panel="performance">
 
-        <div class="card">
-          <div class="card-head">
-            <div>
-              <h2 class="card-title">Score Trend</h2>
-              <p class="card-sub" id="dashTrendSub">0 tests · 0 questions</p>
+        <div class="dash-panel-body">
+
+          <div class="dash-panel-main">
+
+            <div class="card">
+              <div class="card-head">
+                <div>
+                  <h2 class="card-title">Score Trend</h2>
+                  <p class="card-sub" id="dashTrendSub">0 tests · 0 questions</p>
+                </div>
+              </div>
+              <div class="dash-chart-wrap">
+                <canvas class="dash-chart-canvas" id="dashTrendCanvas" width="800" height="130"></canvas>
+              </div>
+              <div class="dash-chart-labels" id="dashTrendLabels"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <h2 class="card-title">Strengths &amp; Weaknesses</h2>
+              </div>
+              <div id="dashSubjects"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <h2 class="card-title">Recent Tests</h2>
+              </div>
+              <div id="dashRecent"></div>
+            </div>
+
+          </div>
+
+          <div class="dash-panel-side">
+            <div class="card">
+              <div class="card-head">
+                <h2 class="card-title">Recommended Practice</h2>
+              </div>
+              <div id="dashRecommended"></div>
             </div>
           </div>
-          <div class="dash-chart-wrap">
-            <canvas class="dash-chart-canvas" id="dashTrendCanvas" width="800" height="160"></canvas>
-          </div>
-          <div class="dash-chart-labels" id="dashTrendLabels"></div>
-        </div>
 
-        <div class="card">
-          <div class="card-head">
-            <h2 class="card-title">Strengths &amp; Weaknesses</h2>
-          </div>
-          <div id="dashSubjects"></div>
-        </div>
-
-        <div class="card">
-          <div class="card-head">
-            <h2 class="card-title">Recent Tests</h2>
-          </div>
-          <div id="dashRecent"></div>
         </div>
 
       </section>
 
       <!-- PURCHASES PANEL -->
       <section class="dash-panel" data-panel="purchases">
-        <div class="card">
-          <div class="card-head">
-            <h2 class="card-title">Purchases</h2>
-          </div>
-          <div class="empty">
-            <p>No purchases yet — ebooks, courses and payments will show up here.</p>
-            <button class="btn btn-sm" type="button" disabled>Browse Ebooks</button>
+        <div class="dash-panel-single">
+          <div class="card">
+            <div class="card-head">
+              <h2 class="card-title">Purchases</h2>
+            </div>
+            <div class="empty">
+              <p>No purchases yet — ebooks, courses and payments will show up here.</p>
+              <button class="btn btn-sm" type="button" disabled>Browse Ebooks</button>
+            </div>
           </div>
         </div>
       </section>
@@ -194,50 +213,52 @@
       <!-- SETTINGS PANEL -->
       <section class="dash-panel" data-panel="settings">
 
-        <div class="card">
-          <div class="card-head">
-            <h2 class="card-title">Account Details</h2>
+        <div class="dash-panel-single">
+          <div class="card">
+            <div class="card-head">
+              <h2 class="card-title">Account Details</h2>
+            </div>
+            <form id="dashSettingsForm" novalidate>
+              <div class="form-field">
+                <label class="form-label" for="dashFieldName">Name</label>
+                <input class="form-input" id="dashFieldName" type="text" maxlength="60" autocomplete="name">
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="dashFieldEmail">Email</label>
+                <input class="form-input" id="dashFieldEmail" type="email" readonly>
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="dashFieldWhatsApp">WhatsApp (optional)</label>
+                <input class="form-input" id="dashFieldWhatsApp" type="tel" maxlength="15" inputmode="numeric" autocomplete="tel">
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="dashFieldDob">Date of Birth</label>
+                <input class="form-input" id="dashFieldDob" type="date">
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="dashFieldPincode">PIN Code</label>
+                <input class="form-input" id="dashFieldPincode" type="text" maxlength="10" inputmode="numeric">
+              </div>
+              <p class="form-error" id="dashSettingsError" hidden></p>
+              <div class="form-actions">
+                <button class="btn btn-primary" id="dashSaveProfileBtn" type="submit">Save changes</button>
+              </div>
+            </form>
           </div>
-          <form id="dashSettingsForm" novalidate>
-            <div class="form-field">
-              <label class="form-label" for="dashFieldName">Name</label>
-              <input class="form-input" id="dashFieldName" type="text" maxlength="60" autocomplete="name">
+
+          <div class="card">
+            <div class="card-head">
+              <h2 class="card-title">Security</h2>
             </div>
-            <div class="form-field">
-              <label class="form-label" for="dashFieldEmail">Email</label>
-              <input class="form-input" id="dashFieldEmail" type="email" readonly>
+            <p class="card-sub" style="margin-bottom: 14px;">Changing your password sends a reset link to your email.</p>
+            <div class="form-actions" style="margin-top: 0;">
+              <button class="btn btn-sm" id="dashChangePasswordBtn" type="button">Change password</button>
+              <button class="btn btn-sm" id="dashLogoutBtn" type="button">Log out</button>
             </div>
-            <div class="form-field">
-              <label class="form-label" for="dashFieldWhatsApp">WhatsApp (optional)</label>
-              <input class="form-input" id="dashFieldWhatsApp" type="tel" maxlength="15" inputmode="numeric" autocomplete="tel">
-            </div>
-            <div class="form-field">
-              <label class="form-label" for="dashFieldDob">Date of Birth</label>
-              <input class="form-input" id="dashFieldDob" type="date">
-            </div>
-            <div class="form-field">
-              <label class="form-label" for="dashFieldPincode">PIN Code</label>
-              <input class="form-input" id="dashFieldPincode" type="text" maxlength="10" inputmode="numeric">
-            </div>
-            <p class="form-error" id="dashSettingsError" hidden></p>
-            <div class="form-actions">
-              <button class="btn btn-primary" id="dashSaveProfileBtn" type="submit">Save changes</button>
-            </div>
-          </form>
+          </div>
         </div>
 
-        <div class="card">
-          <div class="card-head">
-            <h2 class="card-title">Security</h2>
-          </div>
-          <p class="card-sub" style="margin-bottom: 14px;">Changing your password sends a reset link to your email.</p>
-          <div class="form-actions" style="margin-top: 0;">
-            <button class="btn btn-sm" id="dashChangePasswordBtn" type="button">Change password</button>
-            <button class="btn btn-sm" id="dashLogoutBtn" type="button">Log out</button>
-          </div>
-        </div>
-
-        <div class="dash-danger-zone">
+        <div class="dash-danger-zone" style="margin-top: 12px;">
           <div class="card-head">
             <h2 class="card-title">Danger Zone</h2>
           </div>
