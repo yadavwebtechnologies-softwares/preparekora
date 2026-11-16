@@ -2277,7 +2277,7 @@
 
   /* ---------- LIVE ANALYTICS MODULE ---------- */
 
-  const AN_POLL_MS = 10000;
+  const AN_POLL_MS = 60000;
   const AN_TODAY_MS = 60000;
   let anPollId = null;
   let anTodayId = null;
