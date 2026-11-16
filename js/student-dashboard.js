@@ -62,6 +62,7 @@
   const dashTrendLabels = document.getElementById("dashTrendLabels");
   const dashSubjects = document.getElementById("dashSubjects");
   const dashRecent = document.getElementById("dashRecent");
+  const dashRecommended = document.getElementById("dashRecommended");
 
   const dashSettingsForm = document.getElementById("dashSettingsForm");
   const dashFieldName = document.getElementById("dashFieldName");
@@ -215,6 +216,81 @@
     if (dashFieldPincode) dashFieldPincode.value = profile.pincode || "";
   }
 
+  async function loadAllTestsForRecommendation() {
+    try {
+      const raw = sessionStorage.getItem("pk_tests_cache_v1");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.tests)) return parsed.tests;
+      }
+    } catch (e) {}
+
+    try {
+      const r = await fetch(API_BASE + "/tests", { headers: { Accept: "application/json" } });
+      if (!r.ok) return [];
+      const d = await r.json();
+      const tests = Array.isArray(d.tests) ? d.tests : [];
+      try {
+        sessionStorage.setItem("pk_tests_cache_v1", JSON.stringify({
+          tests: tests,
+          gatingEnabled: d.gatingEnabled === true
+        }));
+      } catch (e) {}
+      return tests;
+    } catch (e) { return []; }
+  }
+
+  async function renderRecommendedPractice() {
+    if (!dashRecommended) return;
+    dashRecommended.innerHTML = '<div class="dash-rec-empty">Loading…</div>';
+
+    const allTests = await loadAllTestsForRecommendation();
+    const attempted = (state.stats && Array.isArray(state.stats.attemptedTestIds))
+      ? state.stats.attemptedTestIds : [];
+    const attemptedSet = {};
+    attempted.forEach(function (id) { attemptedSet[id] = true; });
+
+    const unattempted = allTests.filter(function (t) {
+      return t && t.id && !attemptedSet[t.id];
+    });
+    unattempted.sort(function (a, b) {
+      return (b.createdAt || 0) - (a.createdAt || 0);
+    });
+    const picks = unattempted.slice(0, 2);
+
+    if (picks.length === 0) {
+      dashRecommended.innerHTML = '<div class="dash-rec-empty">You\'ve attempted all available tests. Great work!</div>';
+      return;
+    }
+
+    dashRecommended.innerHTML = "";
+    const list = document.createElement("div");
+    list.className = "dash-rec-list";
+
+    picks.forEach(function (t) {
+      const card = document.createElement("div");
+      card.className = "dash-rec-card";
+
+      const qCount = Number(t.questionCount) || 0;
+      const mins = Number(t.minutes) || 0;
+      const examHTML = t.exam ? '<span class="exam-badge">' + esc(t.exam) + '</span>' : '';
+
+      card.innerHTML =
+        '<div class="dash-rec-title">' + esc(t.title || "Untitled") + '</div>' +
+        '<div class="dash-rec-meta">' +
+          examHTML +
+          '<span>' + qCount + ' Questions</span>' +
+          '<span class="meta-dot"></span>' +
+          '<span>' + mins + ' Minutes</span>' +
+        '</div>' +
+        '<a class="btn btn-sm btn-primary" href="mock-test.html?test=' + encodeURIComponent(t.id) + '">Start</a>';
+
+      list.appendChild(card);
+    });
+
+    dashRecommended.appendChild(list);
+  }
+
   function renderStats() {
     const d = state.stats || {};
     if (dashStatTests) dashStatTests.textContent = String(d.totalTests || 0);
@@ -226,6 +302,7 @@
     renderTrend(d.scoreTrend || []);
     renderSubjects(d.subjects || []);
     renderRecent(d.recentSubmissions || []);
+    renderRecommendedPractice();
   }
 
   function renderTrend(points) {
@@ -234,30 +311,80 @@
     if (!ctx) return;
     const W = dashTrendCanvas.width, H = dashTrendCanvas.height;
     ctx.clearRect(0, 0, W, H);
-    ctx.strokeStyle = "#e7e7e7";
-    ctx.lineWidth = 1;
-    for (let i = 0; i <= 4; i++) {
-      const y = 10 + i * ((H - 20) / 4);
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+
+    const padL = 52, padR = 16, padT = 12, padB = 8;
+    const usableW = W - padL - padR;
+    const usableH = H - padT - padB;
+
+    const yLevels = [
+      { pct: 100, label: "100%" },
+      { pct: 50,  label: "50%"  },
+      { pct: 0,   label: "0%"   }
+    ];
+
+    yLevels.forEach(function (lvl) {
+      const y = padT + usableH - (lvl.pct / 100) * usableH;
+      ctx.strokeStyle = "#e7e7e7";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(W - padR, y);
+      ctx.stroke();
+
+      ctx.fillStyle = "#737373";
+      ctx.font = "10px Arial, Helvetica, sans-serif";
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillText(lvl.label, padL - 8, y);
+    });
+
+    if (!points.length) {
+      if (dashTrendLabels) dashTrendLabels.innerHTML = "";
+      return;
     }
-    if (!points.length) { if (dashTrendLabels) dashTrendLabels.innerHTML = ""; return; }
-    const n = points.length, padX = 40, usableW = W - padX * 2, usableH = H - 40, topY = 15;
+
+    const n = points.length;
     const coords = points.map(function (p, i) {
-      const x = n === 1 ? W / 2 : padX + (i / (n - 1)) * usableW;
-      const y = topY + usableH - (Math.min(100, Math.max(0, p.avgPercent)) / 100) * usableH;
+      const x = n === 1 ? padL + usableW / 2 : padL + (i / (n - 1)) * usableW;
+      const y = padT + usableH - (Math.min(100, Math.max(0, p.avgPercent)) / 100) * usableH;
       return { x: x, y: y, val: p.avgPercent };
     });
-    ctx.strokeStyle = "#222222"; ctx.lineWidth = 2;
-    ctx.beginPath();
-    coords.forEach(function (p, i) { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
-    ctx.stroke();
+
+    if (n >= 2) {
+      ctx.beginPath();
+      ctx.moveTo(coords[0].x, padT + usableH);
+      coords.forEach(function (p) { ctx.lineTo(p.x, p.y); });
+      ctx.lineTo(coords[coords.length - 1].x, padT + usableH);
+      ctx.closePath();
+      ctx.fillStyle = "#f7f7f7";
+      ctx.fill();
+
+      ctx.strokeStyle = "#222222";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      coords.forEach(function (p, i) {
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.stroke();
+    }
+
     coords.forEach(function (p) {
-      ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = "#222222"; ctx.fill();
-      ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2; ctx.stroke();
-      ctx.fillStyle = "#737373"; ctx.font = "11px Arial, Helvetica, sans-serif";
-      ctx.textAlign = "center"; ctx.fillText(p.val + "%", p.x, p.y - 12);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = "#222222";
+      ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = "#737373";
+      ctx.font = "10px Arial, Helvetica, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "alphabetic";
+      ctx.fillText(p.val + "%", p.x, p.y - 10);
     });
+
     if (dashTrendLabels) {
       dashTrendLabels.innerHTML = "";
       const step = Math.max(1, Math.ceil(n / 6));
