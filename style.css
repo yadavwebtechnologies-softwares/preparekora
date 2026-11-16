@@ -703,39 +703,29 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   background: #ffffff;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: block;
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+}
+
+.dash-rec-card:hover {
+  border-color: #bdbdbd;
+  background: var(--surface);
 }
 
 .dash-rec-title {
   font-size: 12px;
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.45;
   overflow-wrap: anywhere;
   color: var(--text);
+  display: block;
 }
 
-.dash-rec-meta {
-  font-size: 11px;
-  color: var(--muted);
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.dash-rec-meta .meta-dot {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: var(--muted);
-  align-self: center;
-}
-
-.dash-rec-card .btn {
-  align-self: flex-start;
-  padding: 6px 12px;
-  font-size: 11px;
+.dash-rec-card:hover .dash-rec-title {
+  color: #111111;
 }
 
 .dash-rec-empty {
