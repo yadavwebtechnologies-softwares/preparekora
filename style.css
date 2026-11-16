@@ -764,3 +764,22 @@
   .dash-rec-title { font-size: 11px; }
   .dash-rec-meta { font-size: 10px; }
 }
+/* === Users table: name cell with right-aligned NEW badge (append) === */
+
+.user-name-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.user-name-text {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.user-name-cell .user-new-badge {
+  margin-left: 0;
+  flex-shrink: 0;
+}
