@@ -268,23 +268,10 @@
     list.className = "dash-rec-list";
 
     picks.forEach(function (t) {
-      const card = document.createElement("div");
+      const card = document.createElement("a");
       card.className = "dash-rec-card";
-
-      const qCount = Number(t.questionCount) || 0;
-      const mins = Number(t.minutes) || 0;
-      const examHTML = t.exam ? '<span class="exam-badge">' + esc(t.exam) + '</span>' : '';
-
-      card.innerHTML =
-        '<div class="dash-rec-title">' + esc(t.title || "Untitled") + '</div>' +
-        '<div class="dash-rec-meta">' +
-          examHTML +
-          '<span>' + qCount + ' Questions</span>' +
-          '<span class="meta-dot"></span>' +
-          '<span>' + mins + ' Minutes</span>' +
-        '</div>' +
-        '<a class="btn btn-sm btn-primary" href="mock-test.html?test=' + encodeURIComponent(t.id) + '">Start</a>';
-
+      card.href = "mock-test.html?test=" + encodeURIComponent(t.id);
+      card.innerHTML = '<span class="dash-rec-title">' + esc(t.title || "Untitled") + '</span>';
       list.appendChild(card);
     });
 
