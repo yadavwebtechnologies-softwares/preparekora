@@ -421,24 +421,43 @@
     overlay.setAttribute("aria-labelledby", "studentCompleteProfileTitle");
     overlay.setAttribute("aria-hidden", "true");
     overlay.innerHTML =
-      '<div class="modal complete-profile-modal">' +
+      '<div class="modal complete-profile-modal" style="position: relative;">' +
+        '<button type="button" id="studentCPClose" aria-label="Close" style="position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid transparent; border-radius: 6px; background: transparent; cursor: pointer; color: var(--muted);">' +
+          '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12"/><path d="M18 6 6 18"/></svg>' +
+        '</button>' +
         '<h2 id="studentCompleteProfileTitle">Complete your profile</h2>' +
-        '<p class="complete-profile-sub">Just WhatsApp is required to continue.</p>' +
+        '<p class="complete-profile-sub">Add your WhatsApp number to stay updated. Optional — you can skip and add it later from Settings.</p>' +
         '<form class="complete-profile-form" id="studentCompleteProfileForm" novalidate>' +
           '<div class="form-field">' +
             '<label class="form-label" for="studentCPName">Full name</label>' +
             '<input class="form-input" id="studentCPName" type="text" maxlength="60" autocomplete="name">' +
           '</div>' +
           '<div class="form-field">' +
-            '<label class="form-label" for="studentCPWhatsApp">WhatsApp number</label>' +
+            '<label class="form-label" for="studentCPWhatsApp">WhatsApp number (optional)</label>' +
             '<input class="form-input" id="studentCPWhatsApp" type="tel" maxlength="15" inputmode="numeric" autocomplete="tel">' +
-            '<p class="form-hint">Required — we only contact you about test issues</p>' +
+            '<p class="form-hint">Only used if we need to contact you about test issues.</p>' +
             '<p class="form-error" id="studentCPError" hidden></p>' +
           '</div>' +
-          '<button class="btn btn-primary btn-block" type="submit">Save</button>' +
+          '<div class="modal-actions" style="margin-top: 12px;">' +
+            '<button class="btn" type="button" id="studentCPSkip">Skip for now</button>' +
+            '<button class="btn btn-primary" type="submit">Save</button>' +
+          '</div>' +
         '</form>' +
       '</div>';
     document.body.appendChild(overlay);
+
+    overlay.querySelector("#studentCPClose").addEventListener("click", closeCompleteProfileModal);
+    overlay.querySelector("#studentCPSkip").addEventListener("click", closeCompleteProfileModal);
+
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) closeCompleteProfileModal();
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && overlay.classList.contains("open")) {
+        closeCompleteProfileModal();
+      }
+    });
 
     overlay.querySelector("#studentCompleteProfileForm").addEventListener("submit", async function (e) {
       e.preventDefault();
@@ -453,7 +472,7 @@
         if (errEl) { errEl.textContent = "Please enter your name"; errEl.hidden = false; }
         return;
       }
-      if (!/^[0-9]{10,15}$/.test(wa)) {
+      if (wa.length > 0 && !/^[0-9]{10,15}$/.test(wa)) {
         if (errEl) { errEl.textContent = "Enter a valid WhatsApp number"; errEl.hidden = false; }
         return;
       }
@@ -564,10 +583,8 @@
         renderHeader();
         fireAuthChanged();
 
-        if (isGoogleUser && profile && profile.profileCompleted === false && !completeProfileShownThisSession) {
-          completeProfileShownThisSession = true;
-          setTimeout(openCompleteProfileModal, 300);
-        }
+        // WhatsApp no longer mandatory. Profile modal is dormant —
+        // users can add WhatsApp anytime via Dashboard → Settings.
       } else {
         try { sessionStorage.removeItem("pk_login_session_uid"); } catch (e) {}
         PK_STUDENT.user = null;
