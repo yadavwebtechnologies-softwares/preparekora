@@ -76,11 +76,11 @@
                 '<label class="form-label" for="studentSignupPassword">Password</label>' +
                 '<input class="form-input" id="studentSignupPassword" type="password" autocomplete="new-password" placeholder="At least 6 characters">' +
               '</div>' +
-              '<div class="form-field">' +
-                '<label class="form-label" for="studentSignupWhatsApp">WhatsApp number</label>' +
-                '<input class="form-input" id="studentSignupWhatsApp" type="tel" autocomplete="tel" placeholder="10-digit number" maxlength="15" inputmode="numeric">' +
-                '<p class="form-hint">Required — we only contact you about test issues</p>' +
-              '</div>' +
+          '<div class="form-field">' +
+            '<label class="form-label" for="studentSignupWhatsApp">WhatsApp number (optional)</label>' +
+            '<input class="form-input" id="studentSignupWhatsApp" type="tel" autocomplete="tel" placeholder="10-digit number" maxlength="15" inputmode="numeric">' +
+            '<p class="form-hint">Only used if we need to contact you about test issues.</p>' +
+          '</div>' +
               '<p class="auth-form-error" id="studentSignupError" hidden></p>' +
               '<button class="btn btn-primary btn-block" type="submit">Create account</button>' +
               '<p class="auth-form-hint">By creating an account you agree to our <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy</a>.</p>' +
@@ -278,7 +278,7 @@
     if (name.length < 2) { showError("signup", "Please enter your name"); nameEl.focus(); return; }
     if (!email) { showError("signup", "Enter your email"); emailEl.focus(); return; }
     if (password.length < 6) { showError("signup", "Password must be at least 6 characters"); passEl.focus(); return; }
-    if (!/^[0-9]{10,15}$/.test(wa)) { showError("signup", "Enter a valid WhatsApp number"); waEl.focus(); return; }
+    if (wa.length > 0 && !/^[0-9]{10,15}$/.test(wa)) { showError("signup", "Enter a valid WhatsApp number"); waEl.focus(); return; }
 
     setLoading(true);
     window.PK_STUDENT.signup(email, password, name, wa)
