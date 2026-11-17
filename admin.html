@@ -493,51 +493,38 @@
       </div>
 
       <div class="card" style="margin-bottom: 16px;">
-        <div class="card-head">
-          <h2 class="card-title">Daily automation</h2>
-          <span class="status-badge draft" id="caAutomationBadge">OFF</span>
-        </div>
-        <p class="card-sub" id="caAutomationSub">Manual mode — you can publish, edit and delete entries any time.</p>
-        <div style="display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
           <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
             <input type="checkbox" id="caEnabledCheckbox" style="width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer;">
-            <span style="font-size: 13px; font-weight: 500;">Enable daily automation at 15:00 IST</span>
+            <span style="font-size: 13px; font-weight: 500;">Auto-publish daily at 15:00 IST</span>
           </label>
           <button class="btn btn-sm" id="caSaveToggleBtn" type="button">Save</button>
+          <span class="status-badge draft" id="caAutomationBadge">OFF</span>
         </div>
-        <p class="form-hint" style="margin-top: 10px;">When ON: the create window opens daily at 15:00 IST. One entry per day. Past entries are locked (cannot edit or delete). When OFF: full manual control on any date.</p>
       </div>
 
       <div class="card" style="margin-bottom: 16px;">
-        <div class="card-head">
-          <h2 class="card-title" id="caEditorTitle">Today's entry</h2>
-          <span class="card-sub" id="caTodayStatus">—</span>
+        <h2 class="card-title" id="caEditorTitle" style="margin-bottom: 6px;">Today's entry</h2>
+        <p class="card-sub" id="caAutoTitleEn" style="margin: 0 0 4px;">—</p>
+        <p class="card-sub" id="caAutoTitleAs" style="margin: 0 0 12px; font-size: 12px;">—</p>
+
+        <div class="form-field">
+          <label for="caContentEn" class="form-label">English</label>
+          <textarea id="caContentEn" class="form-input" style="height: auto; min-height: 120px; padding: 10px 12px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 1.55; resize: vertical;" maxlength="8000"></textarea>
         </div>
 
         <div class="form-field">
-          <label class="form-label">Auto-generated title</label>
-          <p class="muted-text" id="caAutoTitleEn" style="margin: 0 0 4px; font-size: 14px; font-weight: 600; color: var(--text);">—</p>
-          <p class="muted-text" id="caAutoTitleAs" style="margin: 0; font-size: 13px;">—</p>
-        </div>
-
-        <div class="form-field">
-          <label for="caContentEn" class="form-label">Content — English</label>
-          <textarea id="caContentEn" class="form-input" style="height: auto; min-height: 140px; padding: 10px 12px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 1.55; resize: vertical;" placeholder="Paste today's current affairs in English…" maxlength="8000"></textarea>
-        </div>
-
-        <div class="form-field">
-          <label for="caContentAs" class="form-label">Content — Assamese</label>
-          <textarea id="caContentAs" class="form-input" style="height: auto; min-height: 140px; padding: 10px 12px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 1.55; resize: vertical;" placeholder="Assamese version — use the Translate button if needed." maxlength="8000"></textarea>
+          <label for="caContentAs" class="form-label">Assamese</label>
+          <textarea id="caContentAs" class="form-input" style="height: auto; min-height: 120px; padding: 10px 12px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 1.55; resize: vertical;" maxlength="8000"></textarea>
         </div>
 
         <div class="form-actions" style="gap: 8px; flex-wrap: wrap;">
-          <button class="btn btn-sm" id="caTranslateBtn" type="button">Translate to Assamese</button>
+          <button class="btn btn-sm" id="caTranslateBtn" type="button">Translate</button>
           <button class="btn btn-primary btn-sm" id="caPublishBtn" type="button">Publish</button>
-          <button class="btn btn-sm" id="caCancelEditBtn" type="button" style="display: none;">Cancel edit</button>
+          <button class="btn btn-sm" id="caCancelEditBtn" type="button" style="display: none;">Cancel</button>
         </div>
 
         <p class="form-error" id="caError" hidden></p>
-        <p class="form-hint" id="caStatusMsg" style="margin-top: 10px;"></p>
       </div>
 
       <div class="card" style="position: relative; min-height: 120px;">
