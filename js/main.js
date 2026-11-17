@@ -499,4 +499,62 @@
   render();
   loadTests();
 
+  /* ========== CURRENT AFFAIRS ========== */
+
+  const CA_CACHE_KEY = "pk_ca_cache_v1";
+  let caData = null;
+
+  function readCACache() {
+    try { const raw = sessionStorage.getItem(CA_CACHE_KEY); return raw ? JSON.parse(raw) : null; }
+    catch (e) { return null; }
+  }
+  function writeCACache(data) {
+    try { sessionStorage.setItem(CA_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+  }
+
+  function caParagraphs(text) {
+    if (!text) return "";
+    const safe = escapeHTML(text);
+    const parts = safe.split(/\n\n+/).map(function (p) { return p.trim(); }).filter(Boolean);
+    return parts.map(function (p, i) {
+      const withBreaks = p.replace(/\n/g, "<br>");
+      return '<p class="muted-text"' + (i > 0 ? ' style="margin-top: 10px;"' : '') + '>' + withBreaks + '</p>';
+    }).join("");
+  }
+
+  function renderCurrentAffairs() {
+    const section = document.getElementById("currentAffairsSection");
+    if (!section) return;
+    const latest = caData && caData.latest;
+    if (!latest || !latest.date) { section.hidden = true; return; }
+    section.hidden = false;
+    const isAs = window.PK && window.PK.lang === "as";
+    const title = isAs ? (latest.titleAs || latest.titleEn) : (latest.titleEn || latest.titleAs);
+    const content = isAs ? (latest.contentAs || latest.contentEn) : (latest.contentEn || latest.contentAs);
+    const titleEl = document.getElementById("caTitle");
+    const bodyEl = document.getElementById("caBody");
+    if (titleEl) titleEl.textContent = title || "";
+    if (bodyEl) bodyEl.innerHTML = caParagraphs(content);
+  }
+
+  async function loadCurrentAffairs() {
+    const cached = readCACache();
+    if (cached) { caData = cached; renderCurrentAffairs(); }
+    try {
+      const res = await apiFetch("/current-affairs");
+      caData = { enabled: res.enabled === true, latest: res.latest || null };
+      writeCACache(caData);
+      renderCurrentAffairs();
+    } catch (err) {
+      if (!cached) { caData = null; renderCurrentAffairs(); }
+    }
+  }
+
+  document.addEventListener("pk:langchange", function () { renderCurrentAffairs(); });
+
+  renderCurrentAffairs();
+  loadCurrentAffairs();
+
+  /* ========== END CURRENT AFFAIRS ========== */
+
 })();
