@@ -2553,17 +2553,6 @@
       badge.textContent = d.enabled ? "ON" : "OFF";
       badge.className = "status-badge " + (d.enabled ? "published" : "draft");
     }
-    const sub = $id("caAutomationSub");
-    if (sub) {
-      if (d.enabled) {
-        const hour = String(d.publishHour || 15).padStart(2, "0");
-        if (d.todayEntryExists) sub.textContent = "Automation ON — today's entry already published.";
-        else if (d.istHour >= d.publishHour) sub.textContent = "Automation ON — window open now.";
-        else sub.textContent = "Automation ON — window opens daily at " + hour + ":00 IST.";
-      } else {
-        sub.textContent = "Manual mode — you can publish, edit and delete entries any time.";
-      }
-    }
 
     const editingDate = state.caEditingDate || d.todayKey;
     const isEditingToday = editingDate === d.todayKey;
@@ -2578,18 +2567,7 @@
     if (titleAsEl) titleAsEl.textContent = titles.as || "—";
 
     const editorTitle = $id("caEditorTitle");
-    if (editorTitle) {
-      if (isEditingToday) editorTitle.textContent = d.todayEntryExists ? "Today's entry (published)" : "Today's entry";
-      else editorTitle.textContent = "Editing " + editingDate;
-    }
-
-    const statusEl = $id("caTodayStatus");
-    if (statusEl) {
-      if (!isEditingToday) statusEl.textContent = "Manual edit";
-      else if (d.todayEntryExists) statusEl.textContent = "Published";
-      else if (d.canCreate) statusEl.textContent = "Ready to publish";
-      else statusEl.textContent = "Window closed";
-    }
+    if (editorTitle) editorTitle.textContent = isEditingToday ? "Today's entry" : "Editing " + editingDate;
 
     const contentEn = $id("caContentEn");
     const contentAs = $id("caContentAs");
@@ -2598,13 +2576,7 @@
 
     const publishBtn = $id("caPublishBtn");
     if (publishBtn) {
-      if (isEditingToday) {
-        publishBtn.textContent = d.todayEntryExists ? "Save changes" : "Publish";
-        publishBtn.disabled = !d.canCreate && !d.todayEntryExists;
-      } else {
-        publishBtn.textContent = "Save changes";
-        publishBtn.disabled = !d.canEditAny;
-      }
+      publishBtn.textContent = d.todayEntryExists && isEditingToday ? "Save changes" : "Publish";
     }
 
     const cancelBtn = $id("caCancelEditBtn");
@@ -2625,33 +2597,30 @@
       return;
     }
     if (empty) empty.hidden = true;
-    const canModify = state.caData && state.caData.canEditAny === true;
     entries.forEach(function (e) {
+      const isPublished = e.published !== false;
       const row = document.createElement("div");
       row.className = "admin-test-card";
       row.style.marginBottom = "8px";
-      const actions = [];
-      if (canModify) {
-        actions.push('<button class="btn btn-sm" data-ca-action="edit" data-ca-date="' + esc(e.date) + '">Edit</button>');
-        actions.push('<button class="btn btn-sm" data-ca-action="delete" data-ca-date="' + esc(e.date) + '">Delete</button>');
-      } else {
-        actions.push('<span class="muted-text" style="font-size: 11px;">Locked (automation ON)</span>');
-      }
       row.innerHTML =
         '<div class="admin-test-info">' +
           '<p class="admin-test-title">' + esc(e.titleEn || e.date) + '</p>' +
           '<div class="admin-test-meta">' +
-            '<span class="status-badge published">Published</span>' +
+            '<span class="status-badge ' + (isPublished ? "published" : "draft") + '">' + (isPublished ? "Published" : "Draft") + '</span>' +
             '<span>' + esc(e.date) + '</span>' +
           '</div>' +
         '</div>' +
-        '<div class="admin-test-actions">' + actions.join("") + '</div>';
+        '<div class="admin-test-actions">' +
+          '<button class="btn btn-sm" data-ca-action="edit">Edit</button>' +
+          '<button class="btn btn-sm" data-ca-action="toggle">' + (isPublished ? "Unpublish" : "Publish") + '</button>' +
+          '<button class="btn btn-sm" data-ca-action="delete">Delete</button>' +
+        '</div>';
       row.querySelectorAll("[data-ca-action]").forEach(function (btn) {
         btn.addEventListener("click", function () {
           const action = btn.getAttribute("data-ca-action");
-          const date = btn.getAttribute("data-ca-date");
-          if (action === "edit") caEditPastEntry(date);
-          else if (action === "delete") caDeleteEntry(date);
+          if (action === "edit") caEditPastEntry(e.date);
+          else if (action === "toggle") caTogglePublish(e.date, !isPublished);
+          else if (action === "delete") caDeleteEntry(e.date);
         });
       });
       container.appendChild(row);
@@ -2693,6 +2662,17 @@
         }
       }
     });
+  }
+
+  async function caTogglePublish(dateKey, willPublish) {
+    try {
+      await api.updateCA(dateKey, { published: willPublish });
+      toast(willPublish ? "Published" : "Unpublished", "success");
+      await loadCurrentAffairs();
+    } catch (err) {
+      if (err.status === 401) return showLogin();
+      toast(err.message || "Failed", "error");
+    }
   }
 
   async function saveCurrentAffairs() {
