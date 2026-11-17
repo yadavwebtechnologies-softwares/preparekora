@@ -131,7 +131,13 @@
     },
     deleteTest: function (id) { return request("/admin/tests/" + encodeURIComponent(id), { method: "DELETE" }); },
     publish: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/publish", { method: "POST" }); },
-    unpublish: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/unpublish", { method: "POST" }); }
+    unpublish: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/unpublish", { method: "POST" }); },
+    listCA: function () { return request("/admin/current-affairs"); },
+    getCAByDate: function (dateKey) { return request("/admin/current-affairs/" + encodeURIComponent(dateKey)); },
+    createCA: function (payload) { return request("/admin/current-affairs", { method: "POST", body: JSON.stringify(payload) }); },
+    updateCA: function (dateKey, payload) { return request("/admin/current-affairs/" + encodeURIComponent(dateKey), { method: "PUT", body: JSON.stringify(payload) }); },
+    deleteCA: function (dateKey) { return request("/admin/current-affairs/" + encodeURIComponent(dateKey), { method: "DELETE" }); },
+    saveCASettings: function (payload) { return request("/settings", { method: "PUT", body: JSON.stringify({ currentAffairs: payload }) }); }
   };
 
   function t(key, vars) { return (window.PK && window.PK.t) ? window.PK.t(key, vars) : key; }
@@ -232,20 +238,24 @@
     return s;
   }
 
-  const state = { admin: null, tests: [], editing: null, currentTab: "tests" };
+  const state = { admin: null, tests: [], editing: null, currentTab: "tests", caData: null, caEditingDate: null };
   const screens = {
     loading: $id("adminLoading"),
     login: $id("loginScreen"),
     dashboard: $id("dashboardScreen"),
     editor: $id("editorScreen"),
     submissions: $id("submissionsScreen"),
-    analysis: $id("analysisScreen")
+    analysis: $id("analysisScreen"),
+    currentAffairs: $id("currentAffairsScreen")
   };
 
   function showScreen(name) {
     Object.keys(screens).forEach(function (k) { if (screens[k]) screens[k].hidden = (k !== name); });
     window.scrollTo({ top: 0, behavior: "auto" });
-    if (name === "editor" || name === "submissions" || name === "analysis") stopLivePolling();
+    if (name === "editor" || name === "submissions" || name === "analysis" || name === "currentAffairs") {
+      stopLivePolling();
+      stopAnalyticsPolling();
+    }
     else if (name === "dashboard" && state.admin) startLivePolling();
   }
 
@@ -734,6 +744,11 @@
       renderEditor();
       showScreen("editor");
     });
+  }
+
+  const currentAffairsBtn = $id("currentAffairsBtn");
+  if (currentAffairsBtn) {
+    currentAffairsBtn.addEventListener("click", function () { openCurrentAffairs(); });
   }
 
   const editorBackBtn = $id("editorBackBtn");
@@ -2483,5 +2498,335 @@
       fetchAnalyticsLive();
     }
   });
+
+  /* ========== CURRENT AFFAIRS MODULE ========== */
+
+  const CA_MONTHS_EN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const CA_MONTHS_AS = ["জানুৱাৰী", "ফেব্ৰুৱাৰী", "মাৰ্চ", "এপ্ৰিল", "মে'", "জুন", "জুলাই", "আগষ্ট", "ছেপ্তেম্বৰ", "অক্টোবৰ", "নৱেম্বৰ", "ডিচেম্বৰ"];
+
+  function caAsNumerals(n) {
+    const map = { "0":"০","1":"১","2":"২","3":"৩","4":"৪","5":"৫","6":"৬","7":"৭","8":"৮","9":"৯" };
+    return String(n).split("").map(function (c) { return map[c] || c; }).join("");
+  }
+
+  function caBuildTitleClient(dateKey) {
+    if (!dateKey || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return { en: dateKey || "", as: dateKey || "" };
+    const parts = dateKey.split("-");
+    const y = Number(parts[0]);
+    const m = Number(parts[1]);
+    const day = Number(parts[2]);
+    if (!y || !m || !day || m < 1 || m > 12) return { en: dateKey, as: dateKey };
+    return {
+      en: "Current Affairs — " + day + " " + CA_MONTHS_EN[m - 1] + " " + y,
+      as: "চলিত পৰিক্ৰমা — " + caAsNumerals(day) + " " + CA_MONTHS_AS[m - 1] + " " + caAsNumerals(y)
+    };
+  }
+
+  async function openCurrentAffairs() {
+    state.caEditingDate = null;
+    showScreen("currentAffairs");
+    await loadCurrentAffairs();
+  }
+
+  async function loadCurrentAffairs() {
+    showOverlay($id("caListLoading"));
+    try {
+      const res = await api.listCA();
+      state.caData = res || {};
+      renderCurrentAffairs();
+    } catch (err) {
+      if (err.status === 401) return showLogin();
+      toast(err.message || "Failed to load Current Affairs", "error");
+    } finally {
+      hideOverlay($id("caListLoading"));
+    }
+  }
+
+  function renderCurrentAffairs() {
+    const d = state.caData || {};
+
+    const cb = $id("caEnabledCheckbox");
+    if (cb) cb.checked = d.enabled === true;
+
+    const badge = $id("caAutomationBadge");
+    if (badge) {
+      badge.textContent = d.enabled ? "ON" : "OFF";
+      badge.className = "status-badge " + (d.enabled ? "published" : "draft");
+    }
+    const sub = $id("caAutomationSub");
+    if (sub) {
+      if (d.enabled) {
+        const hour = String(d.publishHour || 15).padStart(2, "0");
+        if (d.todayEntryExists) sub.textContent = "Automation ON — today's entry already published.";
+        else if (d.istHour >= d.publishHour) sub.textContent = "Automation ON — window open now.";
+        else sub.textContent = "Automation ON — window opens daily at " + hour + ":00 IST.";
+      } else {
+        sub.textContent = "Manual mode — you can publish, edit and delete entries any time.";
+      }
+    }
+
+    const editingDate = state.caEditingDate || d.todayKey;
+    const isEditingToday = editingDate === d.todayKey;
+    const existing = isEditingToday ? d.todayEntry : null;
+
+    const titles = existing
+      ? { en: existing.titleEn || "", as: existing.titleAs || "" }
+      : caBuildTitleClient(editingDate);
+    const titleEnEl = $id("caAutoTitleEn");
+    const titleAsEl = $id("caAutoTitleAs");
+    if (titleEnEl) titleEnEl.textContent = titles.en || "—";
+    if (titleAsEl) titleAsEl.textContent = titles.as || "—";
+
+    const editorTitle = $id("caEditorTitle");
+    if (editorTitle) {
+      if (isEditingToday) editorTitle.textContent = d.todayEntryExists ? "Today's entry (published)" : "Today's entry";
+      else editorTitle.textContent = "Editing " + editingDate;
+    }
+
+    const statusEl = $id("caTodayStatus");
+    if (statusEl) {
+      if (!isEditingToday) statusEl.textContent = "Manual edit";
+      else if (d.todayEntryExists) statusEl.textContent = "Published";
+      else if (d.canCreate) statusEl.textContent = "Ready to publish";
+      else statusEl.textContent = "Window closed";
+    }
+
+    const contentEn = $id("caContentEn");
+    const contentAs = $id("caContentAs");
+    if (contentEn && !contentEn.dataset.userTyped) contentEn.value = existing ? (existing.contentEn || "") : "";
+    if (contentAs && !contentAs.dataset.userTyped) contentAs.value = existing ? (existing.contentAs || "") : "";
+
+    const publishBtn = $id("caPublishBtn");
+    if (publishBtn) {
+      if (isEditingToday) {
+        publishBtn.textContent = d.todayEntryExists ? "Save changes" : "Publish";
+        publishBtn.disabled = !d.canCreate && !d.todayEntryExists;
+      } else {
+        publishBtn.textContent = "Save changes";
+        publishBtn.disabled = !d.canEditAny;
+      }
+    }
+
+    const cancelBtn = $id("caCancelEditBtn");
+    if (cancelBtn) cancelBtn.style.display = state.caEditingDate ? "inline-flex" : "none";
+
+    renderCAPastList(Array.isArray(d.entries) ? d.entries : []);
+  }
+
+  function renderCAPastList(entries) {
+    const container = $id("caListContainer");
+    const empty = $id("caListEmpty");
+    const countEl = $id("caPastCount");
+    if (!container) return;
+    if (countEl) countEl.textContent = entries.length + (entries.length === 1 ? " entry" : " entries");
+    container.innerHTML = "";
+    if (entries.length === 0) {
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (empty) empty.hidden = true;
+    const canModify = state.caData && state.caData.canEditAny === true;
+    entries.forEach(function (e) {
+      const row = document.createElement("div");
+      row.className = "admin-test-card";
+      row.style.marginBottom = "8px";
+      const actions = [];
+      if (canModify) {
+        actions.push('<button class="btn btn-sm" data-ca-action="edit" data-ca-date="' + esc(e.date) + '">Edit</button>');
+        actions.push('<button class="btn btn-sm" data-ca-action="delete" data-ca-date="' + esc(e.date) + '">Delete</button>');
+      } else {
+        actions.push('<span class="muted-text" style="font-size: 11px;">Locked (automation ON)</span>');
+      }
+      row.innerHTML =
+        '<div class="admin-test-info">' +
+          '<p class="admin-test-title">' + esc(e.titleEn || e.date) + '</p>' +
+          '<div class="admin-test-meta">' +
+            '<span class="status-badge published">Published</span>' +
+            '<span>' + esc(e.date) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="admin-test-actions">' + actions.join("") + '</div>';
+      row.querySelectorAll("[data-ca-action]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          const action = btn.getAttribute("data-ca-action");
+          const date = btn.getAttribute("data-ca-date");
+          if (action === "edit") caEditPastEntry(date);
+          else if (action === "delete") caDeleteEntry(date);
+        });
+      });
+      container.appendChild(row);
+    });
+  }
+
+  async function caEditPastEntry(dateKey) {
+    try {
+      const res = await api.getCAByDate(dateKey);
+      if (!res || !res.entry) throw new Error("Entry not found");
+      state.caEditingDate = dateKey;
+      const contentEn = $id("caContentEn");
+      const contentAs = $id("caContentAs");
+      if (contentEn) { contentEn.value = res.entry.contentEn || ""; contentEn.dataset.userTyped = "1"; }
+      if (contentAs) { contentAs.value = res.entry.contentAs || ""; contentAs.dataset.userTyped = "1"; }
+      renderCurrentAffairs();
+      const card = $id("caEditorTitle");
+      if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (err) {
+      if (err.status === 401) return showLogin();
+      toast(err.message || "Failed to load entry", "error");
+    }
+  }
+
+  function caDeleteEntry(dateKey) {
+    openConfirmModal({
+      title: "Delete this entry?",
+      message: "The Current Affairs entry for " + dateKey + " will be permanently removed.",
+      confirmLabel: "Delete",
+      onConfirm: async function () {
+        try {
+          await api.deleteCA(dateKey);
+          toast("Entry deleted", "success");
+          if (state.caEditingDate === dateKey) state.caEditingDate = null;
+          await loadCurrentAffairs();
+        } catch (err) {
+          if (err.status === 401) return showLogin();
+          toast(err.message || "Delete failed", "error");
+        }
+      }
+    });
+  }
+
+  async function saveCurrentAffairs() {
+    const errEl = $id("caError");
+    if (errEl) errEl.hidden = true;
+    const statusMsg = $id("caStatusMsg");
+    if (statusMsg) statusMsg.textContent = "";
+
+    const contentEn = ($id("caContentEn") || {}).value || "";
+    const contentAs = ($id("caContentAs") || {}).value || "";
+
+    if (!contentEn.trim()) {
+      if (errEl) { errEl.textContent = "English content is required."; errEl.hidden = false; }
+      return;
+    }
+    if (!contentAs.trim()) {
+      if (errEl) { errEl.textContent = "Assamese content is required. Use the Translate button if needed."; errEl.hidden = false; }
+      return;
+    }
+
+    const d = state.caData || {};
+    const targetDate = state.caEditingDate || d.todayKey;
+    const isEditingToday = targetDate === d.todayKey;
+
+    const btn = $id("caPublishBtn");
+    if (btn) btn.disabled = true;
+
+    try {
+      if (isEditingToday && !d.todayEntryExists) {
+        await api.createCA({ contentEn: contentEn, contentAs: contentAs });
+        toast("Current Affairs published", "success");
+      } else {
+        await api.updateCA(targetDate, { contentEn: contentEn, contentAs: contentAs });
+        toast("Current Affairs updated", "success");
+      }
+      state.caEditingDate = null;
+      const contentEnEl = $id("caContentEn");
+      const contentAsEl = $id("caContentAs");
+      if (contentEnEl) contentEnEl.dataset.userTyped = "";
+      if (contentAsEl) contentAsEl.dataset.userTyped = "";
+      await loadCurrentAffairs();
+    } catch (err) {
+      if (err.status === 401) return showLogin();
+      if (errEl) { errEl.textContent = err.message || "Save failed"; errEl.hidden = false; }
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async function caSaveToggle() {
+    const cb = $id("caEnabledCheckbox");
+    if (!cb) return;
+    const willEnable = cb.checked;
+    const d = state.caData || {};
+    const publishHour = Number(d.publishHour) || 15;
+
+    const btn = $id("caSaveToggleBtn");
+    if (btn) btn.disabled = true;
+
+    try {
+      await api.saveCASettings({ enabled: willEnable, publishHour: publishHour });
+      toast("Automation " + (willEnable ? "enabled" : "disabled"), "success");
+      await loadCurrentAffairs();
+    } catch (err) {
+      if (err.status === 401) return showLogin();
+      toast(err.message || "Failed to save", "error");
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async function caTranslate() {
+    const contentEn = ($id("caContentEn") || {}).value || "";
+    const contentAs = $id("caContentAs");
+    const errEl = $id("caError");
+    if (errEl) errEl.hidden = true;
+
+    if (!contentEn.trim()) {
+      if (errEl) { errEl.textContent = "Enter English content first."; errEl.hidden = false; }
+      return;
+    }
+
+    const btn = $id("caTranslateBtn");
+    if (btn) { btn.disabled = true; btn.textContent = "Translating…"; }
+
+    try {
+      const res = await fetch(API_BASE + "/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: contentEn, source: "en", target: "as" })
+      });
+      const data = await res.json().catch(function () { return null; });
+      if (!res.ok) throw new Error((data && data.error) || ("HTTP " + res.status));
+      const translated = (data && data.translated) || "";
+      if (contentAs && translated) {
+        contentAs.value = translated;
+        contentAs.dataset.userTyped = "1";
+      }
+      toast("Translated. Review and edit if needed.", "success");
+    } catch (err) {
+      if (errEl) { errEl.textContent = err.message || "Translation failed"; errEl.hidden = false; }
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = "Translate to Assamese"; }
+    }
+  }
+
+  (function wireCurrentAffairs() {
+    const back = $id("caBackBtn");
+    if (back) back.addEventListener("click", function () {
+      state.caEditingDate = null;
+      showScreen("dashboard");
+      loadTests();
+    });
+    const toggle = $id("caSaveToggleBtn");
+    if (toggle) toggle.addEventListener("click", caSaveToggle);
+    const pub = $id("caPublishBtn");
+    if (pub) pub.addEventListener("click", saveCurrentAffairs);
+    const trans = $id("caTranslateBtn");
+    if (trans) trans.addEventListener("click", caTranslate);
+    const cancel = $id("caCancelEditBtn");
+    if (cancel) cancel.addEventListener("click", function () {
+      state.caEditingDate = null;
+      const contentEn = $id("caContentEn");
+      const contentAs = $id("caContentAs");
+      if (contentEn) contentEn.dataset.userTyped = "";
+      if (contentAs) contentAs.dataset.userTyped = "";
+      renderCurrentAffairs();
+    });
+    const enEl = $id("caContentEn");
+    const asEl = $id("caContentAs");
+    if (enEl) enEl.addEventListener("input", function () { enEl.dataset.userTyped = "1"; });
+    if (asEl) asEl.addEventListener("input", function () { asEl.dataset.userTyped = "1"; });
+  })();
+
+  /* ========== END CURRENT AFFAIRS MODULE ========== */
 
 })();
