@@ -280,7 +280,7 @@
       });
     }
 
-    document.querySelectorAll(".archive-section").forEach(function (section) {
+    document.querySelectorAll("#testArchive .archive-section").forEach(function (section) {
       const list = section.querySelector(".test-list");
       section.hidden = !list || list.children.length === 0;
     });
