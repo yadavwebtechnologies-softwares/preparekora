@@ -501,16 +501,7 @@
 
   /* ========== CURRENT AFFAIRS ========== */
 
-  const CA_CACHE_KEY = "pk_ca_cache_v1";
   let caData = null;
-
-  function readCACache() {
-    try { const raw = sessionStorage.getItem(CA_CACHE_KEY); return raw ? JSON.parse(raw) : null; }
-    catch (e) { return null; }
-  }
-  function writeCACache(data) {
-    try { sessionStorage.setItem(CA_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
-  }
 
   function caParagraphs(text) {
     if (!text) return "";
@@ -538,21 +529,19 @@
   }
 
   async function loadCurrentAffairs() {
-    const cached = readCACache();
-    if (cached) { caData = cached; renderCurrentAffairs(); }
     try {
       const res = await apiFetch("/current-affairs");
       caData = { enabled: res.enabled === true, latest: res.latest || null };
-      writeCACache(caData);
-      renderCurrentAffairs();
     } catch (err) {
-      if (!cached) { caData = null; renderCurrentAffairs(); }
+      caData = null;
     }
+    renderCurrentAffairs();
   }
 
   document.addEventListener("pk:langchange", function () { renderCurrentAffairs(); });
 
-  renderCurrentAffairs();
+  try { sessionStorage.removeItem("pk_ca_cache_v1"); } catch (e) {}
+
   loadCurrentAffairs();
 
   /* ========== END CURRENT AFFAIRS ========== */
