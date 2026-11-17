@@ -239,7 +239,9 @@
       profileSaved: "Profile saved",
       signOutConfirmTitle: "Sign out?",
       signOutConfirmSub: "Are you sure you want to sign out?",
-      signOutConfirmBtn: "Sign out"
+      signOutConfirmBtn: "Sign out",
+
+      currentAffairsHeading: "Current Affairs"
     },
 
     as: {
@@ -483,7 +485,9 @@
       profileSaved: "প্ৰ'ফাইল চেছ হ'ল",
       signOutConfirmTitle: "ছাইন আউট কৰিবনে?",
       signOutConfirmSub: "আপুনি নিশ্চিতভাৱে ছাইন আউট কৰিব বিচাৰে নেকি?",
-      signOutConfirmBtn: "ছাইন আউট"
+      signOutConfirmBtn: "ছাইন আউট",
+
+      currentAffairsHeading: "চলিত পৰিক্ৰমা"
     }
   };
 
