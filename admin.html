@@ -482,6 +482,137 @@
 
     </section>
 
+    <section class="ebooks-admin-screen" id="ebooksScreen" hidden>
+
+  <div class="ebook-admin-header">
+    <div>
+      <button class="btn btn-sm" id="ebooksBackBtn" type="button">← Back to Dashboard</button>
+      <h2>Ebooks</h2>
+      <p class="muted-text">Manage your exam guides and ebooks.</p>
+    </div>
+    <button class="btn btn-primary" id="ebookNewBtn" type="button">+ New Ebook</button>
+  </div>
+
+  <!-- Ebook List -->
+  <div id="ebooksListView">
+
+    <div class="loading-overlay is-hidden" id="ebooksLoading" aria-hidden="true">
+      <div class="spinner"></div>
+    </div>
+
+    <div class="form-error" id="ebooksError" hidden></div>
+
+    <div class="empty-state" id="ebooksEmpty" hidden>
+      No ebooks yet. Create your first ebook.
+    </div>
+
+    <div id="ebooksList"></div>
+
+  </div>
+
+  <!-- Ebook Editor -->
+  <div id="ebookEditorView" hidden>
+
+    <div class="editor-card">
+
+      <div class="ebook-editor-header">
+        <button class="btn btn-sm" id="ebookEditorBackBtn" type="button">← Back to Ebooks</button>
+        <h2 id="ebookEditorHeading">New Ebook</h2>
+      </div>
+
+      <div class="form-error" id="ebookEditorError" hidden></div>
+
+      <div class="form-field">
+        <label class="form-label" for="ebookTitle">Ebook Title</label>
+        <input class="form-input" id="ebookTitle" type="text"
+          maxlength="200" placeholder="Enter ebook title">
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="ebookSubtitle">Subtitle</label>
+        <textarea class="form-textarea" id="ebookSubtitle"
+          maxlength="500" rows="2" placeholder="Short description"></textarea>
+      </div>
+
+      <div class="ebook-editor-section">
+        <h3>Packages & Pricing</h3>
+        <p class="form-hint">Set the price and MRP for each package.</p>
+
+        <div class="ebook-package-row" data-key="combo">
+          <h4>Combo Package</h4>
+          <div class="form-field">
+            <label class="form-label">Package Label</label>
+            <input class="form-input ebook-pkg-label" type="text" value="Combo">
+          </div>
+          <div class="form-field">
+            <label class="form-label">Price (₹)</label>
+            <input class="form-input ebook-pkg-price" type="number" min="1">
+          </div>
+          <div class="form-field">
+            <label class="form-label">MRP (₹)</label>
+            <input class="form-input ebook-pkg-mrp" type="number" min="0">
+          </div>
+        </div>
+
+        <div class="ebook-package-row" data-key="as">
+          <h4>Assamese Package</h4>
+          <div class="form-field">
+            <label class="form-label">Package Label</label>
+            <input class="form-input ebook-pkg-label" type="text" value="Assamese">
+          </div>
+          <div class="form-field">
+            <label class="form-label">Price (₹)</label>
+            <input class="form-input ebook-pkg-price" type="number" min="1">
+          </div>
+          <div class="form-field">
+            <label class="form-label">MRP (₹)</label>
+            <input class="form-input ebook-pkg-mrp" type="number" min="0">
+          </div>
+        </div>
+
+        <div class="ebook-package-row" data-key="en">
+          <h4>English Package</h4>
+          <div class="form-field">
+            <label class="form-label">Package Label</label>
+            <input class="form-input ebook-pkg-label" type="text" value="English">
+          </div>
+          <div class="form-field">
+            <label class="form-label">Price (₹)</label>
+            <input class="form-input ebook-pkg-price" type="number" min="1">
+          </div>
+          <div class="form-field">
+            <label class="form-label">MRP (₹)</label>
+            <input class="form-input ebook-pkg-mrp" type="number" min="0">
+          </div>
+        </div>
+      </div>
+
+      <div class="ebook-editor-section">
+        <h3>Description Sections</h3>
+        <p class="form-hint">Add headings and descriptions for the ebook detail page.</p>
+        <div id="ebookSections"></div>
+        <button class="btn btn-sm" id="ebookAddSectionBtn" type="button">
+          + Add Section
+        </button>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="ebookSamplePdfUrl">Sample PDF URL</label>
+        <input class="form-input" id="ebookSamplePdfUrl"
+          type="url" placeholder="https://example.com/sample.pdf">
+      </div>
+
+      <div class="form-actions ebook-editor-actions">
+        <button class="btn" id="ebookDeleteBtn" type="button" hidden>Delete</button>
+        <button class="btn" id="ebookSaveDraftBtn" type="button">Save Draft</button>
+        <button class="btn btn-primary" id="ebookPublishBtn" type="button">Publish</button>
+      </div>
+
+    </div>
+  </div>
+
+</section>
+
   </main>
 
   <footer class="footer">
