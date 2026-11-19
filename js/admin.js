@@ -251,21 +251,33 @@
     return s;
   }
 
-  const state = { admin: null, tests: [], editing: null, currentTab: "tests" };
+  const state = {
+    admin: null,
+    tests: [],
+    ebooks: [],
+    editing: null,
+    editingEbook: null,
+    currentTab: "tests"
+  };
+
   const screens = {
     loading: $id("adminLoading"),
     login: $id("loginScreen"),
     dashboard: $id("dashboardScreen"),
     editor: $id("editorScreen"),
     submissions: $id("submissionsScreen"),
-    analysis: $id("analysisScreen")
+    analysis: $id("analysisScreen"),
+    ebooks: $id("ebooksScreen")
   };
 
   function showScreen(name) {
     Object.keys(screens).forEach(function (k) { if (screens[k]) screens[k].hidden = (k !== name); });
     window.scrollTo({ top: 0, behavior: "auto" });
-    if (name === "editor" || name === "submissions" || name === "analysis") stopLivePolling();
-    else if (name === "dashboard" && state.admin) startLivePolling();
+    if (name === "editor" || name === "submissions" || name === "analysis" || name === "ebooks") {
+      stopLivePolling();
+    } else if (name === "dashboard" && state.admin) {
+      startLivePolling();
+    }
   }
 
   function showLogin() {
@@ -752,6 +764,13 @@
       state.editing = { id: null, status: "draft", title: "", minutes: 10, exam: "", hideResult: false, questions: [blankQuestion()] };
       renderEditor();
       showScreen("editor");
+    });
+  }
+
+  const ebooksBtn = $id("ebooksBtn");
+  if (ebooksBtn) {
+    ebooksBtn.addEventListener("click", function () {
+      openEbooksScreen();
     });
   }
 
