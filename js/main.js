@@ -493,6 +493,80 @@
     });
   }
 
+  /* ============================================================
+     HOMEPAGE — PUBLIC EBOOKS
+     Independent from the mock test archive.
+     ============================================================ */
+
+  async function loadHomeEbooks() {
+    const section = document.getElementById("ebooksHomeSection");
+    const grid = document.getElementById("homeEbooksGrid");
+
+    if (!section || !grid) return;
+
+    try {
+      const res = await apiFetch("/ebooks");
+      const ebooks = Array.isArray(res.ebooks) ? res.ebooks : [];
+
+      if (ebooks.length === 0) {
+        section.hidden = true;
+        return;
+      }
+
+      grid.replaceChildren();
+
+      ebooks.forEach(function (ebook) {
+        if (!ebook || !ebook.id) return;
+
+        const packages = Array.isArray(ebook.packages)
+          ? ebook.packages
+          : [];
+
+        const prices = packages
+          .map(function (pkg) { return Number(pkg.price); })
+          .filter(function (price) {
+            return Number.isFinite(price) && price > 0;
+          });
+
+        const lowestPrice = prices.length
+          ? Math.min.apply(null, prices)
+          : null;
+
+        const priceText = lowestPrice !== null
+          ? "From ₹" + lowestPrice.toLocaleString("en-IN")
+          : "";
+
+        const card = document.createElement("article");
+        card.className = "ebook-home-card";
+
+        card.innerHTML =
+          '<div class="ebook-home-card-info">' +
+            '<h3>' + escapeHTML(ebook.title || "Ebook") + '</h3>' +
+            (ebook.subtitle
+              ? '<p>' + escapeHTML(ebook.subtitle) + '</p>'
+              : '') +
+            (priceText
+              ? '<strong class="ebook-home-price">' + priceText + '</strong>'
+              : '') +
+          '</div>' +
+          '<a class="ebook-home-view" href="ebook.html?id=' +
+            encodeURIComponent(ebook.id) + '">' +
+            'View' +
+          '</a>';
+
+        grid.appendChild(card);
+      });
+
+      section.hidden = grid.children.length === 0;
+
+    } catch (err) {
+      section.hidden = true;
+      grid.replaceChildren();
+    }
+  }
+
+  loadHomeEbooks();
+
   const yearEl = document.getElementById("currentYear");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
