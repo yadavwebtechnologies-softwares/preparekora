@@ -113,7 +113,7 @@
     return data;
   }
 
-  const api = {
+    const api = {
     login: function (email, password) {
       return request("/login", { method: "POST", noAuth: true, body: JSON.stringify({ email: email, password: password }) });
     },
@@ -121,6 +121,7 @@
     updateMe: function (name) {
       return request("/me", { method: "PUT", body: JSON.stringify({ displayName: name }) });
     },
+
     listOwn: function () { return request("/admin/tests"); },
     getOwn: function (id) { return request("/admin/tests/" + encodeURIComponent(id)); },
     createTest: function (payload) {
@@ -131,7 +132,25 @@
     },
     deleteTest: function (id) { return request("/admin/tests/" + encodeURIComponent(id), { method: "DELETE" }); },
     publish: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/publish", { method: "POST" }); },
-    unpublish: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/unpublish", { method: "POST" }); }
+    unpublish: function (id) { return request("/admin/tests/" + encodeURIComponent(id) + "/unpublish", { method: "POST" }); },
+
+    listOwnEbooks: function () { return request("/admin/ebooks"); },
+    getOwnEbook: function (id) { return request("/admin/ebooks/" + encodeURIComponent(id)); },
+    createEbook: function (payload) {
+      return request("/admin/ebooks", { method: "POST", body: JSON.stringify(payload) });
+    },
+    updateEbook: function (id, payload) {
+      return request("/admin/ebooks/" + encodeURIComponent(id), { method: "PUT", body: JSON.stringify(payload) });
+    },
+    deleteEbook: function (id) {
+      return request("/admin/ebooks/" + encodeURIComponent(id), { method: "DELETE" });
+    },
+    publishEbook: function (id) {
+      return request("/admin/ebooks/" + encodeURIComponent(id) + "/publish", { method: "POST" });
+    },
+    unpublishEbook: function (id) {
+      return request("/admin/ebooks/" + encodeURIComponent(id) + "/unpublish", { method: "POST" });
+    }
   };
 
   function t(key, vars) { return (window.PK && window.PK.t) ? window.PK.t(key, vars) : key; }
