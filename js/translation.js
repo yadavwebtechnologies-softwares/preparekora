@@ -209,6 +209,12 @@
       submittedTitle: "Exam submitted",
       submittedBody: "Your exam paper has been submitted. Kindly wait for your result in the concerned WhatsApp group.",
 
+      navCurrentAffairs: "Current Affairs",
+      caHeading: "Current Affairs",
+      caSub: "Daily current affairs for government exam preparation — national, state and international news.",
+      caAllFilter: "All Current Affairs",
+      caEmpty: "No current affairs yet.",,
+
       navDashboard: "Dashboard",
       navPremium: "Premium",
       loginWelcomeBack: "Welcome back",
@@ -449,9 +455,15 @@
       showHint: "সূত্ৰ দেখুৱাওক",
       hintLoading: "সূত্ৰ প্ৰস্তুত হৈ আছে…",
 
-      submittedEyebrow: "জমা দিয়া হৈছে",
+            submittedEyebrow: "জমা দিয়া হৈছে",
       submittedTitle: "পৰীক্ষা জমা দিয়া হৈছে",
       submittedBody: "আপোনাৰ পৰীক্ষা জমা দিয়া হৈছে। অনুগ্ৰহ কৰি সংশ্লিষ্ট হোৱাটছএপ গোটত ফলাফলৰ বাবে অপেক্ষা কৰক।",
+
+      navCurrentAffairs: "চলিত বতৰি",
+      caHeading: "চলিত বতৰি",
+      caSub: "চৰকাৰী পৰীক্ষাৰ প্ৰস্তুতিৰ বাবে দৈনিক চলিত বতৰি — ৰাষ্ট্ৰীয়, ৰাজ্যিক আৰু আন্তৰ্জাতিক বাতৰি।",
+      caAllFilter: "সকলো চলিত বতৰি",
+      caEmpty: "এতিয়ালৈকে কোনো চলিত বতৰি নাই।",
 
       navDashboard: "ডেশব'ৰ্ড",
       navPremium: "প্ৰিমিয়াম",
