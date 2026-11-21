@@ -340,20 +340,26 @@
   const tabLiveEl = $id("tabLive");
   const panelLive = $id("panelLive");
 
+  const tabCAEl = $id("tabCA");
+  const panelCA = $id("panelCA");
+
   function setTab(tab) {
     state.currentTab = tab;
     if (tabTests) { const a = tab === "tests"; tabTests.classList.toggle("is-active", a); tabTests.setAttribute("aria-selected", String(a)); }
     if (tabUsersEl) { const a = tab === "users"; tabUsersEl.classList.toggle("is-active", a); tabUsersEl.setAttribute("aria-selected", String(a)); }
     if (tabLiveEl) { const a = tab === "live"; tabLiveEl.classList.toggle("is-active", a); tabLiveEl.setAttribute("aria-selected", String(a)); }
+    if (tabCAEl) { const a = tab === "ca"; tabCAEl.classList.toggle("is-active", a); tabCAEl.setAttribute("aria-selected", String(a)); }
     if (tabSettings) { const a = tab === "settings"; tabSettings.classList.toggle("is-active", a); tabSettings.setAttribute("aria-selected", String(a)); }
     if (panelTests) panelTests.hidden = tab !== "tests";
     if (panelUsers) panelUsers.hidden = tab !== "users";
     if (panelLive) panelLive.hidden = tab !== "live";
+    if (panelCA) panelCA.hidden = tab !== "ca";
     if (panelSettings) panelSettings.hidden = tab !== "settings";
     if (tab === "settings") loadSettings();
     if (tab === "users") loadUsers();
     if (tab === "live") startAnalyticsPolling();
     if (tab !== "live") stopAnalyticsPolling();
+    if (tab === "ca") loadCAAdmin();
     if (tab === "tests") startLivePolling();
     if (tab !== "tests") stopLivePolling();
   }
@@ -362,6 +368,7 @@
   if (tabSettings) tabSettings.addEventListener("click", function () { setTab("settings"); });
   if (tabUsersEl) tabUsersEl.addEventListener("click", function () { setTab("users"); });
   if (tabLiveEl) tabLiveEl.addEventListener("click", function () { setTab("live"); });
+  if (tabCAEl) tabCAEl.addEventListener("click", function () { setTab("ca"); });
 
   const TESTS_PAGE_SIZE = 5;
   let testsCurrentPage = 1;
@@ -2483,5 +2490,262 @@
       fetchAnalyticsLive();
     }
   });
+
+})();
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && state.admin && state.currentTab === "live") {
+      fetchAnalyticsLive();
+    }
+  });
+
+  /* ---------- CURRENT AFFAIRS ADMIN MODULE ---------- */
+
+  const caAdminList = $id("caAdminList");
+  const caAdminEmpty = $id("caAdminEmpty");
+  const caAdminLoading = $id("caAdminLoading");
+  const caNewBtn = $id("caNewBtn");
+  const caEditorOverlay = $id("caEditorOverlay");
+  const caEditorForm = $id("caEditorForm");
+  const caEditorTitle = $id("caEditorTitle");
+  const caFieldDate = $id("caFieldDate");
+  const caFieldCategory = $id("caFieldCategory");
+  const caFieldEn = $id("caFieldEn");
+  const caFieldAs = $id("caFieldAs");
+  const caCountEn = $id("caCountEn");
+  const caCountAs = $id("caCountAs");
+  const caEditorError = $id("caEditorError");
+  const caEditorCancel = $id("caEditorCancel");
+  const caEditorSave = $id("caEditorSave");
+
+  let caEditingId = null;
+  let caItemsCache = [];
+
+  function caSetError(msg) {
+    if (!caEditorError) return;
+    if (!msg) { caEditorError.hidden = true; caEditorError.textContent = ""; return; }
+    caEditorError.textContent = msg;
+    caEditorError.hidden = false;
+  }
+
+  function caFormatHeadingDate(dateStr) {
+    if (!dateStr) return "—";
+    const d = new Date(dateStr + "T00:00:00");
+    if (isNaN(d.getTime())) return dateStr;
+    const day = String(d.getDate()).padStart(2, "0");
+    const mon = d.toLocaleString("en-IN", { month: "short" });
+    return day + " " + mon + " " + d.getFullYear();
+  }
+
+  async function loadCAAdmin() {
+    if (!caAdminList) return;
+    showOverlay(caAdminLoading);
+    if (caAdminEmpty) caAdminEmpty.hidden = true;
+    caAdminList.innerHTML = "";
+    try {
+      const res = await request("/admin/current-affairs");
+      caItemsCache = (res && Array.isArray(res.items)) ? res.items : [];
+    } catch (err) {
+      if (err.status === 401) return showLogin();
+      caItemsCache = [];
+    }
+    hideOverlay(caAdminLoading);
+    renderCAAdmin();
+  }
+
+  function renderCAAdmin() {
+    if (!caAdminList) return;
+    caAdminList.innerHTML = "";
+
+    if (caItemsCache.length === 0) {
+      if (caAdminEmpty) caAdminEmpty.hidden = false;
+      return;
+    }
+    if (caAdminEmpty) caAdminEmpty.hidden = true;
+
+    const drafts = caItemsCache.filter(function (i) { return i.status !== "published"; });
+    const published = caItemsCache.filter(function (i) { return i.status === "published"; });
+
+    if (drafts.length > 0) {
+      const draftHead = document.createElement("h3");
+      draftHead.className = "ca-admin-section-title";
+      draftHead.textContent = "Drafts (" + drafts.length + ")";
+      caAdminList.appendChild(draftHead);
+      drafts.forEach(function (it) { caAdminList.appendChild(renderCACard(it)); });
+    }
+
+    if (published.length > 0) {
+      const pubHead = document.createElement("h3");
+      pubHead.className = "ca-admin-section-title";
+      pubHead.textContent = "Published (" + published.length + ")";
+      caAdminList.appendChild(pubHead);
+      published.forEach(function (it) { caAdminList.appendChild(renderCACard(it)); });
+    }
+  }
+
+  function renderCACard(it) {
+    const card = document.createElement("div");
+    card.className = "ca-admin-card";
+
+    const info = document.createElement("div");
+    info.className = "ca-admin-info";
+
+    const head = document.createElement("div");
+    head.className = "ca-admin-head";
+    head.innerHTML =
+      '<span class="ca-admin-date">' + esc(caFormatHeadingDate(it.date)) + '</span>' +
+      (it.category ? '<span class="ca-admin-cat">' + esc(it.category) + '</span>' : '') +
+      '<span class="status-badge ' + (it.status === "published" ? "published" : "draft") + '">' +
+        esc(it.status === "published" ? "Published" : "Draft") +
+      '</span>';
+
+    const text = document.createElement("p");
+    text.className = "ca-admin-text";
+    text.textContent = (it.contentEn || "").slice(0, 160) + ((it.contentEn || "").length > 160 ? "…" : "");
+
+    info.appendChild(head);
+    info.appendChild(text);
+    card.appendChild(info);
+
+    const actions = document.createElement("div");
+    actions.className = "ca-admin-actions";
+
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "btn btn-sm";
+    editBtn.textContent = "Edit";
+    editBtn.addEventListener("click", function () { openCAEditor(it); });
+    actions.appendChild(editBtn);
+
+    if (it.status === "published") {
+      const unpubBtn = document.createElement("button");
+      unpubBtn.type = "button";
+      unpubBtn.className = "btn btn-sm";
+      unpubBtn.textContent = "Unpublish";
+      unpubBtn.addEventListener("click", function () { caToggleStatus(it.id, "unpublish"); });
+      actions.appendChild(unpubBtn);
+    } else {
+      const pubBtn = document.createElement("button");
+      pubBtn.type = "button";
+      pubBtn.className = "btn btn-primary btn-sm";
+      pubBtn.textContent = "Publish";
+      pubBtn.addEventListener("click", function () { caToggleStatus(it.id, "publish"); });
+      actions.appendChild(pubBtn);
+    }
+
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.className = "btn btn-sm";
+    delBtn.textContent = "Delete";
+    delBtn.addEventListener("click", function () {
+      openConfirmModal({
+        title: "Delete entry?",
+        message: "This entry will be removed permanently.",
+        confirmLabel: "Delete",
+        onConfirm: async function () {
+          try {
+            await request("/admin/current-affairs/" + encodeURIComponent(it.id), { method: "DELETE" });
+            toast("Deleted");
+            await loadCAAdmin();
+          } catch (err) {
+            if (err.status === 401) return showLogin();
+            toast(err.message || "Delete failed", "error");
+          }
+        }
+      });
+    });
+    actions.appendChild(delBtn);
+
+    card.appendChild(actions);
+    return card;
+  }
+
+  function openCAEditor(existing) {
+    if (!caEditorOverlay) return;
+    caEditingId = existing ? existing.id : null;
+    caEditorTitle.textContent = existing ? "Edit entry" : "New entry";
+    const today = new Date().toISOString().slice(0, 10);
+    caFieldDate.value = existing && existing.date ? existing.date : today;
+    caFieldCategory.value = existing && existing.category ? existing.category : "";
+    caFieldEn.value = existing && existing.contentEn ? existing.contentEn : "";
+    caFieldAs.value = existing && existing.contentAs ? existing.contentAs : "";
+    if (caCountEn) caCountEn.textContent = String(caFieldEn.value.length);
+    if (caCountAs) caCountAs.textContent = String(caFieldAs.value.length);
+    caSetError(null);
+    caEditorOverlay.classList.add("open");
+    caEditorOverlay.setAttribute("aria-hidden", "false");
+    setTimeout(function () { if (caFieldDate) caFieldDate.focus(); }, 60);
+  }
+
+  function closeCAEditor() {
+    if (!caEditorOverlay) return;
+    caEditorOverlay.classList.remove("open");
+    caEditorOverlay.setAttribute("aria-hidden", "true");
+    caEditingId = null;
+  }
+
+  if (caNewBtn) caNewBtn.addEventListener("click", function () { openCAEditor(null); });
+  if (caEditorCancel) caEditorCancel.addEventListener("click", closeCAEditor);
+  if (caEditorOverlay) {
+    caEditorOverlay.addEventListener("click", function (e) {
+      if (e.target === caEditorOverlay) closeCAEditor();
+    });
+  }
+
+  if (caFieldEn) caFieldEn.addEventListener("input", function () { if (caCountEn) caCountEn.textContent = String(caFieldEn.value.length); });
+  if (caFieldAs) caFieldAs.addEventListener("input", function () { if (caCountAs) caCountAs.textContent = String(caFieldAs.value.length); });
+
+  async function caToggleStatus(id, action) {
+    try {
+      await request("/admin/current-affairs/" + encodeURIComponent(id) + "/" + action, { method: "POST" });
+      toast(action === "publish" ? "Published" : "Unpublished", "success");
+      await loadCAAdmin();
+    } catch (err) {
+      if (err.status === 401) return showLogin();
+      toast(err.message || "Failed", "error");
+    }
+  }
+
+  if (caEditorForm) {
+    caEditorForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      caSetError(null);
+
+      const date = caFieldDate.value.trim();
+      const category = caFieldCategory.value;
+      const contentEn = caFieldEn.value.trim();
+      const contentAs = caFieldAs.value.trim();
+
+      if (!date) return caSetError("Date is required");
+      if (!contentEn) return caSetError("English content is required");
+      if (contentEn.length > 3000) return caSetError("English content too long (max 3000 chars)");
+      if (contentAs.length > 3000) return caSetError("Assamese content too long (max 3000 chars)");
+
+      if (caEditorSave) caEditorSave.disabled = true;
+
+      try {
+        const payload = { date, category, contentEn, contentAs };
+        if (caEditingId) {
+          await request("/admin/current-affairs/" + encodeURIComponent(caEditingId), {
+            method: "PUT",
+            body: JSON.stringify(payload)
+          });
+          toast("Saved");
+        } else {
+          await request("/admin/current-affairs", {
+            method: "POST",
+            body: JSON.stringify(payload)
+          });
+          toast("Draft created");
+        }
+        closeCAEditor();
+        await loadCAAdmin();
+      } catch (err) {
+        if (err.status === 401) return showLogin();
+        caSetError(err.message || "Save failed");
+      } finally {
+        if (caEditorSave) caEditorSave.disabled = false;
+      }
+    });
+  }
 
 })();
