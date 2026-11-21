@@ -1518,3 +1518,132 @@
     gap: 13px;
   }
 }
+/* === Current Affairs (append) === */
+
+.ca-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.ca-count { font-weight: 600; color: var(--text); }
+.ca-langs { font-size: 11px; }
+
+.ca-filter-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.ca-filter {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  min-width: 180px;
+}
+.ca-filter:hover { border-color: #bdbdbd; }
+.ca-filter:focus { border-color: #555; }
+
+#caList {
+  position: relative;
+  min-height: 120px;
+}
+
+.ca-date-section {
+  margin-bottom: 24px;
+}
+
+.ca-date-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+
+.ca-date-heading::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.ca-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ca-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #ffffff;
+}
+
+.ca-item-num {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ca-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ca-item-meta {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ca-item-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 560px) {
+  .ca-item { padding: 12px 10px; gap: 10px; }
+  .ca-item-num { width: 22px; height: 22px; font-size: 11px; }
+  .ca-item-text { font-size: 12px; }
+  .ca-date-heading { font-size: 12px; }
+  .ca-filter { width: 100%; }
+}
