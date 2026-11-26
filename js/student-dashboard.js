@@ -963,7 +963,7 @@
 
   function renderPremPlans() {
     const plans = premState.plans || {};
-    const keys = Object.keys(plans).filter(function (k) { return plans[k] && plans[k].active !== false; });
+    const keys = Object.keys(plans).filter(function (k) { return plans[k] && plans[k].active !== false && !plans[k].archived; });
     if (keys.length === 0) {
       premSetPlans('<p class="muted-text">No plans available right now.</p>');
       return;
@@ -972,12 +972,20 @@
     keys.forEach(function (key) {
       const plan = plans[key];
       html +=
+        const featLine = Array.isArray(plan.features) && plan.features.length > 0
+          ? '<div style="font-size:11px;color:#737373;margin-top:4px;">' + plan.features.map(function (f) { return '• ' + esc(f); }).join(' ') + '</div>'
+          : '';
+        const priceHtml = plan.originalPrice && plan.originalPrice > plan.price
+          ? '<div style="text-align:right;"><div style="font-size:11px;color:#737373;text-decoration:line-through;">₹' + plan.originalPrice + '</div><div style="font-size:18px;font-weight:700;color:#171717;font-variant-numeric:tabular-nums;">₹' + plan.price + '</div></div>'
+          : '<div style="font-size:18px;font-weight:700;color:#171717;font-variant-numeric:tabular-nums;">₹' + plan.price + '</div>';
+        html +=
         '<button type="button" class="guide-card" data-plan="' + esc(key) + '" style="text-align:left;cursor:pointer;border:1px solid #e7e7e7;border-radius:8px;padding:14px;background:#ffffff;display:flex;align-items:center;justify-content:space-between;gap:12px;">' +
-          '<div>' +
+          '<div style="flex:1;">' +
             '<div style="font-size:14px;font-weight:600;color:#171717;">' + esc(plan.label) + '</div>' +
             '<div style="font-size:12px;color:#737373;margin-top:2px;">' + plan.days + ' days · Unlimited mock tests</div>' +
+            featLine +
           '</div>' +
-          '<div style="font-size:18px;font-weight:700;color:#171717;font-variant-numeric:tabular-nums;">₹' + plan.price + '</div>' +
+          priceHtml +
         '</button>';
     });
     html += '</div>';
@@ -1036,15 +1044,20 @@
     const btn = document.getElementById("dashPremiumCtaBtn");
     const chip = document.getElementById("dashPlanChip");
 
-        if (p.active) {
+    if (p.active) {
       if (title) title.textContent = "Premium active";
       if (sub) sub.textContent = p.planLabel + " · " + p.remainingDays + " day" + (p.remainingDays === 1 ? "" : "s") + " left";
-      if (btn) { btn.textContent = "Manage"; btn.setAttribute("data-action", "open-premium"); }
+      if (btn) { btn.style.display = "none"; }
       if (chip) chip.textContent = "Premium";
+    } else if (p.expiresAt && p.expiresAt > 0) {
+      if (title) title.textContent = "Premium expired";
+      if (sub) sub.textContent = "Your plan ended on " + premFmtDate(p.expiresAt) + ". Renew to regain access.";
+      if (btn) { btn.style.display = ""; btn.textContent = "Renew"; btn.setAttribute("data-action", "open-premium"); }
+      if (chip) chip.textContent = "Free Account";
     } else {
       if (title) title.textContent = "No active plan";
       if (sub) sub.textContent = "Unlock every test series with Premium.";
-      if (btn) { btn.textContent = "Get Premium"; btn.setAttribute("data-action", "open-premium"); }
+      if (btn) { btn.style.display = ""; btn.textContent = "Get Premium"; btn.setAttribute("data-action", "open-premium"); }
       if (chip) chip.textContent = "Free Account";
     }
   }
