@@ -204,76 +204,91 @@
 
       </section>
 
-      <!-- PREMIUM PANEL -->
-      <section class="dash-panel" data-panel="premium">
-        <div class="dash-panel-single">
 
-          <div class="card" id="premExpiryBannerCard" hidden style="border-color: #b45309; background: #fffbeb;">
-            <div id="premExpiryBannerText" style="font-size: 13px; color: #92400e; line-height: 1.5;"></div>
-          </div>
+<!-- PREMIUM PANEL -->
+<section class="dash-panel" data-panel="premium">
+  <div class="dash-panel-body">
 
-          <div class="card">
-            <div class="card-head">
-              <h2 class="card-title">Daily Test Quota</h2>
-            </div>
-            <div id="premQuotaBox">
-              <p class="muted-text">Loading…</p>
-            </div>
-          </div>
+    <!-- MAIN COLUMN -->
+    <div class="dash-panel-main">
 
-          <div class="card">
-            <div class="card-head">
-              <h2 class="card-title">Your Premium Status</h2>
-            </div>
-            <div id="premStatusBox">
-              <p class="muted-text">Loading…</p>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-head">
-              <h2 class="card-title">Choose a Plan</h2>
-            </div>
-            <p class="card-sub" style="margin: 0 0 14px;">Unlock every mock test. One payment, unlimited attempts during your plan.</p>
-            <div id="premPlansBox">
-              <p class="muted-text">Loading plans…</p>
-            </div>
-          </div>
-
-          <div class="card" id="premOrderCard" hidden>
-            <div class="card-head">
-              <h2 class="card-title">Confirm & Pay</h2>
-            </div>
-            <p class="card-sub" style="margin: 0 0 14px;" id="premSelectedLabel">—</p>
-            <div class="form-field">
-              <label class="form-label" for="premFieldName">Name</label>
-              <input class="form-input" id="premFieldName" type="text" maxlength="60" autocomplete="name">
-            </div>
-            <div class="form-field">
-              <label class="form-label" for="premFieldWhatsApp">WhatsApp</label>
-              <input class="form-input" id="premFieldWhatsApp" type="tel" maxlength="15" inputmode="numeric" autocomplete="tel">
-            </div>
-            <p class="form-error" id="premError" hidden></p>
-            <div class="form-actions" style="margin-top: 12px;">
-              <button class="btn btn-primary" id="premPayBtn" type="button">Pay on WhatsApp</button>
-              <button class="btn" id="premCancelBtn" type="button">Cancel</button>
-            </div>
-            <p class="form-hint" style="margin-top: 12px;">
-              Payment is handled via WhatsApp. Send UPI transfer to the number shown in WhatsApp, then share the UTR / screenshot. Admin will verify and activate your plan within a few hours.
-            </p>
-          </div>
-
-          <div class="card">
-            <div class="card-head">
-              <h2 class="card-title">My Requests</h2>
-            </div>
-            <div id="premRequestsBox">
-              <p class="muted-text">Loading…</p>
-            </div>
-          </div>
-
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">Your Premium Status</h2>
         </div>
-      </section>
+        <div id="premStatusBox">
+          <p class="muted-text">Loading…</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">Choose a Plan</h2>
+        </div>
+        <p class="card-sub" style="margin: 0 0 14px;">Unlock every mock test. One payment, unlimited attempts during your plan.</p>
+        <div id="premPlansBox">
+          <p class="muted-text">Loading plans…</p>
+        </div>
+      </div>
+
+      <div class="card" id="premOrderCard" hidden>
+        <div class="card-head">
+          <h2 class="card-title">Confirm & Pay</h2>
+        </div>
+        <p class="card-sub" style="margin: 0 0 14px;" id="premSelectedLabel">—</p>
+
+        <div class="form-field">
+          <label class="form-label" for="premFieldName">Name</label>
+          <input class="form-input" id="premFieldName" type="text" maxlength="60" autocomplete="name">
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="premFieldWhatsApp">WhatsApp</label>
+          <input class="form-input" id="premFieldWhatsApp" type="tel" maxlength="15" inputmode="numeric" autocomplete="tel">
+        </div>
+
+        <p class="form-error" id="premError" hidden></p>
+
+        <div class="form-actions" style="margin-top: 12px;">
+          <button class="btn btn-primary" id="premPayBtn" type="button">Pay on WhatsApp</button>
+          <button class="btn" id="premCancelBtn" type="button">Cancel</button>
+        </div>
+
+        <p class="form-hint" style="margin-top: 12px;">
+          Payment is handled via WhatsApp. Send UPI transfer to the number shown in WhatsApp, then share the UTR / screenshot. Admin will verify and activate your plan within a few hours.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- SIDE COLUMN -->
+    <div class="dash-panel-side">
+
+      <div class="card" id="premExpiryBannerCard" hidden style="border-color: #b45309; background: #fffbeb;">
+        <div id="premExpiryBannerText" style="font-size: 13px; color: #92400e; line-height: 1.5;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">Daily Test Quota</h2>
+        </div>
+        <div id="premQuotaBox">
+          <p class="muted-text">Loading…</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">My Requests</h2>
+        </div>
+        <div id="premRequestsBox">
+          <p class="muted-text">Loading…</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
 
       <!-- PURCHASES PANEL -->
       <section class="dash-panel" data-panel="purchases">
