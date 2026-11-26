@@ -664,6 +664,12 @@
       if (c3) c3.value = colors[2];
       const sp = $id("premSpeedSelect");
       if (sp) sp.value = style.speed || "medium";
+      const pal = $id("premPalette"); if (pal) pal.value = style.palette || "gold";
+      const rot = $id("premRotationEnabled"); if (rot) rot.checked = style.rotationEnabled !== false;
+      const rs = $id("premRotationSpeed"); if (rs) rs.value = String(style.rotationSpeed || 4);
+      const ts = $id("premTransitionSpeed"); if (ts) ts.value = String(style.transitionSpeed || 0.8);
+      const intel = $id("premIntensity"); if (intel) intel.value = String(style.intensity || 1);
+      const intval = $id("premIntensityVal"); if (intval) intval.textContent = (style.intensity || 1).toFixed(1);
       updateStylePreview();
       const nEn = $id("premNotifEnabled");
       const nAdv = $id("premNotifAdvance");
@@ -712,7 +718,16 @@
       const mode = (document.querySelector('input[name="premMode"]:checked') || {}).value || "auto";
       const colors = [($id("premColor1") || {}).value || "#FFD700", ($id("premColor2") || {}).value || "#FFF8DC", ($id("premColor3") || {}).value || "#DAA520"];
       const speed = ($id("premSpeedSelect") || {}).value || "medium";
-      await request("/admin/premium/style", { method: "PUT", body: JSON.stringify({ style: { mode: mode, colors: colors, speed: speed, theme: "custom" } }) });
+      const palette = ($id("premPalette") || {}).value || "gold";
+      const rotationEnabled = ($id("premRotationEnabled") || {}).checked !== false;
+      const rotationSpeed = Number(($id("premRotationSpeed") || {}).value) || 4;
+      const transitionSpeed = Number(($id("premTransitionSpeed") || {}).value) || 0.8;
+      const intensity = Number(($id("premIntensity") || {}).value) || 1;
+      await request("/admin/premium/style", { method: "PUT", body: JSON.stringify({ style: {
+        mode: mode, colors: colors, speed: speed, theme: "custom",
+        palette: palette, rotationEnabled: rotationEnabled, rotationSpeed: rotationSpeed,
+        transitionSpeed: transitionSpeed, intensity: intensity
+      } }) });
       toast("Premium style saved", "success");
     } catch (e) {
       if (err) { err.textContent = e.message || "Save failed"; err.hidden = false; }
@@ -2412,10 +2427,15 @@
   document.querySelectorAll('input[name="premMode"]').forEach(function (r) {
     r.addEventListener("change", updateStylePreview);
   });
-  ["premColor1", "premColor2", "premColor3", "premSpeedSelect"].forEach(function (id) {
+  ["premColor1", "premColor2", "premColor3", "premSpeedSelect", "premPalette", "premRotationSpeed", "premTransitionSpeed", "premIntensity", "premRotationEnabled"].forEach(function (id) {
     const el = $id(id);
     if (el) el.addEventListener("input", updateStylePreview);
     if (el) el.addEventListener("change", updateStylePreview);
+  });
+  const intelEl = $id("premIntensity");
+  if (intelEl) intelEl.addEventListener("input", function () {
+    const v = $id("premIntensityVal");
+    if (v) v.textContent = Number(intelEl.value).toFixed(1);
   });
 
   const yearEl = $id("currentYear");
