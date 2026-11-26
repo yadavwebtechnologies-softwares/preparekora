@@ -499,4 +499,46 @@
   render();
   loadTests();
 
+  // Ebooks homepage section
+  async function loadHomeEbooks() {
+    try {
+      const res = await fetch(API_BASE + "/ebooks", { headers: { Accept: "application/json" } });
+      if (!res.ok) return;
+      const data = await res.json();
+      const ebooks = Array.isArray(data.ebooks) ? data.ebooks : [];
+      if (ebooks.length === 0) return;
+      const section = document.getElementById("ebooksHomeSection");
+      const grid = document.getElementById("ebooksHomeGrid");
+      if (!section || !grid) return;
+      grid.innerHTML = "";
+      ebooks.slice(0, 12).forEach(function (e) {
+        const card = document.createElement("a");
+        card.href = "ebook.html?id=" + encodeURIComponent(e.id);
+        card.style.cssText = "display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #e7e7e7;border-radius:8px;background:#fff;text-decoration:none;color:inherit;transition:border-color .15s;";
+        card.onmouseover = function () { this.style.borderColor = "#bdbdbd"; };
+        card.onmouseout = function () { this.style.borderColor = "#e7e7e7"; };
+        const cover = e.coverPath ? '<img src="' + e.coverPath + '" alt="" style="width:56px;height:72px;object-fit:cover;border-radius:8px;flex-shrink:0;" onerror="this.style.display=\'none\'">' : '<div style="width:56px;height:72px;background:#f7f7f7;border-radius:8px;flex-shrink:0;"></div>';
+        const priceHtml = e.originalPrice > e.price
+          ? '<div style="font-size:11px;color:#737373;text-decoration:line-through;">₹' + e.originalPrice + '</div><div style="font-size:15px;font-weight:700;">₹' + e.price + '</div>'
+          : '<div style="font-size:15px;font-weight:700;">₹' + e.price + '</div>';
+        card.innerHTML = cover +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:13px;font-weight:600;line-height:1.4;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escapeHTML(e.title) + '</div>' +
+            priceHtml +
+          '</div>' +
+          '<svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:#737373;fill:none;stroke-width:2;flex-shrink:0;"><path d="m9 18 6-6-6-6"/></svg>';
+        grid.appendChild(card);
+      });
+      section.hidden = false;
+      if (window.matchMedia("(max-width: 860px)").matches) {
+        grid.style.gridTemplateColumns = "repeat(2, 1fr)";
+      }
+      if (window.matchMedia("(max-width: 560px)").matches) {
+        grid.style.gridTemplateColumns = "1fr";
+      }
+    } catch (e) {}
+  }
+
+  loadHomeEbooks();
+
 })();
