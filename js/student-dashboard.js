@@ -969,26 +969,27 @@
       return;
     }
     let html = '<div style="display:flex;flex-direction:column;gap:10px;">';
-    keys.forEach(function (key) {
-      const plan = plans[key];
-      html +=
-        const featLine = Array.isArray(plan.features) && plan.features.length > 0
-          ? '<div style="font-size:11px;color:#737373;margin-top:4px;">' + plan.features.map(function (f) { return '• ' + esc(f); }).join(' ') + '</div>'
-          : '';
-        const priceHtml = plan.originalPrice && plan.originalPrice > plan.price
-          ? '<div style="text-align:right;"><div style="font-size:11px;color:#737373;text-decoration:line-through;">₹' + plan.originalPrice + '</div><div style="font-size:18px;font-weight:700;color:#171717;font-variant-numeric:tabular-nums;">₹' + plan.price + '</div></div>'
-          : '<div style="font-size:18px;font-weight:700;color:#171717;font-variant-numeric:tabular-nums;">₹' + plan.price + '</div>';
-        html +=
-        '<button type="button" class="guide-card" data-plan="' + esc(key) + '" style="text-align:left;cursor:pointer;border:1px solid #e7e7e7;border-radius:8px;padding:14px;background:#ffffff;display:flex;align-items:center;justify-content:space-between;gap:12px;">' +
-          '<div style="flex:1;">' +
-            '<div style="font-size:14px;font-weight:600;color:#171717;">' + esc(plan.label) + '</div>' +
-            '<div style="font-size:12px;color:#737373;margin-top:2px;">' + plan.days + ' days · Unlimited mock tests</div>' +
-            featLine +
-          '</div>' +
-          priceHtml +
-        '</button>';
-    });
-    html += '</div>';
+keys.forEach(function (key) {
+  const plan = plans[key];
+
+  const featLine = Array.isArray(plan.features) && plan.features.length > 0
+    ? '<div style="font-size:11px;color:#737373;margin-top:4px;">' + plan.features.map(function (f) { return '• ' + esc(f); }).join(' ') + '</div>'
+    : '';
+
+  const priceHtml = plan.originalPrice && plan.originalPrice > plan.price
+    ? '<div style="text-align:right;"><div style="font-size:11px;color:#737373;text-decoration:line-through;">₹' + plan.originalPrice + '</div><div style="font-size:18px;font-weight:700;color:#171717;font-variant-numeric:tabular-nums;">₹' + plan.price + '</div></div>'
+    : '<div style="font-size:18px;font-weight:700;color:#171717;font-variant-numeric:tabular-nums;">₹' + plan.price + '</div>';
+
+  html +=
+    '<button type="button" class="guide-card" data-plan="' + esc(key) + '" style="text-align:left;cursor:pointer;border:1px solid #e7e7e7;border-radius:8px;padding:14px;background:#ffffff;display:flex;align-items:center;justify-content:space-between;gap:12px;">' +
+      '<div style="flex:1;">' +
+        '<div style="font-size:14px;font-weight:600;color:#171717;">' + esc(plan.label) + '</div>' +
+        '<div style="font-size:12px;color:#737373;margin-top:2px;">' + plan.days + ' days · Unlimited mock tests</div>' +
+        featLine +
+      '</div>' +
+      priceHtml +
+    '</button>';
+});= '</div>';
     premSetPlans(html);
 
     document.querySelectorAll("#premPlansBox [data-plan]").forEach(function (btn) {
