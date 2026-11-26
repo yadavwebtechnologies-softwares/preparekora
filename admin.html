@@ -95,6 +95,7 @@
         <button class="admin-tab" id="tabUsers" type="button" role="tab" aria-selected="false">Users</button>
         <button class="admin-tab" id="tabLive" type="button" role="tab" aria-selected="false">Live</button>
         <button class="admin-tab" id="tabPremium" type="button" role="tab" aria-selected="false">Premium</button>
+        <button class="admin-tab" id="tabEbooks" type="button" role="tab" aria-selected="false">Ebooks</button>
         <button class="admin-tab" id="tabSettings" type="button" role="tab" aria-selected="false" data-i18n="settings">Settings</button>
       </div>
       <!-- MY TESTS PANEL -->
@@ -373,7 +374,101 @@
         </div>
       </div>
 
-      <!-- PREMIUM PANEL -->        <div class="admin-tabs" role="tablist" style="margin-bottom: 16px;">
+            <!-- EBOOKS PANEL -->
+      <div id="panelEbooks" hidden>
+
+        <div id="ebookListPanel">
+          <div class="admin-header-actions" style="margin-bottom: 14px;">
+            <button class="btn btn-primary btn-sm" id="ebookNewBtn" type="button">+ New Ebook</button>
+          </div>
+          <div class="empty-state" id="ebookListEmpty" hidden>No ebooks yet.</div>
+          <div id="ebookListWrap"></div>
+        </div>
+
+        <div id="ebookEditPanel" hidden>
+          <div class="admin-header">
+            <h1 id="ebookEditorHeading">Edit Ebook</h1>
+            <div class="admin-header-actions">
+              <button class="btn btn-sm" id="ebookBackBtn" type="button">Back to List</button>
+              <button class="btn btn-primary btn-sm" id="ebookSaveBtn" type="button">Save</button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom: 14px;">
+            <div class="editor-grid-2">
+              <div class="form-field">
+                <label class="form-label">ID (unique, a-z 0-9 - _)</label>
+                <input class="form-input" id="ebookFieldId" type="text" maxlength="60">
+              </div>
+              <div class="form-field">
+                <label class="form-label">Slug (optional)</label>
+                <input class="form-input" id="ebookFieldSlug" type="text" maxlength="80">
+              </div>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Title</label>
+              <input class="form-input" id="ebookFieldTitle" type="text" maxlength="200">
+            </div>
+            <div class="form-field">
+              <label class="form-label">Description</label>
+              <textarea class="form-input" id="ebookFieldDesc" style="height: auto; min-height: 100px; padding: 10px 12px; font-size: 13px; line-height: 1.55; resize: vertical;" maxlength="5000"></textarea>
+            </div>
+            <div class="editor-grid-2" style="grid-template-columns: 1fr 1fr 1fr;">
+              <div class="form-field">
+                <label class="form-label">Price (₹)</label>
+                <input class="form-input" id="ebookFieldPrice" type="number" min="0" step="1">
+              </div>
+              <div class="form-field">
+                <label class="form-label">Original Price (₹)</label>
+                <input class="form-input" id="ebookFieldOrigPrice" type="number" min="0" step="1">
+              </div>
+              <div class="form-field">
+                <label class="form-label">Display Order</label>
+                <input class="form-input" id="ebookFieldOrder" type="number" min="0" step="1">
+              </div>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Category (optional)</label>
+              <input class="form-input" id="ebookFieldCategory" type="text" maxlength="60" placeholder="e.g. ADRE, APSC">
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom: 14px;">
+            <div class="card-head">
+              <h2 class="card-title">Cover Image</h2>
+            </div>
+            <p class="form-hint" style="margin: 0 0 10px;">JPG/PNG/WebP · Max 120 KB. Path auto: <code>assets/images/ebooks/&lt;filename&gt;</code></p>
+            <div class="form-field">
+              <label class="form-label">Filename</label>
+              <input class="form-input" id="ebookFieldCoverName" type="text" placeholder="e.g. adre-guide.jpg" maxlength="60">
+            </div>
+            <div class="form-field">
+              <label class="form-label">Upload file</label>
+              <input type="file" id="ebookCoverFile" accept="image/jpeg,image/png,image/webp">
+              <p class="form-hint" id="ebookUploadProgress"></p>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Cover path (auto-filled after upload)</label>
+              <input class="form-input" id="ebookFieldCover" type="text" maxlength="300" readonly>
+            </div>
+            <div id="ebookCoverPreview" style="margin-top: 10px;"></div>
+          </div>
+
+          <div class="card" style="margin-bottom: 14px;">
+            <div class="card-head">
+              <h2 class="card-title">Content Sections</h2>
+              <button class="btn btn-sm" id="ebookAddSectionBtn" type="button">+ Add Section</button>
+            </div>
+            <div id="ebookSectionsWrap"></div>
+          </div>
+
+          <p class="form-error" id="ebookEditorError" hidden></p>
+        </div>
+
+      </div>
+
+      <!-- PREMIUM PANEL -->
+      <div class="admin-tabs" role="tablist" style="margin-bottom: 16px;">
           <button class="admin-tab is-active" id="premTabPending" type="button" role="tab" aria-selected="true">Pending</button>
           <button class="admin-tab" id="premTabRejected" type="button" role="tab" aria-selected="false">Rejected</button>
           <button class="admin-tab" id="premTabMembers" type="button" role="tab" aria-selected="false">Members</button>
