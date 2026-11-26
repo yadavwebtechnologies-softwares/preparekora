@@ -989,7 +989,9 @@ keys.forEach(function (key) {
       '</div>' +
       priceHtml +
     '</button>';
-});= '</div>';
+});
+
+html += '</div>';
     premSetPlans(html);
 
     document.querySelectorAll("#premPlansBox [data-plan]").forEach(function (btn) {
