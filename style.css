@@ -1146,3 +1146,20 @@
 }
 
 /* === end of Premium shimmer v2 === */
+
+/* === Animation intensity + transition (append) === */
+.is-premium-user .profile-avatar::before,
+.is-premium-user .dash-avatar::before,
+.is-premium-user .profile-name,
+.is-premium-user .chip.plan,
+.is-premium-user #dashPlanChip,
+.is-premium-user #dashPremiumCtaBtn,
+.is-premium-user #dashPremiumBanner {
+  opacity: var(--prem-intensity, 1);
+  transition: background-position var(--prem-transition, 0.8s) ease, opacity var(--prem-transition, 0.8s) ease;
+}
+.is-premium-user .profile-avatar::before,
+.is-premium-user .dash-avatar::before {
+  animation-duration: var(--prem-rotation-speed, 4s);
+}
+/* === end of Animation intensity === */
