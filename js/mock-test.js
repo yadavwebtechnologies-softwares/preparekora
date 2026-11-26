@@ -361,6 +361,16 @@
         handlePremiumRequired();
         return;
       }
+      if (testErr && testErr.status === 403 && testErr.message && /age/i.test(testErr.message)) {
+        // Trigger age verification overlay from student-auth
+        try {
+          if (window.PK_STUDENT && typeof window.PK_STUDENT.requireAgeVerification === "function") {
+            window.PK_STUDENT.requireAgeVerification();
+          }
+        } catch (e) {}
+        showScreen("notFound");
+        return;
+      }
       showScreen("notFound");
       return;
     }
