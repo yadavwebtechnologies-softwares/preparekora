@@ -2912,4 +2912,324 @@
 
   /* ========== END PREMIUM MODULE ========== */
 
+  /* ========== EBOOK ADMIN MODULE ========== */
+
+  let ebookList = [];
+  let ebookEditing = null;
+  let ebookTab = "list";
+
+  function setEbookTab(tab) {
+    ebookTab = tab;
+    const listEl = $id("ebookListPanel");
+    const editEl = $id("ebookEditPanel");
+    if (listEl) listEl.hidden = tab !== "list";
+    if (editEl) editEl.hidden = tab !== "edit";
+  }
+
+  async function loadEbooksAdmin() {
+    const wrap = $id("ebookListWrap");
+    const empty = $id("ebookListEmpty");
+    if (!wrap) return;
+    wrap.innerHTML = '<p class="muted-text">Loading…</p>';
+    try {
+      const res = await request("/admin/ebooks");
+      ebookList = Array.isArray(res.ebooks) ? res.ebooks : [];
+      renderEbookList();
+    } catch (err) {
+      if (err.status === 401) return showLogin();
+      wrap.innerHTML = '<p class="form-error">' + esc(err.message || "Failed to load") + '</p>';
+    }
+  }
+
+  function renderEbookList() {
+    const wrap = $id("ebookListWrap");
+    const empty = $id("ebookListEmpty");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    if (ebookList.length === 0) {
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (empty) empty.hidden = true;
+    ebookList.forEach(function (e) {
+      const row = document.createElement("div");
+      row.className = "admin-test-card";
+      row.style.marginBottom = "8px";
+      const isPub = e.status === "published";
+      row.innerHTML =
+        '<div class="admin-test-info">' +
+          '<p class="admin-test-title">' + esc(e.title) + '</p>' +
+          '<div class="admin-test-meta">' +
+            '<span class="status-badge ' + (isPub ? "published" : "draft") + '">' + (isPub ? "Published" : "Draft") + '</span>' +
+            '<span>₹' + e.price + (e.originalPrice > e.price ? ' <s style="color:#737373;">₹' + e.originalPrice + '</s>' : '') + '</span>' +
+            '<span>ID: ' + esc(e.id) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="admin-test-actions">' +
+          '<button class="btn btn-sm" data-act="edit" data-id="' + esc(e.id) + '">Edit</button>' +
+          '<button class="btn btn-sm" data-act="' + (isPub ? 'unpublish' : 'publish') + '" data-id="' + esc(e.id) + '">' + (isPub ? 'Unpublish' : 'Publish') + '</button>' +
+          '<button class="btn btn-sm" data-act="delete" data-id="' + esc(e.id) + '">Delete</button>' +
+        '</div>';
+      row.querySelectorAll("[data-act]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          const act = b.getAttribute("data-act");
+          const id = b.getAttribute("data-id");
+          if (act === "edit") openEbookEditor(id);
+          else if (act === "publish") ebookAction(id, "publish");
+          else if (act === "unpublish") ebookAction(id, "unpublish");
+          else if (act === "delete") ebookDelete(id);
+        });
+      });
+      wrap.appendChild(row);
+    });
+  }
+
+  async function ebookAction(id, action) {
+    try {
+      await request("/admin/ebooks/" + encodeURIComponent(id) + "/" + action, { method: "POST" });
+      toast("Ebook " + action + "d", "success");
+      loadEbooksAdmin();
+    } catch (err) {
+      if (err.status === 401) return showLogin();
+      toast(err.message || "Action failed", "error");
+    }
+  }
+
+  function ebookDelete(id) {
+    openConfirmModal({
+      title: "Delete ebook?",
+      message: "This removes the ebook permanently.",
+      confirmLabel: "Delete",
+      onConfirm: async function () {
+        try {
+          await request("/admin/ebooks/" + encodeURIComponent(id), { method: "DELETE" });
+          toast("Ebook deleted", "success");
+          loadEbooksAdmin();
+        } catch (err) {
+          if (err.status === 401) return showLogin();
+          toast(err.message || "Delete failed", "error");
+        }
+      }
+    });
+  }
+
+  async function openEbookEditor(id) {
+    setEbookTab("edit");
+    const heading = $id("ebookEditorHeading");
+    if (id) {
+      try {
+        const res = await request("/admin/ebooks/" + encodeURIComponent(id));
+        ebookEditing = res.ebook;
+        if (heading) heading.textContent = "Edit Ebook";
+      } catch (err) {
+        toast("Failed to load", "error");
+        setEbookTab("list");
+        return;
+      }
+    } else {
+      ebookEditing = { id: "", title: "", slug: "", description: "", price: 0, originalPrice: 0, category: "", coverPath: "", sections: [], displayOrder: 0 };
+      if (heading) heading.textContent = "New Ebook";
+    }
+    renderEbookEditor();
+  }
+
+  function renderEbookEditor() {
+    if (!ebookEditing) return;
+    const e = ebookEditing;
+    $id("ebookFieldId").value = e.id || "";
+    $id("ebookFieldId").disabled = !!e.id;
+    $id("ebookFieldTitle").value = e.title || "";
+    $id("ebookFieldSlug").value = e.slug || "";
+    $id("ebookFieldDesc").value = e.description || "";
+    $id("ebookFieldPrice").value = Number(e.price) || 0;
+    $id("ebookFieldOrigPrice").value = Number(e.originalPrice) || 0;
+    $id("ebookFieldCategory").value = e.category || "";
+    $id("ebookFieldCover").value = e.coverPath || "";
+    $id("ebookFieldOrder").value = Number(e.displayOrder) || 0;
+    renderEbookSections();
+    renderEbookCoverPreview();
+  }
+
+  function renderEbookSections() {
+    const wrap = $id("ebookSectionsWrap");
+    if (!wrap || !ebookEditing) return;
+    wrap.innerHTML = "";
+    const sections = Array.isArray(ebookEditing.sections) ? ebookEditing.sections : [];
+    if (sections.length === 0) {
+      wrap.innerHTML = '<p class="muted-text" style="margin-bottom: 10px;">No sections yet. Click "Add Section".</p>';
+      return;
+    }
+    sections.forEach(function (s, i) {
+      const card = document.createElement("div");
+      card.className = "editor-question";
+      card.style.marginBottom = "10px";
+      card.innerHTML =
+        '<div class="editor-question-head">' +
+          '<span class="editor-question-label">Section ' + (i + 1) + ' — ' + esc(s.type || "text") + '</span>' +
+          '<button type="button" class="editor-remove-btn" data-rm="' + i + '">Remove</button>' +
+        '</div>' +
+        '<div class="form-field">' +
+          '<label class="form-label">Type</label>' +
+          '<select class="form-input" data-fld="type" data-idx="' + i + '">' +
+            '<option value="h2"' + (s.type === "h2" ? " selected" : "") + '>Heading (H2)</option>' +
+            '<option value="h3"' + (s.type === "h3" ? " selected" : "") + '>Subheading (H3)</option>' +
+            '<option value="p"' + (s.type === "p" ? " selected" : "") + '>Paragraph</option>' +
+            '<option value="list"' + (s.type === "list" ? " selected" : "") + '>Bullet list</option>' +
+            '<option value="numlist"' + (s.type === "numlist" ? " selected" : "") + '>Numbered list</option>' +
+            '<option value="highlight"' + (s.type === "highlight" ? " selected" : "") + '>Highlight box</option>' +
+            '<option value="image"' + (s.type === "image" ? " selected" : "") + '>Image</option>' +
+          '</select>' +
+        '</div>' +
+        '<div class="form-field">' +
+          '<label class="form-label">Content' + (s.type === "list" || s.type === "numlist" ? " (one item per line)" : s.type === "image" ? " (image path)" : "") + '</label>' +
+          '<textarea class="form-input" style="height: auto; min-height: 70px; padding: 8px 10px; font-size: 13px; line-height: 1.5; resize: vertical;" data-fld="content" data-idx="' + i + '">' + esc(s.content || "") + '</textarea>' +
+        '</div>';
+      wrap.appendChild(card);
+    });
+    wrap.querySelectorAll("[data-rm]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        const idx = Number(b.getAttribute("data-rm"));
+        ebookEditing.sections.splice(idx, 1);
+        renderEbookSections();
+      });
+    });
+    wrap.querySelectorAll("[data-fld]").forEach(function (el) {
+      el.addEventListener("input", function () {
+        const idx = Number(el.getAttribute("data-idx"));
+        const fld = el.getAttribute("data-fld");
+        if (ebookEditing.sections[idx]) {
+          ebookEditing.sections[idx][fld] = el.value;
+        }
+      });
+      el.addEventListener("change", function () {
+        if (el.getAttribute("data-fld") === "type") renderEbookSections();
+      });
+    });
+  }
+
+  function renderEbookCoverPreview() {
+    const wrap = $id("ebookCoverPreview");
+    if (!wrap) return;
+    const p = ebookEditing && ebookEditing.coverPath ? ebookEditing.coverPath : "";
+    if (!p) { wrap.innerHTML = '<p class="muted-text" style="font-size: 12px;">No cover uploaded.</p>'; return; }
+    wrap.innerHTML = '<img src="' + esc(p) + '" alt="Cover" style="max-width: 200px; border-radius: 8px; border: 1px solid #e7e7e7;" onerror="this.parentNode.innerHTML=\'<p class=form-error>Image not found at path</p>\';">';
+  }
+
+  async function uploadEbookCover(file) {
+    if (!file) return;
+    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (allowed.indexOf(file.type) === -1) { toast("Only JPG, PNG, WebP allowed", "error"); return; }
+    if (file.size > 120 * 1024) { toast("Image must be under 120KB (yours: " + Math.round(file.size / 1024) + "KB)", "error"); return; }
+
+    const filenameInput = $id("ebookFieldCoverName");
+    let filename = (filenameInput && filenameInput.value.trim()) || file.name.replace(/[^a-zA-Z0-9_.-]/g, "_");
+    if (!/\.(jpg|jpeg|png|webp)$/i.test(filename)) filename += ".jpg";
+
+    const progress = $id("ebookUploadProgress");
+    if (progress) progress.textContent = "Uploading…";
+
+    const reader = new FileReader();
+    reader.onload = async function () {
+      try {
+        const b64 = String(reader.result).split(",")[1];
+        const res = await request("/admin/github/upload", {
+          method: "POST",
+          body: JSON.stringify({ filename: filename, content: b64 })
+        });
+        ebookEditing.coverPath = res.path;
+        const cf = $id("ebookFieldCover");
+        if (cf) cf.value = res.path;
+        renderEbookCoverPreview();
+        if (progress) progress.textContent = "Uploaded: " + res.path + (res.overwritten ? " (overwritten)" : "");
+        toast("Cover uploaded", "success");
+      } catch (err) {
+        if (progress) progress.textContent = "";
+        toast(err.message || "Upload failed", "error");
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function saveEbook() {
+    const errEl = $id("ebookEditorError");
+    if (errEl) errEl.hidden = true;
+    const payload = {
+      id: $id("ebookFieldId").value.trim(),
+      title: $id("ebookFieldTitle").value.trim(),
+      slug: $id("ebookFieldSlug").value.trim(),
+      description: $id("ebookFieldDesc").value.trim(),
+      price: Number($id("ebookFieldPrice").value) || 0,
+      originalPrice: Number($id("ebookFieldOrigPrice").value) || 0,
+      category: $id("ebookFieldCategory").value.trim(),
+      coverPath: $id("ebookFieldCover").value.trim(),
+      displayOrder: Number($id("ebookFieldOrder").value) || 0,
+      sections: ebookEditing.sections || []
+    };
+    if (!payload.id || !payload.title) {
+      if (errEl) { errEl.textContent = "ID and Title required"; errEl.hidden = false; }
+      return;
+    }
+    const btn = $id("ebookSaveBtn");
+    if (btn) btn.disabled = true;
+    try {
+      const isNew = !ebookEditing.id;
+      if (isNew) {
+        await request("/admin/ebooks", { method: "POST", body: JSON.stringify(payload) });
+      } else {
+        await request("/admin/ebooks/" + encodeURIComponent(ebookEditing.id), { method: "PUT", body: JSON.stringify(payload) });
+      }
+      toast("Ebook saved", "success");
+      ebookEditing = null;
+      setEbookTab("list");
+      loadEbooksAdmin();
+    } catch (err) {
+      if (err.status === 401) return showLogin();
+      if (errEl) { errEl.textContent = err.message || "Save failed"; errEl.hidden = false; }
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  (function wireEbookUI() {
+    const newBtn = $id("ebookNewBtn");
+    if (newBtn) newBtn.addEventListener("click", function () { openEbookEditor(null); });
+
+    const backBtn = $id("ebookBackBtn");
+    if (backBtn) backBtn.addEventListener("click", function () {
+      ebookEditing = null;
+      setEbookTab("list");
+    });
+
+    const saveBtn = $id("ebookSaveBtn");
+    if (saveBtn) saveBtn.addEventListener("click", saveEbook);
+
+    const addSec = $id("ebookAddSectionBtn");
+    if (addSec) addSec.addEventListener("click", function () {
+      if (!ebookEditing) return;
+      ebookEditing.sections = ebookEditing.sections || [];
+      ebookEditing.sections.push({ type: "p", content: "" });
+      renderEbookSections();
+    });
+
+    const coverFile = $id("ebookCoverFile");
+    if (coverFile) coverFile.addEventListener("change", function (e) {
+      if (e.target.files && e.target.files[0]) uploadEbookCover(e.target.files[0]);
+    });
+  })();
+
+  const tabEbooksEl = $id("tabEbooks");
+  if (tabEbooksEl) {
+    tabEbooksEl.addEventListener("click", function () {
+      if (panelEbooks) panelEbooks.hidden = false;
+      if (panelTests) panelTests.hidden = true;
+      if (panelUsers) panelUsers.hidden = true;
+      if (panelLive) panelLive.hidden = true;
+      if (panelPremium) panelPremium.hidden = true;
+      if (panelSettings) panelSettings.hidden = true;
+      loadEbooksAdmin();
+    });
+  }
+
+  /* ========== END EBOOK ADMIN MODULE ========== */
+
 })();
