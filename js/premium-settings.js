@@ -102,7 +102,7 @@
   const state = {
     plans: [],
     config: {},
-    constraints: { maxPlans: 1, minPrice: 1, maxPrice: 49, minDays: 1, maxDays: 365, whatsappMax: 15, textMax: 500, benefitsMax: 300 }
+    constraints: { maxPlans: 10, minPrice: 1, maxPrice: 49, minDays: 1, maxDays: 365, whatsappMax: 15, textMax: 500, benefitsMax: 300 }
   };
 
   async function loadSettings() {
@@ -208,7 +208,7 @@
       });
     });
     const addBtn = document.getElementById("psAddPlanBtn");
-    if (addBtn) { addBtn.disabled = true; addBtn.style.display = "none"; }
+    if (addBtn) { addBtn.disabled = state.plans.length >= state.constraints.maxPlans; addBtn.style.display = ""; }
   }
 
   document.getElementById("psAddPlanBtn").addEventListener("click", function () {
@@ -234,13 +234,17 @@
     if (btn) btn.disabled = true;
 
     const payload = {
-      plans: state.plans.map(function (p) {
+      plans: state.plans.map(function (p, idx) {
         return {
           key: String(p.key || "").trim(),
           label: String(p.label || "").trim(),
           price: Number(p.price) || 0,
+          originalPrice: Number(p.originalPrice) || 0,
           days: Number(p.days) || 0,
-          active: p.active !== false
+          features: Array.isArray(p.features) ? p.features : [],
+          active: p.active !== false,
+          archived: p.archived === true,
+          order: Number.isInteger(Number(p.order)) ? Number(p.order) : idx
         };
       }),
       config: {
