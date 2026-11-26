@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Explore ebooks and study materials on PrepareKora.in.">
   <title>Ebook — PrepareKora.in</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -11,103 +12,673 @@
 
   <header class="header">
     <div class="header-inner">
-      <a class="brand" href="index.html"><span class="brand-main">preparekora</span><span class="brand-in">.in</span></a>
-      <nav class="desktop-nav"><a href="index.html">Home</a></nav>
+      <a class="brand" href="index.html">
+        <span class="brand-main">preparekora</span>
+        <span class="brand-in">.in</span>
+      </a>
+      <nav class="desktop-nav">
+        <a href="index.html">Home</a>
+      </nav>
     </div>
   </header>
 
   <main class="page-container" id="ebookMain">
-    <div class="loading-state" style="text-align:center;padding:60px 20px;">
-      <div class="spinner" style="width:28px;height:28px;margin:0 auto;border-radius:50%;border:3px solid #e7e7e7;border-top-color:#737373;animation:pkSpin .8s linear infinite;"></div>
+    <div class="ebook-detail-loading">
+      <div class="spinner"></div>
+      <p>Loading ebook...</p>
     </div>
   </main>
 
   <footer class="footer">
     <div class="footer-inner">
       <a href="index.html" class="footer-brand">PrepareKora.in</a>
-      <div class="footer-copy">© <span id="currentYear"></span> PrepareKora.in</div>
+      <div class="footer-copy">
+        © <span id="currentYear"></span> PrepareKora.in
+      </div>
     </div>
   </footer>
 
   <script>
-  (function(){
+  (function () {
     "use strict";
+
     var API_BASE = "https://preparekora-api.yadavsubba2003.workers.dev/api";
+    var FALLBACK_WHATSAPP = "917896579939";
+
     var params = new URLSearchParams(location.search);
-    var id = params.get("id") || "";
+    var ebookId = params.get("id") || "";
     var main = document.getElementById("ebookMain");
-    document.getElementById("currentYear").textContent = new Date().getFullYear();
 
-    function esc(v){ return String(v==null?"":v).replace(/[&<>"']/g,function(c){var m={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"};return m[c];}); }
+    var whatsappPhone = FALLBACK_WHATSAPP;
 
-    function notFound(msg) {
-      main.innerHTML = '<div class="card" style="max-width:520px;margin:40px auto;text-align:center;">' +
-        '<h1 style="font-size:22px;font-weight:600;margin:0 0 8px;">Ebook not found</h1>' +
-        '<p class="muted-text" style="margin:0 0 20px;">' + esc(msg || "This ebook is unavailable.") + '</p>' +
-        '<a href="index.html" class="btn btn-primary">Back to Home</a></div>';
-    }
+    document.getElementById("currentYear").textContent =
+      new Date().getFullYear();
 
-    if (!id) { notFound("No ebook ID provided."); return; }
 
-    fetch(API_BASE + "/ebooks/" + encodeURIComponent(id), { headers: { Accept: "application/json" } })
-      .then(function(r){ if (!r.ok) throw new Error(r.status === 404 ? "Not found" : "HTTP " + r.status); return r.json(); })
-      .then(function(d){
-        var e = d && d.ebook; if (!e) return notFound("Missing data.");
-        render(e);
-      })
-      .catch(function(err){ notFound(err.message); });
+    /* ---------------------------------
+       SAFE HELPERS
+    --------------------------------- */
 
-    function render(e) {
-      var priceLine = e.originalPrice > e.price
-        ? '<span style="text-decoration:line-through;color:#737373;font-size:16px;margin-right:8px;">₹' + e.originalPrice + '</span><span style="font-size:26px;font-weight:700;">₹' + e.price + '</span>'
-        : '<span style="font-size:26px;font-weight:700;">₹' + e.price + '</span>';
-      var coverHtml = e.coverPath
-        ? '<img src="' + esc(e.coverPath) + '" alt="' + esc(e.title) + '" style="width:100%;max-width:340px;border-radius:8px;border:1px solid #e7e7e7;display:block;">'
-        : '<div style="width:100%;max-width:340px;aspect-ratio:3/4;background:#f7f7f7;border-radius:8px;border:1px solid #e7e7e7;display:grid;place-items:center;color:#737373;font-size:12px;">No cover</div>';
+    function esc(value) {
+      return String(value == null ? "" : value).replace(/[&<>"']/g, function (char) {
+        var map = {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;"
+        };
 
-      var html = '<div style="max-width:1000px;margin:0 auto;display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:28px;align-items:start;" class="ebook-layout">' +
-        '<div>' + coverHtml + '</div>' +
-        '<div>' +
-          '<h1 style="margin:0 0 8px;font-size:26px;font-weight:700;line-height:1.3;">' + esc(e.title) + '</h1>' +
-          (e.category ? '<div style="font-size:12px;color:#737373;text-transform:uppercase;letter-spacing:.04em;margin-bottom:14px;">' + esc(e.category) + '</div>' : '') +
-          (e.description ? '<p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#525252;text-align:justify;">' + esc(e.description) + '</p>' : '') +
-          '<div style="margin-bottom:20px;">' + priceLine + '</div>' +
-          '<button class="btn btn-primary" type="button" id="ebookBuyBtn" style="width:100%;max-width:280px;padding:14px;font-size:14px;font-weight:600;">Buy on WhatsApp</button>' +
-          '<p style="font-size:12px;color:#737373;margin-top:10px;">Payment and PDF delivery via WhatsApp.</p>' +
-        '</div>' +
-      '</div>' +
-      '<style>@media(max-width:700px){.ebook-layout{grid-template-columns:1fr!important;}.ebook-layout>div:first-child{text-align:center;}.ebook-layout img{max-width:240px!important;margin:0 auto;}}</style>';
-
-      var contentHtml = "";
-      if (Array.isArray(e.sections) && e.sections.length) {
-        contentHtml = '<div style="max-width:780px;margin:40px auto 0;">';
-        e.sections.forEach(function(s){
-          var t = s.type || "p", c = s.content || "";
-          if (t === "h2") contentHtml += '<h2 style="font-size:20px;font-weight:700;margin:28px 0 12px;">' + esc(c) + '</h2>';
-          else if (t === "h3") contentHtml += '<h3 style="font-size:16px;font-weight:600;margin:22px 0 10px;">' + esc(c) + '</h3>';
-          else if (t === "list") contentHtml += '<ul style="margin:0 0 16px;padding-left:22px;font-size:14px;line-height:1.75;">' + c.split(/\n+/).filter(Boolean).map(function(li){return '<li>'+esc(li)+'</li>';}).join("") + '</ul>';
-          else if (t === "numlist") contentHtml += '<ol style="margin:0 0 16px;padding-left:22px;font-size:14px;line-height:1.75;">' + c.split(/\n+/).filter(Boolean).map(function(li){return '<li>'+esc(li)+'</li>';}).join("") + '</ol>';
-          else if (t === "highlight") contentHtml += '<div style="padding:14px 16px;margin:0 0 16px;border:1px solid #e7e7e7;border-left:3px solid #222222;border-radius:8px;background:#f7f7f7;font-size:14px;line-height:1.65;">' + esc(c) + '</div>';
-          else if (t === "image") contentHtml += c ? '<div style="margin:16px 0;text-align:center;"><img src="' + esc(c) + '" style="max-width:100%;border-radius:8px;border:1px solid #e7e7e7;" alt=""></div>' : "";
-          else contentHtml += '<p style="margin:0 0 14px;font-size:14px;line-height:1.75;color:#222222;text-align:justify;">' + esc(c) + '</p>';
-        });
-        contentHtml += '</div>';
-      }
-
-      main.innerHTML = html + contentHtml;
-
-      var buyBtn = document.getElementById("ebookBuyBtn");
-      if (buyBtn) buyBtn.addEventListener("click", function(){
-        var phone = "917896579939";
-        fetch(API_BASE + "/premium/plans").then(function(r){return r.json();}).then(function(j){
-          if (j && j.config && j.config.whatsapp) phone = j.config.whatsapp;
-        }).catch(function(){}).finally(function(){
-          var msg = "Ebook Order\n\nBook: " + e.title + "\nID: " + e.id + "\nPrice: ₹" + e.price + "\n\nI would like to purchase this ebook. Please share payment details.";
-          window.open("https://wa.me/" + phone + "?text=" + encodeURIComponent(msg), "_blank");
-        });
+        return map[char];
       });
     }
+
+
+    function safeUrl(value) {
+      if (!value || typeof value !== "string") return "";
+
+      try {
+        var url = new URL(value, location.href);
+
+        if (
+          url.protocol !== "https:" &&
+          url.protocol !== "http:"
+        ) {
+          return "";
+        }
+
+        return url.href;
+      } catch (error) {
+        return "";
+      }
+    }
+
+
+    function formatPrice(value) {
+      var number = Number(value);
+
+      if (!Number.isFinite(number)) return "";
+
+      return number.toLocaleString("en-IN", {
+        maximumFractionDigits: 2
+      });
+    }
+
+
+    function formatDate(value) {
+      if (!value) return "";
+
+      var date;
+
+      if (typeof value === "number") {
+        date = new Date(value < 1000000000000 ? value * 1000 : value);
+      } else {
+        date = new Date(value);
+      }
+
+      if (isNaN(date.getTime())) return "";
+
+      return date.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      });
+    }
+
+
+    function notFound(message) {
+      main.innerHTML =
+        '<div class="ebook-detail-error">' +
+          '<h1>Ebook not found</h1>' +
+          '<p>' + esc(message || "This ebook is currently unavailable.") + '</p>' +
+          '<a href="index.html" class="btn btn-primary">Back to Home</a>' +
+        '</div>';
+    }
+
+
+    /* ---------------------------------
+       BADGES
+    --------------------------------- */
+
+    function renderBadges(badges) {
+      if (!Array.isArray(badges) || !badges.length) {
+        return "";
+      }
+
+      var html = '<div class="ebook-detail-badges">';
+
+      badges.forEach(function (item) {
+        var label = typeof item === "string"
+          ? item
+          : item && (item.label || item.title);
+
+        if (!label) return;
+
+        html += '<span class="ebook-detail-badge">' +
+          esc(label) +
+        '</span>';
+      });
+
+      html += '</div>';
+
+      return html;
+    }
+
+
+    /* ---------------------------------
+       PRICE CARD
+    --------------------------------- */
+
+    function renderPrice(e) {
+      var price = Number(e.price);
+      var originalPrice = Number(e.originalPrice);
+
+      var hasPrice = e.price !== undefined &&
+        e.price !== null &&
+        e.price !== "";
+
+      var priceHtml = "";
+
+      if (hasPrice && Number.isFinite(price)) {
+        if (price === 0) {
+          priceHtml = '<div class="ebook-detail-price">Free</div>';
+        } else {
+          priceHtml =
+            '<div class="ebook-detail-price">₹' +
+              formatPrice(price) +
+            '</div>';
+        }
+      } else {
+        priceHtml = '<div class="ebook-detail-price">Price unavailable</div>';
+      }
+
+      var offerHtml = "";
+
+      if (
+        hasPrice &&
+        Number.isFinite(originalPrice) &&
+        originalPrice > price &&
+        price >= 0
+      ) {
+        var discount = Math.round(
+          ((originalPrice - price) / originalPrice) * 100
+        );
+
+        offerHtml =
+          '<div class="ebook-detail-price-offer">' +
+            '<span class="ebook-detail-original-price">₹' +
+              formatPrice(originalPrice) +
+            '</span>' +
+            (discount > 0
+              ? '<span class="ebook-detail-discount">' +
+                  discount + '% OFF' +
+                '</span>'
+              : '') +
+          '</div>';
+      }
+
+      return (
+        '<div class="ebook-detail-price-card">' +
+          '<div class="ebook-detail-price-label">Price</div>' +
+          priceHtml +
+          offerHtml +
+          '<button class="btn btn-primary" type="button" id="ebookBuyBtn">' +
+            'Buy on WhatsApp' +
+          '</button>' +
+          '<p class="ebook-detail-payment-note">' +
+            'Payment and PDF delivery via WhatsApp.' +
+          '</p>' +
+        '</div>'
+      );
+    }
+
+
+    /* ---------------------------------
+       FEATURES
+    --------------------------------- */
+
+    function renderFeatures(features) {
+      if (!Array.isArray(features) || !features.length) {
+        return "";
+      }
+
+      var validFeatures = features.filter(function (feature) {
+        return feature &&
+          (feature.title || feature.description);
+      });
+
+      if (!validFeatures.length) return "";
+
+      var html =
+        '<section class="ebook-detail-section">' +
+          '<h2 class="ebook-detail-section-title">What\'s Included</h2>' +
+          '<div class="ebook-detail-features-grid">';
+
+      validFeatures.forEach(function (feature, index) {
+        var icon = feature.icon || String(index + 1).padStart(2, "0");
+
+        html +=
+          '<article class="ebook-detail-feature-card">' +
+            '<div class="ebook-detail-feature-icon">' +
+              esc(icon) +
+            '</div>' +
+            '<div class="ebook-detail-feature-info">' +
+              (feature.title
+                ? '<h3>' + esc(feature.title) + '</h3>'
+                : '') +
+              (feature.description
+                ? '<p>' + esc(feature.description) + '</p>'
+                : '') +
+            '</div>' +
+          '</article>';
+      });
+
+      html +=
+          '</div>' +
+        '</section>';
+
+      return html;
+    }
+
+
+    /* ---------------------------------
+       TABLE OF CONTENTS
+    --------------------------------- */
+
+    function renderTOC(rows) {
+      if (!Array.isArray(rows) || !rows.length) {
+        return "";
+      }
+
+      var validRows = rows.filter(function (row) {
+        return row && row.title;
+      });
+
+      if (!validRows.length) return "";
+
+      var html =
+        '<section class="ebook-detail-section">' +
+          '<h2 class="ebook-detail-section-title">Table of Contents</h2>' +
+          '<div class="ebook-detail-toc">';
+
+      validRows.forEach(function (row, index) {
+        var sampleUrl = safeUrl(row.sampleUrl);
+
+        var sampleEnabled =
+          row.freeSampleEnabled === true ||
+          row.freeSample === true;
+
+        var sampleHtml = "";
+
+        if (sampleEnabled && sampleUrl) {
+          sampleHtml =
+            '<a class="ebook-detail-sample-btn" ' +
+              'href="' + esc(sampleUrl) + '" ' +
+              'target="_blank" rel="noopener noreferrer">' +
+              'View Sample' +
+            '</a>';
+        }
+
+        html +=
+          '<div class="ebook-detail-toc-row">' +
+
+            '<div class="ebook-detail-toc-number">' +
+              String(index + 1).padStart(2, "0") +
+            '</div>' +
+
+            '<div class="ebook-detail-toc-info">' +
+              '<h3>' + esc(row.title) + '</h3>' +
+
+              (row.badge
+                ? '<span class="ebook-detail-toc-badge">' +
+                    esc(row.badge) +
+                  '</span>'
+                : '') +
+
+              (row.pageRange
+                ? '<span class="ebook-detail-page-range">' +
+                    esc(row.pageRange) +
+                  '</span>'
+                : '') +
+            '</div>' +
+
+            '<div class="ebook-detail-toc-action">' +
+              sampleHtml +
+            '</div>' +
+
+          '</div>';
+      });
+
+      html +=
+          '</div>' +
+        '</section>';
+
+      return html;
+    }
+
+
+    /* ---------------------------------
+       LEGACY CONTENT BLOCKS
+       Existing e.sections remains supported.
+    --------------------------------- */
+
+    function renderLegacySections(sections) {
+      if (!Array.isArray(sections) || !sections.length) {
+        return "";
+      }
+
+      var html = '<section class="ebook-detail-content">';
+
+      sections.forEach(function (section) {
+        if (!section) return;
+
+        var type = section.type || "p";
+        var content = section.content || "";
+
+        if (typeof content !== "string") {
+          content = String(content);
+        }
+
+        if (!content.trim()) return;
+
+        if (type === "h2") {
+          html += '<h2>' + esc(content) + '</h2>';
+        }
+
+        else if (type === "h3") {
+          html += '<h3>' + esc(content) + '</h3>';
+        }
+
+        else if (type === "list" || type === "numlist") {
+          var items = content
+            .split(/\n+/)
+            .map(function (item) {
+              return item.trim();
+            })
+            .filter(Boolean);
+
+          var tag = type === "numlist" ? "ol" : "ul";
+
+          html += '<' + tag + '>';
+
+          items.forEach(function (item) {
+            html += '<li>' + esc(item) + '</li>';
+          });
+
+          html += '</' + tag + '>';
+        }
+
+        else if (type === "highlight") {
+          html +=
+            '<div class="ebook-detail-highlight">' +
+              esc(content) +
+            '</div>';
+        }
+
+        else if (type === "image") {
+          var imageUrl = safeUrl(content);
+
+          if (imageUrl) {
+            html +=
+              '<div class="ebook-detail-content-image">' +
+                '<img src="' + esc(imageUrl) + '" alt="" loading="lazy">' +
+              '</div>';
+          }
+        }
+
+        else {
+          html += '<p>' + esc(content) + '</p>';
+        }
+      });
+
+      html += '</section>';
+
+      return html;
+    }
+
+
+    /* ---------------------------------
+       MAIN EBOOK RENDERER
+    --------------------------------- */
+
+    function render(e) {
+      var title = e.title || "Untitled Ebook";
+      var author = e.authorName || e.author || "Sir Administrator";
+      var updatedDate = formatDate(e.updatedAt);
+
+      document.title = title + " — PrepareKora.in";
+
+      var metaDescription = document.querySelector(
+        'meta[name="description"]'
+      );
+
+      if (metaDescription && e.description) {
+        metaDescription.setAttribute(
+          "content",
+          String(e.description).slice(0, 155)
+        );
+      }
+
+
+      /* Cover */
+
+      var coverUrl = safeUrl(e.coverPath);
+
+      var coverHtml = coverUrl
+        ? (
+          '<div class="ebook-detail-cover-wrap">' +
+            '<img ' +
+              'class="ebook-detail-cover" ' +
+              'src="' + esc(coverUrl) + '" ' +
+              'alt="' + esc(title) + '" ' +
+              'loading="eager" ' +
+              'onerror="this.hidden=true;this.nextElementSibling.hidden=false;">' +
+
+            '<div class="ebook-detail-cover-placeholder" hidden>' +
+              'Cover unavailable' +
+            '</div>' +
+          '</div>'
+        )
+        : (
+          '<div class="ebook-detail-cover-wrap">' +
+            '<div class="ebook-detail-cover-placeholder">' +
+              'No cover available' +
+            '</div>' +
+          '</div>'
+        );
+
+
+      /* Author and date */
+
+      var authorMeta =
+        '<div class="ebook-detail-author">' +
+          'By ' + esc(author) +
+          (updatedDate
+            ? '<span class="ebook-detail-updated">Updated ' +
+                esc(updatedDate) +
+              '</span>'
+            : '') +
+        '</div>';
+
+
+      /* Main hero */
+
+      var heroHtml =
+        '<div class="ebook-detail-breadcrumb">' +
+          '<a href="index.html">Home</a>' +
+          '<span>/</span>' +
+          '<span>Ebooks</span>' +
+          '<span>/</span>' +
+          '<span>' + esc(title) + '</span>' +
+        '</div>' +
+
+        '<section class="ebook-detail-hero">' +
+
+          '<div class="ebook-detail-cover-column">' +
+            coverHtml +
+          '</div>' +
+
+          '<div class="ebook-detail-info">' +
+
+            (e.category
+              ? '<div class="ebook-detail-category">' +
+                  esc(e.category) +
+                '</div>'
+              : '') +
+
+            '<h1 class="ebook-detail-title">' +
+              esc(title) +
+            '</h1>' +
+
+            authorMeta +
+
+            (e.description
+              ? '<p class="ebook-detail-description">' +
+                  esc(e.description) +
+                '</p>'
+              : '') +
+
+            renderBadges(e.badges) +
+
+          '</div>' +
+
+          '<div class="ebook-detail-price-column">' +
+            renderPrice(e) +
+          '</div>' +
+
+        '</section>';
+
+
+      /* Dynamic sections */
+
+      var featuresHtml = renderFeatures(e.features);
+
+      var tocHtml = renderTOC(e.tocSections);
+
+      var legacyContentHtml = renderLegacySections(e.sections);
+
+
+      main.innerHTML =
+        '<div class="ebook-detail-page">' +
+          heroHtml +
+          '<div class="ebook-detail-divider"></div>' +
+          featuresHtml +
+          tocHtml +
+          legacyContentHtml +
+        '</div>';
+
+
+      /* WhatsApp purchase */
+
+      var buyBtn = document.getElementById("ebookBuyBtn");
+
+      if (buyBtn) {
+        buyBtn.addEventListener("click", function () {
+          var phone = String(whatsappPhone).replace(/\D/g, "");
+
+          var priceText = Number(e.price) === 0
+            ? "Free"
+            : (
+                e.price !== undefined && e.price !== null
+                  ? "₹" + formatPrice(e.price)
+                  : "Not specified"
+              );
+
+          var message =
+            "Ebook Order\n\n" +
+            "Book: " + title + "\n" +
+            "ID: " + (e.id || ebookId) + "\n" +
+            "Price: " + priceText + "\n\n" +
+            "I would like to purchase this ebook. Please share payment details.";
+
+          var whatsappUrl =
+            "https://wa.me/" +
+            phone +
+            "?text=" +
+            encodeURIComponent(message);
+
+          window.open(
+            whatsappUrl,
+            "_blank",
+            "noopener,noreferrer"
+          );
+        });
+      }
+    }
+
+
+    /* ---------------------------------
+       INITIAL LOAD
+    --------------------------------- */
+
+    if (!ebookId) {
+      notFound("No ebook ID was provided.");
+      return;
+    }
+
+
+    /* Get configured WhatsApp number */
+
+    fetch(API_BASE + "/premium/plans", {
+      headers: {
+        Accept: "application/json"
+      }
+    })
+    .then(function (response) {
+      if (!response.ok) throw new Error("WhatsApp settings unavailable");
+      return response.json();
+    })
+    .then(function (data) {
+      if (
+        data &&
+        data.config &&
+        data.config.whatsapp
+      ) {
+        whatsappPhone = String(data.config.whatsapp);
+      }
+    })
+    .catch(function () {
+      /* Keep the existing fallback WhatsApp number. */
+    });
+
+
+    /* Fetch ebook */
+
+    fetch(
+      API_BASE + "/ebooks/" + encodeURIComponent(ebookId),
+      {
+        headers: {
+          Accept: "application/json"
+        }
+      }
+    )
+    .then(function (response) {
+      if (!response.ok) {
+        throw new Error(
+          response.status === 404
+            ? "This ebook does not exist or is no longer published."
+            : "Unable to load this ebook. Please try again."
+        );
+      }
+
+      return response.json();
+    })
+    .then(function (data) {
+      var ebook = data && data.ebook;
+
+      if (!ebook) {
+        notFound("Ebook information is missing.");
+        return;
+      }
+
+      render(ebook);
+    })
+    .catch(function (error) {
+      notFound(error.message);
+    });
+
   })();
   </script>
+
 </body>
 </html>
