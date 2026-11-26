@@ -529,14 +529,18 @@
           '<svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:#737373;fill:none;stroke-width:2;flex-shrink:0;"><path d="m9 18 6-6-6-6"/></svg>';
         grid.appendChild(card);
       });
+      section.removeAttribute("hidden");
       section.hidden = false;
+      console.info("[PrepareKora] Homepage ebooks section displayed:", ebooks.length);
       if (window.matchMedia("(max-width: 860px)").matches) {
         grid.style.gridTemplateColumns = "repeat(2, 1fr)";
       }
       if (window.matchMedia("(max-width: 560px)").matches) {
         grid.style.gridTemplateColumns = "1fr";
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error("[PrepareKora] Homepage ebooks loading failed:", e);
+    }
   }
 
   loadHomeEbooks();
