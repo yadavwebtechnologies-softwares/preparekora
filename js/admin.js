@@ -343,6 +343,9 @@
   const tabPremiumEl = $id("tabPremium");
   const panelPremium = $id("panelPremium");
 
+  const tabEbooksElTop = $id("tabEbooks");
+  const panelEbooks = $id("panelEbooks");
+
   function setTab(tab) {
     state.currentTab = tab;
     if (tabTests) { const a = tab === "tests"; tabTests.classList.toggle("is-active", a); tabTests.setAttribute("aria-selected", String(a)); }
