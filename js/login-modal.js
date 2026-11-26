@@ -81,6 +81,15 @@
             '<input class="form-input" id="studentSignupWhatsApp" type="tel" autocomplete="tel" placeholder="10-digit number" maxlength="15" inputmode="numeric">' +
             '<p class="form-hint">Only used if we need to contact you about test issues.</p>' +
           '</div>' +
+          '<div class="form-field">' +
+            '<label class="form-label" for="studentSignupDob">Date of birth</label>' +
+            '<input class="form-input" id="studentSignupDob" type="date">' +
+            '<p class="form-hint">You must be 18 or older to create an account.</p>' +
+          '</div>' +
+          '<label style="display: flex; align-items: flex-start; gap: 10px; margin: 8px 0 14px; cursor: pointer;">' +
+            '<input type="checkbox" id="studentSignupAgeConsent" style="width: 18px; height: 18px; margin-top: 2px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0;">' +
+            '<span style="font-size: 12px; line-height: 1.5;">I confirm I am 18 years or older and accept the Terms of Service.</span>' +
+          '</label>' +
               '<p class="auth-form-error" id="studentSignupError" hidden></p>' +
               '<button class="btn btn-primary btn-block" type="submit">Create account</button>' +
               '<p class="auth-form-hint">By creating an account you agree to our <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy</a>.</p>' +
@@ -92,6 +101,11 @@
       '</div>';
 
     document.body.appendChild(overlay);
+
+    try {
+      const dobEl = document.getElementById("studentSignupDob");
+      if (dobEl) dobEl.max = new Date().toISOString().slice(0, 10);
+    } catch (e) {}
   }
 
   /* ---------- open / close ---------- */
@@ -269,20 +283,54 @@
     const emailEl = document.getElementById("studentSignupEmail");
     const passEl = document.getElementById("studentSignupPassword");
     const waEl = document.getElementById("studentSignupWhatsApp");
+    const dobEl = document.getElementById("studentSignupDob");
+    const consEl = document.getElementById("studentSignupAgeConsent");
 
     const name = nameEl.value.trim();
     const email = emailEl.value.trim();
     const password = passEl.value;
     const wa = waEl.value.replace(/[\s-]/g, "");
+    const dob = dobEl ? dobEl.value : "";
+    const consent = consEl ? consEl.checked : false;
 
     if (name.length < 2) { showError("signup", "Please enter your name"); nameEl.focus(); return; }
     if (!email) { showError("signup", "Enter your email"); emailEl.focus(); return; }
     if (password.length < 6) { showError("signup", "Password must be at least 6 characters"); passEl.focus(); return; }
     if (wa.length > 0 && !/^[0-9]{10,15}$/.test(wa)) { showError("signup", "Enter a valid WhatsApp number"); waEl.focus(); return; }
+    if (!dob) { showError("signup", "Enter your date of birth"); if (dobEl) dobEl.focus(); return; }
+    if (!consent) { showError("signup", "You must confirm the 18+ declaration"); if (consEl) consEl.focus(); return; }
+
+    // Client-side 18+ pre-check (server re-validates)
+    const dobMs = Date.parse(dob + "T00:00:00Z");
+    const now = new Date();
+    let age = now.getUTCFullYear() - new Date(dobMs).getUTCFullYear();
+    const md = now.getUTCMonth() - new Date(dobMs).getUTCMonth();
+    if (md < 0 || (md === 0 && now.getUTCDate() < new Date(dobMs).getUTCDate())) age--;
+    if (age < 18) { showError("signup", "You must be 18 or older to create an account"); if (dobEl) dobEl.focus(); return; }
+    if (age > 100) { showError("signup", "Invalid date of birth"); if (dobEl) dobEl.focus(); return; }
 
     setLoading(true);
     window.PK_STUDENT.signup(email, password, name, wa)
-      .then(function () { closeModal(); })
+      .then(function (cred) {
+        // Submit age verification to backend after Firebase account created
+        return cred.user.getIdToken().then(function (token) {
+          return fetch("https://preparekora-api.yadavsubba2003.workers.dev/api/age/submit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({ dateOfBirth: dob, ageConsent: true, method: "self_declared" })
+          }).then(function (res) {
+            if (!res.ok) {
+              return res.json().catch(function () { return null; }).then(function (data) {
+                throw new Error((data && data.error) || ("Age verification failed: HTTP " + res.status));
+              });
+            }
+            return res.json();
+          });
+        }).then(function () {
+          closeModal();
+          document.dispatchEvent(new CustomEvent("pk:age-verified"));
+        });
+      })
       .catch(function (err) {
         const code = (err && err.code) || "";
         if (code === "auth/email-already-in-use") {
