@@ -163,8 +163,20 @@
     } catch (e) { return PREM_STYLE_DEFAULTS_LOCAL; }
   }
 
+  const PREM_PALETTES = {
+    gold: ["#FFD700", "#FFF8DC", "#DAA520"],
+    rainbow: ["#FF6B6B", "#FFE66D", "#4ECDC4"],
+    ocean: ["#3B82F6", "#93C5FD", "#1E40AF"],
+    sunset: ["#F97316", "#FDA4AF", "#DB2777"],
+    forest: ["#10B981", "#6EE7B7", "#047857"],
+    candy: ["#EC4899", "#F9A8D4", "#A855F7"]
+  };
+
   function resolvePremColors(style) {
     if (!style) return PREM_STYLE_DEFAULTS_LOCAL.colors;
+    if (style.palette && style.palette !== "custom" && PREM_PALETTES[style.palette]) {
+      return PREM_PALETTES[style.palette];
+    }
     if (style.mode === "manual") {
       return Array.isArray(style.colors) && style.colors.length === 3 ? style.colors : PREM_STYLE_DEFAULTS_LOCAL.colors;
     }
@@ -191,6 +203,12 @@
         el.style.setProperty("--prem-c2", colors[1]);
         el.style.setProperty("--prem-c3", colors[2]);
         el.style.setProperty("--prem-speed", dur);
+        const rotSpeed = style && style.rotationSpeed ? style.rotationSpeed + "s" : "4s";
+        const transSpeed = style && style.transitionSpeed ? style.transitionSpeed + "s" : "0.8s";
+        const intensityVal = style && style.intensity ? String(style.intensity) : "1";
+        el.style.setProperty("--prem-rotation-speed", rotSpeed);
+        el.style.setProperty("--prem-transition", transSpeed);
+        el.style.setProperty("--prem-intensity", intensityVal);
       };
 
       document.querySelectorAll(".profile-btn").forEach(applyTo);
