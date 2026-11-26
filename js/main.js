@@ -520,7 +520,7 @@
         card.style.cssText = "display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #e7e7e7;border-radius:8px;background:#fff;text-decoration:none;color:inherit;transition:border-color .15s;";
         card.onmouseover = function () { this.style.borderColor = "#bdbdbd"; };
         card.onmouseout = function () { this.style.borderColor = "#e7e7e7"; };
-const cover = e.coverPath ? '<img src="' + e.coverPath + '" alt="" style="width:56px;height:72px;object-fit:cover;border:2px solid var(--primary, #000);box-sizing:border-box;border-radius:8px;flex-shrink:0;" onerror="this.style.display=\'none\'">' : '<div style="width:56px;height:72px;background:#f7f7f7;border-radius:8px;flex-shrink:0;"></div>';
+const cover = e.coverPath ? '<img src="' + e.coverPath + '" alt="" style="width:56px;height:72px;object-fit:cover;border:1px solid var(--primary, #000);box-sizing:border-box;border-radius:8px;flex-shrink:0;" onerror="this.style.display=\'none\'">' : '<div style="width:56px;height:72px;background:#f7f7f7;border-radius:8px;flex-shrink:0;"></div>';
         const priceHtml = e.originalPrice > e.price
           ? '<div style="font-size:11px;color:#737373;text-decoration:line-through;">₹' + e.originalPrice + '</div><div style="font-size:15px;font-weight:700;">₹' + e.price + '</div>'
           : '<div style="font-size:15px;font-weight:700;">₹' + e.price + '</div>';
