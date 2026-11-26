@@ -290,6 +290,37 @@
               <option value="fast">Fast (2s)</option>
             </select>
           </div>
+          <div class="form-field">
+            <label class="form-label" for="premPalette">Palette</label>
+            <select id="premPalette" class="form-input" style="max-width: 260px;">
+              <option value="gold">Gold (premium classic)</option>
+              <option value="rainbow">Rainbow (vibrant)</option>
+              <option value="ocean">Ocean (blue waves)</option>
+              <option value="sunset">Sunset (orange-pink)</option>
+              <option value="forest">Forest (green)</option>
+              <option value="candy">Candy (pink-purple)</option>
+              <option value="custom">Custom (use colors above)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="premRotationEnabled" checked style="width: 18px; height: 18px; accent-color: var(--accent);">
+              <span style="font-size: 13px; font-weight: 500;">Enable color rotation</span>
+            </label>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="premRotationSpeed">Rotation speed (seconds per cycle)</label>
+            <input type="number" id="premRotationSpeed" class="form-input" min="1" max="20" step="1" value="4" style="max-width: 120px;">
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="premTransitionSpeed">Transition smoothness (0.2 – 3 s)</label>
+            <input type="number" id="premTransitionSpeed" class="form-input" min="0.2" max="3" step="0.1" value="0.8" style="max-width: 120px;">
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="premIntensity">Intensity (0.5 – 2.0)</label>
+            <input type="range" id="premIntensity" min="0.5" max="2" step="0.1" value="1" style="width: 100%; max-width: 260px;">
+            <span id="premIntensityVal" style="font-size: 12px; color: var(--muted);">1.0</span>
+          </div>
           <div class="form-actions">
             <button class="btn btn-primary" id="savePremStyleBtn" type="button">Save Style</button>
           </div>
