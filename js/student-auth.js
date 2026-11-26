@@ -627,6 +627,106 @@
     overlay.setAttribute("aria-hidden", "true");
   }
 
+  /* ---------- 18+ age verification modal ---------- */
+
+  function ensureAgeModal() {
+    if (document.getElementById("studentAgeOverlay")) return;
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.id = "studentAgeOverlay";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-labelledby", "studentAgeTitle");
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.innerHTML =
+      '<div class="modal" style="max-width: 440px;">' +
+        '<h2 id="studentAgeTitle" style="margin: 0 0 6px; font-size: 17px; font-weight: 600;">Age verification required</h2>' +
+        '<p class="muted-text" style="margin: 0 0 16px; font-size: 13px;">PrepareKora.in is for users aged 18 and above. Please confirm your date of birth to continue.</p>' +
+        '<form id="studentAgeForm" novalidate>' +
+          '<div class="form-field">' +
+            '<label class="form-label" for="studentAgeDob">Date of birth</label>' +
+            '<input class="form-input" id="studentAgeDob" type="date" max="' + new Date().toISOString().slice(0, 10) + '">' +
+          '</div>' +
+          '<label style="display: flex; align-items: flex-start; gap: 10px; margin: 12px 0; cursor: pointer;">' +
+            '<input type="checkbox" id="studentAgeConsent" style="width: 18px; height: 18px; margin-top: 2px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0;">' +
+            '<span style="font-size: 12px; line-height: 1.5;">I declare that I am 18 years or older. I understand that providing false information violates the Terms of Service.</span>' +
+          '</label>' +
+          '<p class="form-error" id="studentAgeError" hidden></p>' +
+          '<div class="modal-actions" style="margin-top: 12px;">' +
+            '<button class="btn" type="button" id="studentAgeSignOut">Sign out</button>' +
+            '<button class="btn btn-primary" type="submit">Verify and continue</button>' +
+          '</div>' +
+        '</form>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    document.getElementById("studentAgeSignOut").addEventListener("click", async function () {
+      try { await PK_STUDENT.logout(); } catch (e) {}
+      window.location.href = "index.html";
+    });
+
+    document.getElementById("studentAgeForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const dobEl = document.getElementById("studentAgeDob");
+      const consEl = document.getElementById("studentAgeConsent");
+      const errEl = document.getElementById("studentAgeError");
+      const btn = overlay.querySelector('button[type="submit"]');
+      if (errEl) errEl.hidden = true;
+      const dob = dobEl.value;
+      if (!dob) { if (errEl) { errEl.textContent = "Enter your date of birth"; errEl.hidden = false; } return; }
+      if (!consEl.checked) { if (errEl) { errEl.textContent = "You must confirm the 18+ declaration"; errEl.hidden = false; } return; }
+
+      // Client-side quick check (server re-validates)
+      const dobMs = Date.parse(dob + "T00:00:00Z");
+      const now = new Date();
+      let age = now.getUTCFullYear() - new Date(dobMs).getUTCFullYear();
+      const md = now.getUTCMonth() - new Date(dobMs).getUTCMonth();
+      if (md < 0 || (md === 0 && now.getUTCDate() < new Date(dobMs).getUTCDate())) age--;
+      if (age < 18) { if (errEl) { errEl.textContent = "You must be 18 or older to use PrepareKora"; errEl.hidden = false; } return; }
+
+      btn.disabled = true;
+      try {
+        const token = await PK_STUDENT.getToken();
+        const res = await fetch(API_BASE + "/age/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ dateOfBirth: dob, ageConsent: true, method: "self_declared" })
+        });
+        const data = await res.json().catch(function () { return null; });
+        if (!res.ok) throw new Error((data && data.error) || ("HTTP " + res.status));
+        closeAgeModal();
+        document.dispatchEvent(new CustomEvent("pk:age-verified"));
+      } catch (err) {
+        if (errEl) { errEl.textContent = err.message || "Verification failed"; errEl.hidden = false; }
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
+  function openAgeModal(force) {
+    ensureAgeModal();
+    const overlay = document.getElementById("studentAgeOverlay");
+    if (!overlay) return;
+    overlay.classList.add("open");
+    overlay.setAttribute("aria-hidden", "false");
+    setTimeout(function () {
+      const d = document.getElementById("studentAgeDob");
+      if (d) d.focus();
+    }, 80);
+  }
+
+  function closeAgeModal() {
+    const overlay = document.getElementById("studentAgeOverlay");
+    if (!overlay) return;
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+  }
+
+  PK_STUDENT.requireAgeVerification = function () {
+    try { openAgeModal(true); } catch (e) {}
+  };
+
   function renderHeader() {
     const loggedIn = !!PK_STUDENT.user;
     renderDesktopNav(loggedIn);
@@ -727,6 +827,20 @@
         renderHeader();
         fireAuthChanged();
         applyPremiumStyle();
+
+        // Age gate — check server-side. Show overlay if not verified.
+        try {
+          const token = await fbUser.getIdToken();
+          const ageRes = await fetch(API_BASE + "/age/status", {
+            headers: { Authorization: "Bearer " + token, Accept: "application/json" }
+          });
+          if (ageRes.ok) {
+            const ageData = await ageRes.json();
+            if (!ageData || ageData.verified !== true) {
+              openAgeModal(false);
+            }
+          }
+        } catch (e) {}
       } else {
         try { sessionStorage.removeItem("pk_login_session_uid"); } catch (e) {}
         PK_STUDENT.user = null;
