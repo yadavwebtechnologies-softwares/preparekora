@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Premium customization — Admin">
+  <title>Premium Settings — Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a class="brand" href="index.html" aria-label="PrepareKora home">
+        <span class="brand-main">preparekora</span><span class="brand-in">.in</span>
+      </a>
+      <nav class="desktop-nav" aria-label="Desktop navigation">
+        <a href="admin.html">← Back to Admin</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-button" id="menuToggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="menuPanel">
+          <svg id="menuIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path></svg>
+        </button>
+      </div>
+      <nav class="menu-panel" id="menuPanel" aria-label="Mobile navigation">
+        <a href="admin.html">Back to Admin</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page-container" style="max-width: 900px;">
+
+    <section id="psLoading">
+      <div class="loading-state"><div class="spinner"></div></div>
+    </section>
+
+    <section id="psAuthRequired" hidden>
+      <div class="card" style="max-width: 480px; margin: 40px auto; text-align: center;">
+        <h1 style="margin: 0 0 8px; font-size: 20px; font-weight: 600;">Admin login required</h1>
+        <p class="muted-text" style="margin: 0 0 20px;">You must be signed in as admin to access this page.</p>
+        <a class="btn btn-primary" href="admin.html">Go to Admin Login</a>
+      </div>
+    </section>
+
+    <section id="psMain" hidden>
+
+      <div class="admin-header">
+        <h1>Premium Customization</h1>
+        <div class="admin-header-actions">
+          <a class="btn btn-sm" href="admin.html">Back to Admin</a>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom: 16px;">
+        <div class="card-head">
+          <h2 class="card-title">Plan</h2>
+          <button class="btn btn-sm" id="psAddPlanBtn" type="button" style="display: none;">+ Add plan</button>
+        </div>
+        <p class="card-sub" style="margin: 0 0 14px;">Only one premium plan allowed. Price must be ₹1–₹49. Days must be 1–365.</p>
+        <div id="psPlansList"></div>
+      </div>
+
+      <div class="card" style="margin-bottom: 16px;">
+        <div class="card-head">
+          <h2 class="card-title">WhatsApp & Payment</h2>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="psWhatsapp">WhatsApp number (with country code, digits only)</label>
+          <input id="psWhatsapp" type="text" class="form-input" maxlength="15" inputmode="numeric" placeholder="917896579939">
+          <p class="form-hint">Orders will open this number. Format: 91XXXXXXXXXX (no +, no spaces).</p>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="psInstructions">Payment instructions (shown to students)</label>
+          <textarea id="psInstructions" class="form-input" style="height: auto; min-height: 90px; padding: 10px 12px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 1.55; resize: vertical;" maxlength="500" rows="4"></textarea>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="psBenefits">Benefits text (shown on plans card)</label>
+          <textarea id="psBenefits" class="form-input" style="height: auto; min-height: 70px; padding: 10px 12px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 1.55; resize: vertical;" maxlength="300" rows="3"></textarea>
+        </div>
+      </div>
+
+      <p class="form-error" id="psError" hidden></p>
+
+      <div class="form-actions" style="margin-bottom: 30px;">
+        <button class="btn btn-primary" id="psSaveBtn" type="button">Save All Changes</button>
+        <a class="btn" href="admin.html">Cancel</a>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <a href="index.html" class="footer-brand">PrepareKora.in</a>
+      <div class="footer-copy">© <span id="currentYear"></span> PrepareKora.in</div>
+    </div>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/translation.js"></script>
+  <script src="js/premium-settings.js"></script>
+
+</body>
+</html>

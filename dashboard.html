@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="PrepareKora.in — Your dashboard.">
+  <title>Dashboard — PrepareKora.in</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+
+      <a class="brand" href="index.html" aria-label="PrepareKora home">
+        <span class="brand-main">preparekora</span><span class="brand-in">.in</span>
+      </a>
+
+      <nav class="desktop-nav" aria-label="Desktop navigation">
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-toggle" id="desktopAboutToggle" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="desktopAboutMenu">
+            <span data-i18n="navAbout">About</span>
+            <svg class="nav-dropdown-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+          </button>
+          <div class="nav-dropdown-menu" id="desktopAboutMenu" aria-hidden="true">
+            <a href="about.html" data-i18n="navAbout">About</a>
+            <a href="privacy.html">Privacy</a>
+            <a href="terms.html">Terms</a>
+            <a href="disclaimer.html">Disclaimer</a>
+            <a href="find-us.html" data-i18n="navFindUs">Find Us</a>
+          </div>
+        </div>
+      </nav>
+
+      <div class="nav-actions">
+
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button class="lang-btn is-active" type="button" data-lang="en" aria-pressed="true">EN</button>
+          <button class="lang-btn" type="button" data-lang="as" aria-pressed="false">অসমীয়া</button>
+        </div>
+
+        <button
+          class="icon-button"
+          id="menuToggle"
+          type="button"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+          aria-controls="menuPanel"
+        >
+          <svg id="menuIcon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path>
+          </svg>
+        </button>
+
+      </div>
+
+      <nav class="menu-panel" id="menuPanel" aria-label="Mobile navigation">
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-toggle" id="mobileAboutToggle" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="mobileAboutMenu">
+            <span data-i18n="navAbout">About</span>
+            <svg class="nav-dropdown-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+          </button>
+          <div class="nav-dropdown-menu" id="mobileAboutMenu" aria-hidden="true">
+            <a href="about.html" data-i18n="navAbout">About</a>
+            <a href="privacy.html">Privacy</a>
+            <a href="terms.html">Terms</a>
+            <a href="disclaimer.html">Disclaimer</a>
+            <a href="find-us.html" data-i18n="navFindUs">Find Us</a>
+          </div>
+        </div>
+
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button class="lang-btn is-active" type="button" data-lang="en" aria-pressed="true">EN</button>
+          <button class="lang-btn" type="button" data-lang="as" aria-pressed="false">অসমীয়া</button>
+        </div>
+      </nav>
+
+    </div>
+  </header>
+
+  <main class="page-container">
+
+    <!-- LOADING -->
+    <section id="dashLoading">
+      <div class="loading-state">
+        <div class="spinner"></div>
+      </div>
+    </section>
+
+    <!-- AUTH REQUIRED -->
+    <section id="dashAuthRequired" hidden>
+      <div class="card" style="max-width: 480px; margin: 40px auto; text-align: center;">
+        <h1 style="margin: 0 0 8px; font-size: 22px; font-weight: 600;">Sign in required</h1>
+        <p class="muted-text" style="margin: 0 0 20px;">Please sign in to view your dashboard.</p>
+        <button class="btn btn-primary" id="dashSignInBtn" type="button">Sign in</button>
+      </div>
+    </section>
+
+    <!-- MAIN DASHBOARD -->
+    <section id="dashMain" hidden>
+
+      <!-- Profile head -->
+      <section class="dash-profile-head" id="dashProfileHead">
+        <div class="dash-avatar" id="dashAvatar">U</div>
+        <div class="dash-profile-main">
+          <h1 class="dash-profile-name" id="dashName">—</h1>
+          <div class="dash-profile-meta" id="dashMeta">—</div>
+          <div class="dash-profile-actions">
+            <span class="chip plan" id="dashPlanChip">Free Account</span>
+            <button class="btn btn-sm" id="dashEditBtn" type="button">Edit</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Premium banner (animated) -->
+      <section class="dash-premium-banner dash-premium-banner-v2" id="dashPremiumBanner">
+        <div class="dash-premium-glow" aria-hidden="true"></div>
+        <div class="dash-premium-waves" aria-hidden="true">
+          <span class="dash-premium-wave dash-premium-wave-1"></span>
+          <span class="dash-premium-wave dash-premium-wave-2"></span>
+          <span class="dash-premium-wave dash-premium-wave-3"></span>
+        </div>
+        <div class="dash-premium-content">
+          <div class="dash-premium-text">
+            <div class="dash-premium-title" id="dashPremiumTitle">No active plan</div>
+            <div class="dash-premium-sub" id="dashPremiumSub">Unlock every test series with Premium.</div>
+          </div>
+          <button class="btn btn-primary btn-sm" id="dashPremiumCtaBtn" type="button">Get Premium</button>
+        </div>
+      </section>
+
+      <!-- Stats -->
+      <section class="dash-stats-row">
+        <div class="stat-card">
+          <div class="stat-value" id="dashStatTests">0</div>
+          <div class="stat-label">Tests Taken</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="dashStatAvg">0%</div>
+          <div class="stat-label">Average Score</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="dashStatBest">0%</div>
+          <div class="stat-label">Best Score</div>
+        </div>
+      </section>
+
+      <!-- Tabs -->
+      <div class="dash-tabs" role="tablist">
+        <button class="dash-tab is-active" data-tab="performance" type="button" role="tab" aria-selected="true">Performance</button>
+        <button class="dash-tab" data-tab="premium" type="button" role="tab" aria-selected="false">Premium</button>
+        <button class="dash-tab" data-tab="purchases" type="button" role="tab" aria-selected="false">Purchases</button>
+        <button class="dash-tab" data-tab="settings" type="button" role="tab" aria-selected="false">Settings</button>
+      </div>
+
+      <!-- PERFORMANCE PANEL -->
+      <section class="dash-panel is-active" data-panel="performance">
+
+        <div class="dash-panel-body">
+
+          <div class="dash-panel-main">
+
+            <div class="card">
+              <div class="card-head">
+                <div>
+                  <h2 class="card-title">Score Trend</h2>
+                  <p class="card-sub" id="dashTrendSub">0 tests · 0 questions</p>
+                </div>
+              </div>
+              <div class="dash-chart-wrap">
+                <canvas class="dash-chart-canvas" id="dashTrendCanvas" width="800" height="130"></canvas>
+              </div>
+              <div class="dash-chart-labels" id="dashTrendLabels"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <h2 class="card-title">Strengths &amp; Weaknesses</h2>
+              </div>
+              <div id="dashSubjects"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <h2 class="card-title">Recent Tests</h2>
+              </div>
+              <div id="dashRecent"></div>
+            </div>
+
+          </div>
+
+          <div class="dash-panel-side">
+            <div class="card">
+              <div class="card-head">
+                <h2 class="card-title">Recommended Practice</h2>
+              </div>
+              <div id="dashRecommended"></div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- PREMIUM PANEL -->
+      <section class="dash-panel" data-panel="premium">
+        <div class="dash-panel-single">
+
+          <div class="card" id="premExpiryBannerCard" hidden style="border-color: #b45309; background: #fffbeb;">
+            <div id="premExpiryBannerText" style="font-size: 13px; color: #92400e; line-height: 1.5;"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h2 class="card-title">Daily Test Quota</h2>
+            </div>
+            <div id="premQuotaBox">
+              <p class="muted-text">Loading…</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h2 class="card-title">Your Premium Status</h2>
+            </div>
+            <div id="premStatusBox">
+              <p class="muted-text">Loading…</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h2 class="card-title">Choose a Plan</h2>
+            </div>
+            <p class="card-sub" style="margin: 0 0 14px;">Unlock every mock test. One payment, unlimited attempts during your plan.</p>
+            <div id="premPlansBox">
+              <p class="muted-text">Loading plans…</p>
+            </div>
+          </div>
+
+          <div class="card" id="premOrderCard" hidden>
+            <div class="card-head">
+              <h2 class="card-title">Confirm & Pay</h2>
+            </div>
+            <p class="card-sub" style="margin: 0 0 14px;" id="premSelectedLabel">—</p>
+            <div class="form-field">
+              <label class="form-label" for="premFieldName">Name</label>
+              <input class="form-input" id="premFieldName" type="text" maxlength="60" autocomplete="name">
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="premFieldWhatsApp">WhatsApp</label>
+              <input class="form-input" id="premFieldWhatsApp" type="tel" maxlength="15" inputmode="numeric" autocomplete="tel">
+            </div>
+            <p class="form-error" id="premError" hidden></p>
+            <div class="form-actions" style="margin-top: 12px;">
+              <button class="btn btn-primary" id="premPayBtn" type="button">Pay on WhatsApp</button>
+              <button class="btn" id="premCancelBtn" type="button">Cancel</button>
+            </div>
+            <p class="form-hint" style="margin-top: 12px;">
+              Payment is handled via WhatsApp. Send UPI transfer to the number shown in WhatsApp, then share the UTR / screenshot. Admin will verify and activate your plan within a few hours.
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h2 class="card-title">My Requests</h2>
+            </div>
+            <div id="premRequestsBox">
+              <p class="muted-text">Loading…</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- PURCHASES PANEL -->
+      <section class="dash-panel" data-panel="purchases">
+        <div class="dash-panel-body">
+
+          <div class="dash-panel-main">
+            <div class="card">
+              <div class="card-head">
+                <h2 class="card-title">Purchases</h2>
+              </div>
+              <div class="empty">
+                <p>No purchases yet — ebooks, courses and payments will show up here.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="dash-panel-side">
+            <div class="card">
+              <div class="card-head">
+                <h2 class="card-title">Ebooks</h2>
+              </div>
+              <p class="card-sub" style="margin: 0 0 12px;">Browse our ebook catalog to add purchases here.</p>
+              <button class="btn btn-sm" type="button" disabled>Browse Ebooks</button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- SETTINGS PANEL -->
+      <section class="dash-panel" data-panel="settings">
+
+        <div class="dash-panel-body">
+
+          <div class="dash-panel-main">
+            <div class="card">
+              <div class="card-head">
+                <h2 class="card-title">Account Details</h2>
+              </div>
+              <form id="dashSettingsForm" novalidate>
+                <div class="form-field">
+                  <label class="form-label" for="dashFieldName">Name</label>
+                  <input class="form-input" id="dashFieldName" type="text" maxlength="60" autocomplete="name">
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="dashFieldEmail">Email</label>
+                  <input class="form-input" id="dashFieldEmail" type="email" readonly>
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="dashFieldWhatsApp">WhatsApp (optional)</label>
+                  <input class="form-input" id="dashFieldWhatsApp" type="tel" maxlength="15" inputmode="numeric" autocomplete="tel">
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="dashFieldDob">Date of Birth</label>
+                  <input class="form-input" id="dashFieldDob" type="date">
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="dashFieldPincode">PIN Code</label>
+                  <input class="form-input" id="dashFieldPincode" type="text" maxlength="10" inputmode="numeric">
+                </div>
+                <p class="form-error" id="dashSettingsError" hidden></p>
+                <div class="form-actions">
+                  <button class="btn btn-primary" id="dashSaveProfileBtn" type="submit">Save changes</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="dash-panel-side">
+            <div class="card">
+              <div class="card-head">
+                <h2 class="card-title">Security</h2>
+              </div>
+              <p class="card-sub" style="margin-bottom: 12px;">Changing your password sends a reset link to your email.</p>
+              <div class="form-actions" style="margin-top: 0; flex-direction: column; gap: 6px;">
+                <button class="btn btn-sm" id="dashChangePasswordBtn" type="button">Change password</button>
+                <button class="btn btn-sm" id="dashLogoutBtn" type="button">Log out</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="dash-danger-zone" style="margin-top: 12px;">
+          <div class="card-head">
+            <h2 class="card-title">Danger Zone</h2>
+          </div>
+          <p class="card-sub" style="margin-bottom: 14px;">
+            Deleting your account removes your quiz history, performance stats, subscription access and affiliate data. It is scheduled with a 7-day grace period — log back in within 7 days to cancel.
+          </p>
+          <button class="btn btn-sm btn-danger" id="dashDeleteAccountBtn" type="button">Delete my account</button>
+        </div>
+
+      </section>
+
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <a href="index.html" class="footer-brand">PrepareKora.in</a>
+      <div class="footer-copy">© <span id="currentYear"></span> PrepareKora.in</div>
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a href="about.html" data-i18n="navAbout">About</a>
+        <a href="find-us.html" data-i18n="navFindUs">Find Us</a>
+      </nav>
+    </div>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- LOGOUT CONFIRM -->
+  <div class="modal-overlay" id="dashLogoutOverlay" role="dialog" aria-modal="true" aria-labelledby="dashLogoutTitle" aria-hidden="true">
+    <div class="modal">
+      <h2 id="dashLogoutTitle">Sign out?</h2>
+      <p class="muted-text">You'll need to sign in again to access your dashboard.</p>
+      <div class="modal-actions">
+        <button class="btn" id="dashLogoutCancel" type="button">Cancel</button>
+        <button class="btn btn-primary" id="dashLogoutConfirm" type="button">Sign out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHANGE PASSWORD MODAL -->
+  <div class="modal-overlay" id="dashChangePassOverlay" role="dialog" aria-modal="true" aria-labelledby="dashChangePassTitle" aria-hidden="true">
+    <div class="modal">
+      <h2 id="dashChangePassTitle">Change Password</h2>
+      <p class="muted-text">Enter your current password, then choose a new one.</p>
+      <form id="dashChangePassForm" novalidate>
+        <div class="form-field">
+          <label class="form-label" for="dashCurrentPass">Current password</label>
+          <input class="form-input" id="dashCurrentPass" type="password" autocomplete="current-password">
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="dashNewPass">New password</label>
+          <input class="form-input" id="dashNewPass" type="password" autocomplete="new-password">
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="dashConfirmPass">Confirm new password</label>
+          <input class="form-input" id="dashConfirmPass" type="password" autocomplete="new-password">
+        </div>
+        <p class="form-error" id="dashChangePassError" hidden></p>
+        <div class="modal-actions">
+          <button class="btn" id="dashChangePassCancel" type="button">Cancel</button>
+          <button class="btn btn-primary" id="dashChangePassSubmit" type="submit">Update password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- DELETE ACCOUNT MODAL -->
+  <div class="modal-overlay" id="dashDeleteOverlay" role="dialog" aria-modal="true" aria-labelledby="dashDeleteTitle" aria-hidden="true">
+    <div class="modal">
+      <h2 id="dashDeleteTitle">Delete account?</h2>
+      <p class="muted-text">This removes your account, profile, quiz history, and login activity. Cannot be undone.</p>
+      <p class="muted-text" style="margin-top: 8px;" id="dashDeleteInstructions">Enter your current password to confirm.</p>
+      <form id="dashDeleteForm" novalidate>
+        <div class="form-field" id="dashDeletePasswordField">
+          <label class="form-label" for="dashDeletePassword">Current password</label>
+          <input class="form-input" id="dashDeletePassword" type="password" autocomplete="current-password">
+        </div>
+        <p class="form-error" id="dashDeleteError" hidden></p>
+        <div class="modal-actions">
+          <button class="btn" id="dashDeleteCancel" type="button">Cancel</button>
+          <button class="btn btn-danger" id="dashDeleteConfirm" type="submit">Delete permanently</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/translation.js"></script>
+  <script src="js/nav-dropdown.js"></script>
+  <script src="js/firebase-loader.js"></script>
+  <script src="js/student-auth.js"></script>
+  <script src="js/login-modal.js"></script>
+  <script src="js/student-dashboard.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/premium-redirect.js"></script>
+
+  <script>
+    (function () {
+      const y = document.getElementById("currentYear");
+      if (y && !y.textContent) y.textContent = new Date().getFullYear();
+
+      const menuToggle = document.getElementById("menuToggle");
+      const menuPanel = document.getElementById("menuPanel");
+      const menuIcon = document.getElementById("menuIcon");
+      const hamburgerSVG = '<path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path>';
+      const closeSVG = '<path d="m6 6 12 12"></path><path d="M18 6 6 18"></path>';
+
+      function closeMenu() {
+        if (!menuPanel || !menuToggle || !menuIcon) return;
+        menuPanel.classList.remove("open");
+        menuToggle.setAttribute("aria-expanded", "false");
+        menuIcon.innerHTML = hamburgerSVG;
+      }
+
+      function openMenu() {
+        if (!menuPanel || !menuToggle || !menuIcon) return;
+        menuPanel.classList.add("open");
+        menuToggle.setAttribute("aria-expanded", "true");
+        menuIcon.innerHTML = closeSVG;
+      }
+
+      if (menuToggle && menuPanel && menuIcon) {
+        menuToggle.addEventListener("click", function (e) {
+          e.stopPropagation();
+          if (menuPanel.classList.contains("open")) closeMenu();
+          else openMenu();
+        });
+
+        document.addEventListener("click", function (e) {
+          if (menuPanel.classList.contains("open") &&
+              !menuPanel.contains(e.target) &&
+              !menuToggle.contains(e.target)) {
+            closeMenu();
+          }
+        });
+
+        menuPanel.addEventListener("click", function (e) {
+          if (e.target.closest("a")) closeMenu();
+        });
+      }
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") closeMenu();
+      });
+    })();
+  </script>
+
+</body>
+</html>
