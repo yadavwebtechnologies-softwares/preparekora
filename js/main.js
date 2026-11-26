@@ -281,6 +281,9 @@
     }
 
     document.querySelectorAll(".archive-section").forEach(function (section) {
+      // Ebook section is managed separately by loadHomeEbooks().
+      if (section.id === "ebooksHomeSection") return;
+
       const list = section.querySelector(".test-list");
       section.hidden = !list || list.children.length === 0;
     });
